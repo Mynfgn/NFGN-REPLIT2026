@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { useGetMemberDashboard, useGetMemberAnalytics } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
-import { Wallet, Users, ShoppingBag, ArrowUpRight, TrendingUp, MapPin, Star, CheckCircle2, AlertCircle, BarChart3 } from "lucide-react";
+import { Wallet, Users, ShoppingBag, ArrowUpRight, TrendingUp, MapPin, Star, CheckCircle2, AlertCircle, BarChart3, Link2, Copy, Check, ExternalLink } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, Legend,
@@ -198,6 +200,84 @@ function SalesByStateChart({ data }: { data: any[] }) {
   );
 }
 
+function AffiliateLinkCard({ referralLink }: { referralLink: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const affiliateUrl = (() => {
+    try {
+      const parsed = new URL(referralLink);
+      return `${window.location.origin}${parsed.pathname}`;
+    } catch {
+      return referralLink;
+    }
+  })();
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(affiliateUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
+  };
+
+  return (
+    <Card className="border border-primary/30 bg-gradient-to-br from-primary/5 to-background">
+      <CardHeader className="pb-3">
+        <CardTitle className="font-serif text-base flex items-center gap-2">
+          <Link2 className="h-4 w-4 text-primary" />
+          Your Personal Affiliate Link
+        </CardTitle>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          Share this link with friends and family. When they join or shop through it, you earn commissions automatically.
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex items-center gap-2 p-3 rounded-lg bg-muted border border-border/60">
+          <span className="flex-1 text-sm font-mono text-foreground truncate select-all" title={affiliateUrl}>
+            {affiliateUrl}
+          </span>
+          <Button
+            size="sm"
+            variant={copied ? "default" : "outline"}
+            className={`flex-shrink-0 gap-1.5 transition-all ${copied ? "bg-green-600 hover:bg-green-700 border-green-600 text-white" : ""}`}
+            onClick={handleCopy}
+          >
+            {copied ? (
+              <><Check className="h-3.5 w-3.5" /> Copied!</>
+            ) : (
+              <><Copy className="h-3.5 w-3.5" /> Copy</>
+            )}
+          </Button>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <a
+            href={affiliateUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
+          >
+            <ExternalLink className="h-3 w-3" />
+            Preview your affiliate page
+          </a>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3 pt-1">
+          {[
+            { label: "Share on social media", sub: "Post your link on Facebook, Instagram & more" },
+            { label: "Send via text or email", sub: "Message it directly to people you know" },
+            { label: "Add to your bio", sub: "Put it in your profile link on any platform" },
+          ].map(tip => (
+            <div key={tip.label} className="p-2.5 rounded-md bg-background border border-border/40 text-center">
+              <div className="text-xs font-semibold text-foreground">{tip.label}</div>
+              <div className="text-xs text-muted-foreground mt-0.5 leading-tight">{tip.sub}</div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function EarningsLineChart({ data }: { data: any[] }) {
   if (!data || data.length === 0) return null;
   return (
@@ -260,6 +340,11 @@ export function Dashboard() {
         <StatCard title="Team Size" value={String(data?.teamSize ?? 0)} sub={`${data?.personallyEnrolled ?? 0} personally enrolled`} icon={Users} />
         <StatCard title="Members" value={String(data?.retailCustomers ?? 0)} sub="Active buyers" icon={ShoppingBag} />
       </div>
+
+      {/* Affiliate Link */}
+      {data?.referralLink && (
+        <AffiliateLinkCard referralLink={data.referralLink} />
+      )}
 
       {/* PV/GV Volume + Pro Package Progress */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

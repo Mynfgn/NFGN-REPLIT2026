@@ -105,15 +105,13 @@ router.get("/commission-rules", async (req, res): Promise<void> => {
   const [rules] = await db.select().from(commissionRulesTable).limit(1);
   if (!rules) {
     res.json({
+      referralRate: 10,
+      salesRate: 10,
       levels: [
-        { level: 1, rate: 10, description: "Direct referral" },
-        { level: 2, rate: 20, description: "Power level" },
-        { level: 3, rate: 10 }, { level: 4, rate: 5 }, { level: 5, rate: 5 },
-        { level: 6, rate: 5 }, { level: 7, rate: 5 }, { level: 8, rate: 5 }, { level: 9, rate: 5 },
+        { level: 1, rate: 10, description: "Level 1 Commission — Pro Package (Pro Members only)" },
+        { level: 2, rate: 20, description: "Level 2 Commission — Pro Package (Pro Members only)" },
       ],
-      powerBonusAmount: 100,
-      powerBonusTrigger: 9,
-      powerBonusEnabled: true,
+      powerBonusEnabled: false,
     });
     return;
   }

@@ -9,6 +9,7 @@ import {
   Users, Star, TrendingUp, ChevronDown, ChevronRight,
   Loader2, Search, Network, List
 } from "lucide-react";
+import { roleLabel } from "@/lib/labels";
 
 type TreeNode = {
   id: number;
@@ -51,7 +52,7 @@ function CollapsibleTreeNode({
     node.name.toLowerCase().includes(search.toLowerCase()) ||
     node.email.toLowerCase().includes(search.toLowerCase());
 
-  const roleLabel = node.role.replace(/_/g, " ");
+  const roleLabelText = roleLabel(node.role);
   const roleClass = ROLE_COLORS[node.role] ?? "bg-gray-100 text-gray-700 border-gray-200";
 
   return (
@@ -103,9 +104,9 @@ function CollapsibleTreeNode({
               <Star className="h-3 w-3 text-primary flex-shrink-0" />
             )}
             <span
-              className={`text-xs px-1.5 py-0.5 rounded border capitalize font-medium ${roleClass}`}
+              className={`text-xs px-1.5 py-0.5 rounded border font-medium ${roleClass}`}
             >
-              {roleLabel}
+              {roleLabelText}
             </span>
             <Badge
               variant={node.status === "active" ? "secondary" : "destructive"}
@@ -382,8 +383,8 @@ export function AdminGenealogyPage() {
                               </div>
                             </td>
                             <td className="py-3 pr-4">
-                              <span className={`text-xs px-1.5 py-0.5 rounded border capitalize font-medium ${roleClass}`}>
-                                {m.role.replace(/_/g, " ")}
+                              <span className={`text-xs px-1.5 py-0.5 rounded border font-medium ${ROLE_COLORS[m.role] ?? "bg-gray-100 text-gray-700 border-gray-200"}`}>
+                                {roleLabel(m.role)}
                               </span>
                             </td>
                             <td className="py-3 text-center">

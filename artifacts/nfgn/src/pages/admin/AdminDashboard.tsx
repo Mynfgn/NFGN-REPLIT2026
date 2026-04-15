@@ -2,6 +2,7 @@ import { useGetDashboardSummary } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DollarSign, ShoppingCart, Users, UserCheck } from "lucide-react";
+import { roleLabel } from "@/lib/labels";
 
 export function AdminDashboard() {
   const { data, isLoading } = useGetDashboardSummary();
@@ -90,7 +91,7 @@ export function AdminDashboard() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-xs uppercase font-semibold text-primary">{user.role.replace('_', ' ')}</div>
+                      <div className="text-xs uppercase font-semibold text-primary">{roleLabel(user.role)}</div>
                       <div className="text-xs text-muted-foreground">{new Date(user.createdAt).toLocaleDateString()}</div>
                     </div>
                   </div>

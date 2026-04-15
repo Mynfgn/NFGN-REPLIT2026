@@ -143,6 +143,8 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
     notes: notes ?? undefined,
   }).returning();
 
+  let containsProPackage = false;
+
   for (const { cart, product } of cartItems) {
     if (!product) continue;
     const lineTotal = parseFloat(product.price) * cart.quantity;
@@ -159,6 +161,7 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
     await db.update(productsTable).set({ stock: Math.max(0, product.stock - cart.quantity) }).where(eq(productsTable.id, product.id));
 
     if (product.isProPackage) {
+      containsProPackage = true;
       await db.update(usersTable).set({
         isProMember: true,
         role: "pro_member",
@@ -169,7 +172,7 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
 
   await db.delete(cartItemsTable).where(eq(cartItemsTable.userId, currentUser.id));
 
-  await processCommissions(order.id, orderNumber, total, currentUser.id);
+  await processCommissions(order.id, orderNumber, total, currentUser.id, containsProPackage);
 
   const items = await db.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, order.id));
   const userName = `${currentUser.firstName} ${currentUser.lastName}`;

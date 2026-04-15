@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { roleLabel } from "@/lib/labels";
 
 export function DashboardLayout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
@@ -71,7 +72,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-medium leading-none">{user?.firstName} {user?.lastName}</span>
-              <span className="text-xs text-muted-foreground mt-1 capitalize">{user?.role?.replace('_', ' ')}</span>
+              <span className="text-xs text-muted-foreground mt-1">{user?.role ? roleLabel(user.role) : ""}</span>
             </div>
           </div>
         </div>

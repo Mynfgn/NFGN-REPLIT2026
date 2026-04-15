@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Loader2, Star, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { roleLabel } from "@/lib/labels";
 
 const roleColors: Record<string, string> = {
   super_admin: "destructive",
@@ -60,7 +61,7 @@ export function UsersPage() {
             <SelectItem value="store_admin">Store Admin</SelectItem>
             <SelectItem value="pro_member">Pro Member</SelectItem>
             <SelectItem value="affiliate">Affiliate</SelectItem>
-            <SelectItem value="customer">Customer</SelectItem>
+            <SelectItem value="customer">Member</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -81,7 +82,7 @@ export function UsersPage() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium truncate">{user.firstName} {user.lastName}</span>
                         {user.isProMember && <Star className="h-3 w-3 text-primary fill-primary" />}
-                        <Badge variant={(roleColors[user.role] ?? "secondary") as any} className="text-xs">{user.role.replace(/_/g, " ")}</Badge>
+                        <Badge variant={(roleColors[user.role] ?? "secondary") as any} className="text-xs">{roleLabel(user.role)}</Badge>
                       </div>
                       <p className="text-sm text-muted-foreground truncate">{user.email}</p>
                       <p className="text-xs text-muted-foreground">Ref: {user.referralCode} • Joined {new Date(user.createdAt).toLocaleDateString()}</p>

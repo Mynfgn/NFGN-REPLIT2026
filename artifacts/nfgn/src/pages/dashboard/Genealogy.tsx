@@ -2,6 +2,7 @@ import { useGetGenealogyTree, useGetGenealogyStats } from "@workspace/api-client
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, TrendingUp, Star, Loader2 } from "lucide-react";
+import { roleLabel } from "@/lib/labels";
 
 type TreeNode = {
   id: number;
@@ -45,7 +46,7 @@ function TreeNodeComponent({ node, depth = 0 }: { node: TreeNode; depth?: number
         </div>
         <div className="text-right text-sm flex-shrink-0">
           <div className="font-semibold text-green-600">${node.totalEarnings.toFixed(2)}</div>
-          <div className="text-xs text-muted-foreground capitalize">{node.role.replace(/_/g, " ")}</div>
+          <div className="text-xs text-muted-foreground">{roleLabel(node.role)}</div>
         </div>
       </div>
       {node.children?.map(child => (

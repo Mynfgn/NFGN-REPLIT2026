@@ -35,9 +35,11 @@ Full-stack MLM/network marketing platform for naturopathic wellness products. Bu
 
 | Role | Email | Password |
 |------|-------|----------|
-| Super Admin | admin@nfgn.com | NFGNAdmin!2026# |
+| Admin | joemarcelino99@gmail.com | admin123 |
 | Pro Member | promember@nfgn.com | ProMember!2026# |
-| Customer | customer@nfgn.com | Customer!2026# |
+| Member (customer) | customer@nfgn.com | Customer!2026# |
+
+**Note:** The DB role "customer" is always displayed as "Member" throughout the UI via `roleLabel()` in `artifacts/nfgn/src/lib/labels.ts`.
 
 ## Database Schema (15 tables)
 
@@ -94,13 +96,23 @@ All tables in `lib/db/src/schema/index.ts`:
 - `/admin/payouts` — Payout processing queue
 - `/admin/products`, `/admin/categories`, `/admin/bookings`, `/admin/professionals`, `/admin/messages`, `/admin/promos`, `/admin/settings`, `/admin/reports`, `/admin/genealogy` — stubs
 
-## MLM Commission Rules
+## MLM Commission Rules (3-Type Compensation Plan)
 
-- Level 1: 10% (direct sponsor)
-- Level 2: 20% (power level)
-- Level 3: 5%
-- Level 4–9: 3% each
-- Only `pro_member` role earns commissions
+Commission processing: `artifacts/api-server/src/lib/commissions.ts`
+
+| Type | Who Earns | Trigger | Rate |
+|------|-----------|---------|------|
+| **Referral** | All Members (any role) | Direct referral makes any purchase | 10% |
+| **Sales** | Pro Members only | Direct referral buys regular products | 10% |
+| **Level 1** | Pro Members only | Pro Package purchased by direct referral | 10% |
+| **Level 2** | Pro Members only | Pro Package purchased 2 levels down | 20% |
+
+Key rules:
+- Registration via sponsor referral link is REQUIRED (enforced in Join form)
+- `isProPackage: true` flag on a product triggers Level Commissions AND Referral Commissions
+- Level Commissions cover only 2 generations (NOT 9)
+- Regular product purchases generate Referral + Sales commissions (for Pro Member sponsors)
+- Shared label utility: `artifacts/nfgn/src/lib/labels.ts` (roleLabel, commissionTypeLabel)
 
 ## Brand Colors
 

@@ -20,7 +20,7 @@ const registerSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string(),
   phone: z.string().optional(),
-  referralCode: z.string().optional(),
+  referralCode: z.string().min(1, "A sponsor referral code is required to join NFGN"),
 }).refine(d => d.password === d.confirmPassword, { message: "Passwords don't match", path: ["confirmPassword"] });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -119,8 +119,9 @@ export function Join() {
                 )} />
                 <FormField control={form.control} name="referralCode" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Referral Code (optional)</FormLabel>
+                    <FormLabel>Sponsor Referral Code <span className="text-destructive">*</span></FormLabel>
                     <FormControl><Input placeholder="e.g. jrivers-GOLD1" {...field} /></FormControl>
+                    <p className="text-xs text-muted-foreground">You must have a sponsor referral code to join NFGN.</p>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -156,7 +157,7 @@ export function Join() {
               <h3 className="font-serif font-bold text-lg">Why Join NFGN?</h3>
               {[
                 { icon: Star, title: "Premium Wellness Products", desc: "Access curated naturopathic formulas, soaps, candles, and educational resources." },
-                { icon: TrendingUp, title: "9-Level Commission Structure", desc: "Earn up to 20% commissions across 9 generations with our Power Level bonus." },
+                { icon: TrendingUp, title: "3-Type Commission Plan", desc: "Earn Referral, Sales, and Level Commissions. Pro Members earn up to 20% via our 2-level power structure." },
                 { icon: Users, title: "Thriving Community", desc: "Join a network of health-conscious entrepreneurs supporting each other's growth." },
                 { icon: CheckCircle, title: "Your Own Store", desc: "Get a personalized replicated website to share with family and friends." },
               ].map(({ icon: Icon, title, desc }) => (

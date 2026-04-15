@@ -30,6 +30,10 @@ import { MessagesPage } from "@/pages/dashboard/Messages";
 import { RegistrationPage } from "@/pages/dashboard/Registration";
 import { TransferFundsPage } from "@/pages/dashboard/TransferFunds";
 import { PayoutsPage } from "@/pages/dashboard/Payouts";
+import { EarningsPage } from "@/pages/dashboard/Earnings";
+import { ProfilePage } from "@/pages/dashboard/Profile";
+import { ToolsPage } from "@/pages/dashboard/Tools";
+import { MailboxPage } from "@/pages/dashboard/Mailbox";
 
 // Admin Pages
 import { AdminDashboard } from "@/pages/admin/AdminDashboard";
@@ -148,9 +152,24 @@ function Router() {
           <DashboardLayout><PayoutsPage /></DashboardLayout>
         </RequireAuth>
       </Route>
+      <Route path="/dashboard/earnings">
+        <RequireAuth>
+          <DashboardLayout><EarningsPage /></DashboardLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/dashboard/mailbox">
+        <RequireAuth>
+          <DashboardLayout><MailboxPage /></DashboardLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/dashboard/tools">
+        <RequireAuth>
+          <DashboardLayout><ToolsPage /></DashboardLayout>
+        </RequireAuth>
+      </Route>
       <Route path="/dashboard/profile">
         <RequireAuth>
-          <DashboardLayout><Stub name="My Profile" /></DashboardLayout>
+          <DashboardLayout><ProfilePage /></DashboardLayout>
         </RequireAuth>
       </Route>
       <Route path="/dashboard/reports">

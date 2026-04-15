@@ -4,8 +4,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { useGetMe, useLogout } from "@workspace/api-client-react";
 import { 
   LayoutDashboard, ShoppingBag, Wallet, Users, 
-  Award, Banknote, Calendar, Mail, UserCircle, 
-  BarChart3, LogOut, Menu, X, UserPlus, ArrowRightLeft
+  Award, Banknote, Calendar, Inbox, UserCircle, 
+  BarChart3, LogOut, Menu, X, UserPlus, ArrowRightLeft,
+  TrendingUp, Wrench,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -30,6 +31,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const navItems = [
     { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
     { name: "Registration", href: "/dashboard/registration", icon: UserPlus },
+    { name: "User Earnings", href: "/dashboard/earnings", icon: TrendingUp },
     { name: "Orders", href: "/dashboard/orders", icon: ShoppingBag },
     { name: "E-Wallet", href: "/dashboard/wallet", icon: Wallet },
     { name: "Transfer Funds", href: "/dashboard/transfer", icon: ArrowRightLeft },
@@ -37,7 +39,8 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
     { name: "Genealogy", href: "/dashboard/genealogy", icon: Users },
     { name: "Commissions", href: "/dashboard/commissions", icon: Award },
     { name: "Bookings", href: "/dashboard/bookings", icon: Calendar },
-    { name: "Messages", href: "/dashboard/messages", icon: Mail },
+    { name: "Mailbox", href: "/dashboard/mailbox", icon: Inbox },
+    { name: "Tools", href: "/dashboard/tools", icon: Wrench },
     { name: "Reports", href: "/dashboard/reports", icon: BarChart3 },
     { name: "Profile", href: "/dashboard/profile", icon: UserCircle },
   ];

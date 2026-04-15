@@ -114,6 +114,30 @@ router.post("/auth/register", async (req, res): Promise<void> => {
   res.status(201).json({ token, user: formatUser(newUser) });
 });
 
+router.post("/auth/change-password", requireAuth, async (req, res): Promise<void> => {
+  const user = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    res.status(400).json({ error: "currentPassword and newPassword are required." });
+    return;
+  }
+  if (newPassword.length < 8) {
+    res.status(400).json({ error: "New password must be at least 8 characters." });
+    return;
+  }
+
+  const valid = await verifyPassword(currentPassword, user.passwordHash);
+  if (!valid) {
+    res.status(401).json({ error: "Current password is incorrect." });
+    return;
+  }
+
+  const newHash = await hashPassword(newPassword);
+  await db.update(usersTable).set({ passwordHash: newHash }).where(eq(usersTable.id, user.id));
+  res.json({ success: true });
+});
+
 router.post("/auth/logout", async (_req, res): Promise<void> => {
   res.json({ success: true });
 });

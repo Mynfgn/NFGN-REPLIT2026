@@ -5,7 +5,7 @@ import { useGetMe, useLogout } from "@workspace/api-client-react";
 import { 
   LayoutDashboard, ShoppingBag, Wallet, Users, 
   Award, Banknote, Calendar, Mail, UserCircle, 
-  BarChart3, LogOut, Menu, X
+  BarChart3, LogOut, Menu, X, UserPlus, ArrowRightLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -29,11 +29,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
 
   const navItems = [
     { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
+    { name: "Registration", href: "/dashboard/registration", icon: UserPlus },
     { name: "Orders", href: "/dashboard/orders", icon: ShoppingBag },
-    { name: "Wallet", href: "/dashboard/wallet", icon: Wallet },
+    { name: "E-Wallet", href: "/dashboard/wallet", icon: Wallet },
+    { name: "Transfer Funds", href: "/dashboard/transfer", icon: ArrowRightLeft },
+    { name: "Payouts", href: "/dashboard/payouts", icon: Banknote },
     { name: "Genealogy", href: "/dashboard/genealogy", icon: Users },
     { name: "Commissions", href: "/dashboard/commissions", icon: Award },
-    { name: "Payouts", href: "/dashboard/payouts", icon: Banknote },
     { name: "Bookings", href: "/dashboard/bookings", icon: Calendar },
     { name: "Messages", href: "/dashboard/messages", icon: Mail },
     { name: "Reports", href: "/dashboard/reports", icon: BarChart3 },

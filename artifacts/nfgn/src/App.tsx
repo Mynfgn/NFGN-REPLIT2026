@@ -27,6 +27,9 @@ import { WalletPage } from "@/pages/dashboard/Wallet";
 import { CommissionsPage } from "@/pages/dashboard/Commissions";
 import { GenealogyPage } from "@/pages/dashboard/Genealogy";
 import { MessagesPage } from "@/pages/dashboard/Messages";
+import { RegistrationPage } from "@/pages/dashboard/Registration";
+import { TransferFundsPage } from "@/pages/dashboard/TransferFunds";
+import { PayoutsPage } from "@/pages/dashboard/Payouts";
 
 // Admin Pages
 import { AdminDashboard } from "@/pages/admin/AdminDashboard";
@@ -125,6 +128,16 @@ function Router() {
           <DashboardLayout><MessagesPage /></DashboardLayout>
         </RequireAuth>
       </Route>
+      <Route path="/dashboard/registration">
+        <RequireAuth>
+          <DashboardLayout><RegistrationPage /></DashboardLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/dashboard/transfer">
+        <RequireAuth>
+          <DashboardLayout><TransferFundsPage /></DashboardLayout>
+        </RequireAuth>
+      </Route>
       <Route path="/dashboard/bookings">
         <RequireAuth>
           <DashboardLayout><Stub name="My Bookings" /></DashboardLayout>
@@ -132,7 +145,7 @@ function Router() {
       </Route>
       <Route path="/dashboard/payouts">
         <RequireAuth>
-          <DashboardLayout><Stub name="Payout Requests" /></DashboardLayout>
+          <DashboardLayout><PayoutsPage /></DashboardLayout>
         </RequireAuth>
       </Route>
       <Route path="/dashboard/profile">

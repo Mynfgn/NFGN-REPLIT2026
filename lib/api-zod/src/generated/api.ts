@@ -959,6 +959,24 @@ export const ListWalletTransactionsResponse = zod.object({
 });
 
 /**
+ * @summary Transfer funds to another member
+ */
+export const TransferFundsBody = zod.object({
+  recipientIdentifier: zod
+    .string()
+    .describe("Recipient email address or referral code"),
+  amount: zod.number(),
+  note: zod.string().optional(),
+});
+
+export const TransferFundsResponse = zod.object({
+  success: zod.boolean().optional(),
+  recipientName: zod.string().optional(),
+  amount: zod.number().optional(),
+  senderBalance: zod.number().optional(),
+});
+
+/**
  * @summary Adjust wallet balance (admin)
  */
 export const AdjustWalletBody = zod.object({

@@ -169,6 +169,77 @@ router.post("/payouts", requireAuth, async (req, res): Promise<void> => {
   });
 });
 
+router.post("/wallet/transfer", requireAuth, async (req, res): Promise<void> => {
+  const sender = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
+  const { recipientIdentifier, amount, note } = req.body;
+
+  if (!recipientIdentifier || !amount || parseFloat(String(amount)) <= 0) {
+    res.status(400).json({ error: "Recipient and a positive amount are required." });
+    return;
+  }
+
+  const amt = parseFloat(String(amount));
+
+  const [recipient] = await db.select().from(usersTable).where(
+    eq(usersTable.email, recipientIdentifier)
+  );
+  const [recipientByCode] = !recipient
+    ? await db.select().from(usersTable).where(eq(usersTable.referralCode, recipientIdentifier))
+    : [null];
+  const target = recipient ?? recipientByCode;
+
+  if (!target) {
+    res.status(404).json({ error: "Recipient not found. Check the email or referral code." });
+    return;
+  }
+  if (target.id === sender.id) {
+    res.status(400).json({ error: "You cannot transfer funds to yourself." });
+    return;
+  }
+
+  let [senderWallet] = await db.select().from(walletsTable).where(eq(walletsTable.userId, sender.id));
+  if (!senderWallet) { [senderWallet] = await db.insert(walletsTable).values({ userId: sender.id }).returning(); }
+
+  if (parseFloat(senderWallet.balance) < amt) {
+    res.status(400).json({ error: "Insufficient balance." });
+    return;
+  }
+
+  let [recipientWallet] = await db.select().from(walletsTable).where(eq(walletsTable.userId, target.id));
+  if (!recipientWallet) { [recipientWallet] = await db.insert(walletsTable).values({ userId: target.id }).returning(); }
+
+  const senderNewBalance = parseFloat(senderWallet.balance) - amt;
+  const recipientNewBalance = parseFloat(recipientWallet.balance) + amt;
+
+  await db.update(walletsTable).set({ balance: String(senderNewBalance) }).where(eq(walletsTable.id, senderWallet.id));
+  await db.update(walletsTable).set({ balance: String(recipientNewBalance) }).where(eq(walletsTable.id, recipientWallet.id));
+
+  const transferNote = note ? ` — ${note}` : "";
+  await db.insert(walletTransactionsTable).values({
+    walletId: senderWallet.id,
+    type: "transfer_out",
+    amount: String(-amt),
+    balance: String(senderNewBalance),
+    description: `Transfer to ${target.firstName} ${target.lastName}${transferNote}`,
+    reference: `TXN-${Date.now()}`,
+  });
+  await db.insert(walletTransactionsTable).values({
+    walletId: recipientWallet.id,
+    type: "transfer_in",
+    amount: String(amt),
+    balance: String(recipientNewBalance),
+    description: `Transfer from ${sender.firstName} ${sender.lastName}${transferNote}`,
+    reference: `TXN-${Date.now()}`,
+  });
+
+  res.json({
+    success: true,
+    recipientName: `${target.firstName} ${target.lastName}`,
+    amount: amt,
+    senderBalance: senderNewBalance,
+  });
+});
+
 router.post("/payouts/:id/process", requireAdmin, async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
   const [payout] = await db.update(payoutsTable).set({ status: "processed", processedAt: new Date() }).where(eq(payoutsTable.id, id)).returning();

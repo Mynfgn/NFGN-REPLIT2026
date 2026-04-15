@@ -37,6 +37,7 @@ import type {
   CreatePromoBody,
   DashboardSummary,
   DownlineMember,
+  Error,
   GenealogyNode,
   GenealogyStats,
   GetCommissionReportParams,
@@ -74,6 +75,8 @@ import type {
   SalesReport,
   SendMessageBody,
   TopAffiliate,
+  TransferFunds200,
+  TransferFundsBody,
   UpdateBookingStatusBody,
   UpdateCartItemBody,
   UpdateOrderStatusBody,
@@ -3488,6 +3491,92 @@ export function useListWalletTransactions<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Transfer funds to another member
+ */
+export const getTransferFundsUrl = () => {
+  return `/api/wallet/transfer`;
+};
+
+export const transferFunds = async (
+  transferFundsBody: TransferFundsBody,
+  options?: RequestInit,
+): Promise<TransferFunds200> => {
+  return customFetch<TransferFunds200>(getTransferFundsUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(transferFundsBody),
+  });
+};
+
+export const getTransferFundsMutationOptions = <
+  TError = ErrorType<Error>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof transferFunds>>,
+    TError,
+    { data: BodyType<TransferFundsBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof transferFunds>>,
+  TError,
+  { data: BodyType<TransferFundsBody> },
+  TContext
+> => {
+  const mutationKey = ["transferFunds"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof transferFunds>>,
+    { data: BodyType<TransferFundsBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return transferFunds(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type TransferFundsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof transferFunds>>
+>;
+export type TransferFundsMutationBody = BodyType<TransferFundsBody>;
+export type TransferFundsMutationError = ErrorType<Error>;
+
+/**
+ * @summary Transfer funds to another member
+ */
+export const useTransferFunds = <
+  TError = ErrorType<Error>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof transferFunds>>,
+    TError,
+    { data: BodyType<TransferFundsBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof transferFunds>>,
+  TError,
+  { data: BodyType<TransferFundsBody> },
+  TContext
+> => {
+  return useMutation(getTransferFundsMutationOptions(options));
+};
 
 /**
  * @summary Adjust wallet balance (admin)

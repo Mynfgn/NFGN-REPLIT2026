@@ -825,6 +825,57 @@ paths:
               schema:
                 $ref: "#/components/schemas/WalletTransactionListResponse"
 
+  /wallet/transfer:
+    post:
+      operationId: transferFunds
+      tags: [wallet]
+      summary: Transfer funds to another member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                recipientIdentifier:
+                  type: string
+                  description: Recipient email address or referral code
+                amount:
+                  type: number
+                note:
+                  type: string
+              required:
+                - recipientIdentifier
+                - amount
+      responses:
+        "200":
+          description: Transfer successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  recipientName:
+                    type: string
+                  amount:
+                    type: number
+                  senderBalance:
+                    type: number
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Recipient not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /wallet/adjust:
     post:
       operationId: adjustWallet

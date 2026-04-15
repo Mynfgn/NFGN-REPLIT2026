@@ -739,6 +739,20 @@ export type ListWalletTransactionsParams = {
   limit?: number;
 };
 
+export type TransferFundsBody = {
+  /** Recipient email address or referral code */
+  recipientIdentifier: string;
+  amount: number;
+  note?: string;
+};
+
+export type TransferFunds200 = {
+  success?: boolean;
+  recipientName?: string;
+  amount?: number;
+  senderBalance?: number;
+};
+
 export type ListPayoutsParams = {
   userId?: number;
   status?: string;

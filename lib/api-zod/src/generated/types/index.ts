@@ -77,6 +77,8 @@ export * from "./salesReportTopProductsItem";
 export * from "./sendMessageBody";
 export * from "./testimonial";
 export * from "./topAffiliate";
+export * from "./transferFunds200";
+export * from "./transferFundsBody";
 export * from "./updateBookingStatusBody";
 export * from "./updateCartItemBody";
 export * from "./updateOrderStatusBody";

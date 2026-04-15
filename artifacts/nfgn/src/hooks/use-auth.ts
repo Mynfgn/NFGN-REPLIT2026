@@ -1,13 +1,12 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export function useAuth() {
-  const [token, setToken] = useState<string | null>(null);
-
-  useEffect(() => {
+  const [token, setToken] = useState<string | null>(() => {
     if (typeof window !== "undefined") {
-      setToken(localStorage.getItem("nfgn_token"));
+      return localStorage.getItem("nfgn_token");
     }
-  }, []);
+    return null;
+  });
 
   const login = (newToken: string) => {
     localStorage.setItem("nfgn_token", newToken);

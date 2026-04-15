@@ -1,0 +1,518 @@
+Build a production-style full-stack web app and mobile-ready PWA called “New Face Global Network” (NFGN). NFGN is a modern MLM / network marketing platform for naturopathic products, services, and community-based money circulation.
+
+The business offers:
+- Naturopathic products: IGNITE Herbal Cleanse, IGNITE XL Appetite Suppressant, handmade soaps, herbal books, naturopathic books, candles, lotions, wellness products
+- Book-A-Professional services: wellness coaching, naturopathic consultations, ministry/business consultations, event booking, and other professional services
+- Money Circulation / community commerce tools
+- Affiliate / distributor replicated websites
+- MLM genealogy, commissions, and payout tracking
+
+I want this built as a modern, beautiful, responsive application with:
+1. Public replicated website / capture page
+2. Customer storefront and ecommerce checkout
+3. Affiliate / member back office
+4. Admin back office
+5. Genealogy tree and MLM commission engine
+6. Mobile-first design and installable app behavior (PWA)
+7. Seeded demo data so I can log in immediately and test everything
+
+Use a polished modern UI with:
+- Elegant health + wealth branding
+- Black, white, gold, and green color palette
+- Clean cards, modern dashboards, hero banners, animated counters, responsive menus
+- Professional ecommerce design
+- Fast load speed
+- Strong mobile usability
+
+TECH STACK
+Use a modern Replit-friendly stack:
+- Frontend: React + TypeScript + Vite
+- Backend: Node.js + Express
+- Database: PostgreSQL with Prisma ORM
+- Auth: JWT + secure password hashing
+- Styling: Tailwind CSS
+- State management: React Query or equivalent
+- Charts: Recharts
+- Tree display for genealogy
+- PWA support for app-like install on mobile
+- Role-based access control
+
+ROLES
+Create these user roles:
+- Super Admin
+- Admin / Store Admin
+- Pro Member
+- Customer
+- Affiliate / Distributor
+- Service Professional
+
+LOGIN / DEMO ACCESS
+Seed the app with these credentials so I can immediately test the admin and user back offices:
+
+Super Admin:
+Email: admin@nfgn.com
+Password: NFGNAdmin!2026#
+
+Store Admin:
+Email: storeadmin@nfgn.com
+Password: StoreAdmin!2026#
+
+Demo Pro Member / Consultant:
+Email: promember@nfgn.com
+Password: ProMember!2026#
+
+Demo Affiliate:
+Email: affiliate@nfgn.com
+Password: Affiliate!2026#
+
+Demo Customer:
+Email: customer@nfgn.com
+Password: Customer!2026#
+
+Require password change prompt after first real deployment, but allow these seeded credentials in demo mode.
+
+CORE BUSINESS MODEL
+This platform uses a “2 Down By Infinity Pay Structure” with 9 generations of payout tracking.
+
+REQUIRED MLM RULES
+1. A referring consultant gets a replicated affiliate link.
+2. When a customer clicks that affiliate link, the first thing they see is a beautiful NFGN replicated website / capture page showing:
+   - Referring consultant’s name
+   - Consultant photo/avatar
+   - Consultant contact button
+   - Product highlights
+   - Join / Shop / Book buttons
+3. The system must track the sponsor / referrer automatically through URL parameters and cookies/session.
+4. Customers can buy products as retail customers.
+5. Only customers who purchase a “Pro Member Registration Package” become commission-qualified.
+6. Sales commissions can only be earned by qualified Pro Members.
+7. Members earn 9 generations of payout.
+8. Level 2 must pay double the sales commission of level 1.
+
+COMMISSION PLAN
+Implement the following payout structure:
+- Level 1 = 10%
+- Level 2 = 20%
+- Level 3 = 10%
+- Level 4 = 5%
+- Level 5 = 5%
+- Level 6 = 5%
+- Level 7 = 5%
+- Level 8 = 5%
+- Level 9 = 5%
+
+Also implement:
+- “Power Bonus” on Level 2 / Generation 2
+- Power Bonuses are only earned by Pro Members
+- Power Bonus triggers every 9 registration packages sold within the qualified downline logic
+- Admin must be able to configure Power Bonus amount in settings
+- Include a rules engine so these values can be adjusted in admin later
+
+IMPORTANT COMPENSATION ENGINE REQUIREMENTS
+- Track retail sales separately from Pro Member package sales
+- Commission eligibility must be based on Pro Member qualification
+- Include pending commissions, approved commissions, paid commissions, and rejected/held commissions
+- Allow admin to manually approve, adjust, hold, or release payouts
+- Build a payout ledger and e-wallet
+- Include payout summaries by week, month, year, and lifetime
+- Include safeguards for commission qualification status
+- Log every commission event for audit purposes
+
+PRO MEMBER REGISTRATION PACKAGE
+Create a featured product called:
+“Pro Member Registration Package”
+
+This package should:
+- Turn customer into commission-qualified Pro Member
+- Unlock MLM earnings
+- Unlock genealogy placement
+- Unlock affiliate tools
+- Unlock personal replicated website
+- Unlock Pro Member dashboard features
+
+Allow admin to edit:
+- Registration price
+- Included items
+- Commission eligibility status
+- Bonus qualification rules
+- Package image, description, and terms
+
+PUBLIC WEBSITE / CAPTURE PAGE
+Create a beautiful homepage and replicated landing page system with:
+- Hero section
+- Company overview
+- Featured products
+- Why choose NFGN
+- Wellness + entrepreneurship positioning
+- Book-A-Professional section
+- Testimonials
+- Join NFGN CTA
+- Shop now CTA
+- Consultant replicated URL support
+
+Example affiliate link structure:
+- /rep/john-doe
+- /join/john-doe
+- /shop/john-doe?ref=CONSULTANT123
+
+When visiting a replicated page:
+- Display “You were referred by [Consultant Name]”
+- Track referral in session/cookie
+- Carry referral through registration and checkout
+
+ECOMMERCE STORE
+Build a complete ecommerce storefront with:
+- Categories
+- Product search
+- Product filters
+- Product details
+- Product variations / attributes
+- Inventory tracking
+- Add to cart
+- Checkout
+- Order confirmation
+- Customer order history
+- Promo code support
+- Tax / shipping settings
+- Featured products
+- Related products
+
+Include product categories such as:
+- Cleanses
+- Appetite Support
+- Herbal Wellness
+- Soaps
+- Candles
+- Lotions
+- Books
+- Services
+- Membership Packages
+
+BOOK-A-PROFESSIONAL
+Create a “Book-A-Professional” section where users can:
+- Browse service providers
+- View profiles
+- Book appointments
+- Choose service type
+- Select date/time
+- Pay online or mark offline payment
+- Receive booking confirmation
+
+Create service professional profiles with:
+- Name
+- Bio
+- Specialty
+- Availability
+- Booking calendar
+- Profile image
+- Rating/testimonial area
+
+BACK OFFICE FOR MEMBERS / AFFILIATES / DISTRIBUTORS
+Create a member dashboard with:
+- Dashboard
+- My replicated link
+- Network / genealogy tree
+- Enrollments
+- User earnings
+- Retail customers
+- Orders
+- E-wallet
+- Payout history
+- Profile management
+- Reports
+- Marketing tools
+- Mailbox / internal messaging
+- Bookings
+- Store access
+- Resources / downloads
+- Logout
+
+DASHBOARD FEATURES
+Member dashboard should show:
+- Total earnings
+- Pending earnings
+- Paid earnings
+- Wallet balance
+- Team size
+- Personally enrolled members
+- Active Pro Members
+- Retail customer count
+- Latest orders
+- Latest commissions
+- Referral link copy/share buttons
+- Quick stats and charts
+
+GENEALOGY / NETWORK
+Build MLM genealogy tools:
+- Tree view
+- Sponsor tree
+- Generation view
+- Downline list
+- Search member
+- Placement tracking
+- Qualification badges
+- Active/inactive status
+- Hover cards for each member node
+
+ADMIN BACK OFFICE
+Create a full administrative back office suite with:
+- Admin dashboard
+- User management
+- Member management
+- Customer management
+- Store management
+- Product upload and editing
+- Product variations / attributes
+- Inventory management
+- Order management
+- Category management
+- Booking management
+- Service professional management
+- Commission engine settings
+- Compensation report center
+- Payout processing
+- E-wallet adjustments
+- MLM genealogy viewer
+- Support mailbox
+- CMS / banners / homepage editor
+- Coupon management
+- Tax and shipping settings
+- Payment settings
+- Reports and analytics
+- Audit logs
+- App settings
+
+STORE ADMIN CAPABILITIES
+Store admin must be able to:
+- Upload products
+- Edit products
+- Add attributes and variations
+- Add product photos
+- Manage stock
+- Manage customers
+- View and update orders
+- Create discounts
+- Assign featured products
+- Manage service listings
+- Export customer/order lists
+
+PAYMENTS
+Build payment architecture with provider abstraction and demo mode.
+
+Include these payment options:
+- Credit/Debit Card
+- PayPal
+- Cash App
+- Cash on Delivery (COD)
+
+IMPORTANT:
+- For card and PayPal, create provider-ready integrations with placeholder environment variables and a demo payment simulator if keys are not present
+- For Cash App, create an admin-configurable manual payment instruction flow with payment reference upload
+- For COD, allow order flagging and admin approval
+
+Do not hardcode live secret keys.
+Use environment variables.
+Create clear setup screens and comments showing where real payment credentials go.
+
+MAILBOX / INTERNAL COMMUNICATION
+Create an internal mailbox/message center where:
+- Admin can message members
+- Members can contact admin
+- Broadcast announcements can be sent
+- Inbox, sent, unread, archived views are available
+
+REPORTS
+Create detailed reports for:
+- Sales
+- Registrations
+- Pro Member signups
+- Commission summaries
+- Wallet transactions
+- Payout runs
+- Product performance
+- Customer growth
+- Booking revenue
+- Top affiliates
+- Qualification status
+
+SECURITY
+Implement:
+- Secure authentication
+- Password hashing
+- Protected admin routes
+- Role-based permissions
+- Input validation
+- Audit logs
+- CSRF-safe practices where applicable
+- Rate limiting on login
+- Session expiration / token refresh flow
+
+SEED DATA
+Seed realistic demo data:
+- 10+ products
+- 5+ categories
+- 1 Pro Member package
+- 1 Power Bonus rule
+- 10+ sample members in a genealogy tree
+- 20+ customers
+- Sample orders
+- Sample commissions
+- Sample payouts
+- Sample service professionals
+- Sample bookings
+- Sample internal messages
+
+EXAMPLE PRODUCTS TO SEED
+- IGNITE Herbal Cleanse
+- IGNITE XL Appetite Suppressant
+- Handmade Herbal Soap
+- Herbal Detox Candle
+- Naturopathic Wellness Lotion
+- Herbal Healing Book
+- Soul Body Spirit Wellness Guide
+- Book-A-Professional Consultation
+- Pro Member Registration Package
+
+DATABASE MODELS
+Create database schemas/tables for:
+- Users
+- Roles
+- Profiles
+- Addresses
+- Products
+- ProductCategories
+- ProductVariants
+- ProductImages
+- Inventory
+- Orders
+- OrderItems
+- Payments
+- Wallets
+- WalletTransactions
+- Commissions
+- CommissionRules
+- BonusRules
+- Payouts
+- GenealogyNodes
+- Referrals
+- Enrollments
+- Bookings
+- ServiceProfessionals
+- Messages
+- Notifications
+- Settings
+- Banners
+- AuditLogs
+
+ADMIN SETTINGS PANEL
+Create a settings area where admin can configure:
+- Company name and logo
+- MLM percentages
+- Power Bonus amount and trigger rules
+- Registration package rules
+- Wallet rules
+- Payment methods
+- Store policies
+- Homepage banners
+- Contact information
+- Replicated page defaults
+
+USER EXPERIENCE
+Make the app feel premium and modern.
+Include:
+- Home
+- Shop
+- Join
+- Book-A-Professional
+- About
+- Contact
+- Login
+- Register
+- Replicated pages
+- Dashboard routes by role
+
+PWA / APP REQUIREMENTS
+Make this app installable on mobile as a PWA.
+Include:
+- Manifest
+- Icons
+- Offline fallback
+- Home screen install support
+- Mobile bottom nav for members if useful
+
+REQUIRED ROUTES
+Examples:
+- /
+- /shop
+- /product/:slug
+- /join
+- /book
+- /login
+- /register
+- /rep/:username
+- /dashboard
+- /dashboard/orders
+- /dashboard/wallet
+- /dashboard/genealogy
+- /dashboard/reports
+- /admin
+- /admin/products
+- /admin/orders
+- /admin/users
+- /admin/commissions
+- /admin/settings
+
+ADMIN DEMO DASHBOARD
+The admin back office must be fully viewable after login and include:
+- Total sales
+- Active members
+- New customers
+- Pending payouts
+- Top products
+- Recent registrations
+- Recent orders
+- Commission activity
+- Booking activity
+
+IMPORTANT FINAL REQUIREMENTS
+- Generate all project files
+- Generate database schema
+- Generate seed script
+- Generate demo data
+- Generate README with setup instructions
+- Generate .env.example
+- Ensure app runs in Replit
+- Add comments where live integrations should be completed
+- Ensure no broken links
+- Make demo visually impressive
+- Make admin back office fully accessible with seeded login credentials
+
+At the end, show:
+1. All demo login credentials
+2. Main routes
+3. How to run the app
+4. What environment variables are needed
+5. Which payment methods are in demo mode vs live-ready
+Use these default demo credentials in the app prompt:
+Super Admin: admin@nfgn.com / NFGNAdmin!2026#
+Store Admin: storeadmin@nfgn.com / StoreAdmin!2026#
+Pro Member: promember@nfgn.com / ProMember!2026#
+Affiliate: affiliate@nfgn.com / Affiliate!2026#
+Customer: customer@nfgn.com / Customer!2026#
+A few additions that will make this much stronger:
+Add these success requirements under the prompt if you want Replit to build it more cleanly:
+Also include:
+- A Terms & Conditions page
+- Privacy Policy page
+- Earnings disclaimer page
+- Admin ability to disable commissions for non-qualified users
+- Referral link QR code generator
+- CSV export for orders, members, commissions, and payouts
+- Notification center for new orders, new signups, and payout alerts
+- Homepage CMS blocks editable by admin
+- Testimonial manager
+- FAQ manager
+- Contact form submissions manager
+- Basic SEO fields for pages and products
+- Image upload support for products, banners, avatars, and service professionals
+- Demo mode badge in admin until live payments are configured

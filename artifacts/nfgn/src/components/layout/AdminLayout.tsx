@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Users, ShoppingBag, FolderTree, 
   Award, Banknote, Calendar, Settings,
   MessageSquare, Tag, BarChart, LogOut, Menu, X,
-  ShieldCheck
+  ShieldCheck, Network
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -41,7 +41,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     { name: "Promos", href: "/admin/promos", icon: Tag },
     { name: "Settings", href: "/admin/settings", icon: Settings },
     { name: "Reports", href: "/admin/reports", icon: BarChart },
-    { name: "Genealogy", href: "/admin/genealogy", icon: Users },
+    { name: "Genealogy", href: "/admin/genealogy", icon: Network },
   ];
 
   return (

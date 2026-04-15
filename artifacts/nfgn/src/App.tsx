@@ -34,6 +34,7 @@ import { UsersPage } from "@/pages/admin/Users";
 import { AdminOrdersPage } from "@/pages/admin/Orders";
 import { AdminCommissionsPage } from "@/pages/admin/Commissions";
 import { AdminPayoutsPage } from "@/pages/admin/Payouts";
+import { AdminGenealogyPage } from "@/pages/admin/AdminGenealogy";
 
 // Stubs for pages still being built
 const Stub = ({ name }: { name: string }) => (
@@ -213,7 +214,7 @@ function Router() {
       </Route>
       <Route path="/admin/genealogy">
         <RequireAuth requireAdmin>
-          <AdminLayout><Stub name="Global Genealogy" /></AdminLayout>
+          <AdminLayout><AdminGenealogyPage /></AdminLayout>
         </RequireAuth>
       </Route>
 

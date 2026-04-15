@@ -1,7 +1,22 @@
 import { Router, type IRouter } from "express";
-import { db, usersTable, ordersTable, commissionsTable, payoutsTable, bookingsTable, orderItemsTable, productsTable, walletsTable } from "@workspace/db";
-import { eq, and, desc, count, sum, sql, gte } from "drizzle-orm";
+import { db, usersTable, ordersTable, commissionsTable, payoutsTable, bookingsTable, orderItemsTable, productsTable, walletsTable, commissionRulesTable } from "@workspace/db";
+import { eq, and, desc, count, sum, sql, gte, inArray } from "drizzle-orm";
 import { requireAuth, requireAdmin } from "../lib/auth";
+
+/** Recursively collects all descendant user IDs up to `maxDepth` levels. */
+async function getAllDownlineIds(userId: number, maxDepth = 9): Promise<number[]> {
+  const ids: number[] = [];
+  async function recurse(parentId: number, depth: number) {
+    if (depth > maxDepth) return;
+    const children = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.sponsorId, parentId));
+    for (const c of children) {
+      ids.push(c.id);
+      await recurse(c.id, depth + 1);
+    }
+  }
+  await recurse(userId, 1);
+  return ids;
+}
 
 const router: IRouter = Router();
 
@@ -160,6 +175,167 @@ router.get("/dashboard/member", requireAuth, async (req, res): Promise<void> => 
     })),
     earningsByMonth,
     referralLink: `https://nfgn.com/rep/${currentUser.referralCode}`,
+  });
+});
+
+// ── Member Analytics Endpoint ────────────────────────────────────────────────
+// Returns: monthly sales, sales by state, PV, GV, Pro Package progress
+router.get("/dashboard/analytics", requireAuth, async (req, res): Promise<void> => {
+  const currentUser = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
+  const userId = currentUser.id;
+
+  // Get all community user IDs (self + full downline)
+  const downlineIds = await getAllDownlineIds(userId);
+  const communityIds = [userId, ...downlineIds];
+
+  // ── Monthly Sales (last 12 months) ────────────────────────────────────────
+  const monthlySales: { month: string; year: number; totalSales: number; orderCount: number; totalCV: number }[] = [];
+  for (let i = 11; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(1);
+    date.setMonth(date.getMonth() - i);
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const start = new Date(year, month, 1);
+    const end = new Date(year, month + 1, 0, 23, 59, 59, 999);
+    const monthLabel = date.toLocaleString("en-US", { month: "short", year: "2-digit" });
+
+    const userOrders = communityIds.length > 0
+      ? await db.select({ id: ordersTable.id, total: ordersTable.total })
+          .from(ordersTable)
+          .where(and(inArray(ordersTable.userId, communityIds), gte(ordersTable.createdAt, start), sql`${ordersTable.createdAt} <= ${end}`))
+      : [];
+
+    const orderIds = userOrders.map(o => o.id);
+    let totalCV = 0;
+    if (orderIds.length > 0) {
+      const [{ cvSum }] = await db.select({ cvSum: sum(orderItemsTable.cvTotal) })
+        .from(orderItemsTable)
+        .where(inArray(orderItemsTable.orderId, orderIds));
+      totalCV = parseInt(cvSum ?? "0");
+    }
+
+    monthlySales.push({
+      month: monthLabel,
+      year,
+      totalSales: userOrders.reduce((s, o) => s + parseFloat(o.total), 0),
+      orderCount: userOrders.length,
+      totalCV,
+    });
+  }
+
+  // ── Sales by State ─────────────────────────────────────────────────────────
+  let salesByState: { state: string; totalSales: number; orderCount: number }[] = [];
+  if (communityIds.length > 0) {
+    const stateRows = await db.select({
+      state: ordersTable.shippingState,
+      totalSales: sum(ordersTable.total),
+      orderCount: count(),
+    }).from(ordersTable)
+      .where(inArray(ordersTable.userId, communityIds))
+      .groupBy(ordersTable.shippingState)
+      .orderBy(desc(sum(ordersTable.total)));
+
+    salesByState = stateRows
+      .filter(r => r.state)
+      .map(r => ({
+        state: r.state ?? "Unknown",
+        totalSales: parseFloat(r.totalSales ?? "0"),
+        orderCount: Number(r.orderCount),
+      }))
+      .slice(0, 10);
+  }
+
+  // ── Personal Volume (PV) — this month ─────────────────────────────────────
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const myOrders = await db.select({ id: ordersTable.id })
+    .from(ordersTable)
+    .where(and(eq(ordersTable.userId, userId), gte(ordersTable.createdAt, monthStart)));
+
+  let personalVolume = 0;
+  if (myOrders.length > 0) {
+    const [{ pvSum }] = await db.select({ pvSum: sum(orderItemsTable.cvTotal) })
+      .from(orderItemsTable)
+      .where(inArray(orderItemsTable.orderId, myOrders.map(o => o.id)));
+    personalVolume = parseInt(pvSum ?? "0");
+  }
+
+  // ── Group Volume (GV) — this month ────────────────────────────────────────
+  let groupVolume = 0;
+  if (communityIds.length > 0) {
+    const communityOrders = await db.select({ id: ordersTable.id })
+      .from(ordersTable)
+      .where(and(inArray(ordersTable.userId, communityIds), gte(ordersTable.createdAt, monthStart)));
+
+    if (communityOrders.length > 0) {
+      const [{ gvSum }] = await db.select({ gvSum: sum(orderItemsTable.cvTotal) })
+        .from(orderItemsTable)
+        .where(inArray(orderItemsTable.orderId, communityOrders.map(o => o.id)));
+      groupVolume = parseInt(gvSum ?? "0");
+    }
+  }
+
+  // ── Pro Package Progress ───────────────────────────────────────────────────
+  // Count how many Pro Package purchases have been made in community (all time)
+  const proPackageProduct = await db.select({ id: productsTable.id })
+    .from(productsTable)
+    .where(eq(productsTable.isProPackage, true))
+    .limit(1);
+
+  let proPackagePurchases = 0;
+  if (proPackageProduct.length > 0 && communityIds.length > 0) {
+    const [{ ppCount }] = await db.select({ ppCount: count() })
+      .from(orderItemsTable)
+      .where(and(
+        eq(orderItemsTable.productId, proPackageProduct[0].id),
+        inArray(orderItemsTable.orderId, await db.select({ id: ordersTable.id }).from(ordersTable).where(inArray(ordersTable.userId, communityIds)).then(rows => rows.map(r => r.id)))
+      ));
+    proPackagePurchases = Number(ppCount);
+  }
+
+  const [rules] = await db.select().from(commissionRulesTable).limit(1);
+  const proPackageTarget = rules?.powerBonusTrigger ?? 5;
+
+  // Level 2 bonus requires at least 1 Level 1 Pro Member who has their own downline Pro Members
+  const level1ProMembers = await db.select({ count: count() })
+    .from(usersTable)
+    .where(and(eq(usersTable.sponsorId, userId), eq(usersTable.isProMember, true)));
+  const level1Count = Number(level1ProMembers[0]?.count ?? 0);
+
+  // Level 2 count: Pro Members who are 2 levels down
+  let level2Count = 0;
+  const level1MembersData = await db.select({ id: usersTable.id })
+    .from(usersTable)
+    .where(and(eq(usersTable.sponsorId, userId), eq(usersTable.isProMember, true)));
+  if (level1MembersData.length > 0) {
+    const [{ l2Count }] = await db.select({ l2Count: count() })
+      .from(usersTable)
+      .where(and(
+        inArray(usersTable.sponsorId, level1MembersData.map(m => m.id)),
+        eq(usersTable.isProMember, true)
+      ));
+    level2Count = Number(l2Count);
+  }
+
+  // Pro Package needed: need at least 1 Level 1 + 1 Level 2 Pro Member to unlock Level 2 commissions
+  // We track total pro package purchases in community as progress toward a target
+  const proPackageNeeded = Math.max(0, proPackageTarget - proPackagePurchases);
+
+  res.json({
+    monthlySales,
+    salesByState,
+    personalVolume,
+    groupVolume,
+    cvMaintenanceRequired: 100,
+    proPackageProgress: {
+      current: proPackagePurchases,
+      target: proPackageTarget,
+      needed: proPackageNeeded,
+      level1ProMembers: level1Count,
+      level2ProMembers: level2Count,
+      level2Unlocked: level1Count >= 1 && level2Count >= 1,
+    },
   });
 });
 

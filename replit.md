@@ -45,8 +45,8 @@ Full-stack MLM/network marketing platform for naturopathic wellness products. Bu
 
 All tables in `lib/db/src/schema/index.ts`:
 - `usersTable` — users with roles: super_admin, admin, store_admin, pro_member, affiliate, customer
-- `productsTable` + `categoriesTable` — product catalog with images
-- `ordersTable` + `orderItemsTable` — e-commerce orders
+- `productsTable` + `categoriesTable` — product catalog with images; `cv` (commissionable volume) per product
+- `ordersTable` + `orderItemsTable` — e-commerce orders (`shippingState` on orders, `cvTotal` on items)
 - `cartItemsTable` — server-side cart per user
 - `commissionsTable` — 9-level MLM commissions (level 2 = power level at 20%)
 - `walletTable` + `walletTransactionsTable` — e-wallet and transaction history
@@ -80,11 +80,11 @@ All tables in `lib/db/src/schema/index.ts`:
 - `/login` — JWT login with demo credential hints and role-based redirect
 
 ### Member Dashboard (`/dashboard/*`)
-- `/dashboard` — Overview with wallet balance, earnings, team size, recent orders/commissions
+- `/dashboard` — Overview with: KPI cards, **PV/GV volume card** with monthly maintenance progress, **Level 2 Power Bonus Progress** widget, **Community Monthly Sales bar chart** (recharts), **Monthly Commission Earnings line chart**, **Sales by Location horizontal bar chart**, recent orders/commissions
 - `/dashboard/orders` — Order history with status badges
 - `/dashboard/wallet` — Wallet balance, transactions, payout requests
-- `/dashboard/commissions` — 9-level commission history and rules display
-- `/dashboard/genealogy` — Visual downline tree with stats
+- `/dashboard/commissions` — 3-type commission history and rules display
+- `/dashboard/genealogy` — Visual downline tree with **PV and GV per node**, stats summary
 - `/dashboard/messages` — Inbox with message threading and mark-as-read
 - `/dashboard/bookings`, `/dashboard/payouts`, `/dashboard/profile`, `/dashboard/reports` — stubs
 

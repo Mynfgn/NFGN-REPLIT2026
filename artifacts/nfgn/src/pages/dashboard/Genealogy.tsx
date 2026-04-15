@@ -15,6 +15,8 @@ type TreeNode = {
   generation: number;
   teamSize: number;
   totalEarnings: number;
+  personalVolume: number;
+  groupVolume: number;
   joinedAt: string;
   children: TreeNode[];
   avatar?: string;
@@ -38,15 +40,17 @@ function TreeNodeComponent({ node, depth = 0 }: { node: TreeNode; depth?: number
             {node.isProMember && <Badge variant="default" className="text-xs h-4">Pro</Badge>}
             <Badge variant={node.status === "active" ? "secondary" : "destructive"} className="text-xs h-4">{node.status}</Badge>
           </div>
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
             <span>Gen {node.generation}</span>
             <span>{node.teamSize} in team</span>
-            <span>Joined {new Date(node.joinedAt).toLocaleDateString()}</span>
+            <span className="text-blue-600 font-medium">PV: {node.personalVolume ?? 0} CV</span>
+            <span className="text-green-600 font-medium">GV: {node.groupVolume ?? 0} CV</span>
           </div>
         </div>
         <div className="text-right text-sm flex-shrink-0">
           <div className="font-semibold text-green-600">${node.totalEarnings.toFixed(2)}</div>
           <div className="text-xs text-muted-foreground">{roleLabel(node.role)}</div>
+          <div className="text-xs text-muted-foreground">Joined {new Date(node.joinedAt).toLocaleDateString()}</div>
         </div>
       </div>
       {node.children?.map(child => (

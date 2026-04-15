@@ -762,6 +762,38 @@ export type ListMessagesParams = {
   page?: number;
 };
 
+export type GetMemberAnalytics200MonthlySalesItem = {
+  month?: string;
+  year?: number;
+  totalSales?: number;
+  orderCount?: number;
+  totalCV?: number;
+};
+
+export type GetMemberAnalytics200SalesByStateItem = {
+  state?: string;
+  totalSales?: number;
+  orderCount?: number;
+};
+
+export type GetMemberAnalytics200ProPackageProgress = {
+  current?: number;
+  target?: number;
+  needed?: number;
+  level1ProMembers?: number;
+  level2ProMembers?: number;
+  level2Unlocked?: boolean;
+};
+
+export type GetMemberAnalytics200 = {
+  monthlySales?: GetMemberAnalytics200MonthlySalesItem[];
+  salesByState?: GetMemberAnalytics200SalesByStateItem[];
+  personalVolume?: number;
+  groupVolume?: number;
+  cvMaintenanceRequired?: number;
+  proPackageProgress?: GetMemberAnalytics200ProPackageProgress;
+};
+
 export type GetSalesReportParams = {
   from?: string;
   to?: string;

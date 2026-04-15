@@ -1,23 +1,248 @@
-import { useGetMemberDashboard } from "@workspace/api-client-react";
+import { useGetMemberDashboard, useGetMemberAnalytics } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Wallet, Users, ShoppingBag, ArrowUpRight } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Wallet, Users, ShoppingBag, ArrowUpRight, TrendingUp, MapPin, Star, CheckCircle2, AlertCircle, BarChart3 } from "lucide-react";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  LineChart, Line, Legend,
+} from "recharts";
+import { commissionTypeLabel } from "@/lib/labels";
+
+const BRAND_GOLD = "#C9A84C";
+const BRAND_GREEN = "#2D6A4F";
+
+function StatCard({ title, value, sub, icon: Icon, accent }: {
+  title: string; value: string; sub: string; icon: any; accent?: boolean;
+}) {
+  return (
+    <Card className={accent ? "border-l-4 border-l-primary" : ""}>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+        <Icon className={`h-4 w-4 ${accent ? "text-primary" : "text-muted-foreground"}`} />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{value}</div>
+        <p className="text-xs text-muted-foreground mt-1">{sub}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function CVCard({ pv, gv, required }: { pv: number; gv: number; required: number }) {
+  const pvPercent = Math.min(100, Math.round((pv / required) * 100));
+  const maintained = pv >= required;
+
+  return (
+    <Card className="border-l-4 border-l-green-500">
+      <CardHeader className="pb-3">
+        <CardTitle className="font-serif text-base flex items-center gap-2">
+          <TrendingUp className="h-4 w-4 text-green-600" />
+          Volume This Month
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="text-center p-3 bg-muted rounded-lg">
+            <div className="text-xl font-bold text-primary">{pv} CV</div>
+            <div className="text-xs text-muted-foreground">Personal Volume (PV)</div>
+            <div className="text-xs text-muted-foreground mt-0.5">Your purchases</div>
+          </div>
+          <div className="text-center p-3 bg-muted rounded-lg">
+            <div className="text-xl font-bold text-green-600">{gv} CV</div>
+            <div className="text-xs text-muted-foreground">Group Volume (GV)</div>
+            <div className="text-xs text-muted-foreground mt-0.5">Entire community</div>
+          </div>
+        </div>
+        <div>
+          <div className="flex justify-between text-xs mb-1.5">
+            <span className="text-muted-foreground">Monthly maintenance ({required} CV required)</span>
+            <span className={maintained ? "text-green-600 font-semibold" : "text-yellow-600 font-semibold"}>
+              {pv} / {required} CV
+            </span>
+          </div>
+          <Progress value={pvPercent} className="h-2" />
+          <p className={`text-xs mt-1.5 flex items-center gap-1 ${maintained ? "text-green-600" : "text-yellow-600"}`}>
+            {maintained
+              ? <><CheckCircle2 className="h-3 w-3" /> Pro Member status maintained</>
+              : <><AlertCircle className="h-3 w-3" /> Need {required - pv} more CV to maintain Pro status</>
+            }
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ProPackageProgress({ progress }: { progress: any }) {
+  if (!progress) return null;
+  const { current, target, needed, level1ProMembers, level2ProMembers, level2Unlocked } = progress;
+  const percent = Math.min(100, Math.round((current / Math.max(target, 1)) * 100));
+
+  return (
+    <Card className="border-l-4 border-l-primary">
+      <CardHeader className="pb-3">
+        <CardTitle className="font-serif text-base flex items-center gap-2">
+          <Star className="h-4 w-4 text-primary fill-primary" />
+          Level 2 Power Bonus Progress
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="p-2 bg-muted rounded-lg">
+            <div className="text-lg font-bold">{current}</div>
+            <div className="text-xs text-muted-foreground">Pro Packages sold</div>
+          </div>
+          <div className="p-2 bg-muted rounded-lg">
+            <div className="text-lg font-bold text-primary">{level1ProMembers}</div>
+            <div className="text-xs text-muted-foreground">Level 1 Pro Members</div>
+          </div>
+          <div className="p-2 bg-muted rounded-lg">
+            <div className="text-lg font-bold text-amber-600">{level2ProMembers}</div>
+            <div className="text-xs text-muted-foreground">Level 2 Pro Members</div>
+          </div>
+        </div>
+
+        <div>
+          <div className="flex justify-between text-xs mb-1.5">
+            <span className="text-muted-foreground">Pro Package sales toward target</span>
+            <span className="font-semibold">{current} / {target}</span>
+          </div>
+          <Progress value={percent} className="h-2" />
+        </div>
+
+        <div className={`p-3 rounded-lg border text-sm ${level2Unlocked ? "bg-green-50 border-green-200 text-green-800" : "bg-amber-50 border-amber-200 text-amber-800"}`}>
+          {level2Unlocked ? (
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+              <span><strong>Level 2 Power Bonus ACTIVE!</strong> You have qualifying Pro Members at both Level 1 and Level 2. You're earning 20% Level 2 commissions.</span>
+            </div>
+          ) : (
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+              <div>
+                <strong>{needed > 0 ? `${needed} more Pro Package ${needed === 1 ? "sale" : "sales"} needed` : "Almost there!"}</strong>
+                <div className="text-xs mt-0.5">
+                  {level1ProMembers === 0
+                    ? "Enroll at least 1 Pro Member at Level 1 to start earning Level 2 commissions."
+                    : level2ProMembers === 0
+                    ? "Your Level 1 Pro Members need to enroll their own Pro Members to unlock your Level 2 bonus."
+                    : `${needed} more community Pro Package sales needed to complete your bonus target.`}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function MonthlySalesChart({ data }: { data: any[] }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="font-serif flex items-center gap-2">
+          <BarChart3 className="h-4 w-4 text-primary" />
+          Community Monthly Sales
+        </CardTitle>
+        <p className="text-xs text-muted-foreground">Sales $ and Commissionable Volume (CV) — last 12 months</p>
+      </CardHeader>
+      <CardContent>
+        <ResponsiveContainer width="100%" height={220}>
+          <BarChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: 0 }} barGap={4}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+            <YAxis yAxisId="sales" orientation="left" tick={{ fontSize: 11 }} tickFormatter={v => `$${v}`} />
+            <YAxis yAxisId="cv" orientation="right" tick={{ fontSize: 11 }} tickFormatter={v => `${v}cv`} />
+            <Tooltip
+              formatter={(value: any, name: string) => [
+                name === "totalSales" ? `$${Number(value).toFixed(2)}` : `${value} CV`,
+                name === "totalSales" ? "Sales" : "CV",
+              ]}
+            />
+            <Legend formatter={v => v === "totalSales" ? "Sales ($)" : "Group CV"} />
+            <Bar yAxisId="sales" dataKey="totalSales" fill={BRAND_GOLD} radius={[3, 3, 0, 0]} />
+            <Bar yAxisId="cv" dataKey="totalCV" fill={BRAND_GREEN} radius={[3, 3, 0, 0]} opacity={0.8} />
+          </BarChart>
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SalesByStateChart({ data }: { data: any[] }) {
+  if (!data || data.length === 0) return null;
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="font-serif flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-primary" />
+          Sales by Location
+        </CardTitle>
+        <p className="text-xs text-muted-foreground">Top states by community purchase volume</p>
+      </CardHeader>
+      <CardContent>
+        <ResponsiveContainer width="100%" height={220}>
+          <BarChart layout="vertical" data={data.slice(0, 8)} margin={{ top: 0, right: 30, bottom: 0, left: 60 }}>
+            <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+            <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={v => `$${v}`} />
+            <YAxis type="category" dataKey="state" tick={{ fontSize: 11 }} width={55} />
+            <Tooltip formatter={(v: any) => [`$${Number(v).toFixed(2)}`, "Sales"]} />
+            <Bar dataKey="totalSales" fill={BRAND_GOLD} radius={[0, 3, 3, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
+  );
+}
+
+function EarningsLineChart({ data }: { data: any[] }) {
+  if (!data || data.length === 0) return null;
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="font-serif flex items-center gap-2">
+          <TrendingUp className="h-4 w-4 text-green-600" />
+          Monthly Commission Earnings
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ResponsiveContainer width="100%" height={180}>
+          <LineChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+            <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `$${v}`} />
+            <Tooltip formatter={(v: any) => [`$${Number(v).toFixed(2)}`, "Commissions"]} />
+            <Line type="monotone" dataKey="amount" stroke={BRAND_GOLD} strokeWidth={2} dot={{ r: 3, fill: BRAND_GOLD }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
+  );
+}
 
 export function Dashboard() {
   const { data, isLoading } = useGetMemberDashboard();
+  const { data: analytics, isLoading: analyticsLoading } = useGetMemberAnalytics();
 
   if (isLoading) {
     return (
       <div className="space-y-6">
         <h1 className="text-3xl font-serif font-bold">Dashboard</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-32 w-full" />
-          ))}
+          {Array.from({ length: 4 }).map((_, i) => (<Skeleton key={i} className="h-32 w-full" />))}
         </div>
       </div>
     );
   }
+
+  const monthlySales = analytics?.monthlySales ?? [];
+  const salesByState = analytics?.salesByState ?? [];
+  const pv = analytics?.personalVolume ?? 0;
+  const gv = analytics?.groupVolume ?? 0;
+  const required = analytics?.cvMaintenanceRequired ?? 100;
 
   return (
     <div className="space-y-6">
@@ -28,53 +253,33 @@ export function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-l-4 border-l-primary">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Wallet Balance</CardTitle>
-            <Wallet className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${data?.walletBalance.toFixed(2) || '0.00'}</div>
-            <p className="text-xs text-muted-foreground mt-1">Available for withdrawal</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Earnings</CardTitle>
-            <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${data?.totalEarnings.toFixed(2) || '0.00'}</div>
-            <p className="text-xs text-muted-foreground mt-1">Lifetime commissions</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Team Size</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{data?.teamSize || 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">{data?.personallyEnrolled || 0} personally enrolled</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Retail Customers</CardTitle>
-            <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{data?.retailCustomers || 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">Active buyers</p>
-          </CardContent>
-        </Card>
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard title="Wallet Balance" value={`$${(data?.walletBalance ?? 0).toFixed(2)}`} sub="Available for withdrawal" icon={Wallet} accent />
+        <StatCard title="Total Earnings" value={`$${(data?.totalEarnings ?? 0).toFixed(2)}`} sub="Lifetime commissions" icon={ArrowUpRight} />
+        <StatCard title="Team Size" value={String(data?.teamSize ?? 0)} sub={`${data?.personallyEnrolled ?? 0} personally enrolled`} icon={Users} />
+        <StatCard title="Members" value={String(data?.retailCustomers ?? 0)} sub="Active buyers" icon={ShoppingBag} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+      {/* PV/GV Volume + Pro Package Progress */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <CVCard pv={pv} gv={gv} required={required} />
+        <ProPackageProgress progress={analytics?.proPackageProgress} />
+      </div>
+
+      {/* Monthly Sales Chart + Earnings Line Chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <MonthlySalesChart data={monthlySales} />
+        <EarningsLineChart data={data?.earningsByMonth ?? []} />
+      </div>
+
+      {/* Sales by Location */}
+      {salesByState.length > 0 && (
+        <SalesByStateChart data={salesByState} />
+      )}
+
+      {/* Recent Orders + Commissions */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="font-serif">Recent Orders</CardTitle>
@@ -90,9 +295,7 @@ export function Dashboard() {
                     </div>
                     <div className="text-right">
                       <div className="font-bold">${order.total.toFixed(2)}</div>
-                      <div className={`text-xs capitalize ${
-                        order.status === 'completed' ? 'text-green-600' : 'text-primary'
-                      }`}>{order.status}</div>
+                      <div className={`text-xs capitalize ${order.status === "completed" ? "text-green-600" : "text-primary"}`}>{order.status}</div>
                     </div>
                   </div>
                 ))}
@@ -114,13 +317,13 @@ export function Dashboard() {
                   <div key={comm.id} className="flex justify-between items-center border-b pb-4 last:border-0 last:pb-0">
                     <div>
                       <div className="font-medium">{comm.fromUserName}</div>
-                      <div className="text-sm text-muted-foreground">Level {comm.level} • {comm.type}</div>
+                      <div className="text-sm text-muted-foreground">{commissionTypeLabel(comm.type ?? "referral")}</div>
                     </div>
                     <div className="text-right">
                       <div className="font-bold text-green-600">+${comm.commissionAmount.toFixed(2)}</div>
-                      <div className={`text-xs capitalize ${
-                        comm.status === 'approved' ? 'text-green-600' : 'text-yellow-600'
-                      }`}>{comm.status}</div>
+                      <Badge variant={comm.status === "approved" ? "default" : "secondary"} className="text-xs">
+                        {comm.status}
+                      </Badge>
                     </div>
                   </div>
                 ))}

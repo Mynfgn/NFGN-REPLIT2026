@@ -1,9 +1,43 @@
 import { Router, type IRouter } from "express";
-import { db, usersTable, genealogyNodesTable, walletsTable } from "@workspace/db";
-import { eq, count, sql, and } from "drizzle-orm";
+import { db, usersTable, genealogyNodesTable, walletsTable, ordersTable, orderItemsTable } from "@workspace/db";
+import { eq, count, sum, inArray, and } from "drizzle-orm";
 import { requireAuth } from "../lib/auth";
 
 const router: IRouter = Router();
+
+/** Compute Personal Volume: sum of cvTotal from user's own orders (all time). */
+async function computePV(userId: number): Promise<number> {
+  const orders = await db.select({ id: ordersTable.id }).from(ordersTable).where(eq(ordersTable.userId, userId));
+  if (orders.length === 0) return 0;
+  const [{ pvSum }] = await db.select({ pvSum: sum(orderItemsTable.cvTotal) })
+    .from(orderItemsTable)
+    .where(inArray(orderItemsTable.orderId, orders.map(o => o.id)));
+  return parseInt(pvSum ?? "0");
+}
+
+/** Recursively collects all descendant user IDs up to maxDepth. */
+async function getDownlineIds(userId: number, maxDepth = 9, depth = 1): Promise<number[]> {
+  if (depth > maxDepth) return [];
+  const children = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.sponsorId, userId));
+  const ids = children.map(c => c.id);
+  for (const c of children) {
+    const sub = await getDownlineIds(c.id, maxDepth, depth + 1);
+    ids.push(...sub);
+  }
+  return ids;
+}
+
+/** Compute Group Volume: PV of user + sum of PV of all downline members. */
+async function computeGV(userId: number): Promise<number> {
+  const downlineIds = await getDownlineIds(userId);
+  const allIds = [userId, ...downlineIds];
+  const orders = await db.select({ id: ordersTable.id }).from(ordersTable).where(inArray(ordersTable.userId, allIds));
+  if (orders.length === 0) return 0;
+  const [{ gvSum }] = await db.select({ gvSum: sum(orderItemsTable.cvTotal) })
+    .from(orderItemsTable)
+    .where(inArray(orderItemsTable.orderId, orders.map(o => o.id)));
+  return parseInt(gvSum ?? "0");
+}
 
 async function buildTree(userId: number, depth: number = 9, currentDepth: number = 0): Promise<any> {
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
@@ -12,6 +46,9 @@ async function buildTree(userId: number, depth: number = 9, currentDepth: number
   const [node] = await db.select().from(genealogyNodesTable).where(eq(genealogyNodesTable.userId, userId));
   const [wallet] = await db.select().from(walletsTable).where(eq(walletsTable.userId, userId));
   const [{ value: teamSize }] = await db.select({ value: count() }).from(usersTable).where(eq(usersTable.sponsorId, userId));
+
+  const pv = await computePV(userId);
+  const gv = await computeGV(userId);
 
   const children: any[] = [];
   if (currentDepth < depth) {
@@ -34,6 +71,8 @@ async function buildTree(userId: number, depth: number = 9, currentDepth: number
     generation: node?.generation ?? 1,
     teamSize: Number(teamSize),
     totalEarnings: parseFloat(wallet?.totalEarned ?? "0"),
+    personalVolume: pv,
+    groupVolume: gv,
     joinedAt: user.createdAt.toISOString(),
     children,
   };
@@ -67,6 +106,9 @@ router.get("/genealogy/downline", requireAuth, async (req, res): Promise<void> =
       const [wallet] = await db.select().from(walletsTable).where(eq(walletsTable.userId, member.id));
       const [sponsor] = await db.select().from(usersTable).where(eq(usersTable.id, parentId));
 
+      const pv = await computePV(member.id);
+      const gv = await computeGV(member.id);
+
       downline.push({
         id: node?.id ?? member.id,
         userId: member.id,
@@ -79,6 +121,8 @@ router.get("/genealogy/downline", requireAuth, async (req, res): Promise<void> =
         generation,
         sponsorName: sponsor ? `${sponsor.firstName} ${sponsor.lastName}` : "Unknown",
         totalEarnings: parseFloat(wallet?.totalEarned ?? "0"),
+        personalVolume: pv,
+        groupVolume: gv,
         joinedAt: member.createdAt.toISOString(),
       });
 

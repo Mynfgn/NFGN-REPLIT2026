@@ -1541,6 +1541,45 @@ export const GetMemberDashboardResponse = zod.object({
 });
 
 /**
+ * @summary Get member analytics - monthly sales, location, PV/GV, Pro Package progress
+ */
+export const GetMemberAnalyticsResponse = zod.object({
+  monthlySales: zod
+    .array(
+      zod.object({
+        month: zod.string().optional(),
+        year: zod.number().optional(),
+        totalSales: zod.number().optional(),
+        orderCount: zod.number().optional(),
+        totalCV: zod.number().optional(),
+      }),
+    )
+    .optional(),
+  salesByState: zod
+    .array(
+      zod.object({
+        state: zod.string().optional(),
+        totalSales: zod.number().optional(),
+        orderCount: zod.number().optional(),
+      }),
+    )
+    .optional(),
+  personalVolume: zod.number().optional(),
+  groupVolume: zod.number().optional(),
+  cvMaintenanceRequired: zod.number().optional(),
+  proPackageProgress: zod
+    .object({
+      current: zod.number().optional(),
+      target: zod.number().optional(),
+      needed: zod.number().optional(),
+      level1ProMembers: zod.number().optional(),
+      level2ProMembers: zod.number().optional(),
+      level2Unlocked: zod.boolean().optional(),
+    })
+    .optional(),
+});
+
+/**
  * @summary Get sales report
  */
 export const GetSalesReportQueryParams = zod.object({

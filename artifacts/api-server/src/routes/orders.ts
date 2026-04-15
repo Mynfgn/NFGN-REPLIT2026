@@ -156,6 +156,7 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
       price: product.price,
       quantity: cart.quantity,
       total: String(lineTotal),
+      cvTotal: (product.cv ?? 0) * cart.quantity,
     });
 
     await db.update(productsTable).set({ stock: Math.max(0, product.stock - cart.quantity) }).where(eq(productsTable.id, product.id));

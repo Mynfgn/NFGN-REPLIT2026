@@ -1263,6 +1263,67 @@ paths:
               schema:
                 $ref: "#/components/schemas/MemberDashboard"
 
+  /dashboard/analytics:
+    get:
+      operationId: getMemberAnalytics
+      tags: [dashboard]
+      summary: Get member analytics - monthly sales, location, PV/GV, Pro Package progress
+      responses:
+        "200":
+          description: Member analytics data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  monthlySales:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        month:
+                          type: string
+                        year:
+                          type: integer
+                        totalSales:
+                          type: number
+                        orderCount:
+                          type: integer
+                        totalCV:
+                          type: integer
+                  salesByState:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        state:
+                          type: string
+                        totalSales:
+                          type: number
+                        orderCount:
+                          type: integer
+                  personalVolume:
+                    type: integer
+                  groupVolume:
+                    type: integer
+                  cvMaintenanceRequired:
+                    type: integer
+                  proPackageProgress:
+                    type: object
+                    properties:
+                      current:
+                        type: integer
+                      target:
+                        type: integer
+                      needed:
+                        type: integer
+                      level1ProMembers:
+                        type: integer
+                      level2ProMembers:
+                        type: integer
+                      level2Unlocked:
+                        type: boolean
+
   /reports/sales:
     get:
       operationId: getSalesReport

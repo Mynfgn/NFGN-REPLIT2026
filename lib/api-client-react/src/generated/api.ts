@@ -43,6 +43,7 @@ import type {
   GetDownlineParams,
   GetGenealogyStatsParams,
   GetGenealogyTreeParams,
+  GetMemberAnalytics200,
   GetSalesReportParams,
   HealthStatus,
   ListBookingsParams,
@@ -5449,6 +5450,81 @@ export function useGetMemberDashboard<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetMemberDashboardQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get member analytics - monthly sales, location, PV/GV, Pro Package progress
+ */
+export const getGetMemberAnalyticsUrl = () => {
+  return `/api/dashboard/analytics`;
+};
+
+export const getMemberAnalytics = async (
+  options?: RequestInit,
+): Promise<GetMemberAnalytics200> => {
+  return customFetch<GetMemberAnalytics200>(getGetMemberAnalyticsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMemberAnalyticsQueryKey = () => {
+  return [`/api/dashboard/analytics`] as const;
+};
+
+export const getGetMemberAnalyticsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMemberAnalytics>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMemberAnalytics>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMemberAnalyticsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getMemberAnalytics>>
+  > = ({ signal }) => getMemberAnalytics({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMemberAnalytics>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMemberAnalyticsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMemberAnalytics>>
+>;
+export type GetMemberAnalyticsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get member analytics - monthly sales, location, PV/GV, Pro Package progress
+ */
+
+export function useGetMemberAnalytics<
+  TData = Awaited<ReturnType<typeof getMemberAnalytics>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMemberAnalytics>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMemberAnalyticsQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

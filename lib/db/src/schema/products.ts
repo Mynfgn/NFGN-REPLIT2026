@@ -17,6 +17,7 @@ export const productsTable = pgTable("products", {
   isProPackage: boolean("is_pro_package").notNull().default(false),
   status: text("status").notNull().default("active"),
   commissionRate: numeric("commission_rate", { precision: 5, scale: 2 }).notNull().default("10"),
+  cv: integer("cv").notNull().default(0),
   ingredients: text("ingredients"),
   benefits: text("benefits"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

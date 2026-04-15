@@ -15,6 +15,7 @@ export const ordersTable = pgTable("orders", {
   discount: numeric("discount", { precision: 10, scale: 2 }).notNull().default("0"),
   total: numeric("total", { precision: 10, scale: 2 }).notNull(),
   shippingAddress: text("shipping_address"),
+  shippingState: text("shipping_state"),
   promoCode: text("promo_code"),
   notes: text("notes"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -30,6 +31,7 @@ export const orderItemsTable = pgTable("order_items", {
   price: numeric("price", { precision: 10, scale: 2 }).notNull(),
   quantity: integer("quantity").notNull(),
   total: numeric("total", { precision: 10, scale: 2 }).notNull(),
+  cvTotal: integer("cv_total").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

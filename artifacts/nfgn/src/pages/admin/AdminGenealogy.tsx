@@ -22,6 +22,8 @@ type TreeNode = {
   generation: number;
   teamSize: number;
   totalEarnings: number;
+  personalVolume: number;
+  groupVolume: number;
   joinedAt: string;
   children: TreeNode[];
   avatar?: string;
@@ -127,12 +129,16 @@ function CollapsibleTreeNode({
         </div>
 
         {/* Stats */}
-        <div className="text-right text-sm flex-shrink-0 hidden sm:block">
+        <div className="text-right text-sm flex-shrink-0 hidden sm:block space-y-0.5">
           <div className="font-semibold text-green-600">
             ${node.totalEarnings.toFixed(2)}
           </div>
           <div className="text-xs text-muted-foreground">
             {node.teamSize} in team
+          </div>
+          <div className="flex gap-2 justify-end text-xs">
+            <span className="text-blue-600 font-medium">PV {node.personalVolume ?? 0}</span>
+            <span className="text-green-600 font-medium">GV {node.groupVolume ?? 0}</span>
           </div>
         </div>
       </div>
@@ -359,6 +365,8 @@ export function AdminGenealogyPage() {
                         <th className="pb-3 font-medium text-muted-foreground">Role</th>
                         <th className="pb-3 font-medium text-muted-foreground text-center">Gen</th>
                         <th className="pb-3 font-medium text-muted-foreground">Sponsor</th>
+                        <th className="pb-3 font-medium text-muted-foreground text-right text-blue-700">PV</th>
+                        <th className="pb-3 font-medium text-muted-foreground text-right text-green-700">GV</th>
                         <th className="pb-3 font-medium text-muted-foreground text-right">Earnings</th>
                         <th className="pb-3 font-medium text-muted-foreground text-right">Joined</th>
                       </tr>
@@ -394,6 +402,12 @@ export function AdminGenealogyPage() {
                             </td>
                             <td className="py-3 pr-4 text-muted-foreground text-xs">
                               {m.sponsorName}
+                            </td>
+                            <td className="py-3 text-right text-xs font-semibold text-blue-600">
+                              {m.personalVolume ?? 0} CV
+                            </td>
+                            <td className="py-3 text-right text-xs font-semibold text-green-600">
+                              {m.groupVolume ?? 0} CV
                             </td>
                             <td className="py-3 text-right font-semibold text-green-600">
                               ${m.totalEarnings.toFixed(2)}

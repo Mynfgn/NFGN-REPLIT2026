@@ -16,6 +16,7 @@ import { Home } from "@/pages/public/Home";
 import { Shop } from "@/pages/public/Shop";
 import { Join } from "@/pages/public/Join";
 import { BookAPro } from "@/pages/public/BookAPro";
+import { About } from "@/pages/public/About";
 
 // Auth Pages
 import { Login } from "@/pages/auth/Login";
@@ -92,10 +93,10 @@ function Router() {
         <PublicLayout><BookAPro /></PublicLayout>
       </Route>
       <Route path="/about">
-        <PublicLayout><Stub name="About NFGN" /></PublicLayout>
+        <PublicLayout><About /></PublicLayout>
       </Route>
       <Route path="/contact">
-        <PublicLayout><Stub name="Contact Us" /></PublicLayout>
+        <PublicLayout><About /></PublicLayout>
       </Route>
       <Route path="/rep/:username">
         <PublicLayout><Stub name="Affiliate Storefront" /></PublicLayout>

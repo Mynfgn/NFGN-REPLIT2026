@@ -1,14 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useGetGenealogyTree, useGetGenealogyStats, useGetDownline } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Users, Star, TrendingUp, ChevronDown, ChevronRight,
-  Loader2, Search, Network, List
-} from "lucide-react";
+import { Users, Star, TrendingUp, Loader2, Search, Network, List, X } from "lucide-react";
 import { roleLabel } from "@/lib/labels";
 
 type TreeNode = {
@@ -29,6 +25,216 @@ type TreeNode = {
   avatar?: string;
 };
 
+/* ── Layout constants ─────────────────────────────────────────── */
+const CR = 28;
+const CCY = 36;
+const LABEL_H = 44;
+const NODE_H = CCY + CR + LABEL_H;
+const V_GAP = 52;
+const LEVEL_H = NODE_H + V_GAP;
+const MIN_NODE_W = CR * 2 + 24;
+const H_GAP = 20;
+
+type Measured = { node: TreeNode; w: number; kids: Measured[] };
+
+function measure(node: TreeNode): Measured {
+  if (!node.children?.length) return { node, w: MIN_NODE_W + H_GAP, kids: [] };
+  const kids = node.children.map(measure);
+  const w = Math.max(MIN_NODE_W + H_GAP, kids.reduce((s, k) => s + k.w, 0));
+  return { node, w, kids };
+}
+
+type Pos = { node: TreeNode; x: number; y: number; kids: Pos[] };
+
+function layout(m: Measured, ox: number, level: number): Pos {
+  const x = ox + m.w / 2;
+  const y = level * LEVEL_H;
+  let cx = ox;
+  const kids = m.kids.map(k => { const p = layout(k, cx, level + 1); cx += k.w; return p; });
+  return { node: m.node, x, y, kids };
+}
+
+function flatNodes(p: Pos, acc: Pos[] = []): Pos[] {
+  acc.push(p); p.kids.forEach(k => flatNodes(k, acc)); return acc;
+}
+
+type Edge = { x1: number; y1: number; x2: number; y2: number };
+function flatEdges(p: Pos, acc: Edge[] = []): Edge[] {
+  p.kids.forEach(k => {
+    acc.push({ x1: p.x, y1: p.y + CCY + CR, x2: k.x, y2: k.y + CCY - CR });
+    flatEdges(k, acc);
+  });
+  return acc;
+}
+
+function treeDepth(p: Pos): number {
+  if (!p.kids.length) return 0;
+  return 1 + Math.max(...p.kids.map(treeDepth));
+}
+
+function edgePath({ x1, y1, x2, y2 }: Edge) {
+  const my = (y1 + y2) / 2;
+  return `M ${x1} ${y1} C ${x1} ${my}, ${x2} ${my}, ${x2} ${y2}`;
+}
+
+/* ── Member popup ─────────────────────────────────────────────── */
+function MemberPopup({ pos, onClose }: { pos: Pos; onClose: () => void }) {
+  const n = pos.node;
+  const firstName = n.name.split(" ")[0];
+  const lastName = n.name.split(" ").slice(1).join(" ");
+  return (
+    <div
+      className="absolute z-50 pointer-events-auto"
+      style={{ left: pos.x, top: pos.y + CCY - CR - 8, transform: "translateX(-50%) translateY(-100%)" }}
+    >
+      <div className="bg-white border border-border rounded-xl shadow-2xl w-64 text-sm overflow-hidden">
+        <div className={`px-4 py-3 flex items-center gap-3 ${n.isProMember ? "bg-orange-50 border-b border-orange-100" : "bg-blue-50 border-b border-blue-100"}`}>
+          <div className={`h-10 w-10 rounded-full flex items-center justify-center text-base font-bold text-white flex-shrink-0 ${n.isProMember ? "bg-orange-500" : "bg-blue-500"}`}>
+            {n.name.charAt(0)}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-foreground truncate">{n.name}</div>
+            <div className={`text-xs font-medium ${n.isProMember ? "text-orange-600" : "text-blue-600"}`}>
+              {n.isProMember ? "⭐ Pro Member" : "Member"}
+            </div>
+          </div>
+          <button onClick={onClose} className="flex-shrink-0 text-muted-foreground hover:text-foreground">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="px-4 py-3 space-y-2">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">First Name</span>
+            <span className="font-medium">{firstName}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Last Name</span>
+            <span className="font-medium">{lastName || "—"}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Signed Up</span>
+            <span className="font-medium">{new Date(n.joinedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Email</span>
+            <span className="font-medium text-xs truncate max-w-[140px]">{n.email}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Role</span>
+            <span className="font-medium">{roleLabel(n.role)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Status</span>
+            <span className={`font-medium capitalize ${n.status === "active" ? "text-green-600" : "text-red-500"}`}>{n.status}</span>
+          </div>
+          <hr className="border-border" />
+          <div className="flex justify-between">
+            <span className="text-blue-600 font-medium">Personal Volume</span>
+            <span className="font-bold text-blue-700">{n.personalVolume ?? 0} CV</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-green-600 font-medium">Group Volume</span>
+            <span className="font-bold text-green-700">{n.groupVolume ?? 0} CV</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Total Earnings</span>
+            <span className="font-bold text-green-600">${n.totalEarnings.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Team Size</span>
+            <span className="font-medium">{n.teamSize}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Generation</span>
+            <span className="font-medium">{n.generation}</span>
+          </div>
+        </div>
+      </div>
+      <div className="absolute left-1/2 -translate-x-1/2 bottom-[-8px] w-4 h-4 bg-white border-r border-b border-border rotate-45" />
+    </div>
+  );
+}
+
+/* ── SVG node ─────────────────────────────────────────────────── */
+function NodeEl({ pos, selected, onSelect }: { pos: Pos; selected: boolean; onSelect: (p: Pos | null) => void }) {
+  const n = pos.node;
+  const [hovered, setHovered] = useState(false);
+  const initials = n.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+
+  return (
+    <g
+      transform={`translate(${pos.x},${pos.y + CCY})`}
+      style={{ cursor: "pointer" }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={() => onSelect(selected ? null : pos)}
+    >
+      {(hovered || selected) && (
+        <circle r={CR + 5} fill="none" stroke={n.isProMember ? "#f97316" : "#3b82f6"} strokeWidth="2.5" opacity="0.5" />
+      )}
+      <circle r={CR} fill={n.isProMember ? "#f97316" : "#3b82f6"} stroke={selected ? (n.isProMember ? "#ea580c" : "#1d4ed8") : "white"} strokeWidth={selected ? 3 : 2} />
+      <text textAnchor="middle" dominantBaseline="central" fill="white" fontSize="13" fontWeight="700" fontFamily="system-ui, sans-serif">
+        {initials}
+      </text>
+      {n.isProMember && (
+        <g transform={`translate(${CR - 10},${-CR + 10})`}>
+          <circle r="8" fill="#fff7ed" stroke="#f97316" strokeWidth="1.5" />
+          <text textAnchor="middle" dominantBaseline="central" fontSize="9">⭐</text>
+        </g>
+      )}
+      <text y={CR + 14} textAnchor="middle" fill="#111827" fontSize="10" fontWeight="600" fontFamily="system-ui, sans-serif">
+        {n.name.length > 14 ? n.name.slice(0, 13) + "…" : n.name}
+      </text>
+      <text y={CR + 28} textAnchor="middle" fill={n.isProMember ? "#c2410c" : "#1d4ed8"} fontSize="9" fontFamily="system-ui, sans-serif">
+        {n.isProMember ? "Pro Member" : "Member"}
+      </text>
+    </g>
+  );
+}
+
+/* ── Uni-Level tree canvas ────────────────────────────────────── */
+function UniLevelTree({ root }: { root: TreeNode }) {
+  const [selected, setSelected] = useState<Pos | null>(null);
+
+  const measured = measure(root);
+  const positioned = layout(measured, 0, 0);
+  const nodes = flatNodes(positioned);
+  const edges = flatEdges(positioned);
+  const depth = treeDepth(positioned);
+
+  const svgW = Math.max(measured.w, 420);
+  const svgH = (depth + 1) * LEVEL_H + 24;
+
+  return (
+    <div className="overflow-auto">
+      <div className="flex items-center gap-6 mb-4 px-1">
+        <div className="flex items-center gap-2 text-sm">
+          <div className="h-5 w-5 rounded-full bg-blue-500" />
+          <span className="text-muted-foreground">Member</span>
+        </div>
+        <div className="flex items-center gap-2 text-sm">
+          <div className="h-5 w-5 rounded-full bg-orange-500" />
+          <span className="text-muted-foreground">Pro Member</span>
+        </div>
+        <span className="text-xs text-muted-foreground ml-auto">Click or hover a node for details</span>
+      </div>
+
+      <div className="relative" style={{ width: svgW, minWidth: "100%" }}>
+        <svg width={svgW} height={svgH} style={{ display: "block", overflow: "visible" }}>
+          {edges.map((e, i) => (
+            <path key={i} d={edgePath(e)} fill="none" stroke="#d1d5db" strokeWidth="1.5" strokeLinecap="round" />
+          ))}
+          {nodes.map(pos => (
+            <NodeEl key={pos.node.userId} pos={pos} selected={selected?.node.userId === pos.node.userId} onSelect={setSelected} />
+          ))}
+        </svg>
+        {selected && <MemberPopup pos={selected} onClose={() => setSelected(null)} />}
+      </div>
+    </div>
+  );
+}
+
+/* ── List row colors ──────────────────────────────────────────── */
 const ROLE_COLORS: Record<string, string> = {
   super_admin: "bg-purple-100 text-purple-800 border-purple-200",
   admin: "bg-red-100 text-red-800 border-red-200",
@@ -38,159 +244,27 @@ const ROLE_COLORS: Record<string, string> = {
   customer: "bg-gray-100 text-gray-700 border-gray-200",
 };
 
-function CollapsibleTreeNode({
-  node,
-  depth = 0,
-  search,
-}: {
-  node: TreeNode;
-  depth?: number;
-  search: string;
-}) {
-  const [expanded, setExpanded] = useState(depth < 2);
-  const hasChildren = node.children && node.children.length > 0;
-  const matchesSearch =
-    !search ||
-    node.name.toLowerCase().includes(search.toLowerCase()) ||
-    node.email.toLowerCase().includes(search.toLowerCase());
-
-  const roleLabelText = roleLabel(node.role);
-  const roleClass = ROLE_COLORS[node.role] ?? "bg-gray-100 text-gray-700 border-gray-200";
-
-  return (
-    <div>
-      <div
-        className={`flex items-center gap-2 p-3 rounded-lg mb-1 border transition-all ${
-          matchesSearch ? "" : "opacity-30"
-        } ${
-          node.isProMember
-            ? "bg-primary/5 border-primary/20 hover:border-primary/40"
-            : "bg-card border-border/50 hover:border-border"
-        }`}
-        style={{ marginLeft: depth * 28 }}
-      >
-        {/* Expand toggle */}
-        <button
-          onClick={() => hasChildren && setExpanded(!expanded)}
-          className={`flex-shrink-0 w-5 h-5 flex items-center justify-center rounded text-muted-foreground ${
-            hasChildren ? "hover:bg-muted cursor-pointer" : "cursor-default"
-          }`}
-        >
-          {hasChildren ? (
-            expanded ? (
-              <ChevronDown className="h-3.5 w-3.5" />
-            ) : (
-              <ChevronRight className="h-3.5 w-3.5" />
-            )
-          ) : (
-            <span className="w-3.5" />
-          )}
-        </button>
-
-        {/* Avatar */}
-        <div
-          className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
-            node.isProMember
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground"
-          }`}
-        >
-          {node.name.charAt(0)}
-        </div>
-
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-medium text-sm truncate">{node.name}</span>
-            {node.isProMember && (
-              <Star className="h-3 w-3 text-primary flex-shrink-0" />
-            )}
-            <span
-              className={`text-xs px-1.5 py-0.5 rounded border font-medium ${roleClass}`}
-            >
-              {roleLabelText}
-            </span>
-            <Badge
-              variant={node.status === "active" ? "secondary" : "destructive"}
-              className="text-xs h-4"
-            >
-              {node.status}
-            </Badge>
-          </div>
-          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
-            <span className="truncate">{node.email}</span>
-            <span className="flex-shrink-0">Gen {node.generation}</span>
-            {hasChildren && (
-              <span className="flex-shrink-0">
-                {node.children.length} direct
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="text-right text-sm flex-shrink-0 hidden sm:block space-y-0.5">
-          <div className="font-semibold text-green-600">
-            ${node.totalEarnings.toFixed(2)}
-          </div>
-          <div className="text-xs text-muted-foreground">
-            {node.teamSize} in team
-          </div>
-          <div className="flex gap-2 justify-end text-xs">
-            <span className="text-blue-600 font-medium">PV {node.personalVolume ?? 0}</span>
-            <span className="text-green-600 font-medium">GV {node.groupVolume ?? 0}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Children */}
-      {hasChildren && expanded && (
-        <div>
-          {node.children.map((child) => (
-            <CollapsibleTreeNode
-              key={child.userId}
-              node={child}
-              depth={depth + 1}
-              search={search}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
+/* ── Page ─────────────────────────────────────────────────────── */
 export function AdminGenealogyPage() {
   const [search, setSearch] = useState("");
 
-  // Load from root (user 1 = super admin)
-  const { data: tree, isLoading: treeLoading } = useGetGenealogyTree({
-    userId: 1,
-    depth: 9,
-  });
-  const { data: stats, isLoading: statsLoading } = useGetGenealogyStats({
-    userId: 1,
-  });
-  const { data: downline, isLoading: downlineLoading } = useGetDownline({
-    userId: 1,
-  });
+  const { data: tree, isLoading: treeLoading } = useGetGenealogyTree({ userId: 1, depth: 9 });
+  const { data: stats } = useGetGenealogyStats({ userId: 1 });
+  const { data: downline, isLoading: downlineLoading } = useGetDownline({ userId: 1 });
 
   const flatList: any[] = Array.isArray(downline) ? downline : [];
-  const filteredFlat = flatList.filter(
-    (m) =>
-      !search ||
-      m.name.toLowerCase().includes(search.toLowerCase()) ||
-      m.email.toLowerCase().includes(search.toLowerCase()) ||
-      m.role.toLowerCase().includes(search.toLowerCase())
+  const filteredFlat = flatList.filter(m =>
+    !search ||
+    m.name.toLowerCase().includes(search.toLowerCase()) ||
+    m.email.toLowerCase().includes(search.toLowerCase()) ||
+    m.role.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-serif font-bold">Global Genealogy</h1>
-        <p className="text-muted-foreground">
-          Complete network organization across all 9 generations
-        </p>
+        <p className="text-muted-foreground">Complete network organization — Uni-Level view across all 9 generations</p>
       </div>
 
       {/* Stats */}
@@ -201,77 +275,43 @@ export function AdminGenealogyPage() {
               <Users className="h-4 w-4" /> Total Network
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {statsLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                stats?.totalTeamSize ?? 0
-              )}
-            </div>
-          </CardContent>
+          <CardContent><div className="text-2xl font-bold">{stats?.totalTeamSize ?? 0}</div></CardContent>
         </Card>
-
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">
-              Active Members
-            </CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">Active Members</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {stats?.activeMembers ?? 0}
-            </div>
-          </CardContent>
+          <CardContent><div className="text-2xl font-bold text-green-600">{stats?.activeMembers ?? 0}</div></CardContent>
         </Card>
-
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
-              <Star className="h-4 w-4 text-primary" /> Pro Members
+              <Star className="h-4 w-4 text-orange-500" /> Pro Members
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">
-              {stats?.proMembers ?? 0}
-            </div>
-          </CardContent>
+          <CardContent><div className="text-2xl font-bold text-orange-500">{stats?.proMembers ?? 0}</div></CardContent>
         </Card>
-
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
               <TrendingUp className="h-4 w-4" /> Generations Active
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {stats?.generationBreakdown?.length ?? 0}
-            </div>
-          </CardContent>
+          <CardContent><div className="text-2xl font-bold">{stats?.generationBreakdown?.length ?? 0}</div></CardContent>
         </Card>
       </div>
 
-      {/* Generation Breakdown */}
+      {/* Generation breakdown */}
       {stats?.generationBreakdown && stats.generationBreakdown.length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle className="font-serif text-lg">
-              Generation Breakdown
-            </CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle className="font-serif text-lg">Generation Breakdown</CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-2">
               {stats.generationBreakdown
                 .sort((a: any, b: any) => a.generation - b.generation)
                 .map((g: any) => (
-                  <div
-                    key={g.generation}
-                    className="text-center p-3 bg-muted rounded-lg"
-                  >
-                    <div className="text-xs text-muted-foreground mb-1">
-                      Gen {g.generation}
-                    </div>
+                  <div key={g.generation} className="text-center p-3 bg-muted rounded-lg">
+                    <div className="text-xs text-muted-foreground mb-1">Gen {g.generation}</div>
                     <div className="font-bold text-lg">{g.count}</div>
                   </div>
                 ))}
@@ -280,27 +320,21 @@ export function AdminGenealogyPage() {
         </Card>
       )}
 
-      {/* Search + Tree/List toggle */}
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by name, email or role…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search by name, email or role…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="pl-9"
+        />
       </div>
 
       <Tabs defaultValue="tree">
         <TabsList>
-          <TabsTrigger value="tree" className="gap-2">
-            <Network className="h-4 w-4" /> Tree View
-          </TabsTrigger>
-          <TabsTrigger value="list" className="gap-2">
-            <List className="h-4 w-4" /> List View
-          </TabsTrigger>
+          <TabsTrigger value="tree" className="gap-2"><Network className="h-4 w-4" /> Tree View</TabsTrigger>
+          <TabsTrigger value="list" className="gap-2"><List className="h-4 w-4" /> List View</TabsTrigger>
         </TabsList>
 
         {/* Tree view */}
@@ -309,9 +343,7 @@ export function AdminGenealogyPage() {
             <CardHeader>
               <CardTitle className="font-serif">
                 Network Tree
-                <span className="text-sm font-normal text-muted-foreground ml-2">
-                  Click arrows to expand/collapse
-                </span>
+                <span className="text-sm font-normal text-muted-foreground ml-2">Click or hover any node to view details</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -320,23 +352,15 @@ export function AdminGenealogyPage() {
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
               ) : tree ? (
-                <div className="overflow-x-auto">
-                  <CollapsibleTreeNode
-                    node={tree as TreeNode}
-                    depth={0}
-                    search={search}
-                  />
-                </div>
+                <UniLevelTree root={tree as TreeNode} />
               ) : (
-                <p className="text-center text-muted-foreground py-12">
-                  No genealogy data found.
-                </p>
+                <p className="text-center text-muted-foreground py-12">No genealogy data found.</p>
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Flat list view */}
+        {/* List view */}
         <TabsContent value="list">
           <Card>
             <CardHeader>
@@ -372,52 +396,39 @@ export function AdminGenealogyPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y">
-                      {filteredFlat.map((m: any) => {
-                        const roleClass = ROLE_COLORS[m.role] ?? "bg-gray-100 text-gray-700 border-gray-200";
-                        return (
-                          <tr key={m.userId} className="hover:bg-muted/30 transition-colors">
-                            <td className="py-3 pr-4">
-                              <div className="flex items-center gap-2">
-                                <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${m.isProMember ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                                  {m.name.charAt(0)}
-                                </div>
-                                <div>
-                                  <div className="font-medium flex items-center gap-1">
-                                    {m.name}
-                                    {m.isProMember && <Star className="h-3 w-3 text-primary" />}
-                                  </div>
-                                  <div className="text-xs text-muted-foreground">{m.email}</div>
-                                </div>
+                      {filteredFlat.map((m: any) => (
+                        <tr key={m.userId} className="hover:bg-muted/30 transition-colors">
+                          <td className="py-3 pr-4">
+                            <div className="flex items-center gap-2">
+                              <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 text-white ${m.isProMember ? "bg-orange-500" : "bg-blue-500"}`}>
+                                {m.name.charAt(0)}
                               </div>
-                            </td>
-                            <td className="py-3 pr-4">
-                              <span className={`text-xs px-1.5 py-0.5 rounded border font-medium ${ROLE_COLORS[m.role] ?? "bg-gray-100 text-gray-700 border-gray-200"}`}>
-                                {roleLabel(m.role)}
-                              </span>
-                            </td>
-                            <td className="py-3 text-center">
-                              <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-muted text-xs font-bold">
-                                {m.generation}
-                              </span>
-                            </td>
-                            <td className="py-3 pr-4 text-muted-foreground text-xs">
-                              {m.sponsorName}
-                            </td>
-                            <td className="py-3 text-right text-xs font-semibold text-blue-600">
-                              {m.personalVolume ?? 0} CV
-                            </td>
-                            <td className="py-3 text-right text-xs font-semibold text-green-600">
-                              {m.groupVolume ?? 0} CV
-                            </td>
-                            <td className="py-3 text-right font-semibold text-green-600">
-                              ${m.totalEarnings.toFixed(2)}
-                            </td>
-                            <td className="py-3 text-right text-xs text-muted-foreground">
-                              {new Date(m.joinedAt).toLocaleDateString()}
-                            </td>
-                          </tr>
-                        );
-                      })}
+                              <div>
+                                <div className="font-medium flex items-center gap-1">
+                                  {m.name}
+                                  {m.isProMember && <Star className="h-3 w-3 text-orange-500" />}
+                                </div>
+                                <div className="text-xs text-muted-foreground">{m.email}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3 pr-4">
+                            <span className={`text-xs px-1.5 py-0.5 rounded border font-medium ${ROLE_COLORS[m.role] ?? "bg-gray-100 text-gray-700 border-gray-200"}`}>
+                              {roleLabel(m.role)}
+                            </span>
+                          </td>
+                          <td className="py-3 text-center">
+                            <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-muted text-xs font-bold">
+                              {m.generation}
+                            </span>
+                          </td>
+                          <td className="py-3 pr-4 text-muted-foreground text-xs">{m.sponsorName}</td>
+                          <td className="py-3 text-right text-xs font-semibold text-blue-600">{m.personalVolume ?? 0} CV</td>
+                          <td className="py-3 text-right text-xs font-semibold text-green-600">{m.groupVolume ?? 0} CV</td>
+                          <td className="py-3 text-right font-semibold text-green-600">${m.totalEarnings.toFixed(2)}</td>
+                          <td className="py-3 text-right text-xs text-muted-foreground">{new Date(m.joinedAt).toLocaleDateString()}</td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>

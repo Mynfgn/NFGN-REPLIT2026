@@ -17,7 +17,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
     { name: "Book-A-Pro", href: "/book" },
     { name: "Join NFGN", href: "/join" },
     { name: "About", href: "/about" },
-    { name: "Contact", href: "/contact" },
+    { name: "Contact Us", href: "/contact" },
   ];
 
   return (
@@ -131,7 +131,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
             <ul className="space-y-2 text-sm text-gray-400">
               <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
               <li><Link href="/join" className="hover:text-white transition-colors">Join NFGN</Link></li>
-              <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
+              <li><Link href="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
             </ul>
           </div>
           <div>

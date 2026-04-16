@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Leaf, Users, TrendingUp, Star, Phone, Mail, MapPin,
   Quote, ArrowRight, Award, BookOpen, Lightbulb, DollarSign,
+  Heart, GraduationCap, Globe, Zap, Trophy,
 } from "lucide-react";
 
 const BRAND_GOLD = "#C9A84C";
@@ -231,16 +232,30 @@ export function About() {
         </div>
       </section>
 
-      {/* Money Circulation */}
+      {/* Money Circulation — Core Specialty */}
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4 max-w-5xl">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div className="text-center mb-14">
+            <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase px-4 py-1.5">
+              Our Core Specialty
+            </Badge>
+            <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4">
+              We Specialize in <span className="text-primary">Money Circulation</span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto text-base leading-relaxed">
+              Money Circulation is central to everything we do at NFGN. In addition to our premium 
+              naturopathic products and professional health services, we have built an entire economic 
+              ecosystem designed to keep money flowing between members, families, and communities.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-10 items-start mb-14">
             <div className="space-y-4">
               {[
-                { icon: Leaf, color: BRAND_GREEN, label: "Naturopathic Products", desc: "Premium supplements, herbal cleanses, and wellness solutions." },
-                { icon: DollarSign, color: BRAND_GOLD, label: "Money Circulation", desc: "A system engineered to keep money flowing between members, communities, and families." },
+                { icon: Leaf, color: BRAND_GREEN, label: "Naturopathic Products", desc: "Premium supplements, herbal cleanses, and naturopathic wellness solutions." },
+                { icon: DollarSign, color: BRAND_GOLD, label: "Money Circulation", desc: "A system engineered to keep money flowing between members, communities, and families — this is our signature." },
                 { icon: Star, color: "#7C3AED", label: "Book-A-Professional", desc: "Connect with certified naturopathic practitioners for personalized health guidance." },
-                { icon: Users, color: "#0EA5E9", label: "Community Network", desc: "A global family of wellness entrepreneurs supporting each other's growth." },
+                { icon: Users, color: "#0EA5E9", label: "Global Network", desc: "A worldwide family of wellness entrepreneurs supporting each other's growth and success." },
               ].map(({ icon: Icon, color, label, desc }) => (
                 <div key={label} className="flex gap-4 p-4 rounded-xl border bg-card">
                   <div className="h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${color}15`, color }}>
@@ -248,32 +263,34 @@ export function About() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-sm">{label}</h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{desc}</p>
                   </div>
                 </div>
               ))}
             </div>
-            <div>
-              <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase px-4 py-1.5">What We Do</Badge>
-              <h2 className="text-3xl md:text-4xl font-serif font-bold mb-6">
-                More Than Wellness — We Circulate <span className="text-primary">Money</span>
-              </h2>
-              <div className="space-y-4 text-muted-foreground leading-relaxed">
-                <p>
-                  NFGN is not just a wellness company. In addition to our line of naturopathic 
-                  products and professional health services, we specialize in <strong className="text-foreground">money circulation</strong> — 
-                  creating a closed-loop economic ecosystem where every purchase, every referral, 
-                  and every enrollment puts money back into the hands of our members.
-                </p>
-                <p>
-                  This philosophy — that a community's collective economic activity should enrich 
-                  that same community — is woven into every aspect of how NFGN operates, from our 
-                  compensation plan to our product pricing and our member support systems.
-                </p>
+
+            <div className="bg-foreground text-background rounded-2xl p-8 space-y-5">
+              <div className="flex items-center gap-2 mb-2">
+                <DollarSign className="h-5 w-5 text-primary" />
+                <span className="text-xs uppercase tracking-widest text-primary font-semibold">Why Money Circulation Matters</span>
               </div>
-              <Button asChild className="mt-8 gap-2">
+              <p className="text-gray-300 leading-relaxed text-sm">
+                True financial empowerment happens when money stays within a community and continues 
+                to circulate — creating jobs, opportunities, and prosperity for everyone involved.
+              </p>
+              <p className="text-gray-300 leading-relaxed text-sm">
+                At NFGN, every product purchase, every referral commission, and every network 
+                enrollment is designed to circulate wealth back into the hands of our members. 
+                This is not just a business model — it is a <strong className="text-white">philosophy of economic justice.</strong>
+              </p>
+              <p className="text-gray-300 leading-relaxed text-sm">
+                Our "2 Down By Infinity" compensation plan and multi-point payment grid are the 
+                mechanical engines behind this circulation — ensuring that money flows to those 
+                who drive value at every level of the network.
+              </p>
+              <Button asChild className="gap-2 mt-2">
                 <Link href="/join">
-                  Join the Network <ArrowRight className="h-4 w-4" />
+                  Join the Circulation <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
             </div>
@@ -281,72 +298,153 @@ export function About() {
         </div>
       </section>
 
-      {/* Contact */}
-      <section id="contact" className="py-20 bg-muted/30">
-        <div className="container mx-auto px-4 max-w-3xl text-center">
-          <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase px-4 py-1.5">
-            Get in Touch
-          </Badge>
-          <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4">Contact Us</h2>
-          <p className="text-muted-foreground mb-10">
-            Whether you have questions about our products, our compensation plan, or how to 
-            get started — we're here for you.
-          </p>
+      {/* Keeping The Money Within Your Community Program */}
+      <section className="py-20 bg-primary text-primary-foreground">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="text-center mb-12">
+            <Badge className="mb-4 text-xs tracking-widest uppercase px-4 py-1.5 bg-white/20 text-white border border-white/30">
+              Community Program
+            </Badge>
+            <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4">
+              "Keeping The Money Within Your Own Community"
+            </h2>
+            <p className="text-primary-foreground/80 max-w-2xl mx-auto text-base leading-relaxed">
+              One of our most important and beloved initiatives — a real-world educational and economic 
+              program designed to transform how communities think about, spend, and grow their money.
+            </p>
+          </div>
 
-          <div className="grid sm:grid-cols-3 gap-6 mb-10">
-            <Card>
-              <CardContent className="pt-6 pb-5 text-center space-y-3">
-                <div className="h-12 w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto">
-                  <Mail className="h-6 w-6" />
+          <div className="grid md:grid-cols-3 gap-6 mb-10">
+            <Card className="bg-white/10 border-white/20 text-primary-foreground">
+              <CardContent className="pt-6 space-y-3">
+                <div className="h-10 w-10 rounded-lg bg-white/20 flex items-center justify-center">
+                  <GraduationCap className="h-5 w-5" />
                 </div>
-                <div>
-                  <p className="font-semibold text-sm">Email</p>
-                  <a href="mailto:newfaceglobalnetwork@gmail.com" className="text-xs text-primary hover:underline break-all">
-                    newfaceglobalnetwork@gmail.com
-                  </a>
-                </div>
+                <h3 className="font-semibold">For Adults & Children Alike</h3>
+                <p className="text-sm text-primary-foreground/75 leading-relaxed">
+                  Our program is designed to educate both adults and children on the power of 
+                  keeping money circulating within their own communities — building generational wealth from the ground up.
+                </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="pt-6 pb-5 text-center space-y-3">
-                <div className="h-12 w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto">
-                  <Phone className="h-6 w-6" />
+            <Card className="bg-white/10 border-white/20 text-primary-foreground">
+              <CardContent className="pt-6 space-y-3">
+                <div className="h-10 w-10 rounded-lg bg-white/20 flex items-center justify-center">
+                  <Globe className="h-5 w-5" />
                 </div>
-                <div>
-                  <p className="font-semibold text-sm">Phone</p>
-                  <a href="tel:+16789099974" className="text-xs text-primary hover:underline">
-                    (678) 909-9974
-                  </a>
-                </div>
+                <h3 className="font-semibold">Across Various Cities</h3>
+                <p className="text-sm text-primary-foreground/75 leading-relaxed">
+                  We are bringing this program to cities across the country — creating local chapters 
+                  and community leaders who champion economic self-sufficiency and community-first spending.
+                </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="pt-6 pb-5 text-center space-y-3">
-                <div className="h-12 w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto">
-                  <MapPin className="h-6 w-6" />
+            <Card className="bg-white/10 border-white/20 text-primary-foreground">
+              <CardContent className="pt-6 space-y-3">
+                <div className="h-10 w-10 rounded-lg bg-white/20 flex items-center justify-center">
+                  <Heart className="h-5 w-5" />
                 </div>
-                <div>
-                  <p className="font-semibold text-sm">Headquarters</p>
-                  <p className="text-xs text-muted-foreground">New Orleans, Louisiana</p>
-                </div>
+                <h3 className="font-semibold">Economic Empowerment</h3>
+                <p className="text-sm text-primary-foreground/75 leading-relaxed">
+                  When a community spends money within itself, that money multiplies locally — 
+                  creating more businesses, more jobs, and more opportunity for every person 
+                  who participates in the ecosystem.
+                </p>
               </CardContent>
             </Card>
           </div>
 
+          <div className="bg-white/10 border border-white/20 rounded-xl p-6 text-center">
+            <p className="text-primary-foreground/90 text-base leading-relaxed max-w-3xl mx-auto">
+              <strong className="text-white">"A dollar spent within your community becomes two. A dollar spent outside becomes zero."</strong>{" "}
+              This is the principle that drives our community money circulation program — and it is 
+              why NFGN is so much more than a wellness company.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* NFGN SPORTS */}
+      <section className="py-20 bg-foreground text-background overflow-hidden relative">
+        <div className="absolute inset-0 opacity-5 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-primary via-transparent to-transparent" />
+        <div className="container mx-auto px-4 max-w-5xl relative z-10">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+              <Badge className="mb-5 text-xs tracking-widest uppercase px-4 py-1.5 bg-primary/20 text-primary border border-primary/30">
+                Introducing
+              </Badge>
+              <h2 className="text-4xl md:text-5xl font-serif font-bold mb-6 leading-tight">
+                NFGN <span className="text-primary">SPORTS</span>
+              </h2>
+              <p className="text-xl text-gray-300 font-light mb-4 italic">
+                The next big thing in communities around the world.
+              </p>
+              <div className="space-y-4 text-gray-400 leading-relaxed text-sm">
+                <p>
+                  We are proud to introduce <strong className="text-white">NFGN SPORTS</strong> — a 
+                  bold new initiative that extends the NFGN mission beyond wellness and wealth 
+                  into the exciting world of community sports and athletics.
+                </p>
+                <p>
+                  NFGN SPORTS is being built to unite communities through the power of competition, 
+                  teamwork, and shared purpose — creating new opportunities for athletes, coaches, 
+                  families, and entrepreneurs everywhere.
+                </p>
+                <p>
+                  Whether you're a seasoned athlete or a passionate community organizer, 
+                  NFGN SPORTS will have a place for you. Stay tuned for more details as we 
+                  roll out this groundbreaking program city by city, community by community.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {[
+                { icon: Trophy, color: BRAND_GOLD, title: "Community Competitions", desc: "Organized leagues, tournaments, and events bringing communities together through sport." },
+                { icon: Users, color: "#3B82F6", title: "For All Ages", desc: "Programs designed for youth, adults, and families — everyone belongs in NFGN SPORTS." },
+                { icon: Globe, color: BRAND_GREEN, title: "Global Reach", desc: "Launching in communities across the country and expanding worldwide." },
+                { icon: Zap, color: "#7C3AED", title: "The Next Big Thing", desc: "NFGN SPORTS is poised to become a cornerstone of community life — watch this space." },
+              ].map(({ icon: Icon, color, title, desc }) => (
+                <div key={title} className="flex gap-4 p-4 rounded-xl border border-white/10 bg-white/5">
+                  <div className="h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${color}20`, color }}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-sm text-white">{title}</h3>
+                    <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">{desc}</p>
+                  </div>
+                </div>
+              ))}
+
+              <div className="p-4 rounded-xl border border-primary/30 bg-primary/10 text-center">
+                <p className="text-primary font-semibold text-sm">🏆 Coming Soon to Your Community</p>
+                <p className="text-xs text-gray-400 mt-1">Join NFGN today to be the first to know when NFGN SPORTS launches near you.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-16 bg-muted/30">
+        <div className="container mx-auto px-4 max-w-2xl text-center">
+          <h2 className="text-2xl md:text-3xl font-serif font-bold mb-4">Ready to Be Part of Something Bigger?</h2>
+          <p className="text-muted-foreground mb-8">
+            Join the New Face Global Network — and become part of a community built on health, wealth, and purpose.
+          </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="gap-2">
-              <a href="mailto:newfaceglobalnetwork@gmail.com">
-                <Mail className="h-4 w-4" />
-                Send an Email
-              </a>
+              <Link href="/join">
+                Join NFGN Today <ArrowRight className="h-4 w-4" />
+              </Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="gap-2">
-              <a href="tel:+16789099974">
-                <Phone className="h-4 w-4" />
-                Call Us
-              </a>
+              <Link href="/contact">
+                <Mail className="h-4 w-4" />
+                Contact Us
+              </Link>
             </Button>
           </div>
         </div>

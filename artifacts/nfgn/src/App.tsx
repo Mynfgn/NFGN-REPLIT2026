@@ -17,6 +17,7 @@ import { Shop } from "@/pages/public/Shop";
 import { Join } from "@/pages/public/Join";
 import { BookAPro } from "@/pages/public/BookAPro";
 import { About } from "@/pages/public/About";
+import { Contact } from "@/pages/public/Contact";
 
 // Auth Pages
 import { Login } from "@/pages/auth/Login";
@@ -96,7 +97,7 @@ function Router() {
         <PublicLayout><About /></PublicLayout>
       </Route>
       <Route path="/contact">
-        <PublicLayout><About /></PublicLayout>
+        <PublicLayout><Contact /></PublicLayout>
       </Route>
       <Route path="/rep/:username">
         <PublicLayout><Stub name="Affiliate Storefront" /></PublicLayout>

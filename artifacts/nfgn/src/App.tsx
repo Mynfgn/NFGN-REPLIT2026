@@ -47,6 +47,11 @@ import { AdminGenealogyPage } from "@/pages/admin/AdminGenealogy";
 import { AdminProductsPage } from "@/pages/admin/Products";
 import { AdminCategoriesPage } from "@/pages/admin/Categories";
 import { AdminBonusesPage } from "@/pages/admin/Bonuses";
+import { AdminBookingsPage } from "@/pages/admin/Bookings";
+import { AdminProfessionalsPage } from "@/pages/admin/Professionals";
+import { AdminReportsPage } from "@/pages/admin/Reports";
+import { AffiliateStorefront } from "@/pages/public/AffiliateStorefront";
+import { BookingsPage } from "@/pages/dashboard/Bookings";
 
 // Stubs for pages still being built
 const Stub = ({ name }: { name: string }) => (
@@ -103,7 +108,7 @@ function Router() {
         <PublicLayout><Contact /></PublicLayout>
       </Route>
       <Route path="/rep/:username">
-        <PublicLayout><Stub name="Affiliate Storefront" /></PublicLayout>
+        <AffiliateStorefront />
       </Route>
 
       {/* Dashboard routes */}
@@ -149,7 +154,7 @@ function Router() {
       </Route>
       <Route path="/dashboard/bookings">
         <RequireAuth>
-          <DashboardLayout><Stub name="My Bookings" /></DashboardLayout>
+          <DashboardLayout><BookingsPage /></DashboardLayout>
         </RequireAuth>
       </Route>
       <Route path="/dashboard/payouts">
@@ -226,12 +231,12 @@ function Router() {
       </Route>
       <Route path="/admin/bookings">
         <RequireAuth requireAdmin>
-          <AdminLayout><Stub name="Manage Bookings" /></AdminLayout>
+          <AdminLayout><AdminBookingsPage /></AdminLayout>
         </RequireAuth>
       </Route>
       <Route path="/admin/professionals">
         <RequireAuth requireAdmin>
-          <AdminLayout><Stub name="Manage Professionals" /></AdminLayout>
+          <AdminLayout><AdminProfessionalsPage /></AdminLayout>
         </RequireAuth>
       </Route>
       <Route path="/admin/messages">
@@ -251,7 +256,7 @@ function Router() {
       </Route>
       <Route path="/admin/reports">
         <RequireAuth requireAdmin>
-          <AdminLayout><Stub name="Admin Reports" /></AdminLayout>
+          <AdminLayout><AdminReportsPage /></AdminLayout>
         </RequireAuth>
       </Route>
       <Route path="/admin/genealogy">

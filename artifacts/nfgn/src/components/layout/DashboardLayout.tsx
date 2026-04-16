@@ -42,7 +42,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
     { name: "Mailbox", href: "/dashboard/mailbox", icon: Inbox },
     { name: "Tools", href: "/dashboard/tools", icon: Wrench },
     { name: "Reports", href: "/dashboard/reports", icon: BarChart3 },
-    { name: "Profile", href: "/dashboard/profile", icon: UserCircle },
+    { name: "Profile Management", href: "/dashboard/profile", icon: UserCircle },
   ];
 
   return (

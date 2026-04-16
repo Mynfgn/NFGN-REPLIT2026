@@ -1,25 +1,47 @@
-import { useListProducts } from "@workspace/api-client-react";
+import { useListProducts, useAddToCart } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Loader2 } from "lucide-react";
 import { useCartStore } from "@/hooks/use-cart-store";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { useState } from "react";
 
 export function Shop() {
   const { data, isLoading } = useListProducts({ limit: 50 });
   const { setCartOpen } = useCartStore();
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
+  const qc = useQueryClient();
+  const [addingId, setAddingId] = useState<number | null>(null);
+
+  const addToCart = useAddToCart({
+    mutation: {
+      onSuccess: () => {
+        qc.invalidateQueries({ queryKey: ["getCart"] });
+        setCartOpen(true);
+      },
+      onError: () => {
+        toast({ title: "Could not add to cart", description: "Please try again.", variant: "destructive" });
+      },
+      onSettled: () => setAddingId(null),
+    },
+  });
 
   const handleAddToCart = (e: React.MouseEvent, productId: number) => {
     e.preventDefault();
-    // Here we would typically call useAddToCart
-    toast({
-      title: "Added to cart",
-      description: "Product added to your cart successfully.",
-    });
-    setCartOpen(true);
+    if (!isAuthenticated) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to add items to your cart.",
+      });
+      return;
+    }
+    setAddingId(productId);
+    addToCart.mutate({ data: { productId, quantity: 1 } });
   };
 
   return (
@@ -48,10 +70,10 @@ export function Shop() {
               <Card className="h-full overflow-hidden border-border/50 hover:border-primary/50 transition-colors group cursor-pointer flex flex-col">
                 <div className="aspect-square relative bg-muted flex items-center justify-center overflow-hidden">
                   {product.image ? (
-                    <img 
-                      src={product.image} 
-                      alt={product.name} 
-                      className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" 
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
                     />
                   ) : (
                     <div className="text-muted-foreground font-serif opacity-30 text-2xl">NFGN</div>
@@ -61,10 +83,16 @@ export function Shop() {
                       PRO PACKAGE
                     </div>
                   )}
+                  {product.stock === 0 && (
+                    <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                      <span className="text-sm font-semibold text-muted-foreground">Out of Stock</span>
+                    </div>
+                  )}
                 </div>
+
                 <CardContent className="p-4 flex-1">
                   <div className="text-xs text-primary font-semibold tracking-wider uppercase mb-1">
-                    {product.categoryName || 'Wellness'}
+                    {product.categoryName || "Wellness"}
                   </div>
                   <h3 className="font-bold text-lg leading-tight mb-2 group-hover:text-primary transition-colors">
                     {product.name}
@@ -72,18 +100,26 @@ export function Shop() {
                   <div className="flex items-center gap-2">
                     <span className="font-bold">${product.price.toFixed(2)}</span>
                     {product.comparePrice && product.comparePrice > product.price && (
-                      <span className="text-muted-foreground text-sm line-through">${product.comparePrice.toFixed(2)}</span>
+                      <span className="text-muted-foreground text-sm line-through">
+                        ${product.comparePrice.toFixed(2)}
+                      </span>
                     )}
                   </div>
                 </CardContent>
+
                 <CardFooter className="p-4 pt-0">
-                  <Button 
-                    className="w-full gap-2" 
+                  <Button
+                    className="w-full gap-2"
                     variant={product.isProPackage ? "default" : "outline"}
+                    disabled={product.stock === 0 || addingId === product.id}
                     onClick={(e) => handleAddToCart(e, product.id)}
                   >
-                    <ShoppingCart className="h-4 w-4" />
-                    Add to Cart
+                    {addingId === product.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <ShoppingCart className="h-4 w-4" />
+                    )}
+                    {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
                   </Button>
                 </CardFooter>
               </Card>

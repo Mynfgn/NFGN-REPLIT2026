@@ -2,15 +2,20 @@ import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useCartStore } from "@/hooks/use-cart-store";
+import { useGetCart } from "@workspace/api-client-react";
 import { ShoppingCart, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { CartDrawer } from "@/components/cart/CartDrawer";
 
 export function PublicLayout({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
   const { cartOpen, setCartOpen } = useCartStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [location] = useLocation();
+
+  const { data: cart } = useGetCart({ query: { enabled: isAuthenticated } });
+  const itemCount = cart?.itemCount ?? 0;
 
   const navLinks = [
     { name: "Shop", href: "/shop" },
@@ -44,6 +49,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
           </div>
 
           <div className="flex items-center gap-4">
+            {/* Cart icon with badge */}
             <Button
               variant="ghost"
               size="icon"
@@ -51,9 +57,13 @@ export function PublicLayout({ children }: { children: ReactNode }) {
               onClick={() => setCartOpen(!cartOpen)}
             >
               <ShoppingCart className="h-5 w-5" />
-              {/* Optional: Add badge for cart count */}
+              {isAuthenticated && itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center leading-none">
+                  {itemCount > 99 ? "99+" : itemCount}
+                </span>
+              )}
             </Button>
-            
+
             <div className="hidden md:flex items-center gap-2">
               {isAuthenticated ? (
                 <Link href="/dashboard">
@@ -112,6 +122,9 @@ export function PublicLayout({ children }: { children: ReactNode }) {
       <main className="flex-1 flex flex-col">
         {children}
       </main>
+
+      {/* Cart drawer — mounted globally in the layout */}
+      <CartDrawer />
 
       <footer className="bg-foreground text-background py-12 mt-auto">
         <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8">

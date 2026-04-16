@@ -276,51 +276,41 @@ router.get("/dashboard/analytics", requireAuth, async (req, res): Promise<void> 
     }
   }
 
-  // ── Pro Package Progress ───────────────────────────────────────────────────
-  // Count how many Pro Package purchases have been made in community (all time)
-  const proPackageProduct = await db.select({ id: productsTable.id })
-    .from(productsTable)
-    .where(eq(productsTable.isProPackage, true))
-    .limit(1);
-
-  let proPackagePurchases = 0;
-  if (proPackageProduct.length > 0 && communityIds.length > 0) {
-    const [{ ppCount }] = await db.select({ ppCount: count() })
-      .from(orderItemsTable)
-      .where(and(
-        eq(orderItemsTable.productId, proPackageProduct[0].id),
-        inArray(orderItemsTable.orderId, await db.select({ id: ordersTable.id }).from(ordersTable).where(inArray(ordersTable.userId, communityIds)).then(rows => rows.map(r => r.id)))
-      ));
-    proPackagePurchases = Number(ppCount);
-  }
-
+  // ── Power Squad Bonus Progress ────────────────────────────────────────────
   const [rules] = await db.select().from(commissionRulesTable).limit(1);
-  const proPackageTarget = rules?.powerBonusTrigger ?? 5;
+  const bonusTrigger = rules?.powerBonusTrigger ?? 9;
+  const bonusAmount = parseFloat(rules?.powerBonusAmount ?? "200");
+  const bonusEnabled = rules?.powerBonusEnabled ?? true;
 
-  // Level 2 bonus requires at least 1 Level 1 Pro Member who has their own downline Pro Members
-  const level1ProMembers = await db.select({ count: count() })
+  // Level 1 Pro Members: personally sponsored members who are Pro Members
+  const [{ l1ProCount }] = await db.select({ l1ProCount: count() })
     .from(usersTable)
     .where(and(eq(usersTable.sponsorId, userId), eq(usersTable.isProMember, true)));
-  const level1Count = Number(level1ProMembers[0]?.count ?? 0);
+  const level1ProCount = Number(l1ProCount);
+  const level1Qualified = level1ProCount >= bonusTrigger;
 
-  // Level 2 count: Pro Members who are 2 levels down
-  let level2Count = 0;
-  const level1MembersData = await db.select({ id: usersTable.id })
-    .from(usersTable)
-    .where(and(eq(usersTable.sponsorId, userId), eq(usersTable.isProMember, true)));
-  if (level1MembersData.length > 0) {
-    const [{ l2Count }] = await db.select({ l2Count: count() })
-      .from(usersTable)
-      .where(and(
-        inArray(usersTable.sponsorId, level1MembersData.map(m => m.id)),
-        eq(usersTable.isProMember, true)
-      ));
-    level2Count = Number(l2Count);
-  }
+  // Level 2 Pro Package commissions earned by this user (each = one Pro Package purchase from their L2)
+  const [{ l2CommCount }] = await db.select({ l2CommCount: count() })
+    .from(commissionsTable)
+    .where(and(
+      eq(commissionsTable.userId, userId),
+      eq(commissionsTable.level, 2),
+      eq(commissionsTable.type, "level"),
+    ));
+  const level2L2Commissions = Number(l2CommCount);
 
-  // Pro Package needed: need at least 1 Level 1 + 1 Level 2 Pro Member to unlock Level 2 commissions
-  // We track total pro package purchases in community as progress toward a target
-  const proPackageNeeded = Math.max(0, proPackageTarget - proPackagePurchases);
+  // How many Power Squad Bonuses has this user earned?
+  const [{ bonusCount }] = await db.select({ bonusCount: count() })
+    .from(commissionsTable)
+    .where(and(
+      eq(commissionsTable.userId, userId),
+      eq(commissionsTable.type, "power_squad_bonus"),
+    ));
+  const bonusesEarned = Number(bonusCount);
+
+  // Next bonus milestone
+  const nextBonusAt = (bonusesEarned + 1) * bonusTrigger;
+  const toNextBonus = Math.max(0, nextBonusAt - level2L2Commissions);
 
   res.json({
     monthlySales,
@@ -328,13 +318,18 @@ router.get("/dashboard/analytics", requireAuth, async (req, res): Promise<void> 
     personalVolume,
     groupVolume,
     cvMaintenanceRequired: 100,
-    proPackageProgress: {
-      current: proPackagePurchases,
-      target: proPackageTarget,
-      needed: proPackageNeeded,
-      level1ProMembers: level1Count,
-      level2ProMembers: level2Count,
-      level2Unlocked: level1Count >= 1 && level2Count >= 1,
+    powerSquadBonus: {
+      bonusTrigger,
+      bonusAmount,
+      bonusEnabled,
+      level1ProMembers: level1ProCount,
+      level1Required: bonusTrigger,
+      level1Qualified,
+      level1Needed: Math.max(0, bonusTrigger - level1ProCount),
+      level2Commissions: level2L2Commissions,
+      bonusesEarned,
+      nextBonusAt,
+      toNextBonus,
     },
   });
 });

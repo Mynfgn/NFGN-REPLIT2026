@@ -77,65 +77,130 @@ function CVCard({ pv, gv, required }: { pv: number; gv: number; required: number
   );
 }
 
-function ProPackageProgress({ progress }: { progress: any }) {
-  if (!progress) return null;
-  const { current, target, needed, level1ProMembers, level2ProMembers, level2Unlocked } = progress;
-  const percent = Math.min(100, Math.round((current / Math.max(target, 1)) * 100));
+function PowerSquadBonusCard({ bonus }: { bonus: any }) {
+  if (!bonus) return null;
+
+  const {
+    bonusTrigger,
+    bonusAmount,
+    bonusEnabled,
+    level1ProMembers,
+    level1Required,
+    level1Qualified,
+    level1Needed,
+    level2Commissions,
+    bonusesEarned,
+    nextBonusAt,
+    toNextBonus,
+  } = bonus;
+
+  const l1Percent = Math.min(100, Math.round((level1ProMembers / Math.max(level1Required, 1)) * 100));
+  const l2Percent = Math.min(100, Math.round(((level2Commissions % bonusTrigger || (level2Commissions > 0 && level2Commissions % bonusTrigger === 0 ? bonusTrigger : 0)) / bonusTrigger) * 100));
+
+  if (!bonusEnabled) {
+    return (
+      <Card className="border-l-4 border-l-muted-foreground">
+        <CardHeader className="pb-3">
+          <CardTitle className="font-serif text-base flex items-center gap-2">
+            <Star className="h-4 w-4 text-muted-foreground" />
+            Power Squad Bonus
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">The Power Squad Bonus is currently disabled by admin.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="border-l-4 border-l-primary">
       <CardHeader className="pb-3">
         <CardTitle className="font-serif text-base flex items-center gap-2">
           <Star className="h-4 w-4 text-primary fill-primary" />
-          Level 2 Power Bonus Progress
+          Power Squad Bonus
         </CardTitle>
+        <p className="text-xs text-muted-foreground">
+          Earn <strong className="text-foreground">${bonusAmount}</strong> for every {bonusTrigger} Level 2 Pro Package purchases — requires {bonusTrigger} personally sponsored Level 1 Pro Members to qualify.
+        </p>
       </CardHeader>
       <CardContent className="space-y-4">
+
+        {/* Stats row */}
         <div className="grid grid-cols-3 gap-3 text-center">
           <div className="p-2 bg-muted rounded-lg">
-            <div className="text-lg font-bold">{current}</div>
-            <div className="text-xs text-muted-foreground">Pro Packages sold</div>
-          </div>
-          <div className="p-2 bg-muted rounded-lg">
-            <div className="text-lg font-bold text-primary">{level1ProMembers}</div>
+            <div className={`text-lg font-bold ${level1Qualified ? "text-green-600" : "text-primary"}`}>
+              {level1ProMembers} / {level1Required}
+            </div>
             <div className="text-xs text-muted-foreground">Level 1 Pro Members</div>
           </div>
           <div className="p-2 bg-muted rounded-lg">
-            <div className="text-lg font-bold text-amber-600">{level2ProMembers}</div>
-            <div className="text-xs text-muted-foreground">Level 2 Pro Members</div>
+            <div className="text-lg font-bold text-amber-600">{level2Commissions}</div>
+            <div className="text-xs text-muted-foreground">Level 2 Pro Packages</div>
+          </div>
+          <div className="p-2 bg-muted rounded-lg">
+            <div className="text-lg font-bold text-purple-600">{bonusesEarned}</div>
+            <div className="text-xs text-muted-foreground">Bonuses Earned</div>
           </div>
         </div>
 
+        {/* Level 1 Qualification */}
         <div>
           <div className="flex justify-between text-xs mb-1.5">
-            <span className="text-muted-foreground">Pro Package sales toward target</span>
-            <span className="font-semibold">{current} / {target}</span>
+            <span className="text-muted-foreground">Level 1 qualification ({level1Required} Pro Members required)</span>
+            <span className={`font-semibold ${level1Qualified ? "text-green-600" : "text-amber-600"}`}>
+              {level1ProMembers} / {level1Required}
+            </span>
           </div>
-          <Progress value={percent} className="h-2" />
+          <Progress value={l1Percent} className="h-2" />
         </div>
 
-        <div className={`p-3 rounded-lg border text-sm ${level2Unlocked ? "bg-green-50 border-green-200 text-green-800" : "bg-amber-50 border-amber-200 text-amber-800"}`}>
-          {level2Unlocked ? (
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
-              <span><strong>Level 2 Power Bonus ACTIVE!</strong> You have qualifying Pro Members at both Level 1 and Level 2. You're earning 20% Level 2 commissions.</span>
+        {/* Level 2 progress (only show if qualified) */}
+        {level1Qualified && (
+          <div>
+            <div className="flex justify-between text-xs mb-1.5">
+              <span className="text-muted-foreground">Level 2 Pro Packages toward next bonus</span>
+              <span className="font-semibold">{level2Commissions % bonusTrigger || (level2Commissions > 0 && level2Commissions % bonusTrigger === 0 ? bonusTrigger : 0)} / {bonusTrigger}</span>
             </div>
-          ) : (
+            <Progress value={l2Percent} className="h-2" />
+          </div>
+        )}
+
+        {/* Status message */}
+        {!level1Qualified ? (
+          <div className="p-3 rounded-lg border bg-amber-50 border-amber-200 text-amber-800 text-sm">
             <div className="flex items-start gap-2">
               <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
               <div>
-                <strong>{needed > 0 ? `${needed} more Pro Package ${needed === 1 ? "sale" : "sales"} needed` : "Almost there!"}</strong>
+                <strong>
+                  {level1Needed === 1
+                    ? "1 more Level 1 Pro Member needed to qualify"
+                    : `${level1Needed} more Level 1 Pro Members needed to qualify`}
+                </strong>
                 <div className="text-xs mt-0.5">
-                  {level1ProMembers === 0
-                    ? "Enroll at least 1 Pro Member at Level 1 to start earning Level 2 commissions."
-                    : level2ProMembers === 0
-                    ? "Your Level 1 Pro Members need to enroll their own Pro Members to unlock your Level 2 bonus."
-                    : `${needed} more community Pro Package sales needed to complete your bonus target.`}
+                  Personally sponsor {level1Required} Pro Members to unlock the Power Squad Bonus.
                 </div>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        ) : toNextBonus === 0 ? (
+          <div className="p-3 rounded-lg border bg-green-50 border-green-200 text-green-800 text-sm flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+            <span><strong>Power Squad Bonus earned!</strong> Bonus #{bonusesEarned} of ${bonusAmount} has been credited to your wallet.</span>
+          </div>
+        ) : (
+          <div className="p-3 rounded-lg border bg-green-50 border-green-200 text-green-800 text-sm">
+            <div className="flex items-start gap-2">
+              <CheckCircle2 className="h-4 w-4 flex-shrink-0 mt-0.5" />
+              <div>
+                <strong>Qualified! {toNextBonus} more Level 2 Pro Package {toNextBonus === 1 ? "sale" : "sales"} until your next ${bonusAmount} bonus.</strong>
+                {bonusesEarned > 0 && (
+                  <div className="text-xs mt-0.5">You've earned {bonusesEarned} Power Squad {bonusesEarned === 1 ? "Bonus" : "Bonuses"} so far.</div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -346,10 +411,10 @@ export function Dashboard() {
         <AffiliateLinkCard referralLink={data.referralLink} />
       )}
 
-      {/* PV/GV Volume + Pro Package Progress */}
+      {/* PV/GV Volume + Power Squad Bonus */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <CVCard pv={pv} gv={gv} required={required} />
-        <ProPackageProgress progress={analytics?.proPackageProgress} />
+        <PowerSquadBonusCard bonus={analytics?.powerSquadBonus} />
       </div>
 
       {/* Monthly Sales Chart + Earnings Line Chart */}

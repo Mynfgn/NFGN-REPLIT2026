@@ -1,5 +1,5 @@
 import { db, usersTable, commissionsTable, walletsTable, walletTransactionsTable, commissionRulesTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, and, count } from "drizzle-orm";
 import { logger } from "./logger";
 
 /**
@@ -95,6 +95,105 @@ async function getUplineMember(userId: number): Promise<typeof usersTable.$infer
 }
 
 /**
+ * ═══════════════════════════════════════════════════════
+ *  POWER SQUAD BONUS
+ * ═══════════════════════════════════════════════════════
+ *  TRIGGER:  Every N (default 9) Pro Member Package purchases
+ *            that generate a Level 2 commission for this user
+ *  QUALIFY:  User must have N (default 9) personally sponsored
+ *            Level 1 Pro Members at the time the bonus is earned
+ *  AMOUNT:   Configurable via admin (default $200)
+ * ═══════════════════════════════════════════════════════
+ */
+async function checkAndAwardPowerSquadBonus(
+  userId: number,
+  orderId: number,
+  orderNumber: string,
+): Promise<void> {
+  try {
+    const [rules] = await db.select().from(commissionRulesTable).limit(1);
+    if (!rules?.powerBonusEnabled) return;
+
+    const bonusAmount = parseFloat(rules.powerBonusAmount ?? "200");
+    const trigger = rules.powerBonusTrigger ?? 9;
+
+    // Count total Level 2 commissions ever earned by this user from Pro Package purchases
+    const [{ l2Count }] = await db
+      .select({ l2Count: count() })
+      .from(commissionsTable)
+      .where(and(
+        eq(commissionsTable.userId, userId),
+        eq(commissionsTable.level, 2),
+        eq(commissionsTable.type, "level"),
+      ));
+
+    const totalL2 = Number(l2Count);
+
+    // Check if this purchase pushed us to a new multiple of the trigger
+    if (totalL2 === 0 || totalL2 % trigger !== 0) return;
+
+    // Qualification check: user must have 'trigger' personally sponsored Level 1 Pro Members
+    const [{ l1Count }] = await db
+      .select({ l1Count: count() })
+      .from(usersTable)
+      .where(and(
+        eq(usersTable.sponsorId, userId),
+        eq(usersTable.isProMember, true),
+      ));
+
+    const level1ProCount = Number(l1Count);
+    if (level1ProCount < trigger) {
+      logger.info(
+        { userId, totalL2, level1ProCount, trigger },
+        "Power Squad Bonus not awarded — insufficient Level 1 Pro Members",
+      );
+      return;
+    }
+
+    // Award the bonus
+    const bonusNum = totalL2 / trigger; // which bonus cycle this is
+
+    await db.insert(commissionsTable).values({
+      userId,
+      fromUserId: userId,
+      orderId,
+      orderNumber,
+      level: 2,
+      rate: "0",
+      saleAmount: "0",
+      commissionAmount: String(bonusAmount),
+      status: "approved", // Power Squad Bonuses auto-approve
+      type: "power_squad_bonus",
+      notes: `Power Squad Bonus #${bonusNum} — ${totalL2} Level 2 Pro Package sales reached (every ${trigger} = $${bonusAmount})`,
+    });
+
+    const [wallet] = await db.select().from(walletsTable).where(eq(walletsTable.userId, userId));
+    if (!wallet) return;
+
+    const newBalance = parseFloat((parseFloat(wallet.balance) + bonusAmount).toFixed(2));
+    const newTotalEarned = parseFloat((parseFloat(wallet.totalEarned) + bonusAmount).toFixed(2));
+
+    await db.update(walletsTable).set({
+      balance: String(newBalance),
+      totalEarned: String(newTotalEarned),
+    }).where(eq(walletsTable.userId, userId));
+
+    await db.insert(walletTransactionsTable).values({
+      walletId: wallet.id,
+      type: "commission_credit",
+      amount: String(bonusAmount),
+      balance: String(newBalance),
+      description: `Power Squad Bonus #${bonusNum} — $${bonusAmount} (${totalL2} Level 2 Pro Package sales)`,
+      reference: orderNumber,
+    });
+
+    logger.info({ userId, totalL2, bonusAmount, bonusNum }, "Power Squad Bonus awarded");
+  } catch (err) {
+    logger.error({ err, userId, orderId }, "Failed to process Power Squad Bonus");
+  }
+}
+
+/**
  * Process all commissions for a completed order.
  *
  * @param orderId             DB order ID
@@ -164,6 +263,8 @@ export async function processCommissions(
           saleAmount,
           "level",
         );
+        // Check if Level 2 sponsor has earned a Power Squad Bonus
+        await checkAndAwardPowerSquadBonus(level2Sponsor.id, orderId, orderNumber);
       }
     } else {
       // ── 2. SALES COMMISSION — regular products, Pro Members only ─────────

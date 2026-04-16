@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, productsTable, categoriesTable, orderItemsTable } from "@workspace/db";
-import { eq, like, and, sql, count, desc } from "drizzle-orm";
+import { eq, like, and, sql, count, desc, ne } from "drizzle-orm";
 import { requireAdmin } from "../lib/auth";
 
 const router: IRouter = Router();
@@ -21,6 +21,7 @@ function formatProduct(p: typeof productsTable.$inferSelect, categoryName?: stri
     isProPackage: p.isProPackage,
     status: p.status,
     commissionRate: parseFloat(p.commissionRate),
+    cv: p.cv,
     createdAt: p.createdAt.toISOString(),
   };
 }
@@ -58,8 +59,22 @@ router.get("/products", async (req, res): Promise<void> => {
   });
 });
 
+router.get("/products/admin-all", requireAdmin, async (req, res): Promise<void> => {
+  const rows = await db.select({
+    product: productsTable,
+    categoryName: categoriesTable.name,
+  }).from(productsTable)
+    .leftJoin(categoriesTable, eq(productsTable.categoryId, categoriesTable.id))
+    .orderBy(desc(productsTable.createdAt));
+
+  res.json({
+    products: rows.map(r => ({ ...formatProduct(r.product, r.categoryName), status: r.product.status })),
+    total: rows.length,
+  });
+});
+
 router.post("/products", requireAdmin, async (req, res): Promise<void> => {
-  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, ingredients, benefits } = req.body;
+  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits } = req.body;
   if (!name || !slug || !description || price == null) {
     res.status(400).json({ error: "Missing required fields" });
     return;
@@ -75,6 +90,7 @@ router.post("/products", requireAdmin, async (req, res): Promise<void> => {
     featured: featured ?? false,
     isProPackage: isProPackage ?? false,
     commissionRate: String(commissionRate ?? 10),
+    cv: cv ?? 0,
     ingredients: ingredients ?? undefined,
     benefits: benefits ?? undefined,
     status: "active",
@@ -141,7 +157,7 @@ router.patch("/products/:id", requireAdmin, async (req, res): Promise<void> => {
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
   const updates: Partial<typeof productsTable.$inferInsert> = {};
-  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, ingredients, benefits } = req.body;
+  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits } = req.body;
   if (name) updates.name = name;
   if (slug) updates.slug = slug;
   if (description) updates.description = description;
@@ -153,6 +169,7 @@ router.patch("/products/:id", requireAdmin, async (req, res): Promise<void> => {
   if (featured !== undefined) updates.featured = featured;
   if (isProPackage !== undefined) updates.isProPackage = isProPackage;
   if (commissionRate != null) updates.commissionRate = String(commissionRate);
+  if (cv != null) updates.cv = cv;
   if (ingredients !== undefined) updates.ingredients = ingredients;
   if (benefits !== undefined) updates.benefits = benefits;
 

@@ -44,6 +44,7 @@ import { AdminOrdersPage } from "@/pages/admin/Orders";
 import { AdminCommissionsPage } from "@/pages/admin/Commissions";
 import { AdminPayoutsPage } from "@/pages/admin/Payouts";
 import { AdminGenealogyPage } from "@/pages/admin/AdminGenealogy";
+import { AdminProductsPage } from "@/pages/admin/Products";
 
 // Stubs for pages still being built
 const Stub = ({ name }: { name: string }) => (
@@ -208,7 +209,7 @@ function Router() {
       </Route>
       <Route path="/admin/products">
         <RequireAuth requireAdmin>
-          <AdminLayout><Stub name="Manage Products" /></AdminLayout>
+          <AdminLayout><AdminProductsPage /></AdminLayout>
         </RequireAuth>
       </Route>
       <Route path="/admin/categories">

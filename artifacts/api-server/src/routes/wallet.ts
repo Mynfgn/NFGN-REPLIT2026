@@ -118,6 +118,7 @@ router.get("/payouts", requireAuth, async (req, res): Promise<void> => {
       id: r.payout.id,
       userId: r.payout.userId,
       userName: r.user ? `${r.user.firstName} ${r.user.lastName}` : "Unknown",
+      userEmail: r.user?.email ?? null,
       amount: parseFloat(r.payout.amount),
       method: r.payout.method,
       status: r.payout.status,
@@ -125,6 +126,13 @@ router.get("/payouts", requireAuth, async (req, res): Promise<void> => {
       notes: r.payout.notes ?? null,
       processedAt: r.payout.processedAt?.toISOString() ?? null,
       createdAt: r.payout.createdAt.toISOString(),
+      payoutDestination: {
+        paypalEmail: r.user?.payoutPaypalEmail ?? null,
+        cashAppHandle: r.user?.payoutCashAppHandle ?? null,
+        bankName: r.user?.bankName ?? null,
+        bankAccountType: r.user?.bankAccountType ?? null,
+        preferredMethod: r.user?.payoutMethod ?? null,
+      },
     })),
     total,
     page,
@@ -242,8 +250,69 @@ router.post("/wallet/transfer", requireAuth, async (req, res): Promise<void> => 
 
 router.post("/payouts/:id/process", requireAdmin, async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
-  const [payout] = await db.update(payoutsTable).set({ status: "processed", processedAt: new Date() }).where(eq(payoutsTable.id, id)).returning();
-  if (!payout) { res.status(404).json({ error: "Not found" }); return; }
+  const { reference, adminNotes } = req.body ?? {};
+
+  const existing = await db.select().from(payoutsTable).where(eq(payoutsTable.id, id));
+  if (!existing.length) { res.status(404).json({ error: "Not found" }); return; }
+
+  const currentNotes = existing[0].notes ?? "";
+  const combinedNotes = adminNotes
+    ? [currentNotes, `Admin note: ${adminNotes}`].filter(Boolean).join(" | ")
+    : currentNotes || null;
+
+  const [payout] = await db.update(payoutsTable).set({
+    status: "processed",
+    processedAt: new Date(),
+    reference: reference || null,
+    notes: combinedNotes,
+  }).where(eq(payoutsTable.id, id)).returning();
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, payout.userId));
+  res.json({
+    id: payout.id,
+    userId: payout.userId,
+    userName: user ? `${user.firstName} ${user.lastName}` : "Unknown",
+    amount: parseFloat(payout.amount),
+    method: payout.method,
+    status: payout.status,
+    reference: payout.reference ?? null,
+    notes: payout.notes ?? null,
+    processedAt: payout.processedAt?.toISOString() ?? null,
+    createdAt: payout.createdAt.toISOString(),
+  });
+});
+
+router.post("/payouts/:id/reject", requireAdmin, async (req, res): Promise<void> => {
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+  const { reason } = req.body ?? {};
+
+  const existing = await db.select().from(payoutsTable).where(eq(payoutsTable.id, id));
+  if (!existing.length) { res.status(404).json({ error: "Not found" }); return; }
+  if (existing[0].status !== "pending") {
+    res.status(400).json({ error: "Only pending payouts can be rejected." });
+    return;
+  }
+
+  const refundAmount = parseFloat(existing[0].amount);
+  const [wallet] = await db.select().from(walletsTable).where(eq(walletsTable.userId, existing[0].userId));
+  if (wallet) {
+    const restoredBalance = parseFloat(wallet.balance) + refundAmount;
+    const restoredWithdrawn = Math.max(0, parseFloat(wallet.totalWithdrawn) - refundAmount);
+    await db.update(walletsTable).set({
+      balance: String(restoredBalance),
+      totalWithdrawn: String(restoredWithdrawn),
+    }).where(eq(walletsTable.id, wallet.id));
+  }
+
+  const rejectionNote = reason ? `Rejected: ${reason}` : "Rejected by admin";
+  const existingNotes = existing[0].notes ?? "";
+  const combinedNotes = [existingNotes, rejectionNote].filter(Boolean).join(" | ");
+
+  const [payout] = await db.update(payoutsTable).set({
+    status: "rejected",
+    notes: combinedNotes,
+    processedAt: new Date(),
+  }).where(eq(payoutsTable.id, id)).returning();
 
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, payout.userId));
   res.json({

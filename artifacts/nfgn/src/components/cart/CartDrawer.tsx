@@ -402,14 +402,13 @@ export function CartDrawer() {
 
   const updateItem = useUpdateCartItem({
     mutation: {
-      onSuccess: async (_, vars: any) => {
-        // Refetch cart first, then clear the optimistic entry so the display
-        // transitions directly from optimistic → server value without flickering
-        await qc.invalidateQueries({ queryKey: ["/api/cart"] });
-        setOptimisticQtys(q => { const copy = { ...q }; delete copy[vars.itemId]; return copy; });
+      onSuccess: (_data: any, vars: any) => {
+        // Keep the optimistic value displayed — it IS the correct value.
+        // Just refresh the server cache in the background.
+        qc.invalidateQueries({ queryKey: ["/api/cart"] });
       },
-      onError: (_: any, vars: any) => {
-        // Revert optimistic update on failure
+      onError: (_err: any, vars: any) => {
+        // API failed: revert the optimistic display back to server value
         setOptimisticQtys(q => { const copy = { ...q }; delete copy[vars.itemId]; return copy; });
       },
     },
@@ -441,6 +440,7 @@ export function CartDrawer() {
       setPromoApplied(null);
       setPromoError(null);
       setLastOrder(null);
+      setOptimisticQtys({});
     }, 300);
   }
 
@@ -595,7 +595,7 @@ export function CartDrawer() {
                         <div className="flex items-center gap-2 mt-2">
                           <button
                             onClick={() => handleQty(item.id, -1, item.quantity)}
-                            disabled={isRemoving}
+                            disabled={isRemoving || displayQty <= 1}
                             className="h-7 w-7 rounded border flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                           >
                             <Minus className="h-3 w-3" />

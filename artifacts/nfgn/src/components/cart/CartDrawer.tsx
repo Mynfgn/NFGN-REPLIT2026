@@ -269,17 +269,40 @@ function MemberCheckSection({ onSignedIn }: { onSignedIn: () => void }) {
         </div>
 
         {/* Sponsor — shown prominently */}
-        <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
-          <Label className="text-xs font-bold text-primary">Personal Sponsor Username / Referral Code *</Label>
+        <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 space-y-2">
+          <Label className="text-xs font-bold text-primary">Personal Sponsor Referral Code *</Label>
           <Input
-            placeholder="e.g. store-ADMIN or ljackson-PRO3"
+            placeholder="e.g. ljackson-PRO3 or store-ADMIN"
             value={regForm.sponsorCode}
             onChange={e => setRegForm(f => ({ ...f, sponsorCode: e.target.value }))}
-            className="mt-1 border-primary/40 focus:border-primary"
+            className="border-primary/40 focus:border-primary bg-white"
           />
-          <p className="text-xs text-muted-foreground mt-1">
-            Enter the referral code or username of the NFGN member who invited you. Contact <strong>(678) 909-9974</strong> if you don't have a sponsor.
-          </p>
+          {/* Where to find it */}
+          <div className="bg-white border border-primary/20 rounded-lg p-2.5 space-y-1.5">
+            <p className="text-xs font-bold text-foreground">Where do I find my Sponsor's referral code?</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Your <strong>Personal Sponsor</strong> is the NFGN member who introduced you to NFGN. Their referral code was given to you when they invited you. Here's how to get it:
+            </p>
+            <ul className="text-xs text-muted-foreground space-y-1">
+              <li className="flex gap-1.5">
+                <span className="text-primary font-bold flex-shrink-0">1.</span>
+                <span><strong>Invite link:</strong> If your sponsor sent you a link like <em>nfgn.com/join?ref=...</em> — the code is everything after <code className="bg-muted px-1 rounded">?ref=</code></span>
+              </li>
+              <li className="flex gap-1.5">
+                <span className="text-primary font-bold flex-shrink-0">2.</span>
+                <span><strong>Ask your sponsor:</strong> They can find their personal code in their NFGN dashboard under <em>Profile Management → Referral Code</em> and copy it for you.</span>
+              </li>
+              <li className="flex gap-1.5">
+                <span className="text-primary font-bold flex-shrink-0">3.</span>
+                <span><strong>Met NFGN at an event?</strong> The host or presenter can provide you with their referral code in person.</span>
+              </li>
+            </ul>
+            <div className="border-t border-primary/20 pt-1.5 mt-1.5">
+              <p className="text-xs text-muted-foreground">
+                No sponsor code? Call NFGN directly: <strong className="text-foreground">(678) 909-9974</strong> or email <strong className="text-foreground">newfaceglobalnetwork@gmail.com</strong> — an official will link you to the right sponsor.
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-2">

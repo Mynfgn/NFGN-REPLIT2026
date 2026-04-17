@@ -6,7 +6,7 @@ import { LoginBody, RegisterBody } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
-function formatUser(user: typeof usersTable.$inferSelect) {
+function formatUser(user: typeof usersTable.$inferSelect, sponsorName?: string) {
   return {
     id: user.id,
     email: user.email,
@@ -16,10 +16,22 @@ function formatUser(user: typeof usersTable.$inferSelect) {
     status: user.status,
     referralCode: user.referralCode,
     sponsorId: user.sponsorId,
+    sponsorName: sponsorName ?? null,
     avatar: user.avatar,
     phone: user.phone,
     isProMember: user.isProMember,
+    proMemberSince: user.proMemberSince?.toISOString() ?? null,
     createdAt: user.createdAt.toISOString(),
+    gender: user.gender ?? null,
+    dateOfBirth: user.dateOfBirth ?? null,
+    registrationPackage: user.registrationPackage ?? "free",
+    bankName: user.bankName ?? null,
+    bankAccountNumber: user.bankAccountNumber ?? null,
+    bankRoutingNumber: user.bankRoutingNumber ?? null,
+    bankAccountType: user.bankAccountType ?? null,
+    payoutMethod: user.payoutMethod ?? "bank",
+    payoutPaypalEmail: user.payoutPaypalEmail ?? null,
+    payoutCashAppHandle: user.payoutCashAppHandle ?? null,
   };
 }
 
@@ -144,7 +156,12 @@ router.post("/auth/logout", async (_req, res): Promise<void> => {
 
 router.get("/auth/me", requireAuth, async (req, res): Promise<void> => {
   const user = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
-  res.json(formatUser(user));
+  let sponsorName: string | undefined;
+  if (user.sponsorId) {
+    const [sponsor] = await db.select().from(usersTable).where(eq(usersTable.id, user.sponsorId));
+    if (sponsor) sponsorName = `${sponsor.firstName} ${sponsor.lastName}`;
+  }
+  res.json(formatUser(user, sponsorName));
 });
 
 export default router;

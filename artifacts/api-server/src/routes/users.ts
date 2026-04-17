@@ -5,7 +5,7 @@ import { requireAuth, requireAdmin } from "../lib/auth";
 
 const router: IRouter = Router();
 
-function formatUser(user: typeof usersTable.$inferSelect) {
+function formatUser(user: typeof usersTable.$inferSelect, sponsorName?: string) {
   return {
     id: user.id,
     email: user.email,
@@ -15,10 +15,22 @@ function formatUser(user: typeof usersTable.$inferSelect) {
     status: user.status,
     referralCode: user.referralCode,
     sponsorId: user.sponsorId,
+    sponsorName: sponsorName ?? null,
     avatar: user.avatar,
     phone: user.phone,
     isProMember: user.isProMember,
+    proMemberSince: user.proMemberSince?.toISOString() ?? null,
     createdAt: user.createdAt.toISOString(),
+    gender: user.gender ?? null,
+    dateOfBirth: user.dateOfBirth ?? null,
+    registrationPackage: user.registrationPackage ?? "free",
+    bankName: user.bankName ?? null,
+    bankAccountNumber: user.bankAccountNumber ?? null,
+    bankRoutingNumber: user.bankRoutingNumber ?? null,
+    bankAccountType: user.bankAccountType ?? null,
+    payoutMethod: user.payoutMethod ?? "bank",
+    payoutPaypalEmail: user.payoutPaypalEmail ?? null,
+    payoutCashAppHandle: user.payoutCashAppHandle ?? null,
   };
 }
 
@@ -76,7 +88,12 @@ router.patch("/users/:id", requireAuth, async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
-  const { firstName, lastName, phone, avatar, role, status } = req.body;
+  const {
+    firstName, lastName, phone, avatar, role, status,
+    gender, dateOfBirth,
+    bankName, bankAccountNumber, bankRoutingNumber, bankAccountType,
+    payoutMethod, payoutPaypalEmail, payoutCashAppHandle,
+  } = req.body;
   const currentUser = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
 
   if (currentUser.id !== id && !["super_admin", "admin"].includes(currentUser.role)) {
@@ -92,10 +109,25 @@ router.patch("/users/:id", requireAuth, async (req, res): Promise<void> => {
   if (role && ["super_admin", "admin"].includes(currentUser.role)) updateData.role = role;
   if (status && ["super_admin", "admin"].includes(currentUser.role)) updateData.status = status;
 
+  if (gender !== undefined) updateData.gender = gender;
+  if (dateOfBirth !== undefined) updateData.dateOfBirth = dateOfBirth;
+  if (bankName !== undefined) updateData.bankName = bankName;
+  if (bankAccountNumber !== undefined) updateData.bankAccountNumber = bankAccountNumber;
+  if (bankRoutingNumber !== undefined) updateData.bankRoutingNumber = bankRoutingNumber;
+  if (bankAccountType !== undefined) updateData.bankAccountType = bankAccountType;
+  if (payoutMethod !== undefined) updateData.payoutMethod = payoutMethod;
+  if (payoutPaypalEmail !== undefined) updateData.payoutPaypalEmail = payoutPaypalEmail;
+  if (payoutCashAppHandle !== undefined) updateData.payoutCashAppHandle = payoutCashAppHandle;
+
   const [updated] = await db.update(usersTable).set(updateData).where(eq(usersTable.id, id)).returning();
   if (!updated) { res.status(404).json({ error: "Not found" }); return; }
 
-  res.json(formatUser(updated));
+  let sponsorName: string | undefined;
+  if (updated.sponsorId) {
+    const [sponsor] = await db.select().from(usersTable).where(eq(usersTable.id, updated.sponsorId));
+    if (sponsor) sponsorName = `${sponsor.firstName} ${sponsor.lastName}`;
+  }
+  res.json(formatUser(updated, sponsorName));
 });
 
 router.delete("/users/:id", requireAdmin, async (req, res): Promise<void> => {

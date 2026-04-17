@@ -44,6 +44,7 @@ import {
   Shield,
 } from "lucide-react";
 import { Link } from "wouter";
+import { customFetch } from "@/lib/custom-fetch";
 
 /* ── Types ─────────────────────────────────────────────────────── */
 type PaymentMethod = "authorize_net" | "cash_app" | "paypal" | "cod";
@@ -378,6 +379,9 @@ export function CartDrawer() {
   const [view, setView] = useState<"cart" | "checkout" | "confirm">("cart");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("authorize_net");
   const [promoCode, setPromoCode] = useState("");
+  const [promoValidating, setPromoValidating] = useState(false);
+  const [promoApplied, setPromoApplied] = useState<{ discountType: string; discountValue: number; code: string } | null>(null);
+  const [promoError, setPromoError] = useState<string | null>(null);
   const [shipping, setShipping] = useState<ShippingForm>({
     fullName: "", phone: "", address: "", city: "", state: "", zip: "",
   });
@@ -432,6 +436,38 @@ export function CartDrawer() {
     return card.nameOnCard.trim() && card.cardNumber.replace(/\s/g, "").length === 16 && card.expiry.length === 5 && card.cvv.length >= 3;
   }
 
+  async function applyPromoCode() {
+    const code = promoCode.trim().toUpperCase();
+    if (!code) return;
+    setPromoValidating(true);
+    setPromoError(null);
+    setPromoApplied(null);
+    try {
+      const res = await customFetch("/api/promos/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, orderAmount: subtotal }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setPromoError(data.error ?? data.message ?? "Invalid or expired promo code.");
+      } else {
+        setPromoApplied({ code: data.code ?? code, discountType: data.discountType, discountValue: data.discountValue });
+        toast({ title: `Promo code "${data.code ?? code}" applied!` });
+      }
+    } catch {
+      setPromoError("Could not validate promo code. Please try again.");
+    } finally {
+      setPromoValidating(false);
+    }
+  }
+
+  function clearPromo() {
+    setPromoCode("");
+    setPromoApplied(null);
+    setPromoError(null);
+  }
+
   function placeOrder() {
     if (!shippingValid()) {
       toast({ title: "Missing information", description: "Please fill in your shipping address.", variant: "destructive" });
@@ -442,12 +478,19 @@ export function CartDrawer() {
       return;
     }
     const addr = `${shipping.fullName}, ${shipping.address}, ${shipping.city}, ${shipping.state} ${shipping.zip}${shipping.phone ? " | " + shipping.phone : ""}`;
-    createOrder.mutate({ data: { paymentMethod, shippingAddress: addr, promoCode: promoCode || undefined } } as any);
+    createOrder.mutate({ data: { paymentMethod, shippingAddress: addr, promoCode: promoApplied?.code || promoCode || undefined } } as any);
   }
 
   const items = cart?.items ?? [];
   const subtotal = cart?.subtotal ?? 0;
   const itemCount = cart?.itemCount ?? 0;
+
+  const promoDiscount = promoApplied
+    ? promoApplied.discountType === "percentage"
+      ? subtotal * promoApplied.discountValue / 100
+      : Math.min(promoApplied.discountValue, subtotal)
+    : 0;
+  const discountedTotal = subtotal - promoDiscount;
 
   return (
     <Sheet open={cartOpen} onOpenChange={handleOpenChange}>
@@ -759,15 +802,53 @@ export function CartDrawer() {
               {/* ── Promo Code ── */}
               <section>
                 <h3 className="font-semibold text-xs uppercase tracking-wider text-muted-foreground mb-2">Promo Code</h3>
-                <div className="relative">
-                  <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Enter promo code"
-                    value={promoCode}
-                    onChange={e => setPromoCode(e.target.value.toUpperCase())}
-                    className="pl-9 font-mono tracking-widest uppercase"
-                  />
-                </div>
+                {promoApplied ? (
+                  <div className="flex items-center gap-2 rounded-lg border border-green-300 bg-green-50 px-3 py-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-mono font-bold text-green-700">{promoApplied.code}</p>
+                      <p className="text-xs text-green-600">
+                        {promoApplied.discountType === "percentage"
+                          ? `${promoApplied.discountValue}% off applied`
+                          : `$${promoApplied.discountValue.toFixed(2)} off applied`}
+                        {" — "}<span className="font-semibold">−${promoDiscount.toFixed(2)}</span>
+                      </p>
+                    </div>
+                    <button onClick={clearPromo} className="text-green-600 hover:text-green-800 text-xs underline ml-1 flex-shrink-0">
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Enter promo code"
+                          value={promoCode}
+                          onChange={e => { setPromoCode(e.target.value.toUpperCase()); setPromoError(null); }}
+                          onKeyDown={e => e.key === "Enter" && applyPromoCode()}
+                          className="pl-9 font-mono tracking-widest uppercase"
+                          disabled={promoValidating}
+                        />
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={applyPromoCode}
+                        disabled={!promoCode.trim() || promoValidating}
+                        className="flex-shrink-0"
+                      >
+                        {promoValidating ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
+                      </Button>
+                    </div>
+                    {promoError && (
+                      <p className="text-xs text-destructive mt-1.5 flex items-center gap-1">
+                        <AlertTriangle className="h-3 w-3 flex-shrink-0" /> {promoError}
+                      </p>
+                    )}
+                  </>
+                )}
               </section>
 
               {/* ── Order Summary ── */}
@@ -783,6 +864,18 @@ export function CartDrawer() {
                   <span>Subtotal</span>
                   <span>${subtotal.toFixed(2)}</span>
                 </div>
+                {promoDiscount > 0 && (
+                  <div className="flex justify-between text-sm text-green-600 font-medium">
+                    <span className="flex items-center gap-1"><Tag className="h-3 w-3" /> Promo ({promoApplied!.code})</span>
+                    <span>−${promoDiscount.toFixed(2)}</span>
+                  </div>
+                )}
+                {promoDiscount > 0 && (
+                  <div className="flex justify-between text-sm font-bold border-t pt-1.5">
+                    <span>After Discount</span>
+                    <span className="text-green-700">${discountedTotal.toFixed(2)}</span>
+                  </div>
+                )}
                 <p className="text-xs text-muted-foreground">+ shipping & taxes calculated on order</p>
               </section>
             </div>
@@ -791,7 +884,7 @@ export function CartDrawer() {
               <Button className="w-full gap-2" size="lg" onClick={placeOrder} disabled={createOrder.isPending || !isAuthenticated}>
                 {createOrder.isPending
                   ? <><Loader2 className="h-4 w-4 animate-spin" /> Placing Order…</>
-                  : <>Place Order · ${subtotal.toFixed(2)} <ArrowRight className="h-4 w-4" /></>
+                  : <>Place Order · ${discountedTotal.toFixed(2)} <ArrowRight className="h-4 w-4" /></>
                 }
               </Button>
               {!isAuthenticated && (

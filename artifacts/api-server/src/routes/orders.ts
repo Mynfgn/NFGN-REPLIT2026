@@ -109,14 +109,16 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
   }
 
   let discount = 0;
+  let appliedPromoId: number | null = null;
   if (promoCode) {
-    const [promo] = await db.select().from(promoCodesTable).where(eq(promoCodesTable.code, promoCode));
+    const [promo] = await db.select().from(promoCodesTable).where(eq(promoCodesTable.code, promoCode.toUpperCase().trim()));
     if (promo && promo.isActive) {
       if (promo.discountType === "percentage") {
         discount = subtotal * parseFloat(promo.discountValue) / 100;
       } else {
-        discount = parseFloat(promo.discountValue);
+        discount = Math.min(parseFloat(promo.discountValue), subtotal);
       }
+      appliedPromoId = promo.id;
     }
   }
 
@@ -142,6 +144,13 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
     promoCode: promoCode ?? undefined,
     notes: notes ?? undefined,
   }).returning();
+
+  // Increment promo code usedCount
+  if (appliedPromoId) {
+    await db.update(promoCodesTable)
+      .set({ usedCount: sql`${promoCodesTable.usedCount} + 1` })
+      .where(eq(promoCodesTable.id, appliedPromoId));
+  }
 
   let containsProPackage = false;
 

@@ -57,6 +57,7 @@ import { AffiliateStorefront } from "@/pages/public/AffiliateStorefront";
 import { BookingsPage } from "@/pages/dashboard/Bookings";
 import { BPPDashboardPage } from "@/pages/dashboard/BPP";
 import { AdminBPPPage } from "@/pages/admin/BPP";
+import { AdminPromoCodesPage } from "@/pages/admin/PromoCodes";
 
 // Stubs for pages still being built
 const Stub = ({ name }: { name: string }) => (
@@ -271,7 +272,7 @@ function Router() {
       </Route>
       <Route path="/admin/promos">
         <RequireAuth requireAdmin>
-          <AdminLayout><Stub name="Promo Codes" /></AdminLayout>
+          <AdminLayout><AdminPromoCodesPage /></AdminLayout>
         </RequireAuth>
       </Route>
       <Route path="/admin/settings">

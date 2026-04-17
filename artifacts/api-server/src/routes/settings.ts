@@ -131,4 +131,44 @@ router.post("/promos/validate", async (req, res): Promise<void> => {
   });
 });
 
+router.put("/promos/:id", requireAdmin, async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id);
+  const { code, discountType, discountValue, minOrderAmount, maxUses, expiresAt, isActive } = req.body;
+
+  const [existing] = await db.select().from(promoCodesTable).where(eq(promoCodesTable.id, id));
+  if (!existing) { res.status(404).json({ error: "Promo code not found" }); return; }
+
+  const updates: Record<string, unknown> = {};
+  if (code !== undefined) updates.code = String(code).toUpperCase().trim();
+  if (discountType !== undefined) updates.discountType = discountType;
+  if (discountValue !== undefined) updates.discountValue = String(discountValue);
+  if (minOrderAmount !== undefined) updates.minOrderAmount = String(minOrderAmount);
+  if (maxUses !== undefined) updates.maxUses = maxUses === null ? null : Number(maxUses);
+  if (expiresAt !== undefined) updates.expiresAt = expiresAt ? new Date(expiresAt) : null;
+  if (typeof isActive === "boolean") updates.isActive = isActive;
+
+  const [updated] = await db.update(promoCodesTable).set(updates as any).where(eq(promoCodesTable.id, id)).returning();
+
+  res.json({
+    id: updated.id,
+    code: updated.code,
+    discountType: updated.discountType,
+    discountValue: parseFloat(updated.discountValue),
+    minOrderAmount: parseFloat(updated.minOrderAmount),
+    maxUses: updated.maxUses ?? null,
+    usedCount: updated.usedCount,
+    expiresAt: updated.expiresAt?.toISOString() ?? null,
+    isActive: updated.isActive,
+    createdAt: updated.createdAt.toISOString(),
+  });
+});
+
+router.delete("/promos/:id", requireAdmin, async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id);
+  const [existing] = await db.select().from(promoCodesTable).where(eq(promoCodesTable.id, id));
+  if (!existing) { res.status(404).json({ error: "Promo code not found" }); return; }
+  await db.delete(promoCodesTable).where(eq(promoCodesTable.id, id));
+  res.json({ success: true });
+});
+
 export default router;

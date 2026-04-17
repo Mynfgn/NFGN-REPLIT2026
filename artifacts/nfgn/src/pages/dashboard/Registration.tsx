@@ -12,14 +12,14 @@ import {
 const MEMBER_BENEFITS = [
   { icon: ShoppingBag, title: "Shop at Member Prices", desc: "Access exclusive pricing on all naturopathic wellness products." },
   { icon: Gift, title: "Free to Join", desc: "No registration fee required. Become a member at no cost." },
-  { icon: DollarSign, title: "Referral Commissions", desc: "Earn 10% commission every time someone you refer makes a purchase." },
+  { icon: DollarSign, title: "Referral Commissions", desc: "Earn 20% commission every time someone you refer makes a purchase." },
   { icon: Users, title: "Build Your Community", desc: "Invite friends and family through your personal affiliate link." },
   { icon: BadgeCheck, title: "Verified Member Status", desc: "Get your verified NFGN member badge and referral page." },
 ];
 
 const PRO_BENEFITS = [
-  { icon: Percent, title: "10% Sales Commission", desc: "Earn 10% on every regular product purchase your direct referrals make." },
-  { icon: TrendingUp, title: "Level 2 Power Bonus (20%)", desc: "Earn 20% commissions on Pro Package purchases two levels deep in your team." },
+  { icon: Percent, title: "12% Sales Commission", desc: "Earn 12% on every regular product purchase your direct referrals make." },
+  { icon: TrendingUp, title: "Level 2 Power Bonus (22%)", desc: "Earn 22% commissions on Pro Package purchases two levels deep in your team." },
   { icon: Star, title: "Priority Payout Processing", desc: "Pro Members get priority when requesting fund withdrawals." },
   { icon: Users, title: "Team Volume Bonuses", desc: "Earn on your entire community's Group Volume (GV), not just personal purchases." },
   { icon: Lock, title: "Exclusive Pro Products", desc: "Access to Pro-only wellness bundles and consultation packages." },
@@ -166,7 +166,7 @@ export function RegistrationPage() {
             <div className="pt-2 border-t space-y-2">
               <div className="flex items-center gap-2 text-sm">
                 <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />
-                <span>Referral commission: <strong>10%</strong> on any direct purchase</span>
+                <span>Referral commission: <strong>20%</strong> on any direct purchase</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />
@@ -282,25 +282,25 @@ export function RegistrationPage() {
                   <td className="py-2 font-medium text-foreground">Referral</td>
                   <td className="py-2">All Members</td>
                   <td className="py-2">Any purchase by direct referral</td>
-                  <td className="py-2 text-right font-bold text-green-600">10%</td>
+                  <td className="py-2 text-right font-bold text-green-600">20%</td>
                 </tr>
                 <tr>
                   <td className="py-2 font-medium text-foreground">Sales</td>
                   <td className="py-2">Pro Members only</td>
                   <td className="py-2">Regular product purchase by direct referral</td>
-                  <td className="py-2 text-right font-bold text-green-600">10%</td>
+                  <td className="py-2 text-right font-bold text-green-600">12%</td>
                 </tr>
                 <tr>
-                  <td className="py-2 font-medium text-foreground">Level 1 Bonus</td>
+                  <td className="py-2 font-medium text-foreground">Level 1 Bonus (PRC)</td>
                   <td className="py-2">Pro Members only</td>
                   <td className="py-2">Pro Package purchased by Level 1 member</td>
-                  <td className="py-2 text-right font-bold text-green-600">10%</td>
+                  <td className="py-2 text-right font-bold text-green-600">12%</td>
                 </tr>
                 <tr>
-                  <td className="py-2 font-medium text-foreground">Level 2 Power Bonus</td>
+                  <td className="py-2 font-medium text-foreground">Level 2 Power Bonus (PRC)</td>
                   <td className="py-2">Pro Members only</td>
                   <td className="py-2">Pro Package purchased by Level 2 member</td>
-                  <td className="py-2 text-right font-bold text-primary text-base">20%</td>
+                  <td className="py-2 text-right font-bold text-primary text-base">22%</td>
                 </tr>
               </tbody>
             </table>

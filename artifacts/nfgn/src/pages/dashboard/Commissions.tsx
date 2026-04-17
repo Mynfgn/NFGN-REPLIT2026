@@ -50,11 +50,11 @@ export function CommissionsPage() {
 
   const prcLevels: { level: number; rate: number }[] = Array.isArray((rules as any)?.prcLevels)
     ? (rules as any).prcLevels
-    : [{ level: 1, rate: 10 }, { level: 2, rate: 20 }];
+    : [{ level: 1, rate: 12 }, { level: 2, rate: 22 }, { level: 3, rate: 8 }, { level: 4, rate: 7 }, { level: 5, rate: 7 }];
   const salesLevels: { level: number; rate: number }[] = Array.isArray((rules as any)?.salesLevels)
     ? (rules as any).salesLevels
-    : [{ level: 1, rate: 10 }];
-  const referralRate = (rules as any)?.referralRate ?? 10;
+    : [{ level: 1, rate: 12 }, { level: 2, rate: 24 }, { level: 3, rate: 8 }, { level: 4, rate: 7 }, { level: 5, rate: 6 }, { level: 6, rate: 5 }, { level: 7, rate: 4 }, { level: 8, rate: 3 }, { level: 9, rate: 2 }];
+  const referralRate = (rules as any)?.referralRate ?? 20;
 
   return (
     <div className="space-y-6">

@@ -17,12 +17,23 @@ interface CommissionLevel {
 }
 
 const DEFAULT_PRC = [
-  { level: 1, rate: 10 },
-  { level: 2, rate: 20 },
+  { level: 1, rate: 12 },
+  { level: 2, rate: 22 },
+  { level: 3, rate: 8 },
+  { level: 4, rate: 7 },
+  { level: 5, rate: 7 },
 ];
 
 const DEFAULT_SALES = [
-  { level: 1, rate: 10 },
+  { level: 1, rate: 12 },
+  { level: 2, rate: 24 },
+  { level: 3, rate: 8 },
+  { level: 4, rate: 7 },
+  { level: 5, rate: 6 },
+  { level: 6, rate: 5 },
+  { level: 7, rate: 4 },
+  { level: 8, rate: 3 },
+  { level: 9, rate: 2 },
 ];
 
 function LevelEditor({
@@ -135,7 +146,7 @@ export function CompensationSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
 
-  const [referralRate, setReferralRate] = useState(10);
+  const [referralRate, setReferralRate] = useState(20);
   const [prcLevels, setPrcLevels] = useState<CommissionLevel[]>(DEFAULT_PRC);
   const [salesLevels, setSalesLevels] = useState<CommissionLevel[]>(DEFAULT_SALES);
 
@@ -143,7 +154,7 @@ export function CompensationSettingsPage() {
     customFetch("/api/commission-rules")
       .then(r => r.json())
       .then((data: any) => {
-        setReferralRate(data.referralRate ?? 10);
+        setReferralRate(data.referralRate ?? 20);
         setPrcLevels(Array.isArray(data.prcLevels) && data.prcLevels.length > 0 ? data.prcLevels : DEFAULT_PRC);
         setSalesLevels(Array.isArray(data.salesLevels) && data.salesLevels.length > 0 ? data.salesLevels : DEFAULT_SALES);
       })

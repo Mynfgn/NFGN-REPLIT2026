@@ -142,7 +142,7 @@ export function AffiliateStorefront() {
             {[
               { icon: Leaf, title: "Premium Naturopathic Products", desc: "Handcrafted wellness formulas, herbal cleanses, soaps, candles, and more — all natural, all effective." },
               { icon: Users, title: "True Community Wealth", desc: "Money earned circulates back into your community. Build generational wealth, not just a paycheck." },
-              { icon: Award, title: "3-Type Commission Plan", desc: "Earn through referrals, sales commissions, and level-based bonuses — up to 20% on Level 2 Pro Package sales." },
+              { icon: Award, title: "3-Type Commission Plan", desc: "Earn through referrals, sales commissions, and level-based bonuses — up to 22% on Level 2 Pro Package sales." },
               { icon: Sparkles, title: "Power Squad Bonus", desc: "Earn $200 every 9 Level 2 Pro Package sales. Repeat the cycle, repeat the bonus." },
               { icon: Calendar, title: "Book-A-Professional", desc: "Access certified naturopaths, wellness coaches, and business consultants through our exclusive pro network." },
               { icon: CheckCircle2, title: "Free to Start", desc: "Basic membership is free. Upgrade to Pro for sales commissions and advanced team bonuses anytime." },

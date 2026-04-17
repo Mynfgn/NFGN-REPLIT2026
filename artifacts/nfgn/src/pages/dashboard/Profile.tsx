@@ -143,30 +143,48 @@ export function ProfilePage() {
       </Card>
 
       {/* Referral Info */}
-      <Card className="border-primary/20 bg-primary/3">
+      <Card className="border-2 border-primary/30 bg-primary/5">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Shield className="h-4 w-4 text-primary" />
-            Account Identifiers
+            Referral & Sponsor Tools
           </CardTitle>
-          <CardDescription>Share your referral code to earn commissions</CardDescription>
+          <CardDescription>Share your code or link — anyone who registers using them is linked to you as their sponsor</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div>
-            <Label className="text-xs text-muted-foreground">Your Referral Code</Label>
-            <div className="flex items-center gap-2 mt-1">
-              <code className="text-sm font-mono bg-muted px-3 py-1.5 rounded border flex-1">{user?.referralCode ?? "—"}</code>
+        <CardContent className="space-y-4">
+
+          {/* Sponsor Referral Code — Primary highlight */}
+          <div className="rounded-xl border-2 border-primary/40 bg-background p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                <span className="text-[10px] font-black text-primary-foreground">#</span>
+              </div>
+              <div>
+                <Label className="text-xs font-bold text-primary uppercase tracking-wider">Your Sponsor Referral Code</Label>
+                <p className="text-xs text-muted-foreground">New members enter this when signing up under you</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <code className="text-2xl font-black font-mono tracking-widest text-foreground bg-muted px-4 py-2.5 rounded-lg border border-primary/20 flex-1 select-all">
+                {user?.referralCode ?? "—"}
+              </code>
               {user?.referralCode && <CopyBtn text={user.referralCode} />}
             </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Anyone who enters this code in the <strong>"Personal Sponsor Referral Code"</strong> field at sign-up is placed under you in the genealogy tree, and you earn commissions on their purchases.
+            </p>
           </div>
+
+          {/* Referral Link */}
           <div>
-            <Label className="text-xs text-muted-foreground">Your Referral Link</Label>
+            <Label className="text-xs text-muted-foreground uppercase tracking-wider">Your Referral Invite Link</Label>
             <div className="flex items-center gap-2 mt-1">
               <code className="text-xs font-mono bg-muted px-3 py-1.5 rounded border flex-1 truncate">
                 {window.location.origin}/join?ref={user?.referralCode}
               </code>
               {user?.referralCode && <CopyBtn text={`${window.location.origin}/join?ref=${user.referralCode}`} />}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">Your referral code is pre-filled automatically when someone opens this link.</p>
           </div>
         </CardContent>
       </Card>

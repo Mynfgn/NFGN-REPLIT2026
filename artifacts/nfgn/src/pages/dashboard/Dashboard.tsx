@@ -265,22 +265,43 @@ function SalesByStateChart({ data }: { data: any[] }) {
   );
 }
 
-function AffiliateLinkCard({ referralLink }: { referralLink: string }) {
-  const [copied, setCopied] = useState(false);
+function AffiliateLinkCard({ referralLink, referralCode: codeFromData }: { referralLink: string; referralCode?: string }) {
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
 
   const affiliateUrl = (() => {
     try {
       const parsed = new URL(referralLink);
-      return `${window.location.origin}${parsed.pathname}`;
+      return `${window.location.origin}${parsed.pathname}${parsed.search}`;
     } catch {
       return referralLink;
     }
   })();
 
-  const handleCopy = () => {
+  /* Use prop code if provided; otherwise extract from path /rep/CODE or ?ref= param */
+  const referralCode = (codeFromData && codeFromData.trim()) ? codeFromData : (() => {
+    try {
+      const parsed = new URL(affiliateUrl);
+      const fromParam = parsed.searchParams.get("ref");
+      if (fromParam) return fromParam;
+      const match = parsed.pathname.match(/\/rep\/(.+)/);
+      return match?.[1] ?? "";
+    } catch {
+      return "";
+    }
+  })();
+
+  const handleCopyLink = () => {
     navigator.clipboard.writeText(affiliateUrl).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
+    });
+  };
+
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText(referralCode).then(() => {
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 2500);
     });
   };
 
@@ -289,41 +310,72 @@ function AffiliateLinkCard({ referralLink }: { referralLink: string }) {
       <CardHeader className="pb-3">
         <CardTitle className="font-serif text-base flex items-center gap-2">
           <Link2 className="h-4 w-4 text-primary" />
-          Your Personal Affiliate Link
+          Your Referral Tools
         </CardTitle>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Share this link with friends and family. When they join or shop through it, you earn commissions automatically.
+          Share your code or link with prospects. When they join or shop through either, you earn commissions automatically.
         </p>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-muted border border-border/60">
-          <span className="flex-1 text-sm font-mono text-foreground truncate select-all" title={affiliateUrl}>
-            {affiliateUrl}
-          </span>
-          <Button
-            size="sm"
-            variant={copied ? "default" : "outline"}
-            className={`flex-shrink-0 gap-1.5 transition-all ${copied ? "bg-green-600 hover:bg-green-700 border-green-600 text-white" : ""}`}
-            onClick={handleCopy}
-          >
-            {copied ? (
-              <><Check className="h-3.5 w-3.5" /> Copied!</>
-            ) : (
-              <><Copy className="h-3.5 w-3.5" /> Copy</>
-            )}
-          </Button>
-        </div>
+      <CardContent className="space-y-4">
 
-        <div className="flex flex-wrap gap-2">
-          <a
-            href={affiliateUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
-          >
-            <ExternalLink className="h-3 w-3" />
-            Preview your affiliate page
-          </a>
+        {/* ── Sponsor Referral Code — highlighted primary box ── */}
+        {referralCode && (
+          <div className="rounded-xl border-2 border-primary/40 bg-primary/8 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                <span className="text-[10px] font-black text-primary-foreground">#</span>
+              </div>
+              <div>
+                <p className="text-xs font-bold text-primary uppercase tracking-wider">Your Sponsor Referral Code</p>
+                <p className="text-xs text-muted-foreground">Give this code to anyone you personally sponsor</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 text-xl font-black font-mono tracking-widest text-foreground bg-background border border-primary/30 rounded-lg px-4 py-2.5 select-all">
+                {referralCode}
+              </code>
+              <Button
+                size="sm"
+                variant={copiedCode ? "default" : "outline"}
+                className={`flex-shrink-0 gap-1.5 transition-all h-11 px-4 ${copiedCode ? "bg-green-600 hover:bg-green-700 border-green-600 text-white" : ""}`}
+                onClick={handleCopyCode}
+              >
+                {copiedCode ? <><Check className="h-3.5 w-3.5" /> Copied!</> : <><Copy className="h-3.5 w-3.5" /> Copy</>}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              New members enter this code in the <strong>"Personal Sponsor Referral Code"</strong> field when signing up.
+            </p>
+          </div>
+        )}
+
+        {/* ── Affiliate Link ── */}
+        <div>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Your Affiliate Link</p>
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-muted border border-border/60">
+            <span className="flex-1 text-xs font-mono text-foreground truncate select-all" title={affiliateUrl}>
+              {affiliateUrl}
+            </span>
+            <Button
+              size="sm"
+              variant={copiedLink ? "default" : "outline"}
+              className={`flex-shrink-0 gap-1.5 transition-all ${copiedLink ? "bg-green-600 hover:bg-green-700 border-green-600 text-white" : ""}`}
+              onClick={handleCopyLink}
+            >
+              {copiedLink ? <><Check className="h-3.5 w-3.5" /> Copied!</> : <><Copy className="h-3.5 w-3.5" /> Copy</>}
+            </Button>
+          </div>
+          <div className="flex flex-wrap gap-2 mt-1.5">
+            <a
+              href={affiliateUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
+            >
+              <ExternalLink className="h-3 w-3" />
+              Preview your affiliate page
+            </a>
+          </div>
         </div>
 
         <div className="grid grid-cols-3 gap-3 pt-1">
@@ -408,7 +460,7 @@ export function Dashboard() {
 
       {/* Affiliate Link */}
       {data?.referralLink && (
-        <AffiliateLinkCard referralLink={data.referralLink} />
+        <AffiliateLinkCard referralLink={data.referralLink} referralCode={(data as any)?.referralCode ?? ""} />
       )}
 
       {/* PV/GV Volume + Power Squad Bonus */}

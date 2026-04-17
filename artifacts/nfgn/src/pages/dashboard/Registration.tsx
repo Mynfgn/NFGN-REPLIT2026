@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import {
   UserPlus, Star, ShoppingBag, CheckCircle2, Gift, DollarSign,
-  TrendingUp, Users, Percent, BadgeCheck, ArrowRight, Lock
+  TrendingUp, Users, Percent, BadgeCheck, ArrowRight, Lock, Copy
 } from "lucide-react";
 
 const MEMBER_BENEFITS = [
@@ -59,37 +59,74 @@ export function RegistrationPage() {
         </p>
       </div>
 
-      {/* Affiliate Link Reminder */}
-      <Card className="border-primary/30 bg-primary/5">
-        <CardContent className="pt-5 pb-5">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
+      {/* Sponsor Code + Affiliate Link */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Sponsor Referral Code */}
+        <Card className="border-2 border-primary/50 bg-primary/5">
+          <CardContent className="pt-5 pb-5">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-7 w-7 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                <span className="text-xs font-black text-primary-foreground">#</span>
+              </div>
+              <div>
+                <p className="text-xs font-bold text-primary uppercase tracking-wider">Your Sponsor Referral Code</p>
+                <p className="text-xs text-muted-foreground">Give to prospects — required at registration</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 text-2xl font-black font-mono tracking-widest text-foreground bg-background border-2 border-primary/30 rounded-lg px-4 py-3 select-all">
+                {me?.referralCode ?? "—"}
+              </code>
+              {me?.referralCode && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-shrink-0 h-12 px-4 gap-1.5"
+                  onClick={() => {
+                    if (me?.referralCode) navigator.clipboard.writeText(me.referralCode);
+                  }}
+                >
+                  <Copy className="h-3.5 w-3.5" /> Copy
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              When your prospect registers at the Join page, they enter this exact code in the <strong>"Personal Sponsor Referral Code"</strong> field.
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Affiliate Link */}
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="pt-5 pb-5 h-full flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
                 <UserPlus className="h-4 w-4 text-primary" />
                 <span className="font-semibold text-sm">Your Referral Invite Link</span>
               </div>
-              <code className="text-xs bg-background border rounded px-2 py-1 font-mono text-foreground block truncate">
+              <code className="text-xs bg-background border rounded px-2 py-1.5 font-mono text-foreground block truncate">
                 {referralLink}
               </code>
-              <p className="text-xs text-muted-foreground mt-1">
-                Anyone who visits this link will have your referral code pre-filled on the Join page.
+              <p className="text-xs text-muted-foreground mt-1.5">
+                Your referral code is pre-filled automatically when prospects open this link.
               </p>
             </div>
-            <div className="flex gap-2 flex-shrink-0">
+            <div className="flex gap-2 mt-3">
               <Button
                 size="sm"
                 variant="outline"
+                className="gap-1.5"
                 onClick={() => navigator.clipboard.writeText(referralLink)}
               >
-                Copy Link
+                <Copy className="h-3.5 w-3.5" /> Copy Link
               </Button>
               <Button size="sm" asChild>
-                <Link href="/join">Preview Join Page <ArrowRight className="ml-1 h-3 w-3" /></Link>
+                <Link href="/join">Preview <ArrowRight className="ml-1 h-3 w-3" /></Link>
               </Button>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Important Note */}
       <Card className="border-amber-300 bg-amber-50">

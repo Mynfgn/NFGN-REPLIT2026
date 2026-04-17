@@ -14,6 +14,7 @@ import { AdminLayout } from "@/components/layout/AdminLayout";
 import NotFound from "@/pages/not-found";
 import { Home } from "@/pages/public/Home";
 import { Shop } from "@/pages/public/Shop";
+import { ProductDetail } from "@/pages/public/ProductDetail";
 import { Join } from "@/pages/public/Join";
 import { BookAPro } from "@/pages/public/BookAPro";
 import { About } from "@/pages/public/About";
@@ -100,6 +101,9 @@ function Router() {
       </Route>
       <Route path="/shop">
         <PublicLayout><Shop /></PublicLayout>
+      </Route>
+      <Route path="/product/:slug">
+        <PublicLayout><ProductDetail /></PublicLayout>
       </Route>
       <Route path="/join">
         <PublicLayout><Join /></PublicLayout>

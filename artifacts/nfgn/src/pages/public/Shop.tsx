@@ -1,6 +1,7 @@
 import { useListProducts, useAddToCart } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
+import { resolveImageSrc } from "@/lib/image";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -69,9 +70,9 @@ export function Shop() {
             <Link key={product.id} href={`/product/${product.slug}`}>
               <Card className="h-full overflow-hidden border-border/50 hover:border-primary/50 transition-colors group cursor-pointer flex flex-col">
                 <div className="aspect-square relative bg-muted flex items-center justify-center overflow-hidden">
-                  {product.image ? (
+                  {resolveImageSrc(product.image) ? (
                     <img
-                      src={product.image}
+                      src={resolveImageSrc(product.image)!}
                       alt={product.name}
                       className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
                     />

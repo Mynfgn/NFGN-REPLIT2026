@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
+import { Link } from "wouter";
 import { useGetSettings, useUpdateSettings } from "@workspace/api-client-react";
+import { customFetch } from "@/lib/custom-fetch";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -57,20 +59,32 @@ const ALL_PAYMENT_METHODS = [
   { id: "cod", label: "Cash on Delivery", sub: "By approval only" },
 ];
 
-/* ── Commission level display ───────────────────────────────────── */
-const DEFAULT_LEVELS = [
-  { level: 1, rate: 10 }, { level: 2, rate: 20 }, { level: 3, rate: 5 },
-  { level: 4, rate: 5 }, { level: 5, rate: 5 }, { level: 6, rate: 5 },
-  { level: 7, rate: 5 }, { level: 8, rate: 5 }, { level: 9, rate: 5 },
-];
+/* ── Commission rules types ─────────────────────────────────────── */
+interface LevelRate { level: number; rate: number }
+interface LiveCommissionRules {
+  referralRate: number;
+  levels: LevelRate[];         // PRC levels
+  salesLevels: LevelRate[];    // Sales commission levels
+  powerBonusAmount: number;
+  powerBonusTrigger: number;
+  powerBonusEnabled: boolean;
+}
 
 /* ═══════════════════════════════════════════════════════════════ */
 export default function AdminSettingsPage() {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [justSaved, setJustSaved] = useState(false);
+  const [commissionRules, setCommissionRules] = useState<LiveCommissionRules | null>(null);
 
   const { data: settings, isLoading } = useGetSettings();
+
+  useEffect(() => {
+    customFetch("/api/commission-rules")
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setCommissionRules(data); })
+      .catch(() => {});
+  }, []);
   const updateSettings = useUpdateSettings({
     mutation: {
       onSuccess: () => {
@@ -380,23 +394,93 @@ export default function AdminSettingsPage() {
         </Field>
       </Section>
 
-      {/* ── 6. Commission Structure (read-only overview) ── */}
+      {/* ── 6. Uni-Level Commission Structure (live from commission rules) ── */}
       <Section title="Uni-Level Commission Structure" icon={DollarSign}>
         <p className="text-sm text-muted-foreground -mt-2">
-          Current commission rates paid out across 9 levels of the genealogy tree. Contact your developer to update these rates via the commission rules database table.
+          Live commission rates currently active across the system.{" "}
+          <Link href="/admin/compensation" className="text-primary underline underline-offset-2 hover:opacity-80">
+            Edit in Pro Compensation Settings →
+          </Link>
         </p>
-        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-          {DEFAULT_LEVELS.map(l => (
-            <div key={l.level} className={`rounded-lg border p-3 text-center ${l.level <= 2 ? "border-primary/40 bg-primary/5" : "border-border bg-muted/30"}`}>
-              <p className="text-xs text-muted-foreground">Level {l.level}</p>
-              <p className={`text-lg font-bold ${l.level <= 2 ? "text-primary" : "text-foreground"}`}>{l.rate}%</p>
+
+        {!commissionRules ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+            <Loader2 className="h-4 w-4 animate-spin" /> Loading commission rates…
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* Referral Commission */}
+            <div className="rounded-lg border border-blue-200 bg-blue-50/50 p-4 space-y-2">
+              <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">Referral Commission — All Members</p>
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg border border-blue-300 bg-blue-100 px-4 py-2 text-center min-w-[72px]">
+                  <p className="text-xs text-blue-600">Rate</p>
+                  <p className="text-xl font-bold text-blue-700">{commissionRules.referralRate}%</p>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  The Personal Sponsor earns {commissionRules.referralRate}% on <strong>every purchase</strong> made by the member they referred, regardless of membership type.
+                </p>
+              </div>
             </div>
-          ))}
-        </div>
-        <div className="bg-muted/40 rounded-lg p-3 text-xs space-y-1">
-          <p className="font-medium">Power Squad Bonus</p>
-          <p className="text-muted-foreground">Members earn a <strong>$200 bonus</strong> for every <strong>9 personally sponsored Level 2 Pro Package sales</strong>. Requires 9 personally sponsored Level 1 Pro Members to qualify.</p>
-        </div>
+
+            {/* Sales Commission */}
+            <div className="rounded-lg border p-4 space-y-2">
+              <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Sales Commission — Pro Members Only</p>
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                {(commissionRules.salesLevels ?? []).map(l => (
+                  <div key={l.level} className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-center">
+                    <p className="text-xs text-muted-foreground">Level {l.level}</p>
+                    <p className="text-lg font-bold text-primary">{l.rate}%</p>
+                  </div>
+                ))}
+              </div>
+              {(commissionRules.salesLevels ?? []).length === 0 && (
+                <p className="text-xs text-muted-foreground italic">No sales commission levels configured.</p>
+              )}
+            </div>
+
+            {/* PRC */}
+            <div className="rounded-lg border p-4 space-y-2">
+              <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Pro Registration Commission (PRC) — Pro Members Only</p>
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                {(commissionRules.levels ?? []).map(l => (
+                  <div key={l.level} className="rounded-lg border border-primary/40 bg-primary/5 p-3 text-center">
+                    <p className="text-xs text-muted-foreground">Level {l.level}</p>
+                    <p className="text-lg font-bold text-primary">{l.rate}%</p>
+                  </div>
+                ))}
+              </div>
+              {(commissionRules.levels ?? []).length === 0 && (
+                <p className="text-xs text-muted-foreground italic">No PRC levels configured.</p>
+              )}
+            </div>
+
+            {/* Power Squad Bonus */}
+            <div className="bg-muted/40 rounded-lg p-4 space-y-1.5 border">
+              <p className="text-sm font-semibold flex items-center gap-2">
+                Power Squad Bonus
+                <Badge variant={commissionRules.powerBonusEnabled ? "default" : "secondary"} className="text-xs">
+                  {commissionRules.powerBonusEnabled ? "Active" : "Disabled"}
+                </Badge>
+              </p>
+              {commissionRules.powerBonusEnabled ? (
+                <p className="text-xs text-muted-foreground">
+                  Pro Members earn a{" "}
+                  <strong className="text-foreground">${Number(commissionRules.powerBonusAmount).toFixed(2)} bonus</strong>
+                  {" "}for every{" "}
+                  <strong className="text-foreground">{commissionRules.powerBonusTrigger} Level 2 PRC purchases</strong>.
+                  Requires personally sponsoring at least{" "}
+                  <strong className="text-foreground">{commissionRules.powerBonusTrigger} Level 1 Pro Members</strong> to qualify.{" "}
+                  <Link href="/admin/bonuses" className="text-primary underline underline-offset-2 hover:opacity-80">
+                    Edit in Pro Member Bonuses →
+                  </Link>
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground italic">Power Squad Bonus is currently disabled.</p>
+              )}
+            </div>
+          </div>
+        )}
       </Section>
 
       {/* ── 7. System Mode ── */}

@@ -9,8 +9,12 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Star, Save, RefreshCw, Users, DollarSign, Repeat2, AlertCircle, CheckCircle2, Info } from "lucide-react";
 
+interface LevelRate { level: number; rate: number }
+
 interface CommissionRules {
-  levels: { level: number; rate: number }[];
+  referralRate?: number;
+  levels: LevelRate[];
+  salesLevels?: LevelRate[];
   powerBonusAmount: number;
   powerBonusTrigger: number;
   powerBonusEnabled: boolean;
@@ -61,7 +65,10 @@ export function AdminBonusesPage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          // Preserve all existing commission rate settings — only update bonus fields
+          referralRate: rules?.referralRate,
           levels: rules?.levels,
+          salesLevels: rules?.salesLevels,
           powerBonusAmount: amount,
           powerBonusTrigger: trigger,
           powerBonusEnabled: bonusEnabled,
@@ -91,11 +98,16 @@ export function AdminBonusesPage() {
       rules.powerBonusEnabled !== bonusEnabled
     : false;
 
+  const amountNum = parseFloat(bonusAmount);
+  const triggerNum = parseInt(bonusTrigger, 10);
+  const validAmount = !isNaN(amountNum) && amountNum > 0;
+  const validTrigger = !isNaN(triggerNum) && triggerNum >= 1;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-serif font-bold">Bonus Settings</h1>
+          <h1 className="text-3xl font-serif font-bold">Pro Member Bonuses</h1>
           <p className="text-muted-foreground text-sm mt-1">
             Configure the Power Squad Bonus program for Pro Members.
           </p>
@@ -115,8 +127,8 @@ export function AdminBonusesPage() {
               <p className="font-semibold text-foreground">How the Power Squad Bonus works</p>
               <ul className="text-muted-foreground space-y-0.5 list-disc list-inside">
                 <li>A Pro Member earns a cash bonus every time a set number of Pro Member Packages are purchased at their Level 2 position.</li>
-                <li>The bonus repeats every increment — e.g., at 9, 18, 27, 36 Level 2 Pro Package purchases.</li>
-                <li>To qualify, the Pro Member must personally sponsor at least <strong className="text-foreground">N</strong> Level 1 Pro Members (where N = Trigger Count).</li>
+                <li>The bonus repeats every increment — e.g., at {validTrigger ? triggerNum : "N"}, {validTrigger ? triggerNum * 2 : "2N"}, {validTrigger ? triggerNum * 3 : "3N"}… Level 2 Pro Package purchases.</li>
+                <li>To qualify, the Pro Member must personally sponsor at least <strong className="text-foreground">{validTrigger ? triggerNum : "N"}</strong> Level 1 Pro Members.</li>
                 <li>Bonuses are auto-approved and immediately credited to the member's e-wallet.</li>
               </ul>
             </div>
@@ -204,17 +216,43 @@ export function AdminBonusesPage() {
                 </div>
               </div>
 
-              {/* Qualification summary */}
+              {/* Qualification Summary — updates live as inputs change */}
               <div className="p-4 rounded-lg bg-muted/50 border">
-                <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                <p className="text-sm font-medium mb-3 flex items-center gap-2">
                   <Users className="h-4 w-4 text-primary" />
                   Qualification Summary (current settings)
                 </p>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• Bonus: <strong className="text-foreground">${isNaN(parseFloat(bonusAmount)) ? "—" : parseFloat(bonusAmount).toFixed(2)}</strong> per cycle</li>
-                  <li>• Trigger: every <strong className="text-foreground">{isNaN(parseInt(bonusTrigger)) ? "—" : bonusTrigger}</strong> Level 2 Pro Package purchases</li>
-                  <li>• Minimum Level 1 Pro Members to qualify: <strong className="text-foreground">{isNaN(parseInt(bonusTrigger)) ? "—" : bonusTrigger}</strong></li>
-                  <li>• Bonus repeats at: {isNaN(parseInt(bonusTrigger)) ? "—" : [1, 2, 3, 4, 5].map(n => n * parseInt(bonusTrigger)).join(", ")}… purchases</li>
+                <ul className="text-sm text-muted-foreground space-y-1.5">
+                  <li className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
+                    Bonus per cycle:&nbsp;
+                    <strong className="text-foreground">
+                      {validAmount ? `$${amountNum.toFixed(2)}` : "—"}
+                    </strong>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
+                    Trigger every:&nbsp;
+                    <strong className="text-foreground">
+                      {validTrigger ? `${triggerNum} Level 2 Pro Package purchases` : "—"}
+                    </strong>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
+                    Minimum Level 1 Pro Members to qualify:&nbsp;
+                    <strong className="text-foreground">
+                      {validTrigger ? triggerNum : "—"}
+                    </strong>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
+                    Bonus fires at purchase counts:&nbsp;
+                    <strong className="text-foreground">
+                      {validTrigger
+                        ? [1, 2, 3, 4, 5].map(n => n * triggerNum).join(", ") + "…"
+                        : "—"}
+                    </strong>
+                  </li>
                 </ul>
               </div>
 
@@ -228,7 +266,7 @@ export function AdminBonusesPage() {
               {success && (
                 <div className="flex items-center gap-2 p-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm">
                   <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
-                  Bonus settings saved successfully.
+                  Pro Member Bonus settings saved successfully.
                 </div>
               )}
 

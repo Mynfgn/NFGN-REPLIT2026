@@ -37,7 +37,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     { name: "Commissions", href: "/admin/commissions", icon: Award },
     { name: "Referral Commissions", href: "/admin/referral-commissions", icon: Gift },
     { name: "Pro Compensation Settings", href: "/admin/compensation", icon: Percent },
-    { name: "Bonuses", href: "/admin/bonuses", icon: Star },
+    { name: "Pro Member Bonuses", href: "/admin/bonuses", icon: Star },
     { name: "Payouts", href: "/admin/payouts", icon: Banknote },
     { name: "Bookings", href: "/admin/bookings", icon: Calendar },
     { name: "Professionals", href: "/admin/professionals", icon: Users },

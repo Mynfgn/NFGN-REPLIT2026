@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { customFetch } from "@/lib/custom-fetch";
 import { useListCategories } from "@workspace/api-client-react";
+import { useUpload } from "@workspace/object-storage-web";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,8 +19,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, RefreshCw, Package, DollarSign, BarChart2, Layers } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, Package, DollarSign, BarChart2, Layers, Upload, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+
+function getImageSrc(image: string | null | undefined): string | null {
+  if (!image) return null;
+  if (image.startsWith("http://") || image.startsWith("https://")) return image;
+  if (image.startsWith("/objects/")) return `/api/storage${image}`;
+  return image;
+}
 
 interface Product {
   id: number;
@@ -73,6 +81,17 @@ export function AdminProductsPage() {
 
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { uploadFile, isUploading } = useUpload({
+    onSuccess: (response) => {
+      setForm(f => ({ ...f, image: response.objectPath }));
+      toast.success("Image uploaded successfully!");
+    },
+    onError: (err) => {
+      toast.error(`Upload failed: ${err.message}`);
+    },
+  });
 
   const { data: categoriesData } = useListCategories();
   const categories = categoriesData?.categories ?? [];
@@ -296,13 +315,12 @@ export function AdminProductsPage() {
                   filtered.map(p => (
                     <TableRow key={p.id} className={p.status !== "active" ? "opacity-50" : ""}>
                       <TableCell>
-                        {p.image ? (
-                          <img src={p.image} alt={p.name} className="h-10 w-10 rounded object-cover border" />
-                        ) : (
-                          <div className="h-10 w-10 rounded border bg-muted flex items-center justify-center">
-                            <Package className="h-4 w-4 text-muted-foreground" />
-                          </div>
-                        )}
+                        {getImageSrc(p.image) ? (
+                          <img src={getImageSrc(p.image)!} alt={p.name} className="h-10 w-10 rounded object-cover border" onError={e => { e.currentTarget.style.display = "none"; (e.currentTarget.nextSibling as HTMLElement)?.style.setProperty("display", "flex"); }} />
+                        ) : null}
+                        <div className="h-10 w-10 rounded border bg-muted items-center justify-center" style={{ display: getImageSrc(p.image) ? "none" : "flex" }}>
+                          <Package className="h-4 w-4 text-muted-foreground" />
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div>
@@ -413,19 +431,73 @@ export function AdminProductsPage() {
             </div>
 
             {/* Product Image */}
-            <div className="space-y-1.5">
-              <Label>Product Image URL</Label>
-              <Input
-                value={form.image}
-                onChange={e => setForm(f => ({ ...f, image: e.target.value }))}
-                placeholder="https://example.com/image.jpg"
-              />
+            <div className="space-y-2">
+              <Label>Product Image</Label>
+              <div className="flex gap-2 items-start">
+                <div className="flex-1 space-y-1.5">
+                  <Input
+                    value={form.image}
+                    onChange={e => setForm(f => ({ ...f, image: e.target.value }))}
+                    placeholder="https://example.com/image.jpg or upload →"
+                    disabled={isUploading}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Paste a URL or click "Upload" to select a file from your computer.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) await uploadFile(file);
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading || saving}
+                    className="gap-2 whitespace-nowrap"
+                  >
+                    {isUploading ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" />Uploading…</>
+                    ) : (
+                      <><Upload className="h-4 w-4" />Upload Image</>
+                    )}
+                  </Button>
+                  {form.image && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setForm(f => ({ ...f, image: "" }))}
+                      className="gap-1 text-muted-foreground hover:text-destructive"
+                    >
+                      <X className="h-3.5 w-3.5" />Clear
+                    </Button>
+                  )}
+                </div>
+              </div>
               {form.image && (
-                <img src={form.image} alt="preview" className="h-20 w-20 rounded object-cover border mt-2" onError={e => (e.currentTarget.style.display = "none")} />
+                <div className="flex items-center gap-3 p-2 rounded-lg border bg-muted/30">
+                  <img
+                    src={getImageSrc(form.image) ?? ""}
+                    alt="preview"
+                    className="h-20 w-20 rounded object-cover border flex-shrink-0"
+                    onError={e => (e.currentTarget.style.display = "none")}
+                  />
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-muted-foreground mb-0.5">Image Preview</p>
+                    <p className="text-xs text-muted-foreground break-all line-clamp-2">{form.image}</p>
+                  </div>
+                </div>
               )}
-              <p className="text-xs text-muted-foreground">
-                Paste a direct image URL. Recommended size: 600×600px or larger, square format.
-              </p>
             </div>
 
             {/* Pricing */}

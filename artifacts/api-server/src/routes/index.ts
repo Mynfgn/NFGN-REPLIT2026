@@ -13,6 +13,7 @@ import bookingsRouter from "./bookings";
 import messagesRouter from "./messages";
 import settingsRouter from "./settings";
 import dashboardRouter from "./dashboard";
+import storageRouter from "./storage";
 
 const router: IRouter = Router();
 
@@ -30,5 +31,6 @@ router.use(bookingsRouter);
 router.use(messagesRouter);
 router.use(settingsRouter);
 router.use(dashboardRouter);
+router.use(storageRouter);
 
 export default router;

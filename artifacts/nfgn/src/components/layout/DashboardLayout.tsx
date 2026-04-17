@@ -6,7 +6,7 @@ import {
   LayoutDashboard, ShoppingBag, Wallet, Users, 
   Award, Banknote, Calendar, Inbox, UserCircle, 
   BarChart3, LogOut, Menu, X, UserPlus, ArrowRightLeft,
-  TrendingUp, Wrench,
+  TrendingUp, Wrench, Home,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -38,6 +38,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
     { name: "Payouts", href: "/dashboard/payouts", icon: Banknote },
     { name: "Genealogy", href: "/dashboard/genealogy", icon: Users },
     { name: "Commissions", href: "/dashboard/commissions", icon: Award },
+    { name: "Bill Payer Program", href: "/dashboard/bpp", icon: Home },
     { name: "Bookings", href: "/dashboard/bookings", icon: Calendar },
     { name: "Mailbox", href: "/dashboard/mailbox", icon: Inbox },
     { name: "Tools", href: "/dashboard/tools", icon: Wrench },

@@ -7,3 +7,4 @@ export * from "./wallets";
 export * from "./bookings";
 export * from "./messages";
 export * from "./settings";
+export * from "./bpp";

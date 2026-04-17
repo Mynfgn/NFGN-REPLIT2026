@@ -14,6 +14,7 @@ import messagesRouter from "./messages";
 import settingsRouter from "./settings";
 import dashboardRouter from "./dashboard";
 import storageRouter from "./storage";
+import bppRouter from "./bpp";
 
 const router: IRouter = Router();
 
@@ -32,5 +33,6 @@ router.use(messagesRouter);
 router.use(settingsRouter);
 router.use(dashboardRouter);
 router.use(storageRouter);
+router.use(bppRouter);
 
 export default router;

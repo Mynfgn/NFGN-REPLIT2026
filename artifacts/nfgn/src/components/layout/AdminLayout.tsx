@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Users, ShoppingBag, FolderTree, 
   Award, Banknote, Calendar, Settings,
   MessageSquare, Tag, BarChart, LogOut, Menu, X,
-  ShieldCheck, Network, Star, Percent, Gift
+  ShieldCheck, Network, Star, Percent, Gift, Home,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -38,6 +38,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     { name: "Referral Commissions", href: "/admin/referral-commissions", icon: Gift },
     { name: "Pro Compensation Settings", href: "/admin/compensation", icon: Percent },
     { name: "Pro Member Bonuses", href: "/admin/bonuses", icon: Star },
+    { name: "Bill Payer Program", href: "/admin/bpp", icon: Home },
     { name: "Payouts", href: "/admin/payouts", icon: Banknote },
     { name: "Bookings", href: "/admin/bookings", icon: Calendar },
     { name: "Professionals", href: "/admin/professionals", icon: Users },

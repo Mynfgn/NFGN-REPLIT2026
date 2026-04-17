@@ -55,6 +55,8 @@ import { CompensationSettingsPage } from "@/pages/admin/CompensationSettings";
 import { ReferralCommissionsPage } from "@/pages/admin/ReferralCommissions";
 import { AffiliateStorefront } from "@/pages/public/AffiliateStorefront";
 import { BookingsPage } from "@/pages/dashboard/Bookings";
+import { BPPDashboardPage } from "@/pages/dashboard/BPP";
+import { AdminBPPPage } from "@/pages/admin/BPP";
 
 // Stubs for pages still being built
 const Stub = ({ name }: { name: string }) => (
@@ -155,6 +157,11 @@ function Router() {
           <DashboardLayout><TransferFundsPage /></DashboardLayout>
         </RequireAuth>
       </Route>
+      <Route path="/dashboard/bpp">
+        <RequireAuth>
+          <DashboardLayout><BPPDashboardPage /></DashboardLayout>
+        </RequireAuth>
+      </Route>
       <Route path="/dashboard/bookings">
         <RequireAuth>
           <DashboardLayout><BookingsPage /></DashboardLayout>
@@ -235,6 +242,11 @@ function Router() {
       <Route path="/admin/categories">
         <RequireAuth requireAdmin>
           <AdminLayout><AdminCategoriesPage /></AdminLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/admin/bpp">
+        <RequireAuth requireAdmin>
+          <AdminLayout><AdminBPPPage /></AdminLayout>
         </RequireAuth>
       </Route>
       <Route path="/admin/bonuses">

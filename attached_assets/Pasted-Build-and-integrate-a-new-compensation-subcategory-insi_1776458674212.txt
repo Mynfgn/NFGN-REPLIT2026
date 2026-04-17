@@ -1,0 +1,472 @@
+Build and integrate a new compensation subcategory inside the NFGN MLM platform called:
+
+PRO CONSULTANT COMMISSIONS → BILL PAYER PROGRAM (BPP)
+
+Company Name:
+New Face Global Network (NFGN)
+
+Purpose of this feature:
+Create a “Bill Payer Program” (BPP) for NFGN Pro Members only. This is a special bonus program designed to help qualified Pro Members pay important monthly bills, regardless of how many products they are personally selling by themselves, because this bonus is primarily based on Group Volume (GV) performance, not personal retail sales alone.
+
+The concept:
+A Pro Member earns a Bill Payer Bonus when they help their group/community generate enough volume and they also meet the required minimum Personal Volume (PV). These bonuses are funded by the company as part of the compensation structure and should be deposited into the member’s NFGN account wallet/balance once the qualification requirements are met and approved.
+
+==================================================
+CORE BUSINESS RULES
+==================================================
+
+1. The Bill Payer Program (BPP) must be available to PRO MEMBERS ONLY.
+   - Standard members, affiliates, customers, and non-Pro consultants cannot access or qualify for BPP.
+   - The system should validate Pro membership status before showing eligibility or payout qualification.
+
+2. Add a new compensation subcategory:
+   - Main Section: Pro Consultant Commissions
+   - New Subcategory: Bill Payer Program (BPP)
+
+3. The BPP contains 5 separate “Funds”:
+   - Rent / Mortgage Fund
+   - Car Fund
+   - Utilities Fund
+   - Medical Fund
+   - Phone / Internet Fund
+
+4. Default maximum payout caps for each fund:
+   - Rent / Mortgage Fund: up to $1,500
+   - Car Fund: up to $600
+   - Utilities Fund: up to $450
+   - Medical Fund: up to $350
+   - Phone / Internet Fund: up to $185
+
+5. Important qualification rule:
+   - These funds CANNOT be earned by personally selling products only.
+   - They are earned by helping the member’s group/community become productive and successful.
+   - Qualification must be based primarily on GROUP VOLUME (GV), plus a minimum PERSONAL VOLUME (PV) requirement.
+   - The platform should emphasize that the network is rewarding leadership, duplication, support, and team performance.
+
+6. Deposit behavior:
+   - Once requirements are met and approved, the Bill Payer Bonus should be deposited into the member’s NFGN account/wallet.
+   - Show admin-configurable messaging that states payouts are usually deposited within 1 to 5 business days.
+   - Actual payout cycle should be monthly.
+   - Funds should be paid no more than once per month per fund unless admin overrides are enabled.
+
+7. Non-transferable rule:
+   - Funds cannot be transferred to another member.
+   - Funds cannot be reassigned, relocated, gifted, or paid out to someone else.
+   - These bonuses belong only to the qualifying Pro Member.
+
+8. Admin disclaimer:
+   - The total amount of each fund can be changed at any time at company discretion.
+   - Build this as editable language in admin settings and display it in the member-facing BPP section.
+
+9. Story / origin section:
+   Add a member-facing description explaining that:
+   - The origin of this fund begins with Mr. Marcelino himself, who wanted to help people struggling with bills and daily hardships.
+   - He wanted to help people obtain financial freedom by taking a portion of the company’s revenue and directing it toward qualifying Pro Members.
+   - The Bill Payer Program should be presented as one of the most exciting features of the NFGN platform and compensation structure.
+
+==================================================
+ADMIN REQUIREMENTS
+==================================================
+
+Create a PRO COMPENSATION SETTINGS area in the admin back office that allows full control over the Bill Payer Program.
+
+Add a dedicated admin page:
+Admin Back Office → Compensation Settings → Pro Consultant Commissions → Bill Payer Program (BPP)
+
+The admin must be able to do ALL of the following:
+
+1. Enable / Disable the entire BPP program globally.
+
+2. Enable / Disable individual funds separately:
+   - Rent / Mortgage Fund
+   - Car Fund
+   - Utilities Fund
+   - Medical Fund
+   - Phone / Internet Fund
+
+3. Change each fund’s:
+   - Fund Name
+   - Description
+   - Maximum payout cap
+   - Required Group Volume (GV)
+   - Required Personal Volume (PV)
+   - Payout percentage
+   - Active / inactive status
+   - Sort order / display order
+
+4. The admin must be able to set payout qualification formulas like this example:
+   - Rent / Mortgage Fund:
+     12% payout
+     Required GV = 15,000
+     Required PV = 100
+
+5. IMPORTANT:
+   I need the admin to be able to change:
+   - the payout percentage
+   - the GV amount
+   - the PV amount
+   for each fund independently.
+
+6. Add input controls for every fund such as:
+   - Payout Percentage (%)
+   - Required GV
+   - Required PV
+   - Max Cap ($)
+   - Active toggle
+
+7. Add validation logic:
+   - Percentages must be numeric and within sensible ranges
+   - GV and PV must be numeric and non-negative
+   - Max cap must be numeric and non-negative
+   - Prevent invalid saves
+
+8. Add “effective payout preview” logic:
+   Show admins how a fund would be calculated based on current settings.
+   Example:
+   - Rent Fund
+   - 12% of GV
+   - Required GV: 15,000
+   - Required PV: 100
+   - Max payout cap: $1,500
+
+9. Add audit logging:
+   - Track which admin changed BPP settings
+   - Track old values vs new values
+   - Track timestamp of each change
+
+==================================================
+COMPENSATION / CALCULATION LOGIC
+==================================================
+
+Create a flexible calculation engine for the Bill Payer Program.
+
+Each fund should support this logic:
+
+A Pro Member qualifies for a fund if:
+1. They are an active Pro Member
+2. Their monthly Personal Volume (PV) is equal to or above the required PV threshold
+3. Their qualifying Group Volume (GV) is equal to or above the required GV threshold
+4. The fund is active
+5. They have not already been paid that fund for the current monthly cycle
+6. Any compliance/account standing requirements are satisfied
+
+Suggested payout calculation:
+- payout_amount = min( GV × payout_percentage, fund_max_cap )
+
+Example:
+- GV = 15,000
+- Payout % = 12%
+- Max cap = $1,500
+- Raw amount = $1,800
+- Actual payout = $1,500 cap
+
+Another example:
+- GV = 3,000
+- Payout % = 12%
+- Raw amount = $360
+- If the user meets the threshold requirement and cap is higher than $360, payout = $360
+
+IMPORTANT:
+Make this logic configurable so the system can support either:
+A. Threshold + percentage payout
+or
+B. Flat payout when threshold is met
+
+Add an admin option for payout mode per fund:
+- Percentage-Based
+- Flat Amount
+
+If Flat Amount is selected:
+- Pay the preset fund amount once the required GV and PV are met
+- Example:
+  Rent Fund = fixed $1,500 if qualified
+
+If Percentage-Based is selected:
+- Pay percentage of GV, limited by the fund cap
+
+==================================================
+DATABASE / DATA MODEL
+==================================================
+
+Create or extend tables/models for the following:
+
+1. bpp_funds
+Fields:
+- id
+- name
+- slug
+- description
+- payout_mode (percentage / flat)
+- payout_percentage
+- flat_amount
+- gv_requirement
+- pv_requirement
+- max_cap
+- is_active
+- display_order
+- member_facing_copy
+- disclaimer_text
+- created_at
+- updated_at
+
+2. bpp_member_qualifications
+Fields:
+- id
+- member_id
+- fund_id
+- qualification_month
+- qualification_year
+- member_pv
+- member_gv
+- qualified_amount
+- status (pending / approved / paid / denied)
+- qualified_at
+- approved_at
+- paid_at
+- notes
+
+3. bpp_payout_transactions
+Fields:
+- id
+- member_id
+- fund_id
+- qualification_id
+- amount
+- payout_month
+- payout_year
+- payment_status
+- payment_reference
+- created_at
+- updated_at
+
+4. compensation_settings_audit_log
+Fields:
+- id
+- admin_user_id
+- setting_group
+- setting_key
+- old_value
+- new_value
+- changed_at
+
+==================================================
+MEMBER DASHBOARD REQUIREMENTS
+==================================================
+
+Inside the Pro Member dashboard, add a Bill Payer Program section.
+
+Menu example:
+My Back Office → Commissions → Pro Consultant Commissions → Bill Payer Program
+
+Show the following:
+
+1. Overview panel
+   - Explain what BPP is
+   - Explain that it is for Pro Members only
+   - Explain that funds are earned through helping the group/community perform, not just personal selling
+
+2. Display all 5 funds with:
+   - Fund name
+   - Max available amount
+   - Current status
+   - Required GV
+   - Required PV
+   - Member’s current monthly GV progress
+   - Member’s current monthly PV progress
+   - Estimated payout if qualified
+   - Whether already paid this month
+
+3. Add status badges such as:
+   - Not Eligible
+   - In Progress
+   - Qualified
+   - Pending Approval
+   - Paid
+   - Inactive
+
+4. Add progress bars for:
+   - GV progress toward threshold
+   - PV progress toward threshold
+
+5. Add monthly history table:
+   - Fund
+   - Month
+   - GV achieved
+   - PV achieved
+   - Qualified amount
+   - Status
+   - Deposit date
+
+6. Add wallet/account integration:
+   - When a fund is paid, deposit the bonus into the member’s NFGN wallet/account balance
+   - Show transaction line item with label:
+     “Bill Payer Program Bonus – [Fund Name]”
+
+==================================================
+ADMIN DASHBOARD REQUIREMENTS
+==================================================
+
+Create an admin dashboard view for BPP performance.
+
+Show:
+1. Total BPP payouts this month
+2. Total qualifiers this month
+3. Qualifiers by fund
+4. Pending approvals
+5. Paid vs pending vs denied
+6. Top Pro Members by qualifying GV
+7. Fund usage trends
+
+Allow admin actions:
+- View all qualifiers
+- Approve qualification
+- Deny qualification
+- Mark as paid
+- Trigger wallet deposit
+- Export payout reports (CSV)
+- Filter by month, year, fund, member, and status
+
+==================================================
+AUTOMATION / CRON / PAYOUT FLOW
+==================================================
+
+Create a monthly qualification and payout workflow:
+
+1. At the end of each commission cycle (monthly), calculate BPP qualification for each active Pro Member.
+2. Evaluate each fund independently.
+3. If requirements are met, create a qualification record.
+4. Allow either:
+   - Automatic approval
+   OR
+   - Manual admin approval
+5. Once approved, create payout transaction and deposit amount into member wallet.
+6. Prevent duplicate payout for the same fund in the same month.
+
+Add admin settings for:
+- Auto-approve BPP qualifications (on/off)
+- Auto-pay approved BPP bonuses (on/off)
+- Payout delay message (default 1–5 business days)
+- Monthly cycle closing date
+
+==================================================
+UI / UX REQUIREMENTS
+==================================================
+
+Create a clean, modern admin and member interface.
+
+Use cards for each fund with:
+- Title
+- Description
+- Requirements
+- Fund cap
+- Estimated payout
+- Status
+
+For admin settings, use an editable table or accordion cards for each fund.
+
+Each fund card in admin should include:
+- Name
+- Description
+- Payout mode
+- Payout percentage
+- Flat amount
+- GV requirement
+- PV requirement
+- Max cap
+- Active toggle
+- Save button
+
+Include tooltips explaining:
+- GV = Group Volume
+- PV = Personal Volume
+- BPP = Bill Payer Program
+- Max Cap = highest amount a fund can pay in a cycle
+
+==================================================
+DEFAULT SEED DATA
+==================================================
+
+Seed the BPP with these default funds:
+
+1. Rent / Mortgage Fund
+   - max_cap: 1500
+   - payout_mode: percentage
+   - payout_percentage: 12
+   - gv_requirement: 15000
+   - pv_requirement: 100
+   - active: true
+
+2. Car Fund
+   - max_cap: 600
+   - payout_mode: percentage
+   - payout_percentage: editable default
+   - gv_requirement: editable default
+   - pv_requirement: editable default
+   - active: true
+
+3. Utilities Fund
+   - max_cap: 450
+   - payout_mode: percentage
+   - payout_percentage: editable default
+   - gv_requirement: editable default
+   - pv_requirement: editable default
+   - active: true
+
+4. Medical Fund
+   - max_cap: 350
+   - payout_mode: percentage
+   - payout_percentage: editable default
+   - gv_requirement: editable default
+   - pv_requirement: editable default
+   - active: true
+
+5. Phone / Internet Fund
+   - max_cap: 185
+   - payout_mode: percentage
+   - payout_percentage: editable default
+   - gv_requirement: editable default
+   - pv_requirement: editable default
+   - active: true
+
+==================================================
+MEMBER-FACING COPY
+==================================================
+
+Add a professional explanatory section that says something like:
+
+“The Bill Payer Program (BPP) is a Pro Member benefit created to help qualified NFGN leaders offset real-life monthly expenses such as housing, transportation, utilities, medical, and phone/internet bills. Unlike programs based only on personal selling, the BPP rewards members for helping their group and community become productive. Once the required Group Volume and Personal Volume are met, qualifying bonuses may be deposited into the member’s NFGN account, typically within 1 to 5 business days after approval. Funds are paid monthly, are non-transferable, and may be changed at company discretion.”
+
+Also add an origin section mentioning Mr. Marcelino’s vision of helping people facing financial hardship.
+
+==================================================
+TECHNICAL REQUIREMENTS
+==================================================
+
+- Build this so it fits into the existing NFGN MLM architecture
+- Use secure role-based permissions
+- Only admins can edit BPP settings
+- Only Pro Members can view BPP qualification details
+- Use server-side validation for all calculations
+- Use clean modular code
+- Add comments in code for all BPP business rules
+- Make calculations transparent and easy to update later
+- Ensure this feature works with the replicated MLM/member system
+- Ensure wallet deposits are logged and traceable
+
+==================================================
+DELIVERABLES
+==================================================
+
+Please generate:
+1. Database schema / migrations
+2. Backend models
+3. Admin settings pages
+4. Pro Member dashboard pages
+5. Qualification logic
+6. Monthly payout logic
+7. Wallet deposit integration
+8. Audit logs
+9. Seed data
+10. Clean UI for both admin and member dashboards
+
+Also make the BPP fully editable from the admin back office without touching code.

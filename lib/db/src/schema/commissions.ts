@@ -22,6 +22,8 @@ export const commissionsTable = pgTable("commissions", {
 export const commissionRulesTable = pgTable("commission_rules", {
   id: serial("id").primaryKey(),
   levels: jsonb("levels").notNull(),
+  salesLevels: jsonb("sales_levels"),
+  referralRate: numeric("referral_rate", { precision: 5, scale: 2 }).default("10"),
   powerBonusAmount: numeric("power_bonus_amount", { precision: 10, scale: 2 }).notNull().default("100"),
   powerBonusTrigger: integer("power_bonus_trigger").notNull().default(9),
   powerBonusEnabled: boolean("power_bonus_enabled").notNull().default(true),

@@ -18,7 +18,7 @@ export function commissionTypeLabel(type: string): string {
   switch (type) {
     case "referral":           return "Referral Commission";
     case "sales":              return "Sales Commission";
-    case "level":              return "Level Commission";
+    case "level":              return "Pro Registration Commission (PRC)";
     case "power_squad_bonus":  return "Power Squad Bonus";
     default:                   return type.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
   }

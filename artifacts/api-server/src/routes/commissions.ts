@@ -101,22 +101,32 @@ router.post("/commissions/:id/reject", requireAdmin, async (req, res): Promise<v
   res.json(formatCommission(updated, `${user?.firstName} ${user?.lastName}`, `${fromUser?.firstName} ${fromUser?.lastName}`));
 });
 
+const DEFAULT_PRC_LEVELS = [
+  { level: 1, rate: 10 },
+  { level: 2, rate: 20 },
+];
+
+const DEFAULT_SALES_LEVELS = [
+  { level: 1, rate: 10 },
+];
+
 router.get("/commission-rules", async (req, res): Promise<void> => {
   const [rules] = await db.select().from(commissionRulesTable).limit(1);
   if (!rules) {
     res.json({
       referralRate: 10,
-      salesRate: 10,
-      levels: [
-        { level: 1, rate: 10, description: "Level 1 Commission — Pro Package (Pro Members only)" },
-        { level: 2, rate: 20, description: "Level 2 Commission — Pro Package (Pro Members only)" },
-      ],
-      powerBonusEnabled: false,
+      prcLevels: DEFAULT_PRC_LEVELS,
+      salesLevels: DEFAULT_SALES_LEVELS,
+      powerBonusAmount: 200,
+      powerBonusTrigger: 9,
+      powerBonusEnabled: true,
     });
     return;
   }
   res.json({
-    levels: rules.levels,
+    referralRate: parseFloat(rules.referralRate ?? "10"),
+    prcLevels: rules.levels ?? DEFAULT_PRC_LEVELS,
+    salesLevels: rules.salesLevels ?? DEFAULT_SALES_LEVELS,
     powerBonusAmount: parseFloat(rules.powerBonusAmount),
     powerBonusTrigger: rules.powerBonusTrigger,
     powerBonusEnabled: rules.powerBonusEnabled,
@@ -124,12 +134,14 @@ router.get("/commission-rules", async (req, res): Promise<void> => {
 });
 
 router.put("/commission-rules", requireAdmin, async (req, res): Promise<void> => {
-  const { levels, powerBonusAmount, powerBonusTrigger, powerBonusEnabled } = req.body;
+  const { prcLevels, salesLevels, referralRate, powerBonusAmount, powerBonusTrigger, powerBonusEnabled } = req.body;
 
   const [existing] = await db.select().from(commissionRulesTable).limit(1);
   const updates = {
-    levels: levels ?? existing?.levels,
-    powerBonusAmount: String(powerBonusAmount ?? existing?.powerBonusAmount ?? 100),
+    levels: prcLevels ?? existing?.levels ?? DEFAULT_PRC_LEVELS,
+    salesLevels: salesLevels ?? existing?.salesLevels ?? DEFAULT_SALES_LEVELS,
+    referralRate: String(referralRate ?? existing?.referralRate ?? 10),
+    powerBonusAmount: String(powerBonusAmount ?? existing?.powerBonusAmount ?? 200),
     powerBonusTrigger: powerBonusTrigger ?? existing?.powerBonusTrigger ?? 9,
     powerBonusEnabled: powerBonusEnabled ?? existing?.powerBonusEnabled ?? true,
   };
@@ -142,11 +154,47 @@ router.put("/commission-rules", requireAdmin, async (req, res): Promise<void> =>
   }
 
   res.json({
-    levels: result!.levels,
+    referralRate: parseFloat(result!.referralRate ?? "10"),
+    prcLevels: result!.levels,
+    salesLevels: result!.salesLevels ?? DEFAULT_SALES_LEVELS,
     powerBonusAmount: parseFloat(result!.powerBonusAmount),
     powerBonusTrigger: result!.powerBonusTrigger,
     powerBonusEnabled: result!.powerBonusEnabled,
   });
+});
+
+router.get("/commissions/referral", requireAdmin, async (req, res): Promise<void> => {
+  const page = parseInt(String(req.query.page ?? "1"));
+  const limit = parseInt(String(req.query.limit ?? "50"));
+  const offset = (page - 1) * limit;
+  const search = (req.query.search as string | undefined)?.toLowerCase();
+
+  const rows = await db.select({
+    commission: commissionsTable,
+    earner: usersTable,
+  }).from(commissionsTable)
+    .leftJoin(usersTable, eq(commissionsTable.userId, usersTable.id))
+    .where(eq(commissionsTable.type, "referral"))
+    .limit(limit)
+    .offset(offset)
+    .orderBy(desc(commissionsTable.createdAt));
+
+  const [{ value: total }] = await db.select({ value: count() }).from(commissionsTable).where(eq(commissionsTable.type, "referral"));
+
+  const result = [];
+  for (const row of rows) {
+    const [fromUser] = await db.select().from(usersTable).where(eq(usersTable.id, row.commission.fromUserId));
+    const earnerName = row.earner ? `${row.earner.firstName} ${row.earner.lastName}` : "Unknown";
+    const fromUserName = fromUser ? `${fromUser.firstName} ${fromUser.lastName}` : "Unknown";
+    const item = formatCommission(row.commission, earnerName, fromUserName);
+    if (search) {
+      const hay = `${earnerName} ${fromUserName} ${row.commission.orderNumber}`.toLowerCase();
+      if (!hay.includes(search)) continue;
+    }
+    result.push(item);
+  }
+
+  res.json({ commissions: result, total, page, totalPages: Math.ceil(total / limit) });
 });
 
 export default router;

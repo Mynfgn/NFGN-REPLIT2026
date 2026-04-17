@@ -51,6 +51,8 @@ import { AdminBookingsPage } from "@/pages/admin/Bookings";
 import { AdminProfessionalsPage } from "@/pages/admin/Professionals";
 import { AdminReportsPage } from "@/pages/admin/Reports";
 import AdminSettingsPage from "@/pages/admin/AdminSettings";
+import { CompensationSettingsPage } from "@/pages/admin/CompensationSettings";
+import { ReferralCommissionsPage } from "@/pages/admin/ReferralCommissions";
 import { AffiliateStorefront } from "@/pages/public/AffiliateStorefront";
 import { BookingsPage } from "@/pages/dashboard/Bookings";
 
@@ -208,6 +210,16 @@ function Router() {
       <Route path="/admin/commissions">
         <RequireAuth requireAdmin>
           <AdminLayout><AdminCommissionsPage /></AdminLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/admin/referral-commissions">
+        <RequireAuth requireAdmin>
+          <AdminLayout><ReferralCommissionsPage /></AdminLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/admin/compensation">
+        <RequireAuth requireAdmin>
+          <AdminLayout><CompensationSettingsPage /></AdminLayout>
         </RequireAuth>
       </Route>
       <Route path="/admin/payouts">

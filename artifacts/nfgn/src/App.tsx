@@ -50,6 +50,7 @@ import { AdminBonusesPage } from "@/pages/admin/Bonuses";
 import { AdminBookingsPage } from "@/pages/admin/Bookings";
 import { AdminProfessionalsPage } from "@/pages/admin/Professionals";
 import { AdminReportsPage } from "@/pages/admin/Reports";
+import AdminSettingsPage from "@/pages/admin/AdminSettings";
 import { AffiliateStorefront } from "@/pages/public/AffiliateStorefront";
 import { BookingsPage } from "@/pages/dashboard/Bookings";
 
@@ -251,7 +252,7 @@ function Router() {
       </Route>
       <Route path="/admin/settings">
         <RequireAuth requireAdmin>
-          <AdminLayout><Stub name="System Settings" /></AdminLayout>
+          <AdminLayout><AdminSettingsPage /></AdminLayout>
         </RequireAuth>
       </Route>
       <Route path="/admin/reports">

@@ -45,6 +45,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { customFetch } from "@/lib/custom-fetch";
+import { resolveImageSrc } from "@/lib/image";
 
 /* ── Types ─────────────────────────────────────────────────────── */
 type PaymentMethod = "authorize_net" | "cash_app" | "paypal" | "cod";
@@ -171,7 +172,7 @@ function MemberCheckSection({ onSignedIn }: { onSignedIn: () => void }) {
     mutation: {
       onSuccess: (data: any) => {
         saveToken(data.token);
-        qc.invalidateQueries({ queryKey: ["getCart"] });
+        qc.invalidateQueries({ queryKey: ["/api/cart"] });
         onSignedIn();
       },
       onError: () => toast({ title: "Sign in failed", description: "Check your email and password.", variant: "destructive" }),
@@ -182,7 +183,7 @@ function MemberCheckSection({ onSignedIn }: { onSignedIn: () => void }) {
     mutation: {
       onSuccess: (data: any) => {
         saveToken(data.token);
-        qc.invalidateQueries({ queryKey: ["getCart"] });
+        qc.invalidateQueries({ queryKey: ["/api/cart"] });
         onSignedIn();
         toast({ title: "Welcome to NFGN!", description: "Your account has been created. You can now complete your purchase." });
       },
@@ -372,7 +373,7 @@ export function CartDrawer() {
 
   function handleSignedIn() {
     setIsAuthenticated(true);
-    qc.invalidateQueries({ queryKey: ["getCart"] });
+    qc.invalidateQueries({ queryKey: ["/api/cart"] });
   }
 
   /* "cart" | "checkout" | "confirm" */
@@ -382,6 +383,8 @@ export function CartDrawer() {
   const [promoValidating, setPromoValidating] = useState(false);
   const [promoApplied, setPromoApplied] = useState<{ discountType: string; discountValue: number; code: string } | null>(null);
   const [promoError, setPromoError] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<number | null>(null);
+  const [optimisticQtys, setOptimisticQtys] = useState<Record<number, number>>({});
   const [shipping, setShipping] = useState<ShippingForm>({
     fullName: "", phone: "", address: "", city: "", state: "", zip: "",
   });
@@ -398,18 +401,32 @@ export function CartDrawer() {
   });
 
   const updateItem = useUpdateCartItem({
-    mutation: { onSuccess: () => qc.invalidateQueries({ queryKey: ["getCart"] }) },
+    mutation: {
+      onSuccess: async (_, vars: any) => {
+        // Refetch cart first, then clear the optimistic entry so the display
+        // transitions directly from optimistic → server value without flickering
+        await qc.invalidateQueries({ queryKey: ["/api/cart"] });
+        setOptimisticQtys(q => { const copy = { ...q }; delete copy[vars.itemId]; return copy; });
+      },
+      onError: (_: any, vars: any) => {
+        // Revert optimistic update on failure
+        setOptimisticQtys(q => { const copy = { ...q }; delete copy[vars.itemId]; return copy; });
+      },
+    },
   });
   const removeItem = useRemoveCartItem({
-    mutation: { onSuccess: () => qc.invalidateQueries({ queryKey: ["getCart"] }) },
+    mutation: {
+      onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/cart"] }); setRemovingId(null); },
+      onError: () => setRemovingId(null),
+    },
   });
   const createOrder = useCreateOrder({
     mutation: {
       onSuccess: (order) => {
         setLastOrder(order);
         setView("confirm");
-        qc.invalidateQueries({ queryKey: ["getCart"] });
-        qc.invalidateQueries({ queryKey: ["getOrders"] });
+        qc.invalidateQueries({ queryKey: ["/api/cart"] });
+        qc.invalidateQueries({ queryKey: ["/api/orders"] });
       },
       onError: (err: any) =>
         toast({ title: "Order failed", description: err?.message ?? "Please try again.", variant: "destructive" }),
@@ -418,13 +435,34 @@ export function CartDrawer() {
 
   function handleOpenChange(open: boolean) {
     setCartOpen(open);
-    if (!open) setTimeout(() => { setView("cart"); setPromoCode(""); setLastOrder(null); }, 300);
+    if (!open) setTimeout(() => {
+      setView("cart");
+      setPromoCode("");
+      setPromoApplied(null);
+      setPromoError(null);
+      setLastOrder(null);
+    }, 300);
   }
 
-  function handleQty(itemId: number, delta: number, current: number) {
+  function handleQty(itemId: number, delta: number, serverQty: number) {
+    if (removingId === itemId) return;
+    const current = optimisticQtys[itemId] ?? serverQty;
     const next = current + delta;
-    if (next < 1) removeItem.mutate({ itemId });
-    else updateItem.mutate({ itemId, data: { quantity: next } });
+    if (next < 1) {
+      setRemovingId(itemId);
+      setOptimisticQtys(q => { const copy = { ...q }; delete copy[itemId]; return copy; });
+      removeItem.mutate({ itemId });
+    } else {
+      setOptimisticQtys(q => ({ ...q, [itemId]: next }));
+      updateItem.mutate({ itemId, data: { quantity: next } });
+    }
+  }
+
+  function handleRemove(itemId: number) {
+    if (removingId === itemId) return;
+    setRemovingId(itemId);
+    setOptimisticQtys(q => { const copy = { ...q }; delete copy[itemId]; return copy; });
+    removeItem.mutate({ itemId });
   }
 
   function shippingValid() {
@@ -482,8 +520,16 @@ export function CartDrawer() {
   }
 
   const items = cart?.items ?? [];
-  const subtotal = cart?.subtotal ?? 0;
+  const serverSubtotal = cart?.subtotal ?? 0;
   const itemCount = cart?.itemCount ?? 0;
+
+  // Recompute subtotal using optimistic quantities for instant feedback
+  const subtotal = Object.keys(optimisticQtys).length > 0
+    ? items.reduce((sum: number, item: any) => {
+        const qty = optimisticQtys[item.id] ?? item.quantity;
+        return sum + item.price * qty;
+      }, 0)
+    : serverSubtotal;
 
   const promoDiscount = promoApplied
     ? promoApplied.discountType === "percentage"
@@ -530,11 +576,15 @@ export function CartDrawer() {
             ) : (
               <>
                 <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-                  {items.map((item: any) => (
-                    <div key={item.id} className="flex gap-3 pb-4 border-b last:border-0">
+                  {items.map((item: any) => {
+                    const isRemoving = removingId === item.id;
+                    const displayQty = optimisticQtys[item.id] ?? item.quantity;
+                    const displayLineTotal = item.price * displayQty;
+                    return (
+                    <div key={item.id} className={`flex gap-3 pb-4 border-b last:border-0 transition-opacity ${isRemoving ? "opacity-40 pointer-events-none" : ""}`}>
                       <div className="h-[72px] w-16 flex-shrink-0 rounded-md bg-muted overflow-hidden">
-                        {item.productImage ? (
-                          <img src={item.productImage} alt={item.productName} className="h-full w-full object-cover" />
+                        {resolveImageSrc(item.productImage) ? (
+                          <img src={resolveImageSrc(item.productImage)!} alt={item.productName} className="h-full w-full object-cover" />
                         ) : (
                           <div className="h-full w-full flex items-center justify-center text-muted-foreground text-xs font-bold">NFGN</div>
                         )}
@@ -543,21 +593,36 @@ export function CartDrawer() {
                         <p className="font-medium text-sm leading-snug">{item.productName}</p>
                         <p className="text-primary font-bold text-sm mt-0.5">${item.price.toFixed(2)}</p>
                         <div className="flex items-center gap-2 mt-2">
-                          <button onClick={() => handleQty(item.id, -1, item.quantity)} className="h-7 w-7 rounded border flex items-center justify-center hover:bg-muted transition-colors">
+                          <button
+                            onClick={() => handleQty(item.id, -1, item.quantity)}
+                            disabled={isRemoving}
+                            className="h-7 w-7 rounded border flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
                             <Minus className="h-3 w-3" />
                           </button>
-                          <span className="text-sm font-semibold w-6 text-center">{item.quantity}</span>
-                          <button onClick={() => handleQty(item.id, 1, item.quantity)} className="h-7 w-7 rounded border flex items-center justify-center hover:bg-muted transition-colors">
+                          <span className="text-sm font-semibold w-6 text-center">{displayQty}</span>
+                          <button
+                            onClick={() => handleQty(item.id, 1, item.quantity)}
+                            disabled={isRemoving}
+                            className="h-7 w-7 rounded border flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
                             <Plus className="h-3 w-3" />
                           </button>
-                          <span className="ml-auto text-sm font-semibold">${item.lineTotal.toFixed(2)}</span>
-                          <button onClick={() => removeItem.mutate({ itemId: item.id })} className="text-muted-foreground hover:text-destructive transition-colors">
-                            <Trash2 className="h-4 w-4" />
+                          <span className="ml-auto text-sm font-semibold">${displayLineTotal.toFixed(2)}</span>
+                          <button
+                            onClick={() => handleRemove(item.id)}
+                            disabled={isRemoving}
+                            className="text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            {isRemoving
+                              ? <Loader2 className="h-4 w-4 animate-spin" />
+                              : <Trash2 className="h-4 w-4" />
+                            }
                           </button>
                         </div>
                       </div>
                     </div>
-                  ))}
+                  );})}
                 </div>
                 <div className="border-t px-5 py-4 space-y-3 bg-background flex-shrink-0">
                   <div className="flex justify-between text-sm">

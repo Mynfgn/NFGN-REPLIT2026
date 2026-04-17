@@ -63,7 +63,7 @@ const ALL_PAYMENT_METHODS = [
 interface LevelRate { level: number; rate: number }
 interface LiveCommissionRules {
   referralRate: number;
-  levels: LevelRate[];         // PRC levels
+  prcLevels: LevelRate[];      // PRC levels (API returns as prcLevels)
   salesLevels: LevelRate[];    // Sales commission levels
   powerBonusAmount: number;
   powerBonusTrigger: number;
@@ -443,26 +443,26 @@ export default function AdminSettingsPage() {
             <div className="rounded-lg border p-4 space-y-2">
               <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Pro Registration Commission (PRC) — Pro Members Only</p>
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                {(commissionRules.levels ?? []).map(l => (
+                {(commissionRules.prcLevels ?? []).map(l => (
                   <div key={l.level} className="rounded-lg border border-primary/40 bg-primary/5 p-3 text-center">
                     <p className="text-xs text-muted-foreground">Level {l.level}</p>
                     <p className="text-lg font-bold text-primary">{l.rate}%</p>
                   </div>
                 ))}
               </div>
-              {(commissionRules.levels ?? []).length === 0 && (
+              {(commissionRules.prcLevels ?? []).length === 0 && (
                 <p className="text-xs text-muted-foreground italic">No PRC levels configured.</p>
               )}
             </div>
 
             {/* Power Squad Bonus */}
             <div className="bg-muted/40 rounded-lg p-4 space-y-1.5 border">
-              <p className="text-sm font-semibold flex items-center gap-2">
+              <div className="text-sm font-semibold flex items-center gap-2">
                 Power Squad Bonus
                 <Badge variant={commissionRules.powerBonusEnabled ? "default" : "secondary"} className="text-xs">
                   {commissionRules.powerBonusEnabled ? "Active" : "Disabled"}
                 </Badge>
-              </p>
+              </div>
               {commissionRules.powerBonusEnabled ? (
                 <p className="text-xs text-muted-foreground">
                   Pro Members earn a{" "}

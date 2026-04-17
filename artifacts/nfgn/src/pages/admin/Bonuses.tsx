@@ -13,7 +13,7 @@ interface LevelRate { level: number; rate: number }
 
 interface CommissionRules {
   referralRate?: number;
-  levels: LevelRate[];
+  prcLevels?: LevelRate[];
   salesLevels?: LevelRate[];
   powerBonusAmount: number;
   powerBonusTrigger: number;
@@ -67,7 +67,7 @@ export function AdminBonusesPage() {
         body: JSON.stringify({
           // Preserve all existing commission rate settings — only update bonus fields
           referralRate: rules?.referralRate,
-          levels: rules?.levels,
+          prcLevels: rules?.prcLevels,
           salesLevels: rules?.salesLevels,
           powerBonusAmount: amount,
           powerBonusTrigger: trigger,

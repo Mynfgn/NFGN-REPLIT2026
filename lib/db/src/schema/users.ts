@@ -31,6 +31,9 @@ export const usersTable = pgTable("users", {
   payoutMethod: text("payout_method").default("bank"),
   payoutPaypalEmail: text("payout_paypal_email"),
   payoutCashAppHandle: text("payout_cash_app_handle"),
+
+  pvAdjustment: integer("pv_adjustment").notNull().default(0),
+  gvAdjustment: integer("gv_adjustment").notNull().default(0),
 });
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({ id: true, createdAt: true, updatedAt: true });

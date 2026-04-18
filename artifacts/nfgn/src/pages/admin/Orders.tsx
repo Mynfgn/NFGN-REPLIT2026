@@ -1,17 +1,28 @@
 import { useState } from "react";
 import { useListOrders, useUpdateOrderStatus } from "@workspace/api-client-react";
+import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Receipt } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2, Receipt, RefreshCw, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ReceiptModal } from "@/components/orders/ReceiptModal";
+import { customFetch } from "@/lib/custom-fetch";
 
 export function AdminOrdersPage() {
   const [status, setStatus] = useState("all");
   const [page, setPage] = useState(1);
   const [receiptOrder, setReceiptOrder] = useState<any | null>(null);
+  const [refundOrder, setRefundOrder] = useState<any | null>(null);
+  const [refundAmount, setRefundAmount] = useState("");
+  const [refundNote, setRefundNote] = useState("");
+  const [fullRefund, setFullRefund] = useState(false);
   const { toast } = useToast();
 
   const { data, isLoading, refetch } = useListOrders({
@@ -20,6 +31,27 @@ export function AdminOrdersPage() {
     status: status !== "all" ? status : undefined,
   });
   const updateStatus = useUpdateOrderStatus();
+
+  const refundMutation = useMutation({
+    mutationFn: async ({ orderId, amount, note, full }: { orderId: number; amount: number; note: string; full: boolean }) => {
+      const res = await customFetch(`/api/orders/${orderId}/refund`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refundAmount: amount, refundNote: note, fullRefund: full }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Refund issued successfully!" });
+      setRefundOrder(null);
+      setRefundAmount("");
+      setRefundNote("");
+      setFullRefund(false);
+      refetch();
+    },
+    onError: (e: any) => toast({ variant: "destructive", title: "Refund failed", description: e.message }),
+  });
 
   const orders = data?.orders ?? [];
 
@@ -32,6 +64,23 @@ export function AdminOrdersPage() {
           toast({ variant: "destructive", title: "Error", description: e.message }),
       }
     );
+  }
+
+  function openRefund(order: any) {
+    setRefundOrder(order);
+    setRefundAmount(order.total.toFixed(2));
+    setRefundNote("");
+    setFullRefund(false);
+  }
+
+  function handleRefundSubmit() {
+    if (!refundOrder) return;
+    const amount = parseFloat(refundAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast({ variant: "destructive", title: "Invalid amount" });
+      return;
+    }
+    refundMutation.mutate({ orderId: refundOrder.id, amount, note: refundNote, full: fullRefund });
   }
 
   const statusOptions = ["pending", "processing", "completed", "cancelled"];
@@ -84,7 +133,7 @@ export function AdminOrdersPage() {
                             variant={
                               order.status === "completed"
                                 ? "default"
-                                : order.status === "cancelled"
+                                : order.status === "cancelled" || order.status === "refunded"
                                 ? "destructive"
                                 : "secondary"
                             }
@@ -98,6 +147,11 @@ export function AdminOrdersPage() {
                           >
                             {order.paymentStatus?.replace("_", " ")}
                           </Badge>
+                          {(order.refundAmount ?? 0) > 0 && (
+                            <Badge variant="destructive" className="text-xs">
+                              Refunded ${order.refundAmount.toFixed(2)}
+                            </Badge>
+                          )}
                         </div>
                         <p className="text-sm text-muted-foreground">
                           {order.userName} • {order.paymentMethod}
@@ -115,6 +169,9 @@ export function AdminOrdersPage() {
                             {order.items.map((item: any) => (
                               <p key={item.id} className="text-xs text-muted-foreground">
                                 {item.productName} × {item.quantity} — ${item.total.toFixed(2)}
+                                {(item.cvTotal ?? 0) > 0 && (
+                                  <span className="ml-1 text-blue-700 font-semibold">{item.cvTotal} CV</span>
+                                )}
                               </p>
                             ))}
                           </div>
@@ -136,6 +193,17 @@ export function AdminOrdersPage() {
                           <Receipt className="h-3.5 w-3.5" />
                           View Receipt
                         </Button>
+                        {order.status !== "refunded" && order.status !== "cancelled" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs gap-1.5 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-400"
+                            onClick={() => openRefund(order)}
+                          >
+                            <RefreshCw className="h-3.5 w-3.5" />
+                            Refund
+                          </Button>
+                        )}
                         <Select
                           value={order.status}
                           onValueChange={(s) => handleStatusChange(order.id, s)}
@@ -190,6 +258,80 @@ export function AdminOrdersPage() {
         open={!!receiptOrder}
         onClose={() => setReceiptOrder(null)}
       />
+
+      {/* Refund Modal */}
+      <Dialog open={!!refundOrder} onOpenChange={() => setRefundOrder(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              Issue Refund
+            </DialogTitle>
+          </DialogHeader>
+          {refundOrder && (
+            <div className="space-y-4">
+              <div className="bg-muted/40 rounded-lg p-3 text-sm">
+                <p className="font-mono font-bold">{refundOrder.orderNumber}</p>
+                <p className="text-muted-foreground">{refundOrder.userName}</p>
+                <p className="font-bold text-base mt-1">${refundOrder.total.toFixed(2)}</p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="fullRefund"
+                  checked={fullRefund}
+                  onCheckedChange={(checked) => {
+                    setFullRefund(!!checked);
+                    if (checked) setRefundAmount(refundOrder.total.toFixed(2));
+                  }}
+                />
+                <Label htmlFor="fullRefund" className="text-sm cursor-pointer">
+                  Full refund (${refundOrder.total.toFixed(2)}) — marks order as Refunded
+                </Label>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="refundAmount">Refund Amount ($)</Label>
+                <Input
+                  id="refundAmount"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  max={refundOrder.total}
+                  value={refundAmount}
+                  onChange={e => { setRefundAmount(e.target.value); setFullRefund(false); }}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="refundNote">Reason / Note</Label>
+                <Textarea
+                  id="refundNote"
+                  placeholder="Optional reason for refund..."
+                  rows={3}
+                  value={refundNote}
+                  onChange={e => setRefundNote(e.target.value)}
+                />
+              </div>
+
+              <div className="flex gap-2 pt-1">
+                <Button variant="outline" className="flex-1" onClick={() => setRefundOrder(null)}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  className="flex-1 gap-1.5"
+                  onClick={handleRefundSubmit}
+                  disabled={refundMutation.isPending}
+                >
+                  {refundMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                  Issue Refund
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -18,6 +18,9 @@ export const ordersTable = pgTable("orders", {
   shippingState: text("shipping_state"),
   promoCode: text("promo_code"),
   notes: text("notes"),
+  refundAmount: numeric("refund_amount", { precision: 10, scale: 2 }).notNull().default("0"),
+  refundNote: text("refund_note"),
+  refundedAt: timestamp("refunded_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

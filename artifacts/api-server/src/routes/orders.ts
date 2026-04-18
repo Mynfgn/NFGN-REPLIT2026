@@ -20,6 +20,9 @@ function formatOrder(order: typeof ordersTable.$inferSelect, userName: string, i
     shipping: parseFloat(order.shipping),
     total: parseFloat(order.total),
     discount: parseFloat(order.discount),
+    refundAmount: parseFloat(order.refundAmount ?? "0"),
+    refundNote: order.refundNote ?? null,
+    refundedAt: order.refundedAt?.toISOString() ?? null,
     shippingAddress: order.shippingAddress ?? null,
     promoCode: order.promoCode ?? null,
     notes: order.notes ?? null,
@@ -32,6 +35,7 @@ function formatOrder(order: typeof ordersTable.$inferSelect, userName: string, i
       price: parseFloat(i.price),
       quantity: i.quantity,
       total: parseFloat(i.total),
+      cvTotal: i.cvTotal ?? 0,
     })),
   };
 }
@@ -228,6 +232,45 @@ router.patch("/orders/:id", requireAdmin, async (req, res): Promise<void> => {
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, updated.userId));
   const items = await db.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, id));
   const userName = user ? `${user.firstName} ${user.lastName}` : "Unknown";
+  res.json(formatOrder(updated, userName, items));
+});
+
+// ── Refund / Adjustment ──────────────────────────────────────────────────────
+router.post("/orders/:id/refund", requireAdmin, async (req, res): Promise<void> => {
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const { amount, note, fullRefund } = req.body;
+
+  const [order] = await db.select({
+    order: ordersTable,
+    user: usersTable,
+  }).from(ordersTable)
+    .leftJoin(usersTable, eq(ordersTable.userId, usersTable.id))
+    .where(eq(ordersTable.id, id));
+
+  if (!order) { res.status(404).json({ error: "Order not found" }); return; }
+
+  const refundAmt = fullRefund ? parseFloat(order.order.total) : parseFloat(String(amount ?? 0));
+  if (isNaN(refundAmt) || refundAmt <= 0) {
+    res.status(400).json({ error: "Invalid refund amount" });
+    return;
+  }
+  if (refundAmt > parseFloat(order.order.total)) {
+    res.status(400).json({ error: "Refund amount exceeds order total" });
+    return;
+  }
+
+  const [updated] = await db.update(ordersTable).set({
+    refundAmount: String(refundAmt),
+    refundNote: note ?? null,
+    refundedAt: new Date(),
+    status: fullRefund ? "refunded" : order.order.status,
+    paymentStatus: fullRefund ? "refunded" : order.order.paymentStatus,
+  }).where(eq(ordersTable.id, id)).returning();
+
+  const items = await db.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, id));
+  const userName = order.user ? `${order.user.firstName} ${order.user.lastName}` : "Unknown";
   res.json(formatOrder(updated, userName, items));
 });
 

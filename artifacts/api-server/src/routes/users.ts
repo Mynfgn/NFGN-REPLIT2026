@@ -31,6 +31,8 @@ function formatUser(user: typeof usersTable.$inferSelect, sponsorName?: string) 
     payoutMethod: user.payoutMethod ?? "bank",
     payoutPaypalEmail: user.payoutPaypalEmail ?? null,
     payoutCashAppHandle: user.payoutCashAppHandle ?? null,
+    pvAdjustment: user.pvAdjustment ?? 0,
+    gvAdjustment: user.gvAdjustment ?? 0,
   };
 }
 
@@ -164,6 +166,31 @@ router.post("/users/:id/upgrade-pro", requireAdmin, async (req, res): Promise<vo
     isProMember: updated.isProMember,
     createdAt: updated.createdAt.toISOString(),
   });
+});
+
+// ── Manual PV / GV Adjustment (Admin only) ─────────────────────────────────
+router.post("/users/:id/volume-adjustment", requireAdmin, async (req, res): Promise<void> => {
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const { pvAdjustment, gvAdjustment } = req.body;
+
+  const [existing] = await db.select().from(usersTable).where(eq(usersTable.id, id));
+  if (!existing) { res.status(404).json({ error: "User not found" }); return; }
+
+  const updates: Partial<typeof usersTable.$inferInsert> = {};
+  if (pvAdjustment !== undefined) updates.pvAdjustment = parseInt(String(pvAdjustment));
+  if (gvAdjustment !== undefined) updates.gvAdjustment = parseInt(String(gvAdjustment));
+
+  const [updated] = await db.update(usersTable).set(updates).where(eq(usersTable.id, id)).returning();
+  if (!updated) { res.status(404).json({ error: "Not found" }); return; }
+
+  let sponsorName: string | undefined;
+  if (updated.sponsorId) {
+    const [sponsor] = await db.select().from(usersTable).where(eq(usersTable.id, updated.sponsorId));
+    if (sponsor) sponsorName = `${sponsor.firstName} ${sponsor.lastName}`;
+  }
+  res.json(formatUser(updated, sponsorName));
 });
 
 export default router;

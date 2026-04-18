@@ -192,6 +192,9 @@ async function calculateMemberBppQualification(
       .where(inArray(orderItemsTable.orderId, myOrders.map(o => o.id)));
     personalVolume = parseFloat(pvSum ?? "0");
   }
+  // Include manual PV adjustment
+  const [memberRecord] = await db.select({ pvAdjustment: usersTable.pvAdjustment }).from(usersTable).where(eq(usersTable.id, memberId));
+  personalVolume += memberRecord?.pvAdjustment ?? 0;
 
   // ── Group Volume (GV) ────────────────────────────────────────────────────────
   const downlineIds = await getDownlineIds(memberId);
@@ -212,6 +215,12 @@ async function calculateMemberBppQualification(
         .where(inArray(orderItemsTable.orderId, communityOrders.map(o => o.id)));
       groupVolume = parseFloat(gvSum ?? "0");
     }
+    // Include manual GV adjustments from downline members
+    const downlineAdjustments = await db
+      .select({ gvAdjustment: usersTable.gvAdjustment })
+      .from(usersTable)
+      .where(inArray(usersTable.id, downlineIds));
+    groupVolume += downlineAdjustments.reduce((s, u) => s + (u.gvAdjustment ?? 0), 0);
   }
 
   const results = [];
@@ -678,6 +687,8 @@ router.get("/bpp/dashboard", requireAuth, async (req, res): Promise<void> => {
       .where(inArray(orderItemsTable.orderId, myOrders.map(o => o.id)));
     personalVolume = parseFloat(pvSum ?? "0");
   }
+  // Include manual PV adjustment
+  personalVolume += currentUser.pvAdjustment ?? 0;
 
   // ── Current month GV ───────────────────────────────────────────────────────
   const downlineIds = await getDownlineIds(userId);
@@ -690,6 +701,10 @@ router.get("/bpp/dashboard", requireAuth, async (req, res): Promise<void> => {
         .where(inArray(orderItemsTable.orderId, communityOrders.map(o => o.id)));
       groupVolume = parseFloat(gvSum ?? "0");
     }
+    // Include manual GV adjustments from downline members
+    const downlineAdjRows = await db.select({ gvAdjustment: usersTable.gvAdjustment }).from(usersTable)
+      .where(inArray(usersTable.id, downlineIds));
+    groupVolume += downlineAdjRows.reduce((s, u) => s + (u.gvAdjustment ?? 0), 0);
   }
 
   // ── This month's qualification status per fund ─────────────────────────────
@@ -787,6 +802,8 @@ router.get("/bpp/dashboard", requireAuth, async (req, res): Promise<void> => {
     currentYear: year,
     personalVolume,
     groupVolume,
+    pvAdjustment: currentUser.pvAdjustment ?? 0,
+    gvAdjustment: currentUser.gvAdjustment ?? 0,
     funds: fundCards,
     history: history.map(r => ({
       id: r.q.id,

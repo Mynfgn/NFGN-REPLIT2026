@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useListOrders } from "@workspace/api-client-react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2, ShoppingBag, Receipt } from "lucide-react";
 import { ReceiptModal } from "@/components/orders/ReceiptModal";
+import { customFetch } from "@/lib/custom-fetch";
 
 const statusColors: Record<string, string> = {
   pending: "secondary",
@@ -18,6 +20,19 @@ export function OrdersPage() {
   const { data, isLoading } = useListOrders({ page: 1, limit: 20 });
   const orders = data?.orders ?? [];
   const [receiptOrder, setReceiptOrder] = useState<any | null>(null);
+
+  const { data: me } = useQuery({
+    queryKey: ["/api/auth/me"],
+    queryFn: () => customFetch("/api/auth/me").then(r => r.json()),
+    staleTime: 60_000,
+  });
+
+  const { data: bppData } = useQuery({
+    queryKey: ["/api/bpp/dashboard"],
+    queryFn: () => customFetch("/api/bpp/dashboard").then(r => r.ok ? r.json() : null),
+    staleTime: 60_000,
+    enabled: !!me?.isProMember,
+  });
 
   return (
     <div className="space-y-6">
@@ -59,39 +74,23 @@ export function OrdersPage() {
                       </Badge>
                     </div>
                   </div>
-
                   {order.items?.length > 0 && (
-                    <div className="border-t pt-3 space-y-2">
+                    <div className="mb-3 space-y-0.5">
                       {order.items.map((item: any) => (
-                        <div key={item.id} className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">
-                            {item.productName} × {item.quantity}
-                          </span>
-                          <span>${item.total.toFixed(2)}</span>
-                        </div>
+                        <p key={item.id} className="text-xs text-muted-foreground">
+                          {item.productName} × {item.quantity} — ${item.total.toFixed(2)}
+                          {(item.cvTotal ?? 0) > 0 && (
+                            <span className="ml-1 text-blue-700 font-semibold">{item.cvTotal} CV</span>
+                          )}
+                        </p>
                       ))}
                     </div>
                   )}
-
-                  <div className="border-t mt-3 pt-3 flex items-center justify-between gap-4">
-                    <div className="flex gap-4 text-xs text-muted-foreground">
-                      <span>
-                        Payment:{" "}
-                        <span className="capitalize">{order.paymentMethod}</span>
-                      </span>
-                      <span>
-                        Status:{" "}
-                        <span
-                          className={`capitalize font-medium ${order.paymentStatus === "demo_paid" ? "text-green-600" : ""}`}
-                        >
-                          {order.paymentStatus?.replace("_", " ")}
-                        </span>
-                      </span>
-                    </div>
+                  <div className="flex justify-end">
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-7 text-xs gap-1.5 border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/60"
+                      className="h-7 text-xs gap-1.5 border-primary/30 text-primary hover:bg-primary/5"
                       onClick={() => setReceiptOrder(order)}
                     >
                       <Receipt className="h-3.5 w-3.5" />
@@ -109,6 +108,8 @@ export function OrdersPage() {
         order={receiptOrder}
         open={!!receiptOrder}
         onClose={() => setReceiptOrder(null)}
+        isProMember={!!me?.isProMember}
+        currentMonthPv={bppData?.personalVolume ?? 0}
       />
     </div>
   );

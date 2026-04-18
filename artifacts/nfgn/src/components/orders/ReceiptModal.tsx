@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,10 +6,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Printer, Share2, Copy, Check } from "lucide-react";
-import { useState } from "react";
+import { Printer, Share2, Check, Zap, Star, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface OrderItem {
@@ -19,6 +17,7 @@ interface OrderItem {
   price: number;
   quantity: number;
   total: number;
+  cvTotal?: number;
 }
 
 interface Order {
@@ -33,6 +32,8 @@ interface Order {
   shipping: number;
   discount: number;
   total: number;
+  refundAmount?: number;
+  refundNote?: string | null;
   shippingAddress?: string | null;
   promoCode?: string | null;
   notes?: string | null;
@@ -44,6 +45,8 @@ interface ReceiptModalProps {
   order: Order | null;
   open: boolean;
   onClose: () => void;
+  isProMember?: boolean;
+  currentMonthPv?: number;
 }
 
 const statusColors: Record<string, string> = {
@@ -54,114 +57,76 @@ const statusColors: Record<string, string> = {
   refunded: "bg-red-100 text-red-800",
 };
 
-function fmt(n: number) {
-  return n.toFixed(2);
-}
+const BPP_MIN_PV = 100;
 
-export function ReceiptModal({ order, open, onClose }: ReceiptModalProps) {
+function fmt(n: number) { return n.toFixed(2); }
+
+export function ReceiptModal({ order, open, onClose, isProMember, currentMonthPv }: ReceiptModalProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
 
   if (!order) return null;
 
+  const totalPv = order.items.reduce((s, i) => s + (i.cvTotal ?? 0), 0);
+  const pvAfterOrder = (currentMonthPv ?? 0) + totalPv;
+  const pvNeeded = Math.max(0, BPP_MIN_PV - pvAfterOrder);
+  const bppMet = isProMember && pvAfterOrder >= BPP_MIN_PV;
+
   const date = new Date(order.createdAt);
-  const formattedDate = date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-  const formattedTime = date.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const formattedDate = date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  const formattedTime = date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
 
   function handlePrint() {
     const content = receiptRef.current;
     if (!content) return;
-
     const printWindow = window.open("", "_blank", "width=800,height=900");
     if (!printWindow) return;
-
     printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Receipt – ${order.orderNumber}</title>
-          <style>
-            * { box-sizing: border-box; margin: 0; padding: 0; }
-            body { font-family: 'Arial', sans-serif; font-size: 13px; color: #0a0a0a; background: #fff; }
-            .receipt-wrap { max-width: 680px; margin: 0 auto; padding: 32px 24px; }
-            .header { text-align: center; margin-bottom: 24px; }
-            .brand { font-size: 26px; font-weight: 900; letter-spacing: 3px; color: #C9A84C; }
-            .brand-sub { font-size: 10px; letter-spacing: 2px; color: #666; text-transform: uppercase; margin-top: 2px; }
-            .doc-title { font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #0a0a0a; margin-top: 8px; }
-            .order-meta { display: flex; justify-content: space-between; margin-top: 16px; font-size: 12px; color: #555; border: 1px solid #ddd; border-radius: 6px; padding: 10px 14px; }
-            .order-meta strong { color: #0a0a0a; }
-
-            /* Shipping Slip */
-            .section-label { font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #C9A84C; margin-bottom: 6px; }
-            .slip-block { border: 1.5px dashed #C9A84C; border-radius: 6px; padding: 14px 16px; margin: 20px 0; }
-            .slip-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-            .slip-col h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #666; margin-bottom: 6px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
-            .slip-col p { font-size: 12px; line-height: 1.6; }
-            .slip-items { margin-top: 10px; }
-            .slip-items table { width: 100%; border-collapse: collapse; font-size: 12px; }
-            .slip-items td { padding: 3px 0; }
-            .slip-items td:last-child { text-align: right; }
-            .tear-line { border: none; border-top: 2px dashed #ccc; margin: 20px 0; position: relative; }
-            .tear-label { text-align: center; font-size: 9px; letter-spacing: 2px; color: #aaa; text-transform: uppercase; margin: -8px 0 16px; }
-
-            /* Receipt Items */
-            .items-table { width: 100%; border-collapse: collapse; margin: 12px 0; }
-            .items-table th { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #888; padding: 6px 8px; text-align: left; border-bottom: 1px solid #eee; }
-            .items-table th:not(:first-child) { text-align: right; }
-            .items-table td { padding: 8px 8px; font-size: 12px; vertical-align: top; }
-            .items-table td:not(:first-child) { text-align: right; }
-            .items-table tr:not(:last-child) td { border-bottom: 1px solid #f5f5f5; }
-            .product-name { font-weight: 600; }
-            .unit-price { color: #666; font-size: 11px; margin-top: 1px; }
-
-            /* Totals */
-            .totals { margin-left: auto; width: 260px; margin-top: 12px; }
-            .totals-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; }
-            .totals-row.subtotal { color: #555; }
-            .totals-row.discount { color: #2D6A4F; }
-            .totals-row.total { font-size: 15px; font-weight: 900; border-top: 2px solid #0a0a0a; padding-top: 8px; margin-top: 4px; }
-
-            /* Footer */
-            .receipt-footer { text-align: center; margin-top: 28px; padding-top: 16px; border-top: 1px solid #eee; font-size: 10px; color: #888; line-height: 1.8; }
-            .receipt-footer strong { color: #C9A84C; }
-
-            .status-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
-            .status-completed { background: #d1fae5; color: #065f46; }
-            .status-pending { background: #fef3c7; color: #92400e; }
-            .status-processing { background: #dbeafe; color: #1e40af; }
-            .status-cancelled { background: #fee2e2; color: #991b1b; }
-
-            @media print {
-              body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="receipt-wrap">
-            ${content.innerHTML}
-          </div>
-          <script>window.onload = () => { window.print(); window.close(); }<\/script>
-        </body>
-      </html>
-    `);
+      <!DOCTYPE html><html><head>
+      <title>Receipt – ${order.orderNumber}</title>
+      <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; font-size: 13px; color: #0a0a0a; background: #fff; }
+        .receipt-wrap { max-width: 700px; margin: 0 auto; padding: 32px 24px; }
+        .header { text-align: center; margin-bottom: 24px; }
+        .brand { font-size: 26px; font-weight: 900; letter-spacing: 3px; color: #C9A84C; }
+        .brand-sub { font-size: 10px; letter-spacing: 2px; color: #666; text-transform: uppercase; margin-top: 2px; }
+        .doc-title { font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #0a0a0a; margin-top: 8px; }
+        .meta-bar { display: flex; justify-content: space-between; border: 1px solid #ddd; border-radius: 6px; padding: 10px 14px; margin-bottom: 20px; font-size: 12px; }
+        .slip-block { border: 1.5px dashed #C9A84C; border-radius: 6px; padding: 14px 16px; margin-bottom: 16px; }
+        .slip-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 12px; }
+        .slip-col h4 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 6px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+        .slip-col p { font-size: 12px; line-height: 1.6; }
+        .items-table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+        .items-table th { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #888; padding: 6px 8px; text-align: left; border-bottom: 1px solid #eee; }
+        .items-table th:not(:first-child) { text-align: right; }
+        .items-table td { padding: 8px 8px; font-size: 12px; }
+        .items-table td:not(:first-child) { text-align: right; }
+        .items-table tr:not(:last-child) td { border-bottom: 1px solid #f5f5f5; }
+        .cv-badge { display: inline-block; background: #f0f9ff; color: #0369a1; font-size: 10px; padding: 1px 5px; border-radius: 4px; font-weight: 600; }
+        .totals { margin-left: auto; width: 260px; margin-top: 12px; }
+        .totals-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; color: #555; }
+        .totals-row.grand-total { font-size: 15px; font-weight: 900; border-top: 2px solid #0a0a0a; padding-top: 8px; margin-top: 4px; }
+        .pv-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; color: #0369a1; font-weight: 600; border-top: 1px solid #dbeafe; margin-top: 6px; padding-top: 6px; }
+        .bpp-box { border: 1px solid #C9A84C; border-radius: 6px; padding: 10px 14px; margin-top: 16px; font-size: 11px; }
+        .bpp-box.met { border-color: #2D6A4F; background: #f0fdf4; color: #166534; }
+        .bpp-box.need { border-color: #C9A84C; background: #fffbeb; color: #92400e; }
+        .tear-line { border: none; border-top: 2px dashed #ccc; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 28px; padding-top: 16px; border-top: 1px solid #eee; font-size: 10px; color: #888; line-height: 1.8; }
+        .footer strong { color: #C9A84C; }
+        @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+      </style></head>
+      <body><div class="receipt-wrap">${content.innerHTML}</div>
+      <script>window.onload=()=>{window.print();window.close();}<\/script>
+      </body></html>`);
     printWindow.document.close();
   }
 
   async function handleShare() {
-    const text = buildShareText(order);
+    const text = buildShareText(order, totalPv);
     if (navigator.share) {
-      try {
-        await navigator.share({ title: `Receipt – ${order.orderNumber}`, text });
-        return;
-      } catch { /* fall through to copy */ }
+      try { await navigator.share({ title: `Receipt – ${order.orderNumber}`, text }); return; } catch { /* fall through */ }
     }
     await navigator.clipboard.writeText(text);
     setCopied(true);
@@ -188,7 +153,6 @@ export function ReceiptModal({ order, open, onClose }: ReceiptModalProps) {
           </DialogTitle>
         </DialogHeader>
 
-        {/* Receipt Content */}
         <div ref={receiptRef} className="px-6 pb-6 pt-4 space-y-0">
 
           {/* Header */}
@@ -217,11 +181,20 @@ export function ReceiptModal({ order, open, onClose }: ReceiptModalProps) {
             </div>
           </div>
 
+          {/* Refund notice if applicable */}
+          {(order.refundAmount ?? 0) > 0 && (
+            <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-xs mb-4">
+              <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-bold text-red-700">Refund Issued: −${fmt(order.refundAmount!)}</p>
+                {order.refundNote && <p className="text-red-600 mt-0.5">{order.refundNote}</p>}
+              </div>
+            </div>
+          )}
+
           {/* ——— SHIPPING SLIP ——— */}
           <div className="border-2 border-dashed border-primary/40 rounded-lg p-4 mb-2">
-            <div className="text-[9px] font-bold tracking-[2px] uppercase text-primary mb-3">
-              ✂ Shipping Slip — Tear Here
-            </div>
+            <div className="text-[9px] font-bold tracking-[2px] uppercase text-primary mb-3">✂ Shipping Slip — Tear Here</div>
             <div className="grid grid-cols-2 gap-4 mb-3">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 border-b pb-1">Ship To</p>
@@ -241,13 +214,15 @@ export function ReceiptModal({ order, open, onClose }: ReceiptModalProps) {
                   <tr className="text-muted-foreground">
                     <th className="text-left font-medium pb-1">Product</th>
                     <th className="text-right font-medium pb-1">Qty</th>
+                    <th className="text-right font-medium pb-1">CV</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {order.items.map((item) => (
+                  {order.items.map(item => (
                     <tr key={item.id}>
                       <td className="py-0.5 font-medium">{item.productName}</td>
                       <td className="text-right py-0.5">× {item.quantity}</td>
+                      <td className="text-right py-0.5 text-blue-700 font-semibold">{item.cvTotal ?? 0} CV</td>
                     </tr>
                   ))}
                 </tbody>
@@ -261,7 +236,7 @@ export function ReceiptModal({ order, open, onClose }: ReceiptModalProps) {
             )}
           </div>
 
-          {/* Tear line visual for on-screen */}
+          {/* Tear line */}
           <div className="flex items-center gap-2 my-4">
             <div className="flex-1 border-t-2 border-dashed border-muted-foreground/30" />
             <span className="text-[9px] tracking-[2px] text-muted-foreground/50 uppercase">Receipt Below</span>
@@ -295,17 +270,21 @@ export function ReceiptModal({ order, open, onClose }: ReceiptModalProps) {
                   <th className="text-left py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Product</th>
                   <th className="text-right py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Qty</th>
                   <th className="text-right py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Unit Price</th>
+                  <th className="text-right py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">CV</th>
                   <th className="text-right py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Total</th>
                 </tr>
               </thead>
               <tbody>
-                {order.items.map((item) => (
+                {order.items.map(item => (
                   <tr key={item.id} className="border-b border-muted/50">
                     <td className="py-2.5 pr-2">
                       <p className="font-semibold">{item.productName}</p>
                     </td>
                     <td className="py-2.5 text-right text-muted-foreground">{item.quantity}</td>
                     <td className="py-2.5 text-right text-muted-foreground">${fmt(item.price)}</td>
+                    <td className="py-2.5 text-right">
+                      <span className="inline-block bg-blue-50 text-blue-700 text-[10px] px-1.5 py-0.5 rounded font-bold">{item.cvTotal ?? 0}</span>
+                    </td>
                     <td className="py-2.5 text-right font-semibold">${fmt(item.total)}</td>
                   </tr>
                 ))}
@@ -313,7 +292,7 @@ export function ReceiptModal({ order, open, onClose }: ReceiptModalProps) {
             </table>
 
             {/* Totals */}
-            <div className="ml-auto max-w-[240px] mt-3 space-y-1 text-sm">
+            <div className="ml-auto max-w-[260px] mt-3 space-y-1 text-sm">
               <div className="flex justify-between text-muted-foreground">
                 <span>Subtotal</span>
                 <span>${fmt(order.subtotal)}</span>
@@ -332,12 +311,44 @@ export function ReceiptModal({ order, open, onClose }: ReceiptModalProps) {
                 <span>Tax</span>
                 <span>${fmt(order.tax)}</span>
               </div>
+              {(order.refundAmount ?? 0) > 0 && (
+                <div className="flex justify-between text-red-600 font-semibold">
+                  <span>Refunded</span>
+                  <span>−${fmt(order.refundAmount!)}</span>
+                </div>
+              )}
               <Separator className="my-1" />
               <div className="flex justify-between font-black text-base">
                 <span>Total</span>
                 <span className="text-primary">${fmt(order.total)}</span>
               </div>
+              {/* PV Earned Row */}
+              <div className="flex justify-between text-blue-700 font-bold text-sm border-t border-blue-100 pt-2 mt-1">
+                <span className="flex items-center gap-1"><Zap className="h-3.5 w-3.5" />PV Earned</span>
+                <span>{totalPv} PV</span>
+              </div>
             </div>
+
+            {/* BPP Notification for Pro Members */}
+            {isProMember && (
+              <div className={`mt-4 rounded-lg border px-4 py-3 text-xs flex items-start gap-2.5 ${bppMet ? "bg-green-50 border-green-200" : "bg-amber-50 border-amber-200"}`}>
+                <Star className={`h-4 w-4 mt-0.5 flex-shrink-0 ${bppMet ? "text-green-600" : "text-amber-600"}`} />
+                <div>
+                  <p className={`font-bold ${bppMet ? "text-green-800" : "text-amber-800"}`}>
+                    {bppMet ? "BPP Qualification: On Track!" : "Bill Payer Program (BPP) Progress"}
+                  </p>
+                  {bppMet ? (
+                    <p className={`mt-0.5 ${bppMet ? "text-green-700" : "text-amber-700"}`}>
+                      This order contributed {totalPv} PV. You've accumulated {pvAfterOrder} PV this month — you meet the 100 PV minimum for BPP qualification!
+                    </p>
+                  ) : (
+                    <p className="mt-0.5 text-amber-700">
+                      This order contributed {totalPv} PV. You need <strong>{pvNeeded} more PV</strong> this month to qualify for BPP (100 PV required). Check your BPP dashboard for details.
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Footer */}
@@ -355,7 +366,7 @@ export function ReceiptModal({ order, open, onClose }: ReceiptModalProps) {
   );
 }
 
-function buildShareText(order: Order): string {
+function buildShareText(order: Order, totalPv: number): string {
   const date = new Date(order.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
   const lines: string[] = [
     "═══════════════════════════════",
@@ -368,13 +379,14 @@ function buildShareText(order: Order): string {
     `Status: ${order.status.toUpperCase()}`,
     "─────────────────────────────",
     "ITEMS:",
-    ...order.items.map(i => `  ${i.productName} × ${i.quantity}  $${i.total.toFixed(2)}`),
+    ...order.items.map(i => `  ${i.productName} × ${i.quantity}  $${i.total.toFixed(2)}  (${i.cvTotal ?? 0} CV)`),
     "─────────────────────────────",
     `Subtotal: $${order.subtotal.toFixed(2)}`,
     ...(order.discount > 0 ? [`Discount: -$${order.discount.toFixed(2)}`] : []),
     `Shipping: ${order.shipping === 0 ? "Free" : "$" + order.shipping.toFixed(2)}`,
     `Tax: $${order.tax.toFixed(2)}`,
     `TOTAL: $${order.total.toFixed(2)}`,
+    `PV EARNED: ${totalPv} PV`,
     "─────────────────────────────",
     `Ship To: ${order.userName}`,
     order.shippingAddress ?? "No address on file",

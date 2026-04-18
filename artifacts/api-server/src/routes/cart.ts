@@ -19,6 +19,7 @@ async function buildCart(userId: number) {
     const price = parseFloat(product.price);
     const lineTotal = price * cart.quantity;
     subtotal += lineTotal;
+    const cvPerUnit = product.cv ?? 0;
     return {
       id: cart.id,
       productId: cart.productId,
@@ -27,6 +28,8 @@ async function buildCart(userId: number) {
       price,
       quantity: cart.quantity,
       lineTotal,
+      cvPerUnit,
+      cvLineTotal: cvPerUnit * cart.quantity,
     };
   }).filter(Boolean);
 

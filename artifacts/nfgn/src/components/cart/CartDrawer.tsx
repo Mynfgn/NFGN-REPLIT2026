@@ -42,6 +42,7 @@ import {
   AlertTriangle,
   Info,
   Shield,
+  Zap,
 } from "lucide-react";
 import { Link } from "wouter";
 import { customFetch } from "@/lib/custom-fetch";
@@ -591,7 +592,14 @@ export function CartDrawer() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm leading-snug">{item.productName}</p>
-                        <p className="text-primary font-bold text-sm mt-0.5">${item.price.toFixed(2)}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <p className="text-primary font-bold text-sm">${item.price.toFixed(2)}</p>
+                          {(item.cvPerUnit ?? 0) > 0 && (
+                            <span className="text-[10px] font-bold bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-100">
+                              {item.cvPerUnit} CV/ea
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-2 mt-2">
                           <button
                             onClick={() => handleQty(item.id, -1, item.quantity)}
@@ -629,6 +637,36 @@ export function CartDrawer() {
                     <span className="text-muted-foreground">Subtotal</span>
                     <span className="font-bold">${subtotal.toFixed(2)}</span>
                   </div>
+                  {/* PV Summary */}
+                  {(() => {
+                    const cartPv = items.reduce((s: number, item: any) => {
+                      const qty = optimisticQtys[item.id] ?? item.quantity;
+                      return s + ((item.cvPerUnit ?? 0) * qty);
+                    }, 0);
+                    if (cartPv <= 0) return null;
+                    const isProMemberCart = !!(me as any)?.isProMember;
+                    const pvNeeded = Math.max(0, 100 - cartPv);
+                    return (
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between text-sm font-semibold text-blue-700">
+                          <span className="flex items-center gap-1">
+                            <Zap className="h-3.5 w-3.5" />PV from this order
+                          </span>
+                          <span>{cartPv} PV</span>
+                        </div>
+                        {isProMemberCart && (
+                          <div className={`rounded-lg px-3 py-2 text-xs border flex items-start gap-2 ${cartPv >= 100 ? "bg-green-50 border-green-200 text-green-800" : "bg-amber-50 border-amber-200 text-amber-800"}`}>
+                            <Star className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+                            <span>
+                              {cartPv >= 100
+                                ? `This order (${cartPv} PV) meets the 100 PV/month BPP requirement!`
+                                : `Need ${pvNeeded} more PV this month for BPP qualification (100 PV required).`}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                   <p className="text-xs text-muted-foreground">Shipping & taxes calculated at checkout</p>
                   <Button className="w-full gap-2" size="lg" onClick={() => setView("checkout")}>
                     Proceed to Checkout <ArrowRight className="h-4 w-4" />

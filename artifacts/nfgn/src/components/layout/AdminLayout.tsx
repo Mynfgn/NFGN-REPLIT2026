@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { roleLabel } from "@/lib/labels";
+import { NotificationBell } from "@/components/dashboard/NotificationBell";
 
 export function AdminLayout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
@@ -70,9 +71,12 @@ export function AdminLayout({ children }: { children: ReactNode }) {
             <ShieldCheck className="h-6 w-6 text-primary" />
             <span className="font-serif text-xl font-bold tracking-tighter text-primary">NFGN Admin</span>
           </Link>
-          <Button variant="ghost" size="icon" className="ml-auto md:hidden text-white hover:text-white/80 hover:bg-white/10" onClick={() => setSidebarOpen(false)}>
-            <X className="h-5 w-5" />
-          </Button>
+          <div className="ml-auto flex items-center gap-1">
+            <span className="hidden md:flex text-foreground"><NotificationBell /></span>
+            <Button variant="ghost" size="icon" className="md:hidden text-white hover:text-white/80 hover:bg-white/10" onClick={() => setSidebarOpen(false)}>
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
 
         <div className="p-4 border-b border-white/10">
@@ -126,7 +130,8 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>
             <Menu className="h-5 w-5" />
           </Button>
-          <span className="ml-4 font-serif font-bold text-primary">Admin Panel</span>
+          <span className="ml-4 font-serif font-bold text-primary flex-1">Admin Panel</span>
+          <NotificationBell />
         </header>
         <div className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto">
           {children}

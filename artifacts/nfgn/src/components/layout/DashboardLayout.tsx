@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { roleLabel } from "@/lib/labels";
+import { NotificationBell } from "@/components/dashboard/NotificationBell";
 
 export function DashboardLayout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
@@ -66,9 +67,12 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           <Link href="/" className="flex items-center gap-2">
             <span className="font-serif text-2xl font-bold tracking-tighter text-primary">NFGN</span>
           </Link>
-          <Button variant="ghost" size="icon" className="ml-auto md:hidden" onClick={() => setSidebarOpen(false)}>
-            <X className="h-5 w-5" />
-          </Button>
+          <div className="ml-auto flex items-center gap-1">
+            <span className="hidden md:flex"><NotificationBell /></span>
+            <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSidebarOpen(false)}>
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
 
         <div className="p-4 border-b">
@@ -121,7 +125,8 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>
             <Menu className="h-5 w-5" />
           </Button>
-          <span className="ml-4 font-serif font-bold text-primary">Member Dashboard</span>
+          <span className="ml-4 font-serif font-bold text-primary flex-1">Member Dashboard</span>
+          <NotificationBell />
         </header>
         <div className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto">
           {children}

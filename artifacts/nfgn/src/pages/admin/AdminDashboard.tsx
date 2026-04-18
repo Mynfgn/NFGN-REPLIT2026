@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DollarSign, ShoppingCart, Users, UserCheck } from "lucide-react";
 import { roleLabel } from "@/lib/labels";
+import { MemberMapCard } from "@/components/dashboard/MemberMapCard";
 
 export function AdminDashboard() {
   const { data, isLoading } = useGetDashboardSummary();
@@ -132,6 +133,9 @@ export function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Community World Map */}
+      <MemberMapCard title="Global Member Distribution" />
     </div>
   );
 }

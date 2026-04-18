@@ -645,7 +645,7 @@ export function CartDrawer() {
                     }, 0);
                     if (cartPv <= 0) return null;
                     const isProMemberCart = !!(me as any)?.isProMember;
-                    const pvNeeded = Math.max(0, 100 - cartPv);
+                    const pvNeeded = Math.max(0, 150 - cartPv);
                     return (
                       <div className="space-y-1.5">
                         <div className="flex justify-between text-sm font-semibold text-blue-700">
@@ -655,12 +655,12 @@ export function CartDrawer() {
                           <span>{cartPv} PV</span>
                         </div>
                         {isProMemberCart && (
-                          <div className={`rounded-lg px-3 py-2 text-xs border flex items-start gap-2 ${cartPv >= 100 ? "bg-green-50 border-green-200 text-green-800" : "bg-amber-50 border-amber-200 text-amber-800"}`}>
+                          <div className={`rounded-lg px-3 py-2 text-xs border flex items-start gap-2 ${cartPv >= 150 ? "bg-green-50 border-green-200 text-green-800" : "bg-amber-50 border-amber-200 text-amber-800"}`}>
                             <Star className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
                             <span>
-                              {cartPv >= 100
-                                ? `This order (${cartPv} PV) meets the 100 PV/month BPP requirement!`
-                                : `Need ${pvNeeded} more PV this month for BPP qualification (100 PV required).`}
+                              {cartPv >= 150
+                                ? `This order (${cartPv} PV) meets the 150 PV/month BPP requirement!`
+                                : `Need ${pvNeeded} more PV this month for BPP qualification (150 PV required).`}
                             </span>
                           </div>
                         )}

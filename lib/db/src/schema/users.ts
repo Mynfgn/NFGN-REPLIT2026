@@ -34,6 +34,10 @@ export const usersTable = pgTable("users", {
 
   pvAdjustment: integer("pv_adjustment").notNull().default(0),
   gvAdjustment: integer("gv_adjustment").notNull().default(0),
+
+  city: text("city"),
+  state: text("state"),
+  country: text("country").default("United States"),
 });
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({ id: true, createdAt: true, updatedAt: true });

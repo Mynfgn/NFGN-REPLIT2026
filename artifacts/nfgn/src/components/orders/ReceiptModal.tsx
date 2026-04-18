@@ -57,7 +57,7 @@ const statusColors: Record<string, string> = {
   refunded: "bg-red-100 text-red-800",
 };
 
-const BPP_MIN_PV = 100;
+const BPP_MIN_PV = 150;
 
 function fmt(n: number) { return n.toFixed(2); }
 
@@ -339,11 +339,11 @@ export function ReceiptModal({ order, open, onClose, isProMember, currentMonthPv
                   </p>
                   {bppMet ? (
                     <p className={`mt-0.5 ${bppMet ? "text-green-700" : "text-amber-700"}`}>
-                      This order contributed {totalPv} PV. You've accumulated {pvAfterOrder} PV this month — you meet the 100 PV minimum for BPP qualification!
+                      This order contributed {totalPv} PV. You've accumulated {pvAfterOrder} PV this month — you meet the 150 PV minimum for BPP qualification!
                     </p>
                   ) : (
                     <p className="mt-0.5 text-amber-700">
-                      This order contributed {totalPv} PV. You need <strong>{pvNeeded} more PV</strong> this month to qualify for BPP (100 PV required). Check your BPP dashboard for details.
+                      This order contributed {totalPv} PV. You need <strong>{pvNeeded} more PV</strong> this month to qualify for BPP (150 PV required). Check your BPP dashboard for details.
                     </p>
                   )}
                 </div>

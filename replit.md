@@ -114,6 +114,25 @@ Key rules:
 - Regular product purchases generate Referral + Sales commissions (for Pro Member sponsors)
 - Shared label utility: `artifacts/nfgn/src/lib/labels.ts` (roleLabel, commissionTypeLabel)
 
+## Notifications System
+
+- **Table**: `notifications` (userId, type, message, relatedUserId, isRead, createdAt)
+- **API**: `GET /api/notifications` (returns list + unreadCount), `POST /api/notifications/:id/read`, `POST /api/notifications/read-all`
+- **Trigger**: On `POST /auth/register` — traverses `sponsorId` chain up to 9 levels and creates a "🎉 Congratulations!!" notification for each upline member
+- **Frontend**: `NotificationBell` component — bell icon with red badge, dropdown panel in both DashboardLayout and AdminLayout sidebars (desktop + mobile)
+- **Poll interval**: 30 seconds
+
+## Community World Map
+
+- **API**: `GET /api/dashboard/member-locations` — admin sees all, member sees downline only (up to 9 levels)
+- **Groups** members by city/state/country label; returns count per location
+- **Frontend**: `MemberMapCard` component using `react-simple-maps` with world topojson from CDN
+- **Coordinate lookup**: Built-in lookup table for all 50 US states + major world countries
+- **Marketing Suggestions**: Dynamic AI-style suggestions shown below the map based on top locations
+- **Used in**: Admin Dashboard and Member Dashboard
+- Users must have `city`, `state`, `country` set at registration for locations to appear on map
+- Demo users have been seeded with diverse locations across US states, Jamaica, UK, Nigeria, Ghana, Trinidad
+
 ## Brand Colors
 
 - Black: `#0a0a0a` (background)

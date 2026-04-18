@@ -461,4 +461,54 @@ router.get("/replicated/:username", async (req, res): Promise<void> => {
   });
 });
 
+// ── GET /dashboard/member-locations ──────────────────────────────────────────
+// Admin: all member locations; Member: downline only
+router.get("/dashboard/member-locations", requireAuth, async (req, res): Promise<void> => {
+  const me = (req as any).user as typeof usersTable.$inferSelect;
+  const isAdmin = ["admin", "super_admin", "store_admin"].includes(me.role);
+
+  let users: Pick<typeof usersTable.$inferSelect, "id" | "city" | "state" | "country" | "createdAt">[] = [];
+
+  if (isAdmin) {
+    users = await db.select({
+      id: usersTable.id,
+      city: usersTable.city,
+      state: usersTable.state,
+      country: usersTable.country,
+      createdAt: usersTable.createdAt,
+    }).from(usersTable).where(eq(usersTable.status, "active"));
+  } else {
+    const downlineIds = await getAllDownlineIds(me.id, 9);
+    if (downlineIds.length > 0) {
+      users = await db.select({
+        id: usersTable.id,
+        city: usersTable.city,
+        state: usersTable.state,
+        country: usersTable.country,
+        createdAt: usersTable.createdAt,
+      }).from(usersTable).where(and(eq(usersTable.status, "active"), inArray(usersTable.id, downlineIds)));
+    }
+  }
+
+  // Group by location label
+  const locationMap: Record<string, { label: string; country: string; count: number; latestJoin: string }> = {};
+  for (const u of users) {
+    const country = u.country ?? "United States";
+    const state = u.state ?? null;
+    const city = u.city ?? null;
+    const label = city && state ? `${city}, ${state}` : state ? state : country;
+    const key = label;
+    if (!locationMap[key]) {
+      locationMap[key] = { label, country, count: 0, latestJoin: u.createdAt.toISOString() };
+    }
+    locationMap[key].count++;
+    if (u.createdAt.toISOString() > locationMap[key].latestJoin) {
+      locationMap[key].latestJoin = u.createdAt.toISOString();
+    }
+  }
+
+  const locations = Object.values(locationMap).sort((a, b) => b.count - a.count);
+  res.json({ locations, total: users.length });
+});
+
 export default router;

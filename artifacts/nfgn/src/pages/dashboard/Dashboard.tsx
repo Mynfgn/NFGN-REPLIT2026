@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Wallet, Users, ShoppingBag, ArrowUpRight, TrendingUp, MapPin, Star, CheckCircle2, AlertCircle, BarChart3, Link2, Copy, Check, ExternalLink } from "lucide-react";
+import { MemberMapCard } from "@/components/dashboard/MemberMapCard";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, Legend,
@@ -536,6 +537,9 @@ export function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Community World Map */}
+      <MemberMapCard title="Your Community Map" />
     </div>
   );
 }

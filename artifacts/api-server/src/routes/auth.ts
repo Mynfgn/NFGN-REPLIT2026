@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, usersTable, walletsTable, genealogyNodesTable } from "@workspace/db";
+import { db, usersTable, walletsTable, genealogyNodesTable, notificationsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { hashPassword, verifyPassword, generateToken, generateReferralCode, requireAuth } from "../lib/auth";
 import { LoginBody, RegisterBody } from "@workspace/api-zod";
@@ -32,7 +32,25 @@ function formatUser(user: typeof usersTable.$inferSelect, sponsorName?: string) 
     payoutMethod: user.payoutMethod ?? "bank",
     payoutPaypalEmail: user.payoutPaypalEmail ?? null,
     payoutCashAppHandle: user.payoutCashAppHandle ?? null,
+    city: user.city ?? null,
+    state: user.state ?? null,
+    country: user.country ?? "United States",
   };
+}
+
+/** Walk up the sponsor chain up to maxLevels and collect upline user IDs */
+async function getUplineIds(startSponsorId: number, maxLevels: number = 9): Promise<number[]> {
+  const ids: number[] = [];
+  let currentId: number | null = startSponsorId;
+  for (let i = 0; i < maxLevels; i++) {
+    if (!currentId) break;
+    const [user] = await db.select({ id: usersTable.id, sponsorId: usersTable.sponsorId })
+      .from(usersTable).where(eq(usersTable.id, currentId));
+    if (!user) break;
+    ids.push(user.id);
+    currentId = user.sponsorId ?? null;
+  }
+  return ids;
 }
 
 router.post("/auth/login", async (req, res): Promise<void> => {
@@ -71,6 +89,10 @@ router.post("/auth/register", async (req, res): Promise<void> => {
   }
 
   const { email, password, firstName, lastName, phone, referralCode, role } = parsed.data;
+  // Accept optional location fields (not in RegisterBody schema, so pull from req.body directly)
+  const city: string | undefined = req.body.city ?? undefined;
+  const state: string | undefined = req.body.state ?? undefined;
+  const country: string | undefined = req.body.country ?? "United States";
 
   const [existing] = await db.select().from(usersTable).where(eq(usersTable.email, email.toLowerCase()));
   if (existing) {
@@ -99,10 +121,14 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     sponsorId: sponsorId ?? undefined,
     isProMember: false,
     status: "active",
+    city: city ?? null,
+    state: state ?? null,
+    country: country ?? "United States",
   }).returning();
 
   await db.insert(walletsTable).values({ userId: newUser.id });
 
+  // Add to genealogy
   if (sponsorId) {
     const [parentNode] = await db.select().from(genealogyNodesTable).where(eq(genealogyNodesTable.userId, sponsorId));
     if (parentNode) {
@@ -120,6 +146,27 @@ router.post("/auth/register", async (req, res): Promise<void> => {
       generation: 1,
       path: "",
     });
+  }
+
+  // 🎉 Trigger congratulations notifications up the upline chain (up to 9 levels)
+  if (sponsorId) {
+    try {
+      const uplineIds = await getUplineIds(sponsorId, 9);
+      const joinName = `${firstName} ${lastName}`;
+      if (uplineIds.length > 0) {
+        await db.insert(notificationsTable).values(
+          uplineIds.map(uid => ({
+            userId: uid,
+            type: "join",
+            message: `🎉 Congratulations!! ${joinName} joined your NFGN community!`,
+            relatedUserId: newUser.id,
+            isRead: false,
+          }))
+        );
+      }
+    } catch {
+      // Non-blocking — don't fail registration if notifications error
+    }
   }
 
   const token = generateToken(newUser.id, newUser.role);

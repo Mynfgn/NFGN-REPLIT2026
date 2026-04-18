@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { useListOrders } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ShoppingBag } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, ShoppingBag, Receipt } from "lucide-react";
+import { ReceiptModal } from "@/components/orders/ReceiptModal";
 
 const statusColors: Record<string, string> = {
   pending: "secondary",
@@ -14,6 +17,7 @@ const statusColors: Record<string, string> = {
 export function OrdersPage() {
   const { data, isLoading } = useListOrders({ page: 1, limit: 20 });
   const orders = data?.orders ?? [];
+  const [receiptOrder, setReceiptOrder] = useState<any | null>(null);
 
   return (
     <div className="space-y-6">
@@ -25,7 +29,9 @@ export function OrdersPage() {
       <Card>
         <CardContent className="pt-6">
           {isLoading ? (
-            <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
           ) : orders.length === 0 ? (
             <div className="text-center py-16">
               <ShoppingBag className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
@@ -35,30 +41,62 @@ export function OrdersPage() {
           ) : (
             <div className="space-y-4">
               {orders.map((order: any) => (
-                <div key={order.id} className="border rounded-lg p-4 hover:border-primary/30 transition-colors">
+                <div
+                  key={order.id}
+                  className="border rounded-lg p-4 hover:border-primary/30 transition-colors"
+                >
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <p className="font-bold font-mono text-sm">{order.orderNumber}</p>
-                      <p className="text-xs text-muted-foreground">{new Date(order.createdAt).toLocaleDateString()}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </p>
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-lg">${order.total.toFixed(2)}</p>
-                      <Badge variant={(statusColors[order.status] ?? "secondary") as any}>{order.status}</Badge>
+                      <Badge variant={(statusColors[order.status] ?? "secondary") as any}>
+                        {order.status}
+                      </Badge>
                     </div>
                   </div>
+
                   {order.items?.length > 0 && (
                     <div className="border-t pt-3 space-y-2">
                       {order.items.map((item: any) => (
                         <div key={item.id} className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">{item.productName} × {item.quantity}</span>
+                          <span className="text-muted-foreground">
+                            {item.productName} × {item.quantity}
+                          </span>
                           <span>${item.total.toFixed(2)}</span>
                         </div>
                       ))}
                     </div>
                   )}
-                  <div className="border-t mt-3 pt-3 flex gap-4 text-xs text-muted-foreground">
-                    <span>Payment: <span className="capitalize">{order.paymentMethod}</span></span>
-                    <span>Status: <span className={`capitalize font-medium ${order.paymentStatus === "demo_paid" ? "text-green-600" : ""}`}>{order.paymentStatus?.replace("_", " ")}</span></span>
+
+                  <div className="border-t mt-3 pt-3 flex items-center justify-between gap-4">
+                    <div className="flex gap-4 text-xs text-muted-foreground">
+                      <span>
+                        Payment:{" "}
+                        <span className="capitalize">{order.paymentMethod}</span>
+                      </span>
+                      <span>
+                        Status:{" "}
+                        <span
+                          className={`capitalize font-medium ${order.paymentStatus === "demo_paid" ? "text-green-600" : ""}`}
+                        >
+                          {order.paymentStatus?.replace("_", " ")}
+                        </span>
+                      </span>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs gap-1.5 border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/60"
+                      onClick={() => setReceiptOrder(order)}
+                    >
+                      <Receipt className="h-3.5 w-3.5" />
+                      View Receipt
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -66,6 +104,12 @@ export function OrdersPage() {
           )}
         </CardContent>
       </Card>
+
+      <ReceiptModal
+        order={receiptOrder}
+        open={!!receiptOrder}
+        onClose={() => setReceiptOrder(null)}
+      />
     </div>
   );
 }

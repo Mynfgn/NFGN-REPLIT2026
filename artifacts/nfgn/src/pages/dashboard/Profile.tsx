@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useGetMe, useGetSettings, useGetProduct, useAddToCart } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import {
   UserCircle, Shield, Key, Copy, Check, Loader2, Save,
   AlertCircle, CheckCircle2, Star, Calendar, Phone, Mail,
   Building2, CreditCard, Wallet, Users, Award, ChevronRight,
-  Eye, EyeOff, Sparkles, ArrowRight, Crown, Zap, TrendingUp, Lock,
+  Eye, EyeOff, Sparkles, ArrowRight, Crown, Zap, TrendingUp, Lock, Camera,
 } from "lucide-react";
 import { customFetch } from "@/lib/custom-fetch";
 import { roleLabel } from "@/lib/labels";
@@ -236,6 +236,9 @@ export function ProfilePage() {
   const [pwSaving, setPwSaving] = useState(false);
   const [pwMsg, setPwMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+  const [avatarSaving, setAvatarSaving] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     if (user) {
       setFirstName((user as any).firstName ?? "");
@@ -321,6 +324,37 @@ export function ProfilePage() {
     } finally { setPwSaving(false); }
   }
 
+  async function handleAvatarUpload(file: File) {
+    setAvatarSaving(true);
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const img = new Image();
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          img.src = e.target?.result as string;
+          img.onload = () => {
+            const size = 150;
+            const canvas = document.createElement("canvas");
+            canvas.width = size; canvas.height = size;
+            const ctx = canvas.getContext("2d")!;
+            const scale = Math.max(size / img.width, size / img.height);
+            const sw = img.width * scale, sh = img.height * scale;
+            ctx.drawImage(img, (size - sw) / 2, (size - sh) / 2, sw, sh);
+            resolve(canvas.toDataURL("image/jpeg", 0.82));
+          };
+          img.onerror = reject;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      await patchUser({ avatar: dataUrl });
+    } catch {
+      // silently ignore
+    } finally {
+      setAvatarSaving(false);
+    }
+  }
+
   const u = user as any;
   const initials = `${u?.firstName?.charAt(0) ?? ""}${u?.lastName?.charAt(0) ?? ""}`;
   const memberSince = u?.createdAt ? new Date(u.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "—";
@@ -337,8 +371,35 @@ export function ProfilePage() {
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center gap-4">
-            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xl font-bold flex-shrink-0">
-              {initials || <UserCircle className="h-8 w-8" />}
+            {/* Avatar with upload overlay */}
+            <div className="relative flex-shrink-0 group">
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAvatarUpload(f); e.target.value = ""; }}
+              />
+              <div
+                className="h-16 w-16 rounded-full overflow-hidden cursor-pointer ring-2 ring-border group-hover:ring-primary transition-all"
+                onClick={() => avatarInputRef.current?.click()}
+              >
+                {u?.avatar ? (
+                  <img src={u.avatar} alt={u.firstName} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="h-full w-full bg-primary/10 flex items-center justify-center text-primary text-xl font-bold">
+                    {initials || <UserCircle className="h-8 w-8" />}
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={avatarSaving}
+                className="absolute bottom-0 right-0 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:bg-primary/90 transition-colors"
+                title="Upload profile photo"
+              >
+                {avatarSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Camera className="h-3 w-3" />}
+              </button>
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 flex-wrap">

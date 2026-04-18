@@ -117,11 +117,19 @@ function MemberPopup({ pos, onClose, svgW }: { pos: Pos; onClose: () => void; sv
       <div className="bg-white border border-border rounded-xl shadow-2xl text-sm overflow-hidden">
         {/* Header */}
         <div className={`px-4 py-3 flex items-center gap-3 ${n.isProMember ? "bg-orange-50 border-b border-orange-100" : "bg-blue-50 border-b border-blue-100"}`}>
-          <div
-            className={`h-10 w-10 rounded-full flex items-center justify-center text-base font-bold text-white flex-shrink-0 ${n.isProMember ? "bg-orange-500" : "bg-blue-500"}`}
-          >
-            {n.name.charAt(0)}
-          </div>
+          {n.avatar ? (
+            <img
+              src={n.avatar}
+              alt={n.name}
+              className="h-10 w-10 rounded-full object-cover flex-shrink-0 ring-2 ring-white"
+            />
+          ) : (
+            <div
+              className={`h-10 w-10 rounded-full flex items-center justify-center text-base font-bold text-white flex-shrink-0 ${n.isProMember ? "bg-orange-500" : "bg-blue-500"}`}
+            >
+              {n.name.charAt(0)}
+            </div>
+          )}
           <div className="flex-1 min-w-0">
             <div className="font-semibold text-foreground truncate">{n.name}</div>
             <div className={`text-xs font-medium ${n.isProMember ? "text-orange-600" : "text-blue-600"}`}>
@@ -198,6 +206,7 @@ function NodeEl({
   const n = pos.node;
   const [hovered, setHovered] = useState(false);
   const initials = n.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+  const clipId = `avatar-clip-${n.userId}`;
 
   return (
     <g
@@ -207,6 +216,13 @@ function NodeEl({
       onMouseLeave={() => setHovered(false)}
       onClick={() => onSelect(selected ? null : pos)}
     >
+      {/* Clip path for avatar photo */}
+      <defs>
+        <clipPath id={clipId}>
+          <circle r={CR} />
+        </clipPath>
+      </defs>
+
       {/* Glow ring when hovered or selected */}
       {(hovered || selected) && (
         <circle
@@ -214,28 +230,52 @@ function NodeEl({
           fill="none"
           stroke={n.isProMember ? "#f97316" : "#3b82f6"}
           strokeWidth="2.5"
-          strokeDasharray={n.isProMember ? "none" : "none"}
           opacity="0.5"
         />
       )}
-      {/* Main circle */}
+
+      {/* Background circle (always shown — visible if avatar has transparent edges) */}
       <circle
         r={CR}
         fill={n.isProMember ? "#f97316" : "#3b82f6"}
         stroke={selected ? (n.isProMember ? "#ea580c" : "#1d4ed8") : "white"}
         strokeWidth={selected ? 3 : 2}
       />
-      {/* Initials */}
-      <text
-        textAnchor="middle"
-        dominantBaseline="central"
-        fill="white"
-        fontSize="13"
-        fontWeight="700"
-        fontFamily="system-ui, sans-serif"
-      >
-        {initials}
-      </text>
+
+      {n.avatar ? (
+        /* Profile photo clipped to circle */
+        <>
+          <image
+            href={n.avatar}
+            x={-CR}
+            y={-CR}
+            width={CR * 2}
+            height={CR * 2}
+            clipPath={`url(#${clipId})`}
+            preserveAspectRatio="xMidYMid slice"
+          />
+          {/* Re-draw the border ring on top of the image */}
+          <circle
+            r={CR}
+            fill="none"
+            stroke={selected ? (n.isProMember ? "#ea580c" : "#1d4ed8") : "white"}
+            strokeWidth={selected ? 3 : 2}
+          />
+        </>
+      ) : (
+        /* Initials fallback */
+        <text
+          textAnchor="middle"
+          dominantBaseline="central"
+          fill="white"
+          fontSize="13"
+          fontWeight="700"
+          fontFamily="system-ui, sans-serif"
+        >
+          {initials}
+        </text>
+      )}
+
       {/* Star badge for Pro Members */}
       {n.isProMember && (
         <g transform={`translate(${CR - 10},${-CR + 10})`}>

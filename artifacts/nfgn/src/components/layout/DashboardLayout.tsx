@@ -31,13 +31,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
 
   const navItems = [
     { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
+    { name: "Genealogy", href: "/dashboard/genealogy", icon: Users },
     { name: "Registration", href: "/dashboard/registration", icon: UserPlus },
     { name: "User Earnings", href: "/dashboard/earnings", icon: TrendingUp },
     { name: "Orders", href: "/dashboard/orders", icon: ShoppingBag },
     { name: "E-Wallet", href: "/dashboard/wallet", icon: Wallet },
     { name: "Transfer Funds", href: "/dashboard/transfer", icon: ArrowRightLeft },
     { name: "Payouts", href: "/dashboard/payouts", icon: Banknote },
-    { name: "Genealogy", href: "/dashboard/genealogy", icon: Users },
     { name: "Commissions", href: "/dashboard/commissions", icon: Award },
     { name: "Bill Payer Program", href: "/dashboard/bpp", icon: Home },
     { name: "Bookings", href: "/dashboard/bookings", icon: Calendar },

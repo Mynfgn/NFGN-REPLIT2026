@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, usersTable, walletsTable, genealogyNodesTable, notificationsTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, count } from "drizzle-orm";
 import { hashPassword, verifyPassword, generateToken, generateReferralCode, requireAuth } from "../lib/auth";
 import { LoginBody, RegisterBody } from "@workspace/api-zod";
 
@@ -199,6 +199,23 @@ router.post("/auth/change-password", requireAuth, async (req, res): Promise<void
 
 router.post("/auth/logout", async (_req, res): Promise<void> => {
   res.json({ success: true });
+});
+
+router.get("/auth/sponsor-lookup", async (req, res): Promise<void> => {
+  const { ref } = req.query as { ref?: string };
+  if (!ref) { res.status(400).json({ error: "ref is required" }); return; }
+  const [sponsor] = await db.select().from(usersTable).where(eq(usersTable.referralCode, ref));
+  if (!sponsor) { res.status(404).json({ error: "Sponsor not found" }); return; }
+  const [{ value: directCount }] = await db.select({ value: count() }).from(usersTable).where(eq(usersTable.sponsorId, sponsor.id));
+  let label: string;
+  if (sponsor.isProMember) {
+    label = "Pro Member";
+  } else if (directCount > 0) {
+    label = "Community Builder";
+  } else {
+    label = "NFGN Community Member";
+  }
+  res.json({ name: `${sponsor.firstName} ${sponsor.lastName}`, label });
 });
 
 router.get("/auth/me", requireAuth, async (req, res): Promise<void> => {

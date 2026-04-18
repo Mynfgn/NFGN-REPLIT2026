@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Star, Users, TrendingUp, Loader2 } from "lucide-react";
+import { CheckCircle, Star, Users, TrendingUp, Loader2, UserCircle2 } from "lucide-react";
 
 const registerSchema = z.object({
   firstName: z.string().min(2, "First name is required"),
@@ -25,6 +25,8 @@ const registerSchema = z.object({
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
+type SponsorInfo = { name: string; label: string } | null;
+
 export function Join() {
   const [, setLocation] = useLocation();
   const { login } = useAuth();
@@ -36,6 +38,31 @@ export function Join() {
 
   const searchParams = new URLSearchParams(window.location.search);
   const refCode = searchParams.get("ref") ?? "";
+
+  const [sponsorInfo, setSponsorInfo] = useState<SponsorInfo>(null);
+  const [sponsorLoading, setSponsorLoading] = useState(false);
+
+  async function lookupSponsor(code: string) {
+    if (!code.trim()) { setSponsorInfo(null); return; }
+    setSponsorLoading(true);
+    try {
+      const res = await fetch(`/api/auth/sponsor-lookup?ref=${encodeURIComponent(code.trim())}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSponsorInfo(data);
+      } else {
+        setSponsorInfo(null);
+      }
+    } catch {
+      setSponsorInfo(null);
+    } finally {
+      setSponsorLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (refCode) lookupSponsor(refCode);
+  }, [refCode]);
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -58,6 +85,29 @@ export function Join() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Sponsor Banner */}
+      {sponsorInfo && (
+        <div className="bg-primary/10 border-b border-primary/20 py-3 px-4 text-center">
+          <div className="flex items-center justify-center gap-2 text-sm">
+            <UserCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+            <span className="font-semibold text-foreground">{sponsorInfo.name}</span>
+            <span className="text-muted-foreground">·</span>
+            <Badge variant="outline" className="text-xs border-primary/50 text-primary bg-primary/5">
+              {sponsorInfo.label}
+            </Badge>
+            <span className="text-muted-foreground hidden sm:inline">is inviting you to join the family</span>
+          </div>
+        </div>
+      )}
+      {sponsorLoading && (
+        <div className="bg-muted/40 border-b py-3 px-4 text-center">
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            <span>Looking up your sponsor...</span>
+          </div>
+        </div>
+      )}
+
       <section className="bg-foreground text-background py-20 px-4 text-center">
         <span className="text-primary text-sm font-semibold tracking-widest uppercase mb-4 block">Join The Family</span>
         <h1 className="text-4xl md:text-6xl font-serif font-bold mb-4">Start Your Wellness Journey</h1>
@@ -120,7 +170,21 @@ export function Join() {
                 <FormField control={form.control} name="referralCode" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Sponsor Referral Code <span className="text-destructive">*</span></FormLabel>
-                    <FormControl><Input placeholder="e.g. jrivers-GOLD1" {...field} /></FormControl>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g. jrivers-GOLD1"
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          lookupSponsor(e.target.value);
+                        }}
+                      />
+                    </FormControl>
+                    {sponsorInfo && (
+                      <p className="text-xs text-green-600 font-medium flex items-center gap-1">
+                        <CheckCircle className="h-3 w-3" /> Sponsored by {sponsorInfo.name} · {sponsorInfo.label}
+                      </p>
+                    )}
                     <p className="text-xs text-muted-foreground">You must have a sponsor referral code to join NFGN.</p>
                     <FormMessage />
                   </FormItem>

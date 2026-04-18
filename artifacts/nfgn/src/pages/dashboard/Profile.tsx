@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useGetMe } from "@workspace/api-client-react";
+import { useGetMe, useGetSettings, useGetProduct, useAddToCart } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,10 +11,13 @@ import {
   UserCircle, Shield, Key, Copy, Check, Loader2, Save,
   AlertCircle, CheckCircle2, Star, Calendar, Phone, Mail,
   Building2, CreditCard, Wallet, Users, Award, ChevronRight,
-  Eye, EyeOff,
+  Eye, EyeOff, Sparkles, ArrowRight, Crown, Zap, TrendingUp, Lock,
 } from "lucide-react";
 import { customFetch } from "@/lib/custom-fetch";
 import { roleLabel } from "@/lib/labels";
+import { useCartStore } from "@/hooks/use-cart-store";
+import { resolveImageSrc } from "@/lib/image";
+import { useToast } from "@/hooks/use-toast";
 
 function CopyBtn({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -58,6 +62,147 @@ function StatusMessage({ msg }: { msg: { type: "success" | "error"; text: string
       {msg.type === "success" ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
       {msg.text}
     </div>
+  );
+}
+
+function UpgradeSection({ user, onUpgraded }: { user: any; onUpgraded: () => void }) {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const setCartOpen = useCartStore(s => s.setCartOpen);
+  const [adding, setAdding] = useState(false);
+
+  const { data: settings } = useGetSettings();
+  const pkgId = (settings as any)?.registrationPackageId ?? null;
+
+  const { data: product } = useGetProduct(pkgId ?? 0, {
+    query: { enabled: !!pkgId },
+  });
+  const addToCart = useAddToCart();
+
+  const pkg = product as any;
+
+  async function handleUpgrade() {
+    if (!pkgId) {
+      toast({ title: "No package configured", description: "The registration package has not been set up yet. Please contact support.", variant: "destructive" });
+      return;
+    }
+    setAdding(true);
+    addToCart.mutate(
+      { data: { productId: pkgId, quantity: 1 } } as any,
+      {
+        onSuccess: () => {
+          qc.invalidateQueries({ queryKey: ["/api/cart"] });
+          setCartOpen(true);
+          toast({ title: "Package added to cart!", description: "Complete your purchase in the cart to activate your Pro membership." });
+          setAdding(false);
+        },
+        onError: () => {
+          toast({ title: "Error", description: "Could not add the package to your cart. Please try again.", variant: "destructive" });
+          setAdding(false);
+        },
+      }
+    );
+  }
+
+  const benefits = [
+    { icon: TrendingUp, text: "Earn higher commissions on direct sales" },
+    { icon: Users,      text: "Unlock binary & matrix genealogy bonuses" },
+    { icon: Zap,        text: "Access exclusive Pro Member products & pricing" },
+    { icon: Crown,      text: "Priority customer support & training resources" },
+    { icon: Award,      text: "Qualify for leadership rank advancement" },
+    { icon: Sparkles,   text: "Invitation to NFGN Pro events & retreats" },
+  ];
+
+  return (
+    <Card className="border-2 border-primary/40 bg-gradient-to-br from-primary/5 via-background to-yellow-50/30 dark:to-yellow-950/10 overflow-hidden">
+      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-yellow-400 to-primary" />
+      <CardHeader className="pb-3 relative">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <CardTitle className="text-lg flex items-center gap-2 font-serif">
+              <Crown className="h-5 w-5 text-primary" />
+              Upgrade to Pro Member
+            </CardTitle>
+            <CardDescription className="mt-1">
+              Unlock the full NFGN compensation plan — one-time registration package purchase
+            </CardDescription>
+          </div>
+          <Badge className="bg-primary text-primary-foreground text-sm px-3 py-1 gap-1 flex-shrink-0">
+            <Sparkles className="h-3.5 w-3.5" />
+            {pkg ? `$${parseFloat(pkg.price).toFixed(2)}` : (settings as any)?.registrationPackagePrice ? `$${((settings as any).registrationPackagePrice).toFixed(2)}` : "One-Time Fee"}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Package product preview */}
+        {pkg && (
+          <div className="flex items-center gap-3 rounded-lg bg-background/80 border px-4 py-3">
+            {resolveImageSrc(pkg.image) && (
+              <img
+                src={resolveImageSrc(pkg.image)!}
+                alt={pkg.name}
+                className="h-12 w-12 rounded-md object-cover flex-shrink-0"
+              />
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm">{pkg.name}</p>
+              {pkg.cv != null && pkg.cv > 0 && (
+                <p className="text-xs text-muted-foreground">CV: {pkg.cv} pts</p>
+              )}
+              {pkg.description && (
+                <p className="text-xs text-muted-foreground truncate">{pkg.description}</p>
+              )}
+            </div>
+            <div className="text-right flex-shrink-0">
+              <p className="text-lg font-bold text-primary">${parseFloat(pkg.price).toFixed(2)}</p>
+              {pkg.comparePrice && parseFloat(pkg.comparePrice) > parseFloat(pkg.price) && (
+                <p className="text-xs text-muted-foreground line-through">${parseFloat(pkg.comparePrice).toFixed(2)}</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Benefits grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {benefits.map(({ icon: Icon, text }) => (
+            <div key={text} className="flex items-start gap-2 text-sm">
+              <Icon className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+              <span className="text-foreground/80">{text}</span>
+            </div>
+          ))}
+        </div>
+
+        <Separator />
+
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Your membership is activated instantly upon successful payment. The registration package includes physical product(s) shipped to your address.
+          </p>
+          <Button
+            onClick={handleUpgrade}
+            disabled={adding || addToCart.isPending}
+            size="lg"
+            className="gap-2 flex-shrink-0 w-full sm:w-auto"
+          >
+            {adding || addToCart.isPending
+              ? <Loader2 className="h-4 w-4 animate-spin" />
+              : <ShoppingCartIcon className="h-4 w-4" />
+            }
+            Add to Cart & Upgrade
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ShoppingCartIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
+      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+    </svg>
   );
 }
 
@@ -257,7 +402,7 @@ export function ProfilePage() {
             />
           </div>
           <div className="rounded-lg bg-muted/50 border px-4 py-3 text-xs text-muted-foreground">
-            To update your membership package or sponsorship placement, please contact NFGN Support at{" "}
+            To update sponsorship placement, contact NFGN Support at{" "}
             <a href="tel:6789099974" className="font-medium text-foreground underline underline-offset-2">(678) 909-9974</a>{" "}
             or email{" "}
             <a href="mailto:newfaceglobalnetwork@gmail.com" className="font-medium text-foreground underline underline-offset-2">
@@ -266,6 +411,13 @@ export function ProfilePage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Upgrade to Pro Member — only shown to non-pro members */}
+      {!u?.isProMember && (
+        <div className="relative">
+          <UpgradeSection user={u} onUpgraded={refetch} />
+        </div>
+      )}
 
       {/* Referral & Sponsor Tools */}
       <Card className="border-2 border-primary/30 bg-primary/5">

@@ -16,6 +16,7 @@ import { CheckCircle, Star, Users, TrendingUp, Loader2, UserCircle2 } from "luci
 const registerSchema = z.object({
   firstName: z.string().min(2, "First name is required"),
   lastName: z.string().min(2, "Last name is required"),
+  organizationName: z.string().optional(),
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string(),
@@ -66,7 +67,7 @@ export function Join() {
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { firstName: "", lastName: "", email: "", password: "", confirmPassword: "", phone: "", referralCode: refCode },
+    defaultValues: { firstName: "", lastName: "", organizationName: "", email: "", password: "", confirmPassword: "", phone: "", referralCode: refCode },
   });
 
   function onSubmit(data: RegisterFormValues) {
@@ -139,6 +140,13 @@ export function Join() {
                     </FormItem>
                   )} />
                 </div>
+                <FormField control={form.control} name="organizationName" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Company or Non Profit Organization Name <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
+                    <FormControl><Input placeholder="e.g. Rivers Wellness LLC" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
                 <FormField control={form.control} name="email" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Email Address</FormLabel>

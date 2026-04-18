@@ -28,6 +28,7 @@ function formatUser(user: typeof usersTable.$inferSelect, sponsorName?: string) 
     bankName: user.bankName ?? null,
     bankAccountNumber: user.bankAccountNumber ?? null,
     bankRoutingNumber: user.bankRoutingNumber ?? null,
+    organizationName: user.organizationName ?? null,
     bankAccountType: user.bankAccountType ?? null,
     payoutMethod: user.payoutMethod ?? "bank",
     payoutPaypalEmail: user.payoutPaypalEmail ?? null,
@@ -89,10 +90,11 @@ router.post("/auth/register", async (req, res): Promise<void> => {
   }
 
   const { email, password, firstName, lastName, phone, referralCode, role } = parsed.data;
-  // Accept optional location fields (not in RegisterBody schema, so pull from req.body directly)
+  // Accept optional fields (not in RegisterBody schema, so pull from req.body directly)
   const city: string | undefined = req.body.city ?? undefined;
   const state: string | undefined = req.body.state ?? undefined;
   const country: string | undefined = req.body.country ?? "United States";
+  const organizationName: string | undefined = req.body.organizationName ?? undefined;
 
   const [existing] = await db.select().from(usersTable).where(eq(usersTable.email, email.toLowerCase()));
   if (existing) {
@@ -124,6 +126,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     city: city ?? null,
     state: state ?? null,
     country: country ?? "United States",
+    organizationName: organizationName ?? null,
   }).returning();
 
   await db.insert(walletsTable).values({ userId: newUser.id });

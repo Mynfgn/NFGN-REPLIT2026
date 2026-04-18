@@ -38,6 +38,8 @@ export const usersTable = pgTable("users", {
   city: text("city"),
   state: text("state"),
   country: text("country").default("United States"),
+
+  organizationName: text("organization_name"),
 });
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({ id: true, createdAt: true, updatedAt: true });

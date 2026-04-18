@@ -23,7 +23,7 @@ function timeAgo(iso: string) {
   return `${days}d ago`;
 }
 
-export function NotificationBell() {
+export function NotificationBell({ align = "right" }: { align?: "left" | "right" }) {
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const qc = useQueryClient();
@@ -76,7 +76,7 @@ export function NotificationBell() {
       </Button>
 
       {open && (
-        <div className="absolute right-0 top-11 z-50 w-80 bg-card border rounded-xl shadow-2xl overflow-hidden">
+        <div className={`absolute top-11 z-50 w-80 bg-card border rounded-xl shadow-2xl overflow-hidden ${align === "left" ? "left-0" : "right-0"}`}>
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/40">
             <div className="flex items-center gap-2">

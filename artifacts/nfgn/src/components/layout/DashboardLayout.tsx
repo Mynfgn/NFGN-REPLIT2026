@@ -68,7 +68,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             <span className="font-serif text-2xl font-bold tracking-tighter text-primary">NFGN</span>
           </Link>
           <div className="ml-auto flex items-center gap-1">
-            <span className="hidden md:flex"><NotificationBell /></span>
+            <span className="hidden md:flex"><NotificationBell align="left" /></span>
             <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSidebarOpen(false)}>
               <X className="h-5 w-5" />
             </Button>

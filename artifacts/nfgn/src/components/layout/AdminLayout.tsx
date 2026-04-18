@@ -72,7 +72,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
             <span className="font-serif text-xl font-bold tracking-tighter text-primary">NFGN Admin</span>
           </Link>
           <div className="ml-auto flex items-center gap-1">
-            <span className="hidden md:flex text-foreground"><NotificationBell /></span>
+            <span className="hidden md:flex text-foreground"><NotificationBell align="left" /></span>
             <Button variant="ghost" size="icon" className="md:hidden text-white hover:text-white/80 hover:bg-white/10" onClick={() => setSidebarOpen(false)}>
               <X className="h-5 w-5" />
             </Button>

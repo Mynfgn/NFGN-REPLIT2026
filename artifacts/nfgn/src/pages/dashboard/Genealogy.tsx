@@ -77,17 +77,44 @@ function edgePath({ x1, y1, x2, y2 }: Edge) {
   return `M ${x1} ${y1} C ${x1} ${my}, ${x2} ${my}, ${x2} ${y2}`;
 }
 
+const POPUP_W = 256; // w-64
+const POPUP_H = 310; // approximate popup height
+
 /* ── Member info popup ────────────────────────────────────────── */
-function MemberPopup({ pos, onClose }: { pos: Pos; onClose: () => void }) {
+function MemberPopup({ pos, onClose, svgW }: { pos: Pos; onClose: () => void; svgW: number }) {
   const n = pos.node;
   const firstName = n.name.split(" ")[0];
   const lastName = n.name.split(" ").slice(1).join(" ");
+
+  // Default: centered above the node
+  const nodeTopY = pos.y + CCY - CR - 8;
+  const flipBelow = nodeTopY - POPUP_H < 4; // not enough room above → show below
+
+  let left = pos.x - POPUP_W / 2;
+  // Clamp horizontally so popup never exits the SVG canvas (with 8px padding)
+  left = Math.max(8, Math.min(left, svgW - POPUP_W - 8));
+
+  const top = flipBelow
+    ? pos.y + CCY + CR + 10   // below the node circle
+    : nodeTopY - POPUP_H;     // above the node circle
+
+  // Arrow position relative to popup left edge
+  const arrowLeft = Math.min(Math.max(pos.x - left - 8, 12), POPUP_W - 28);
+
   return (
     <div
       className="absolute z-50 pointer-events-auto"
-      style={{ left: pos.x, top: pos.y + CCY - CR - 8, transform: "translateX(-50%) translateY(-100%)" }}
+      style={{ left, top, width: POPUP_W }}
     >
-      <div className="bg-white border border-border rounded-xl shadow-2xl w-64 text-sm overflow-hidden">
+      {/* Arrow pointing down (when popup is above node) */}
+      {!flipBelow && (
+        <div
+          className="absolute bottom-[-8px] w-4 h-4 bg-white border-r border-b border-border rotate-45"
+          style={{ left: arrowLeft }}
+        />
+      )}
+
+      <div className="bg-white border border-border rounded-xl shadow-2xl text-sm overflow-hidden">
         {/* Header */}
         <div className={`px-4 py-3 flex items-center gap-3 ${n.isProMember ? "bg-orange-50 border-b border-orange-100" : "bg-blue-50 border-b border-blue-100"}`}>
           <div
@@ -146,8 +173,14 @@ function MemberPopup({ pos, onClose }: { pos: Pos; onClose: () => void }) {
           </div>
         </div>
       </div>
-      {/* Arrow */}
-      <div className="absolute left-1/2 -translate-x-1/2 bottom-[-8px] w-4 h-4 bg-white border-r border-b border-border rotate-45" />
+
+      {/* Arrow pointing up (when popup is below node) */}
+      {flipBelow && (
+        <div
+          className="absolute top-[-8px] w-4 h-4 bg-white border-l border-t border-border rotate-45"
+          style={{ left: arrowLeft }}
+        />
+      )}
     </div>
   );
 }
@@ -300,7 +333,7 @@ function UniLevelTree({ root }: { root: TreeNode }) {
 
         {/* Popup overlay */}
         {selected && (
-          <MemberPopup pos={selected} onClose={() => setSelected(null)} />
+          <MemberPopup pos={selected} onClose={() => setSelected(null)} svgW={svgW} />
         )}
       </div>
     </div>

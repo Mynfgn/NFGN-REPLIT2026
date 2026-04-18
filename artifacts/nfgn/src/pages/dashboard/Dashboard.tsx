@@ -464,6 +464,9 @@ export function Dashboard() {
         <AffiliateLinkCard referralLink={data.referralLink} referralCode={(data as any)?.referralCode ?? ""} />
       )}
 
+      {/* Community World Map */}
+      <MemberMapCard title="Your Community Map" />
+
       {/* PV/GV Volume + Power Squad Bonus */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <CVCard pv={pv} gv={gv} required={required} />
@@ -538,8 +541,6 @@ export function Dashboard() {
         </Card>
       </div>
 
-      {/* Community World Map */}
-      <MemberMapCard title="Your Community Map" />
     </div>
   );
 }

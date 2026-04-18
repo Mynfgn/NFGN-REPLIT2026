@@ -3,13 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from "react-simple-maps";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Globe, MapPin, Lightbulb, TrendingUp, Users } from "lucide-react";
+import { Globe, MapPin, Lightbulb, TrendingUp, Users, Plus, Minus } from "lucide-react";
 import { customFetch } from "@/lib/custom-fetch";
 
 const GEO_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
-// Coordinate lookup for US states and world countries
 const COORDS: Record<string, [number, number]> = {
   // US States
   "Alabama": [-86.79, 32.80], "Alaska": [-153.37, 61.37], "Arizona": [-111.09, 34.05],
@@ -49,13 +49,10 @@ const COORDS: Record<string, [number, number]> = {
 };
 
 function getCoords(label: string, country: string): [number, number] | null {
-  // Try exact match first
   if (COORDS[label]) return COORDS[label];
-  // Try stripping city prefix "City, STATE" → state name
   const parts = label.split(", ");
   if (parts.length >= 2) {
     const state = parts[parts.length - 1].trim();
-    // Try abbreviation → full name mapping
     const stateAbbrevMap: Record<string, string> = {
       "AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California",
       "CO": "Colorado", "CT": "Connecticut", "DE": "Delaware", "FL": "Florida", "GA": "Georgia",
@@ -73,7 +70,6 @@ function getCoords(label: string, country: string): [number, number] | null {
     if (COORDS[fullState]) return COORDS[fullState];
     if (COORDS[state]) return COORDS[state];
   }
-  // Fall back to country
   if (COORDS[country]) return COORDS[country];
   return null;
 }
@@ -85,13 +81,12 @@ function getMarketingSuggestions(locations: { label: string; count: number; coun
   const top = locations[0];
   suggestions.push(`Your strongest market is ${top.label} with ${top.count} member${top.count > 1 ? "s" : ""}. Host a virtual or in-person wellness event there to deepen the community!`);
 
-  const hasUS = locations.some(l => l.country === "United States" || l.label.includes(", "));
   const hasIntl = locations.some(l => l.country !== "United States" && l.country !== "");
-  if (hasUS && !hasIntl) suggestions.push("Your community is primarily US-based. Expand globally — target the Caribbean, UK, and West Africa where naturopathic wellness is thriving!");
-  if (hasIntl) suggestions.push("You have international members! Create region-specific social media groups to nurture each market in their local timezone.");
+  if (!hasIntl) suggestions.push("Your community is primarily US-based. Expand globally — target the Caribbean, UK, and West Africa where naturopathic wellness is thriving!");
+  else suggestions.push("You have international members! Create region-specific social media groups to nurture each market in their local timezone.");
 
   if (locations.length < 3) suggestions.push("Only " + locations.length + " region" + (locations.length > 1 ? "s" : "") + " represented. Encourage members in " + top.label + " to share their referral links locally to multiply community growth.");
-  else suggestions.push(`${locations.length} regions active! Consider a \"Top Recruiter\" leaderboard to spark friendly competition across your locations.`);
+  else suggestions.push(`${locations.length} regions active! Consider a "Top Recruiter" leaderboard to spark friendly competition across your locations.`);
 
   suggestions.push("Share before-and-after wellness testimonials from members in each region — local success stories are the most powerful recruiting tool.");
   return suggestions.slice(0, 3);
@@ -104,8 +99,12 @@ interface LocationPoint {
   latestJoin: string;
 }
 
+const MIN_ZOOM = 1;
+const MAX_ZOOM = 8;
+
 export function MemberMapCard({ title = "Community World Map" }: { title?: string }) {
   const [tooltip, setTooltip] = useState<{ label: string; count: number; x: number; y: number } | null>(null);
+  const [zoom, setZoom] = useState(1);
 
   const { data, isLoading } = useQuery({
     queryKey: ["/api/dashboard/member-locations"],
@@ -122,6 +121,9 @@ export function MemberMapCard({ title = "Community World Map" }: { title?: strin
 
   const suggestions = getMarketingSuggestions(locations);
   const maxCount = Math.max(...locations.map(l => l.count), 1);
+
+  const handleZoomIn = () => setZoom(z => Math.min(MAX_ZOOM, +(z * 1.5).toFixed(2)));
+  const handleZoomOut = () => setZoom(z => Math.max(MIN_ZOOM, +(z / 1.5).toFixed(2)));
 
   return (
     <Card>
@@ -143,6 +145,28 @@ export function MemberMapCard({ title = "Community World Map" }: { title?: strin
           <>
             {/* World Map */}
             <div className="relative bg-blue-50/50 dark:bg-blue-950/20 rounded-xl overflow-hidden border" style={{ height: 220 }}>
+              {/* Zoom controls */}
+              <div className="absolute top-2 right-2 z-10 flex flex-col gap-1">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-7 w-7 bg-white/90 shadow-sm border-border/60 hover:bg-white"
+                  onClick={handleZoomIn}
+                  disabled={zoom >= MAX_ZOOM}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-7 w-7 bg-white/90 shadow-sm border-border/60 hover:bg-white"
+                  onClick={handleZoomOut}
+                  disabled={zoom <= MIN_ZOOM}
+                >
+                  <Minus className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+
               {tooltip && (
                 <div
                   className="absolute z-10 bg-popover border shadow-lg rounded-lg px-3 py-2 text-xs pointer-events-none"
@@ -152,12 +176,13 @@ export function MemberMapCard({ title = "Community World Map" }: { title?: strin
                   <p className="text-muted-foreground">{tooltip.count} member{tooltip.count > 1 ? "s" : ""}</p>
                 </div>
               )}
+
               <ComposableMap
                 projection="geoMercator"
                 projectionConfig={{ scale: 100, center: [10, 20] }}
                 style={{ width: "100%", height: "100%" }}
               >
-                <ZoomableGroup zoom={1}>
+                <ZoomableGroup zoom={zoom} onMoveEnd={({ zoom: z }) => setZoom(z)}>
                   <Geographies geography={GEO_URL}>
                     {({ geographies }) =>
                       geographies.map(geo => (
@@ -177,20 +202,22 @@ export function MemberMapCard({ title = "Community World Map" }: { title?: strin
                     }
                   </Geographies>
                   {markers.map((loc) => {
-                    const r = Math.max(5, Math.min(18, 5 + (loc.count / maxCount) * 13));
+                    // Smaller circles: max radius 8, min 3
+                    const r = Math.max(3, Math.min(8, 3 + (loc.count / maxCount) * 5));
                     return (
                       <Marker
                         key={loc.label}
                         coordinates={loc.coords}
                         onMouseEnter={(e: React.MouseEvent) => {
-                          const rect = (e.currentTarget as SVGElement).closest("svg")?.getBoundingClientRect();
-                          const svgRect = (e.currentTarget as SVGElement).getBoundingClientRect();
+                          const svgEl = (e.currentTarget as SVGElement).closest("svg");
+                          const rect = svgEl?.getBoundingClientRect();
+                          const markerRect = (e.currentTarget as SVGElement).getBoundingClientRect();
                           if (rect) {
                             setTooltip({
                               label: loc.label,
                               count: loc.count,
-                              x: svgRect.left - rect.left + svgRect.width / 2,
-                              y: svgRect.top - rect.top,
+                              x: markerRect.left - rect.left + markerRect.width / 2,
+                              y: markerRect.top - rect.top,
                             });
                           }
                         }}
@@ -199,23 +226,11 @@ export function MemberMapCard({ title = "Community World Map" }: { title?: strin
                         <circle
                           r={r}
                           fill="#C9A84C"
-                          fillOpacity={0.8}
+                          fillOpacity={0.85}
                           stroke="#92400e"
-                          strokeWidth={1.5}
+                          strokeWidth={0.8}
                           style={{ cursor: "pointer" }}
                         />
-                        {loc.count > 1 && (
-                          <text
-                            y={4}
-                            textAnchor="middle"
-                            fill="#fff"
-                            fontSize={r > 9 ? 9 : 7}
-                            fontWeight="700"
-                            pointerEvents="none"
-                          >
-                            {loc.count}
-                          </text>
-                        )}
                       </Marker>
                     );
                   })}

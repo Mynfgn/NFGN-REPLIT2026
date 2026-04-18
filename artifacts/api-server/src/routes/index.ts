@@ -15,6 +15,7 @@ import settingsRouter from "./settings";
 import dashboardRouter from "./dashboard";
 import storageRouter from "./storage";
 import bppRouter from "./bpp";
+import reportsRouter from "./reports";
 
 const router: IRouter = Router();
 
@@ -34,5 +35,6 @@ router.use(settingsRouter);
 router.use(dashboardRouter);
 router.use(storageRouter);
 router.use(bppRouter);
+router.use(reportsRouter);
 
 export default router;

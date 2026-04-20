@@ -18,7 +18,7 @@ const MEMBER_BENEFITS = [
 ];
 
 const PRO_BENEFITS = [
-  { icon: Percent, title: "Products & Services Commission (PASC)", desc: "Earn commissions on every regular product or service purchase made within your downline group." },
+  { icon: Percent, title: "Product Sales Commission (PSC)", desc: "Earn commissions on every regular product or service purchase made within your downline group." },
   { icon: TrendingUp, title: "Level 2 Power Bonus (22%)", desc: "Earn 22% commissions on Pro Package purchases two levels deep in your team." },
   { icon: Star, title: "Priority Payout Processing", desc: "Pro Members get priority when requesting fund withdrawals." },
   { icon: Users, title: "Team Volume Bonuses", desc: "Earn on your entire community's Group Volume (GV), not just personal purchases." },

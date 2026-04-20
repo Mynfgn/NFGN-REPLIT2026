@@ -93,7 +93,7 @@ export function ProMemberBonusesPage() {
             <Gift className="h-8 w-8 text-blue-600 flex-shrink-0" />
             <div>
               <p className="text-xs text-muted-foreground">Income Stream</p>
-              <p className="text-sm font-bold text-blue-600">Separate from PASC &amp; PMRC</p>
+              <p className="text-sm font-bold text-blue-600">Separate from PSC &amp; PMRC</p>
               <p className="text-xs text-muted-foreground">triggered by PMRP sales</p>
             </div>
           </CardContent>
@@ -108,8 +108,8 @@ export function ProMemberBonusesPage() {
             <div className="space-y-2">
               <p className="font-semibold text-foreground">What are Pro Member Bonuses?</p>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Pro Member Bonuses are a completely separate income stream from your Products &amp; Services Commissions 
-                (PASC) and Pro Member Registration Commissions (PMRC). They are triggered when you and your 
+                Pro Member Bonuses are a completely separate income stream from your Product Sales Commissions 
+                (PSC) and Pro Member Registration Commissions (PMRC). They are triggered when you and your 
                 <strong className="text-foreground"> Core Leaders</strong> sell{" "}
                 <strong className="text-foreground">Pro Member Registration Products (PMRP)</strong> in increments of 9.
               </p>
@@ -212,7 +212,7 @@ export function ProMemberBonusesPage() {
         <CardContent className="pt-4 pb-4">
           <p className="text-sm text-amber-900 leading-relaxed">
             <strong className="text-amber-800">Important:</strong> Pro Member Bonuses (CLB &amp; MCB) are completely 
-            separate from your Products &amp; Services Commissions (PASC) and Pro Member Registration Commissions (PMRC). 
+            separate from your Product Sales Commissions (PSC) and Pro Member Registration Commissions (PMRC). 
             They are their own income stream connected only to the sale of{" "}
             <strong className="text-amber-800">Pro Member Registration Products (PMRP)</strong>. The more PMRPs 
             your team sells and the more requirements you meet, the more bonuses you earn.

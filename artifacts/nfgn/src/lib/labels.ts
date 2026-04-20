@@ -17,7 +17,7 @@ export function roleLabel(role: string): string {
 export function commissionTypeLabel(type: string): string {
   switch (type) {
     case "referral":           return "Referral Commission";
-    case "sales":              return "Products & Services Commission (PASC)";
+    case "sales":              return "Product Sales Commission (PSC)";
     case "level":              return "Pro Member Registration Commission (PMRC)";
     case "power_squad_bonus":  return "Pro Member Bonus (CLB/MCB)";
     default:                   return type.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());

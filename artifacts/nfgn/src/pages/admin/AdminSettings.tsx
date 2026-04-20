@@ -425,7 +425,7 @@ export default function AdminSettingsPage() {
 
             {/* Sales Commission */}
             <div className="rounded-lg border p-4 space-y-2">
-              <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Products &amp; Services Commissions (PASC) — Pro Members Only</p>
+              <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Product Sales Commissions (PSC) — Pro Members Only</p>
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                 {(commissionRules.salesLevels ?? []).map(l => (
                   <div key={l.level} className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-center">

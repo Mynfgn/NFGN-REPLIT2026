@@ -239,7 +239,7 @@ export function EarningsPage() {
               <CardContent className="space-y-4">
                 {[
                   { key: "referral", label: "Referral Commissions", icon: Users, color: "#3B82F6" },
-                  { key: "sales", label: "Products & Services Commissions (PASC)", icon: TrendingUp, color: "#22C55E" },
+                  { key: "sales", label: "Product Sales Commissions (PSC)", icon: TrendingUp, color: "#22C55E" },
                   { key: "level", label: "Level / Power Bonus", icon: Star, color: BRAND_GOLD },
                 ].map(({ key, label, icon: Icon, color }) => {
                   const amount = commissions

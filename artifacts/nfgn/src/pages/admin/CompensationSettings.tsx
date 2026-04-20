@@ -168,7 +168,7 @@ export function CompensationSettingsPage() {
       return;
     }
     if (salesLevels.some(l => l.rate < 0 || l.rate > 100)) {
-      toast.error("PASC rates must be between 0% and 100%");
+      toast.error("PSC rates must be between 0% and 100%");
       return;
     }
     setSaving(true);
@@ -248,7 +248,7 @@ export function CompensationSettingsPage() {
             bg: "bg-blue-50 border-blue-200",
           },
           {
-            label: "Products & Services Commissions (PASC)",
+            label: "Product Sales Commissions (PSC)",
             desc: `Pro Members Only · ${salesLevels.length} level${salesLevels.length !== 1 ? "s" : ""} · Regular product purchases`,
             value: `${salesLevels.length} Level${salesLevels.length !== 1 ? "s" : ""}`,
             color: "text-green-600",
@@ -310,7 +310,7 @@ export function CompensationSettingsPage() {
 
       {/* Sales Commission Levels */}
       <LevelEditor
-        title="Products & Services Commission — PASC (Uni-Level)"
+        title="Product Sales Commission — PSC (Uni-Level)"
         description="Earned by Pro Members on regular product purchases within their downline genealogy tree."
         color="text-green-600"
         icon={TrendingUp}

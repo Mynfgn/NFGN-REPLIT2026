@@ -60,7 +60,7 @@ export function CommissionsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-serif font-bold">Commissions</h1>
-        <p className="text-muted-foreground">Your referral, PASC, PMRC, and PMB earnings</p>
+        <p className="text-muted-foreground">Your referral, PSC, PMRC, and PMB earnings</p>
       </div>
 
       {/* Summary cards */}
@@ -106,7 +106,7 @@ export function CommissionsPage() {
             )}
           </TabsTrigger>
           <TabsTrigger value="sales" className="gap-1.5">
-            PASC
+            PSC
             {salesCommissions.length > 0 && (
               <span className="text-xs bg-green-600 text-white rounded-full px-1.5 py-0 font-mono">{salesCommissions.length}</span>
             )}
@@ -174,20 +174,20 @@ export function CommissionsPage() {
           </div>
         </TabsContent>
 
-        {/* ── PASC Tab ── */}
+        {/* ── PSC Tab ── */}
         <TabsContent value="sales">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <span className="inline-block h-3 w-3 rounded-full bg-green-500" />
-                Products &amp; Services Commission (PASC) History
+                Product Sales Commission (PSC) History
               </CardTitle>
             </CardHeader>
             <CardContent>
               {isLoading ? (
                 <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
               ) : salesCommissions.length === 0 ? (
-                <p className="text-center text-muted-foreground py-12">No PASC earnings yet. Pro Members earn on regular product and service purchases within their downline.</p>
+                <p className="text-center text-muted-foreground py-12">No PSC earnings yet. Pro Members earn on regular product and service purchases within their downline.</p>
               ) : (
                 <div className="space-y-3">
                   {salesCommissions.map(c => <CommissionRow key={c.id} c={c} />)}
@@ -231,7 +231,7 @@ export function CommissionsPage() {
                   <div className="space-y-2">
                     <p className="font-semibold text-foreground">What are Pro Member Bonuses (PMB)?</p>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      PMB is an entirely separate income stream from PASC and PMRC. PMB are triggered when you and your 
+                      PMB is an entirely separate income stream from PSC and PMRC. PMB are triggered when you and your 
                       Core Leaders sell <strong className="text-foreground">Pro Member Registration Products (PMRP)</strong> in increments 
                       of 9. The more stores (Pro Members) you and your team open across Levels 1 and 2, the more bonuses you earn. 
                       You must hold Pro Member status to qualify.
@@ -363,7 +363,7 @@ export function CommissionsPage() {
                 <div className="grid sm:grid-cols-2 gap-2">
                   {[
                     { code: "RC", label: "Referral Commission", color: "blue", who: "All Members", trigger: "Your referred member makes any purchase" },
-                    { code: "PASC", label: "Products & Services Commissions", color: "green", who: "Pro Members Only", trigger: "Any product/service purchase in your downline (up to 9 levels)" },
+                    { code: "PSC", label: "Product Sales Commissions", color: "green", who: "Pro Members Only", trigger: "Any product/service purchase in your downline (up to 9 levels)" },
                     { code: "PMRC", label: "Pro Member Registration Commission", color: "amber", who: "Pro Members Only", trigger: "Someone in your upline buys the Pro Member Registration Package" },
                     { code: "PMB", label: "Pro Member Bonuses (CLB & MCB)", color: "purple", who: "Pro Members Only", trigger: "Every 9 PMRPs sold on Level 1 (CLB) or Level 2 (MCB)" },
                     { code: "GVB", label: "Group Volume Bonuses (BPP)", color: "rose", who: "Pro Members Only", trigger: "Monthly GV/PV targets met — pays toward 5 real-life bills" },
@@ -388,7 +388,7 @@ export function CommissionsPage() {
                   <strong className="text-amber-800">The Store Analogy:</strong> Your NFGN business is an online store sourcing wellness 
                   products from a warehouse. Standard members you register are <em>customers</em> who shop in your store. Pro Members you 
                   register are <em>franchise partners</em> — they open their own store in a new region, sell the same products from the 
-                  same warehouse, and help you move massive volume. RC is your customer loyalty bonus. PASC is your franchise royalty. 
+                  same warehouse, and help you move massive volume. RC is your customer loyalty bonus. PSC is your franchise royalty. 
                   PMRC is your franchise fee share. PMB is your regional/national store-opening bonus. GVB is the company paying your real-life bills 
                   when you hit volume targets.
                 </div>
@@ -444,12 +444,12 @@ export function CommissionsPage() {
               </CardContent>
             </Card>
 
-            {/* PASC */}
+            {/* PSC */}
             <Card className="border-l-4 border-l-green-400">
               <CardHeader className="pb-3">
                 <CardTitle className="font-serif text-lg flex items-center gap-2">
                   <span className="text-xs px-2 py-1 rounded border font-medium bg-green-100 text-green-800 border-green-200">
-                    Products &amp; Services Commissions (PASC)
+                    Product Sales Commissions (PSC)
                   </span>
                   <span className="text-muted-foreground font-normal text-sm">— Pro Members Only</span>
                 </CardTitle>
@@ -457,10 +457,10 @@ export function CommissionsPage() {
               <CardContent className="space-y-4">
                 <div className="text-sm text-muted-foreground space-y-3 leading-relaxed">
                   <p>
-                    <strong className="text-foreground">PASC</strong> are commissions generated when NFGN members purchase products or 
+                    <strong className="text-foreground">PSC</strong> are commissions generated when NFGN members purchase products or 
                     services — including <strong className="text-foreground">recurring monthly subscriptions</strong> — within your Group 
                     or Community. The more products and services being purchased in your NFGN Community, the greater your 
-                    <strong className="text-foreground"> Group Volume (GV)</strong> and your PASC earnings become.
+                    <strong className="text-foreground"> Group Volume (GV)</strong> and your PSC earnings become.
                   </p>
                   <p>
                     <strong className="text-foreground">Think of it like a store:</strong> Your online NFGN business is a store that 
@@ -474,10 +474,10 @@ export function CommissionsPage() {
                     <strong className="text-foreground"> franchise store</strong>. You're opening another store in another part of the 
                     region or country — selling the same products and services from the same warehouse. Pro Members are not just 
                     customers; they are <strong className="text-foreground">partners</strong> whose mission is to help you move big 
-                    volumes of products and services out of the warehouse. This is what drives your PASC earnings exponentially.
+                    volumes of products and services out of the warehouse. This is what drives your PSC earnings exponentially.
                   </p>
                   <p>
-                    PASC is separate from Referral Commissions — RC is earned on direct referral purchases, while PASC is earned across 
+                    PSC is separate from Referral Commissions — RC is earned on direct referral purchases, while PSC is earned across 
                     multiple levels of your downline genealogy tree (Pro Members only).
                   </p>
                 </div>
@@ -539,10 +539,10 @@ export function CommissionsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="rounded-lg bg-purple-50 border border-purple-200 p-3 text-sm text-purple-900 space-y-2">
-                  <p className="font-semibold">Completely Separate from PASC and PMRC</p>
+                  <p className="font-semibold">Completely Separate from PSC and PMRC</p>
                   <p className="text-xs leading-relaxed text-purple-800">
-                    Pro Member Bonuses (CLB and MCB) are an entirely different income stream from Products &amp; Services Commissions 
-                    (PASC) and Pro Member Registration Commissions (PMRC). If they are connected to anything, it is the 
+                    Pro Member Bonuses (CLB and MCB) are an entirely different income stream from Product Sales Commissions 
+                    (PSC) and Pro Member Registration Commissions (PMRC). If they are connected to anything, it is the 
                     <strong> Pro Member Registration Product (PMRP)</strong> — because the more PMRPs you and your team sell and meet 
                     the requirements, the more bonuses you earn. You must be a Pro Member to receive these bonuses.
                   </p>
@@ -628,7 +628,7 @@ export function CommissionsPage() {
                 <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900 leading-relaxed">
                   <strong className="text-amber-800">Important:</strong> GVBs are classified as <em>Money Circulation Bonuses</em> — 
                   they are drawn from the group's collective volume activity, not fixed commission rates on individual transactions. 
-                  GVBs are entirely separate from RC, PASC, PMRC, and PMB. See the <strong>Bill Payer Program</strong> page in the 
+                  GVBs are entirely separate from RC, PSC, PMRC, and PMB. See the <strong>Bill Payer Program</strong> page in the 
                   sidebar for your live fund status, GV/PV progress, and estimated payouts for the current month.
                 </div>
               </CardContent>

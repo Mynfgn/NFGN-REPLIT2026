@@ -31,6 +31,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
 
   const navItems = [
     { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
+    { name: "Profile Management", href: "/dashboard/profile", icon: UserCircle },
     { name: "Genealogy", href: "/dashboard/genealogy", icon: Users },
     { name: "Registration", href: "/dashboard/registration", icon: UserPlus },
     { name: "User Earnings", href: "/dashboard/earnings", icon: TrendingUp },
@@ -44,7 +45,6 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
     { name: "Mailbox", href: "/dashboard/mailbox", icon: Inbox },
     { name: "Tools", href: "/dashboard/tools", icon: Wrench },
     { name: "Reports", href: "/dashboard/reports", icon: BarChart3 },
-    { name: "Profile Management", href: "/dashboard/profile", icon: UserCircle },
   ];
 
   return (

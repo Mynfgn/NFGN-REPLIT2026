@@ -19,12 +19,25 @@ import { logger } from "./logger";
  *     ‣ RATE:      Configurable per-level via admin (default L1 = 10%)
  *     ‣ NOTE:      Paid IN ADDITION to the Referral Commission on Level 1
  *
- *  3. PRO REGISTRATION COMMISSION / PRC (type: "level")
+ *  3. PRO REGISTRATION COMMISSION / PMRC (type: "level")
  *     ‣ WHO earns: Pro Members ONLY
- *     ‣ WHEN:      A Pro Member Registration Package is purchased
- *                  anywhere in the configured PRC levels of their upline
+ *     ‣ WHEN:      A Pro Member Registration Package is purchased OR renewed
+ *                  anywhere in the configured PMRC levels of their upline
  *     ‣ RATE:      Configurable per-level via admin (default L1=10%, L2=20%)
  *     ‣ NOTE:      Direct sponsor also earns Referral Commission on top
+ *
+ *  4. CLB — Core Leadership Bonus (type: "power_squad_bonus", level: 1)
+ *     ‣ WHO earns: Pro Members ONLY
+ *     ‣ WHEN:      Every N (default 9) PMRC Level 1 commissions earned (cumulative)
+ *                  Counts initial registrations AND every subscription renewal
+ *     ‣ AMOUNT:    Configurable via admin (default $200)
+ *     ‣ NOTE:      No extra qualification beyond being a Pro Member
+ *
+ *  5. MCB — Money Circulation Bonus (type: "power_squad_bonus", level: 2)
+ *     ‣ WHO earns: Pro Members ONLY (with at least N Level 1 Pro Members)
+ *     ‣ WHEN:      Every N (default 9) PMRC Level 2 commissions earned (cumulative)
+ *                  Counts initial registrations AND every subscription renewal
+ *     ‣ AMOUNT:    Configurable via admin (default $200)
  * ═══════════════════════════════════════════════════════
  */
 
@@ -145,36 +158,61 @@ async function getUplineChain(
 
 /**
  * ═══════════════════════════════════════════════════════
- *  POWER SQUAD BONUS
+ *  PRO MEMBER BONUSES — CLB & MCB
  * ═══════════════════════════════════════════════════════
- *  TRIGGER:  Every N (default 9) PRC Level 2 commissions earned
- *  QUALIFY:  User must have N personally sponsored Pro Members
+ *
+ *  CLB (Core Leadership Bonus / Core 9 / Gen 1 Bonus / STB)
+ *  ─────────────────────────────────────────────────────
+ *  TRIGGER:  Every N (default 9) PMRC Level 1 commissions earned
+ *            Counted cumulatively — fires on EVERY purchase & subscription renewal
+ *  QUALIFY:  Sponsor must be a Pro Member
  *  AMOUNT:   Configurable via admin (default $200)
+ *
+ *  MCB (Money Circulation Bonus / Super 9 / Gen 2 / Level 2 Power Team Bonus)
+ *  ────────────────────────────────────────────────────────────────────────────
+ *  TRIGGER:  Every N (default 9) PMRC Level 2 commissions earned
+ *            Counted cumulatively — fires on EVERY purchase & subscription renewal
+ *  QUALIFY:  Sponsor must be a Pro Member with at least N Level 1 Pro Members
+ *  AMOUNT:   Configurable via admin (default $200)
+ *
+ *  NOTE: Both bonuses count ALL PMRC commissions lifetime — initial registrations
+ *        AND recurring monthly subscription renewals each increment the counter.
+ *        Example: 18 Level 2 members buy PMRP in March → MCB #1 & #2 awarded.
+ *        Those same 18 renew in April → MCB #3 & #4 awarded (running total: 36).
  * ═══════════════════════════════════════════════════════
  */
-async function checkAndAwardPowerSquadBonus(
+
+async function awardPMB(
   userId: number,
+  pmrLevel: 1 | 2,
   orderId: number,
   orderNumber: string,
   rules: CompensationRules,
 ): Promise<void> {
-  try {
-    if (!rules.powerBonusEnabled) return;
+  if (!rules.powerBonusEnabled) return;
 
-    const { powerBonusAmount, powerBonusTrigger } = rules;
+  const { powerBonusAmount, powerBonusTrigger } = rules;
+  const bonusLabel = pmrLevel === 1
+    ? "CLB (Core Leadership Bonus)"
+    : "MCB (Money Circulation Bonus)";
 
-    const [{ l2Count }] = await db
-      .select({ l2Count: count() })
-      .from(commissionsTable)
-      .where(and(
-        eq(commissionsTable.userId, userId),
-        eq(commissionsTable.level, 2),
-        eq(commissionsTable.type, "level"),
-      ));
+  // Count ALL historical PMRC commissions at this level for this sponsor.
+  // This includes initial registrations AND every subscription renewal —
+  // each purchase creates a new commission record that increments this total.
+  const [{ pmrCount }] = await db
+    .select({ pmrCount: count() })
+    .from(commissionsTable)
+    .where(and(
+      eq(commissionsTable.userId, userId),
+      eq(commissionsTable.level, pmrLevel),
+      eq(commissionsTable.type, "level"),
+    ));
 
-    const totalL2 = Number(l2Count);
-    if (totalL2 === 0 || totalL2 % powerBonusTrigger !== 0) return;
+  const total = Number(pmrCount);
+  if (total === 0 || total % powerBonusTrigger !== 0) return;
 
+  // MCB qualification: must have at least N Level 1 Pro Members (CLB has no extra requirement)
+  if (pmrLevel === 2) {
     const [{ l1Count }] = await db
       .select({ l1Count: count() })
       .from(usersTable)
@@ -185,52 +223,50 @@ async function checkAndAwardPowerSquadBonus(
 
     if (Number(l1Count) < powerBonusTrigger) {
       logger.info(
-        { userId, totalL2, l1Count, powerBonusTrigger },
-        "Power Squad Bonus not awarded — insufficient Level 1 Pro Members",
+        { userId, total, l1Count, powerBonusTrigger },
+        `${bonusLabel} not awarded — insufficient Level 1 Pro Members`,
       );
       return;
     }
-
-    const bonusNum = totalL2 / powerBonusTrigger;
-
-    await db.insert(commissionsTable).values({
-      userId,
-      fromUserId: userId,
-      orderId,
-      orderNumber,
-      level: 2,
-      rate: "0",
-      saleAmount: "0",
-      commissionAmount: String(powerBonusAmount),
-      status: "approved",
-      type: "power_squad_bonus",
-      notes: `Power Squad Bonus #${bonusNum} — ${totalL2} PRC Level 2 sales (every ${powerBonusTrigger} = $${powerBonusAmount})`,
-    });
-
-    const [wallet] = await db.select().from(walletsTable).where(eq(walletsTable.userId, userId));
-    if (!wallet) return;
-
-    const newBalance = parseFloat((parseFloat(wallet.balance) + powerBonusAmount).toFixed(2));
-    const newTotalEarned = parseFloat((parseFloat(wallet.totalEarned) + powerBonusAmount).toFixed(2));
-
-    await db.update(walletsTable).set({
-      balance: String(newBalance),
-      totalEarned: String(newTotalEarned),
-    }).where(eq(walletsTable.userId, userId));
-
-    await db.insert(walletTransactionsTable).values({
-      walletId: wallet.id,
-      type: "commission_credit",
-      amount: String(powerBonusAmount),
-      balance: String(newBalance),
-      description: `Power Squad Bonus #${bonusNum} — $${powerBonusAmount} (${totalL2} PRC Level 2 sales)`,
-      reference: orderNumber,
-    });
-
-    logger.info({ userId, totalL2, powerBonusAmount, bonusNum }, "Power Squad Bonus awarded");
-  } catch (err) {
-    logger.error({ err, userId, orderId }, "Failed to process Power Squad Bonus");
   }
+
+  const bonusNum = total / powerBonusTrigger;
+
+  await db.insert(commissionsTable).values({
+    userId,
+    fromUserId: userId,
+    orderId,
+    orderNumber,
+    level: pmrLevel,
+    rate: "0",
+    saleAmount: "0",
+    commissionAmount: String(powerBonusAmount),
+    status: "approved",
+    type: "power_squad_bonus",
+    notes: `${bonusLabel} #${bonusNum} — ${total} PMRC Level ${pmrLevel} (purchases + renewals), every ${powerBonusTrigger} = $${powerBonusAmount}`,
+  });
+
+  const [wallet] = await db.select().from(walletsTable).where(eq(walletsTable.userId, userId));
+  if (!wallet) return;
+
+  const newBalance = parseFloat((parseFloat(wallet.balance) + powerBonusAmount).toFixed(2));
+  const newTotalEarned = parseFloat((parseFloat(wallet.totalEarned) + powerBonusAmount).toFixed(2));
+
+  await db.update(walletsTable).set({
+    balance: String(newBalance),
+    totalEarned: String(newTotalEarned),
+  }).where(eq(walletsTable.userId, userId));
+
+  await db.insert(walletTransactionsTable).values({
+    walletId: wallet.id,
+    type: "commission_credit",
+    amount: String(powerBonusAmount),
+    balance: String(newBalance),
+    description: `${bonusLabel} #${bonusNum} — $${powerBonusAmount} (${total} PMRC Level ${pmrLevel} purchases/renewals)`,
+    reference: orderNumber,
+  });
+
+  logger.info({ userId, total, pmrLevel, powerBonusAmount, bonusNum }, `${bonusLabel} awarded`);
 }
 
 /**
@@ -304,9 +340,12 @@ export async function processCommissions(
           "level",
         );
 
-        // Check Power Squad Bonus for Level 2 PRC earners
-        if (levelConfig.level === 2) {
-          await checkAndAwardPowerSquadBonus(sponsor.id, orderId, orderNumber, rules);
+        // Check CLB for Level 1 PMRC earners; MCB for Level 2 PMRC earners.
+        // Both bonuses count ALL cumulative PMRC purchases + subscription renewals.
+        if (levelConfig.level === 1 && sponsor.isProMember) {
+          await awardPMB(sponsor.id, 1, orderId, orderNumber, rules);
+        } else if (levelConfig.level === 2) {
+          await awardPMB(sponsor.id, 2, orderId, orderNumber, rules);
         }
       }
     } else {

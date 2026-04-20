@@ -539,12 +539,12 @@ export function CommissionsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="rounded-lg bg-purple-50 border border-purple-200 p-3 text-sm text-purple-900 space-y-2">
-                  <p className="font-semibold">Completely Separate from PSC and PMRC</p>
+                  <p className="font-semibold">Completely Separate from PSC and PMRC · Counts Renewals Too</p>
                   <p className="text-xs leading-relaxed text-purple-800">
-                    Pro Member Bonuses (CLB and MCB) are an entirely different income stream from Product Sales Commissions 
-                    (PSC) and Pro Member Registration Commissions (PMRC). If they are connected to anything, it is the 
-                    <strong> Pro Member Registration Product (PMRP)</strong> — because the more PMRPs you and your team sell and meet 
-                    the requirements, the more bonuses you earn. You must be a Pro Member to receive these bonuses.
+                    CLB and MCB are an entirely different income stream from PSC and PMRC. They are triggered by 
+                    <strong> Pro Member Registration Product (PMRP)</strong> purchases — both <strong>first-time registrations 
+                    and monthly subscription renewals</strong> count. Every purchase by every qualifying Level 1 or Level 2 
+                    member increments your cumulative counter, so your bonuses grow continuously month after month.
                   </p>
                 </div>
                 <div className="grid sm:grid-cols-2 gap-3">
@@ -553,11 +553,11 @@ export function CommissionsPage() {
                     <p className="text-xs text-blue-700">Also called: Core 9 Bonus (C9B) · Super Team Bonus (STB) · Gen 1 Bonus (G1B)</p>
                     <div className="flex items-center gap-2 mt-2">
                       <Users className="h-4 w-4 text-blue-600 flex-shrink-0" />
-                      <span className="text-xs font-semibold text-blue-900">Every 9 PMRPs on Level 1</span>
+                      <span className="text-xs font-semibold text-blue-900">Every 9 PMRPs on Level 1 — including renewals</span>
                     </div>
                     <p className="text-xs text-blue-700 leading-relaxed">
-                      You earn a CLB for every 9 Pro Member Registration Products sold on your Level 1. Think of this as your 
-                      regional bonus — you're opening franchise stores in your direct market.
+                      Earned for every 9 PMRP purchases (initial or monthly renewal) on Level 1. If 9 Level 1 members each 
+                      subscribe and renew monthly, you earn a CLB every single month. The counter is cumulative and never resets.
                     </p>
                   </div>
                   <div className="rounded-xl bg-purple-50 border border-purple-200 p-4 space-y-2">
@@ -565,18 +565,20 @@ export function CommissionsPage() {
                     <p className="text-xs text-purple-700">Also called: Super 9 Bonus · Level 2 Power Team Bonus · Super Group Bonus · Gen-2 Bonus</p>
                     <div className="flex items-center gap-2 mt-2">
                       <TrendingUp className="h-4 w-4 text-purple-600 flex-shrink-0" />
-                      <span className="text-xs font-semibold text-purple-900">Every 9 PMRPs on Level 2</span>
+                      <span className="text-xs font-semibold text-purple-900">Every 9 PMRPs on Level 2 — including renewals</span>
                     </div>
                     <p className="text-xs text-purple-700 leading-relaxed">
-                      You earn an MCB for every 9 Pro Member Registration Products sold on your Level 2. This is your national 
-                      expansion bonus — your franchise partners are opening their own stores and growing the network.
+                      Earned for every 9 PMRP purchases (initial or monthly renewal) on Level 2. Example: 18 Level 2 members 
+                      buy in March → MCBs #1 and #2. Those same 18 renew in April → MCBs #3 and #4. Counter is cumulative.
                     </p>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground italic">
-                  Bonuses repeat in increments of 9: at 9, 18, 27, 36… Pro Member Registrations on the respective level. 
-                  The more stores you and your Core Leaders open, the more bonuses you make.
-                </p>
+                <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-xs text-green-900 leading-relaxed">
+                  <strong className="text-green-800">How the counter works:</strong> The counter tracks all PMRC commissions 
+                  earned at each level, lifetime. Each purchase — initial or renewal — creates a new commission record and 
+                  increments the total. Bonuses fire at every multiple of 9: 9, 18, 27, 36, 45… There is no monthly reset. 
+                  A growing active subscriber base means growing monthly PMB income.
+                </div>
               </CardContent>
             </Card>
 

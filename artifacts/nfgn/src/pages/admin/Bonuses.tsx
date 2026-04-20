@@ -126,10 +126,11 @@ export function AdminBonusesPage() {
             <div className="text-sm space-y-1">
               <p className="font-semibold text-foreground">Core Leadership Bonus (CLB) &amp; Money Circulation Bonus (MCB)</p>
               <ul className="text-muted-foreground space-y-0.5 list-disc list-inside">
-                <li><strong className="text-foreground">CLB (Core 9 Bonus / Gen 1 Bonus / STB):</strong> Awarded every {validTrigger ? triggerNum : "N"} Pro Member Registration Products sold on Level 1.</li>
-                <li><strong className="text-foreground">MCB (Super 9 Bonus / Gen-2 Bonus / Level 2 Power Team Bonus):</strong> Awarded every {validTrigger ? triggerNum : "N"} Pro Member Registration Products sold on Level 2.</li>
-                <li>Both bonuses repeat at every increment — e.g., at {validTrigger ? triggerNum : "N"}, {validTrigger ? triggerNum * 2 : "2N"}, {validTrigger ? triggerNum * 3 : "3N"}… registrations.</li>
-                <li>To qualify for MCB, the Pro Member must personally sponsor at least <strong className="text-foreground">{validTrigger ? triggerNum : "N"}</strong> Level 1 Pro Members.</li>
+                <li><strong className="text-foreground">CLB:</strong> Awarded every {validTrigger ? triggerNum : "N"} PMRP purchases on Level 1 — counts initial registrations AND monthly subscription renewals.</li>
+                <li><strong className="text-foreground">MCB:</strong> Awarded every {validTrigger ? triggerNum : "N"} PMRP purchases on Level 2 — counts initial registrations AND monthly subscription renewals.</li>
+                <li>Both bonuses use a <strong className="text-foreground">cumulative, lifetime counter</strong> that never resets — each purchase or renewal increments the total.</li>
+                <li>Bonuses fire at every multiple: {validTrigger ? triggerNum : "N"}, {validTrigger ? triggerNum * 2 : "2N"}, {validTrigger ? triggerNum * 3 : "3N"}… continuously as the team stays active.</li>
+                <li>MCB requires at least <strong className="text-foreground">{validTrigger ? triggerNum : "N"}</strong> personally sponsored Level 1 Pro Members. CLB has no minimum team size.</li>
                 <li>Bonuses are auto-approved and immediately credited to the member's e-wallet as a separate income stream.</li>
               </ul>
             </div>

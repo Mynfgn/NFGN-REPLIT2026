@@ -147,24 +147,31 @@ export function ProMemberBonusesPage() {
           <div className="rounded-lg bg-blue-50 border border-blue-200 p-4 space-y-2">
             <p className="font-semibold text-blue-900 flex items-center gap-2">
               <Users className="h-4 w-4 text-blue-600" />
-              Trigger: Every 9 Pro Member Registration Products sold on Level 1
+              Trigger: Every 9 PMRPs on Level 1 — initial purchases AND monthly renewals
             </p>
             <p className="text-sm text-blue-700 leading-relaxed">
-              Every time you (or your direct Core Leaders) sell 9 Pro Member Registration Products on your 
-              <strong> Level 1</strong>, you earn a Core Leadership Bonus. This bonus continues in increments of 9 — 
-              at 9, 18, 27, 36 registrations and beyond.
+              Every time 9 PMRP purchases or subscription renewals accumulate on your <strong>Level 1</strong>, 
+              you earn a CLB. The counter is <strong>cumulative and never resets</strong> — at 9, 18, 27, 36 
+              and beyond, for as long as your team keeps their subscriptions active.
+            </p>
+          </div>
+          <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-xs text-green-900 space-y-1">
+            <p className="font-medium text-green-800">Monthly Renewal Example</p>
+            <p className="leading-relaxed">
+              If 9 Level 1 members each have an active PMRP subscription, every month those 9 renewals 
+              increment your counter by 9 — awarding you a CLB bonus every single month, automatically.
             </p>
           </div>
           <div className="rounded-lg bg-white border p-3 text-sm text-muted-foreground space-y-1">
             <p className="font-medium text-foreground">Store Analogy</p>
             <p className="text-xs leading-relaxed">
-              Level 1 is your direct regional market. Every 9 franchise stores (Pro Members) you open in that 
-              market earns you a regional leadership bonus. You're not just a merchant — you're a regional 
-              director with a growing network of partner stores.
+              Level 1 is your direct regional market. Every 9 franchise renewals (active partner stores) in that 
+              market earns you a regional leadership bonus — rewards you for keeping your team active, not just 
+              recruiting new ones.
             </p>
           </div>
           <p className="text-xs text-muted-foreground italic">
-            Must be a Pro Member to qualify for CLB.
+            Must be a Pro Member to qualify for CLB. No minimum team size required.
           </p>
         </CardContent>
       </Card>
@@ -185,24 +192,32 @@ export function ProMemberBonusesPage() {
           <div className="rounded-lg bg-purple-50 border border-purple-200 p-4 space-y-2">
             <p className="font-semibold text-purple-900 flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-purple-600" />
-              Trigger: Every 9 Pro Member Registration Products sold on Level 2
+              Trigger: Every 9 PMRPs on Level 2 — initial purchases AND monthly renewals
             </p>
             <p className="text-sm text-purple-700 leading-relaxed">
-              Every time your Level 1 Pro Members (your franchise partners) collectively sell 9 Pro Member 
-              Registration Products on your <strong>Level 2</strong>, you earn a Money Circulation Bonus. 
-              This repeats in increments of 9 indefinitely.
+              Every time 9 PMRP purchases or subscription renewals accumulate on your <strong>Level 2</strong>, 
+              you earn an MCB. The counter is <strong>cumulative and never resets</strong> — it continues at 
+              9, 18, 27, 36, 45… indefinitely for as long as active subscriptions flow through Level 2.
+            </p>
+          </div>
+          <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-xs text-green-900 space-y-1">
+            <p className="font-medium text-green-800">Monthly Renewal Example</p>
+            <p className="leading-relaxed">
+              If 18 Level 2 members purchase PMRP in March, your counter hits 18 — MCBs #1 and #2 are awarded. 
+              Those same 18 members renew in April, counter reaches 36 — MCBs #3 and #4 awarded. Fully automatic, 
+              every month they stay subscribed.
             </p>
           </div>
           <div className="rounded-lg bg-white border p-3 text-sm text-muted-foreground space-y-1">
             <p className="font-medium text-foreground">Store Analogy</p>
             <p className="text-xs leading-relaxed">
-              Level 2 is your national expansion. Your franchise partners (Level 1 Pro Members) are opening 
-              stores all over the country, and each of their franchise partners (Level 2) adds to your national 
-              volume. Every 9 stores opened at Level 2 earns you a national growth bonus — the MCB.
+              Level 2 is your national market. Your franchise partners (Level 1 Pro Members) have their own 
+              franchise partners (Level 2). Every 9 of those Level 2 active subscriptions earns you a national 
+              growth bonus — rewarding you for building a sustainable, recurring revenue network.
             </p>
           </div>
           <p className="text-xs text-muted-foreground italic">
-            Must be a Pro Member and have at least 9 Level 1 Pro Members to qualify for MCB.
+            Must be a Pro Member with at least 9 personally sponsored Level 1 Pro Members to qualify for MCB.
           </p>
         </CardContent>
       </Card>

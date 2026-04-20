@@ -156,7 +156,7 @@ export function CommissionsPage() {
                   <div className="text-center py-12 space-y-2">
                     <Users className="h-10 w-10 text-muted-foreground mx-auto" />
                     <p className="text-muted-foreground">No referral commissions yet.</p>
-                    <p className="text-sm text-muted-foreground">Refer members and earn {referralRate}% on every purchase they make.</p>
+                    <p className="text-sm text-muted-foreground">Refer members and earn a Referral Commission on every purchase they make. Rates vary by product.</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -242,23 +242,47 @@ export function CommissionsPage() {
               <CardHeader className="pb-3">
                 <CardTitle className="font-serif text-lg flex items-center gap-2">
                   <span className="text-xs px-2 py-1 rounded border font-medium bg-blue-100 text-blue-800 border-blue-200">
-                    Referral Commission
+                    Referral Commission (RC)
                   </span>
-                  <span className="text-muted-foreground font-normal text-sm">— All Members</span>
+                  <span className="text-muted-foreground font-normal text-sm">— All Members &amp; Community Builders</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Every Member earns a Referral Commission when their personally sponsored member makes ANY purchase.
+              <CardContent className="space-y-3">
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Every Member — whether a standard Member or a Pro Member — earns a <strong className="text-foreground">Referral Commission (RC)</strong> when 
+                  someone they personally referred makes a purchase. Referral Commissions are available to all members, including 
+                  <strong className="text-foreground"> Community Builders</strong> (members who have made at least one referral).
                 </p>
-                <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="h-8 w-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">1</div>
-                  <div className="flex-1">
-                    <div className="font-medium">Direct Sponsor — Level 1</div>
-                    <div className="text-xs text-muted-foreground">Paid on every purchase by your personally enrolled member</div>
+                <div className="rounded-lg bg-blue-50 border border-blue-200 p-4 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="h-8 w-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">RC</div>
+                    <div className="flex-1">
+                      <div className="font-semibold text-blue-900">Direct Sponsor — Level 1 Only</div>
+                      <div className="text-xs text-blue-700 mt-1 leading-relaxed">
+                        Paid when your personally enrolled member makes any purchase. The commission rate is 
+                        <strong> not a fixed percentage</strong> — every product and service has its own Referral Commission amount, 
+                        which may be a percentage of the sale price or a specified flat dollar amount.
+                      </div>
+                    </div>
                   </div>
-                  <div className="font-bold text-lg text-blue-700">{referralRate}%</div>
                 </div>
+                <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-900 space-y-1">
+                  <p className="font-semibold text-amber-800">Important: RC is Product-Specific</p>
+                  <p className="text-xs leading-relaxed">
+                    Referral Commissions vary by product. Each item in the NFGN catalog carries its own commission rate or dollar 
+                    amount set by the company. For example, one product might pay a 10% RC while another pays a flat $20 — both 
+                    for the same referral relationship. Always check the individual product details for the exact RC amount.
+                  </p>
+                  <p className="text-xs leading-relaxed">
+                    <strong>Example:</strong> If a product costs $179.99 and its RC is $20, and you refer 9 members who each purchase 
+                    that product, you earn $180 total in Referral Commissions — making your own purchase of that product effectively 
+                    $0 out of pocket.
+                  </p>
+                </div>
+                <p className="text-xs text-muted-foreground italic">
+                  Referral Commissions are the only commissions available to standard Members and Community Builders. Pro Members earn 
+                  RC in addition to Sales Commissions and Pro Registration Commissions.
+                </p>
               </CardContent>
             </Card>
 

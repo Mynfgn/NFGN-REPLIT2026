@@ -250,9 +250,10 @@ export function BPPDashboardPage() {
               <div>
                 <p className="font-semibold">Pro Members Only</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  The Bill Payer Program is available exclusively to NFGN Pro Members.
-                  Upgrade your membership to access this unique bonus program that helps you
-                  offset real monthly expenses through your group's performance.
+                  The Bill Payer Program pays out <strong className="text-foreground">Money Circulation Bonuses</strong> — also called{" "}
+                  <strong className="text-foreground">Group Volume Bonuses (GVB)</strong>. There are 5 total, each covering a real monthly 
+                  expense (housing, car, utilities, medical, phone/internet). This program is available exclusively to NFGN Pro Members. 
+                  Upgrade your membership to unlock the ability to earn these monthly bonuses through your group's collective volume.
                 </p>
               </div>
             </div>
@@ -287,7 +288,7 @@ export function BPPDashboardPage() {
       <div>
         <h1 className="text-3xl font-serif font-bold">Bill Payer Program</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Pro Consultant Commissions · {monthName} {data.currentYear}
+          Money Circulation Bonuses (Group Volume Bonuses) · {monthName} {data.currentYear}
         </p>
       </div>
 
@@ -299,10 +300,19 @@ export function BPPDashboardPage() {
             <div className="space-y-2">
               <p className="font-semibold text-foreground">What is the Bill Payer Program?</p>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                The Bill Payer Program (BPP) is a Pro Member benefit created to help qualified NFGN leaders offset real-life monthly
-                expenses such as housing, transportation, utilities, medical, and phone/internet bills. Unlike programs based only on
-                personal selling, the BPP rewards members for helping their group and community become productive. Once the required
-                Group Volume and Personal Volume are met, qualifying bonuses may be deposited into your NFGN account.
+                The Bill Payer Program (BPP) pays out what are called <strong className="text-foreground">Money Circulation Bonuses</strong> — 
+                also referred to as <strong className="text-foreground">Group Volume Bonuses (GVB)</strong>. These bonuses are designed to help 
+                qualified NFGN Pro Members offset real monthly expenses such as housing, transportation, utilities, medical, and phone/internet 
+                bills. There are <strong className="text-foreground">5 Group Volume Bonuses</strong> in total, each with its own Group Volume 
+                requirement and a standard Personal Volume requirement of 150 PV.
+              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                These bonuses are called "Group Volume Bonuses" because they are primarily generated when a Pro Member's group reaches the 
+                required Group Volume (GV) threshold for each bonus level. Pro Members meet the Personal Volume requirement by personally 
+                purchasing NFGN products and services. However, only <strong className="text-foreground">Pro Member Registration Packages</strong> 
+                activate your eligibility to earn these bonuses. For example, if you purchase a Pro Member Registration item worth 50 PV, 
+                you will be upgraded to Pro Member status — but you will still need an additional 100 PV in products or services to meet 
+                the 150 PV Personal Volume requirement.
               </p>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 <strong className="text-foreground">The story behind BPP:</strong> This program was born from the heart of Mr. Marcelino himself,
@@ -324,8 +334,8 @@ export function BPPDashboardPage() {
         {[
           { label: "Your Monthly PV", value: data.personalVolume.toLocaleString(), sub: "Personal Volume", icon: Users, color: "text-blue-600" },
           { label: "Your Monthly GV", value: data.groupVolume.toLocaleString(), sub: "Group Volume", icon: TrendingUp, color: "text-purple-600" },
-          { label: "Funds Qualified", value: qualifiedFunds, sub: "this month", icon: CheckCircle2, color: "text-green-600" },
-          { label: "Paid This Month", value: `$${totalEarnedThisMonth.toFixed(2)}`, sub: `${paidFunds} fund${paidFunds !== 1 ? "s" : ""}`, icon: DollarSign, color: "text-emerald-600" },
+          { label: "Bonuses Qualified", value: qualifiedFunds, sub: "this month", icon: CheckCircle2, color: "text-green-600" },
+          { label: "Paid This Month", value: `$${totalEarnedThisMonth.toFixed(2)}`, sub: `${paidFunds} bonus${paidFunds !== 1 ? "es" : ""}`, icon: DollarSign, color: "text-emerald-600" },
         ].map(s => (
           <Card key={s.label}>
             <CardContent className="pt-4 pb-4 flex items-center gap-3">
@@ -342,21 +352,21 @@ export function BPPDashboardPage() {
 
       <Tabs defaultValue="funds">
         <TabsList>
-          <TabsTrigger value="funds">My Funds</TabsTrigger>
+          <TabsTrigger value="funds">My GV Bonuses</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
+          <TabsTrigger value="comp">Comp Plan</TabsTrigger>
         </TabsList>
 
-        {/* ── Funds Tab ── */}
+        {/* ── GV Bonuses Tab ── */}
         <TabsContent value="funds" className="mt-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {data.funds.map(fund => (
               <FundCard key={fund.id} fund={fund} />
             ))}
           </div>
-
           <p className="text-xs text-muted-foreground mt-4 px-1">
             GV and PV figures reflect the current billing month ({monthName} {data.currentYear}).
-            Qualifications are reviewed at month end. Fund caps and requirements may be updated at company discretion.
+            Qualifications are reviewed at month end. Bonus caps and requirements may be updated at company discretion.
           </p>
         </TabsContent>
 
@@ -367,7 +377,7 @@ export function BPPDashboardPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-muted/40">
-                    <th className="text-left px-4 py-3 font-medium">Fund</th>
+                    <th className="text-left px-4 py-3 font-medium">Bonus</th>
                     <th className="text-left px-4 py-3 font-medium">Period</th>
                     <th className="text-right px-4 py-3 font-medium">GV Achieved</th>
                     <th className="text-right px-4 py-3 font-medium">PV Achieved</th>
@@ -380,7 +390,7 @@ export function BPPDashboardPage() {
                   {data.history.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="text-center py-12 text-muted-foreground">
-                        No qualification history yet. Keep growing your group to qualify for your first BPP bonus!
+                        No qualification history yet. Keep growing your group to qualify for your first Group Volume Bonus!
                       </td>
                     </tr>
                   ) : data.history.map(h => (
@@ -399,6 +409,159 @@ export function BPPDashboardPage() {
                 </tbody>
               </table>
             </div>
+          </Card>
+        </TabsContent>
+
+        {/* ── Comp Plan Tab ── */}
+        <TabsContent value="comp" className="mt-4 space-y-5">
+          {/* Overview */}
+          <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10">
+            <CardHeader className="pb-3">
+              <CardTitle className="font-serif text-xl flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-primary" />
+                Money Circulation Bonuses
+                <Badge className="text-xs ml-1">Also called Group Volume Bonuses (GVB)</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm text-muted-foreground">
+              <p className="leading-relaxed">
+                The Bill Payer Program pays out <strong className="text-foreground">Money Circulation Bonuses</strong> — commonly referred to as 
+                <strong className="text-foreground"> Group Volume Bonuses (GVB)</strong>. There are a total of 
+                <strong className="text-foreground"> 5 Group Volume Bonuses</strong>, each designed to help Pro Members offset a specific 
+                monthly living expense.
+              </p>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div className="rounded-lg bg-background border p-3 space-y-1">
+                  <p className="font-semibold text-foreground text-xs uppercase tracking-wide">Who Qualifies</p>
+                  <p>Pro Members only. You must have purchased a Pro Member Registration Package, which activates your eligibility to earn these bonuses.</p>
+                </div>
+                <div className="rounded-lg bg-background border p-3 space-y-1">
+                  <p className="font-semibold text-foreground text-xs uppercase tracking-wide">How PV Is Counted</p>
+                  <p>Your Personal Volume is generated through your own product and service purchases. The system recognizes Pro Member Registration Packages first to activate eligibility — then you must also reach the PV requirement through additional purchases.</p>
+                </div>
+                <div className="rounded-lg bg-background border p-3 space-y-1">
+                  <p className="font-semibold text-foreground text-xs uppercase tracking-wide">Standard PV Requirement</p>
+                  <p>Generally <strong className="text-foreground">150 PV</strong> per bonus (+/−). This may vary per bonus but is typically kept uniform to keep the program easy to understand.</p>
+                </div>
+                <div className="rounded-lg bg-background border p-3 space-y-1">
+                  <p className="font-semibold text-foreground text-xs uppercase tracking-wide">When Bonuses Pay Out</p>
+                  <p>Bonuses are reviewed and paid at the end of each calendar month after both the GV and PV requirements are confirmed. Amounts are deposited directly into your NFGN E-Wallet.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* PV Activation Example */}
+          <Card className="border-amber-200 bg-amber-50/40">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2 text-amber-800">
+                <Info className="h-4 w-4 flex-shrink-0" />
+                Important: Pro Member Registration &amp; PV Requirements
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-amber-900 space-y-2">
+              <p className="leading-relaxed">
+                Purchasing a Pro Member Registration Package upgrades you to Pro Member status and activates your ability to earn 
+                Group Volume Bonuses. However, the Registration Package PV alone may not satisfy the full Personal Volume requirement.
+              </p>
+              <div className="rounded-lg bg-white border border-amber-200 p-3 space-y-1">
+                <p className="font-semibold text-amber-800">Example</p>
+                <p>If you purchase a 50 PV Pro Member Registration Package → You become a Pro Member ✓</p>
+                <p>But the standard 150 PV requirement means you still need an additional <strong>100 PV</strong> in other product or service purchases to fully qualify for each bonus.</p>
+              </div>
+              <p className="text-xs italic text-amber-700">
+                The PV requirement for each bonus is tracked independently each month. Meeting it consistently ensures you remain eligible every month.
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* 5 GVB Breakdown */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-serif">The 5 Group Volume Bonuses (GVB)</CardTitle>
+              <p className="text-sm text-muted-foreground">Each bonus covers a real monthly living expense and has its own Group Volume threshold.</p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {[
+                  {
+                    num: 1, name: "Rent / Mortgage Bonus", slug: "rent-mortgage", icon: Home,
+                    color: "blue", desc: "Helps offset your monthly housing costs.",
+                    gvReq: data.funds.find(f => f.slug === "rent-mortgage")?.gvRequirement,
+                    pvReq: data.funds.find(f => f.slug === "rent-mortgage")?.pvRequirement,
+                    cap: data.funds.find(f => f.slug === "rent-mortgage")?.maxCap,
+                  },
+                  {
+                    num: 2, name: "Car Payment Bonus", slug: "car", icon: Car,
+                    color: "amber", desc: "Helps offset your monthly vehicle payment.",
+                    gvReq: data.funds.find(f => f.slug === "car")?.gvRequirement,
+                    pvReq: data.funds.find(f => f.slug === "car")?.pvRequirement,
+                    cap: data.funds.find(f => f.slug === "car")?.maxCap,
+                  },
+                  {
+                    num: 3, name: "Utilities Bonus", slug: "utilities", icon: Zap,
+                    color: "green", desc: "Helps offset electricity, gas, and water bills.",
+                    gvReq: data.funds.find(f => f.slug === "utilities")?.gvRequirement,
+                    pvReq: data.funds.find(f => f.slug === "utilities")?.pvRequirement,
+                    cap: data.funds.find(f => f.slug === "utilities")?.maxCap,
+                  },
+                  {
+                    num: 4, name: "Medical Bonus", slug: "medical", icon: Heart,
+                    color: "red", desc: "Helps offset healthcare and medical expenses.",
+                    gvReq: data.funds.find(f => f.slug === "medical")?.gvRequirement,
+                    pvReq: data.funds.find(f => f.slug === "medical")?.pvRequirement,
+                    cap: data.funds.find(f => f.slug === "medical")?.maxCap,
+                  },
+                  {
+                    num: 5, name: "Phone & Internet Bonus", slug: "phone-internet", icon: Phone,
+                    color: "purple", desc: "Helps offset your monthly phone and internet bills.",
+                    gvReq: data.funds.find(f => f.slug === "phone-internet")?.gvRequirement,
+                    pvReq: data.funds.find(f => f.slug === "phone-internet")?.pvRequirement,
+                    cap: data.funds.find(f => f.slug === "phone-internet")?.maxCap,
+                  },
+                ].map(b => {
+                  const colorMap: Record<string, { bg: string; text: string; border: string; dot: string }> = {
+                    blue:   { bg: "bg-blue-50",   text: "text-blue-700",   border: "border-blue-200",   dot: "bg-blue-500" },
+                    amber:  { bg: "bg-amber-50",  text: "text-amber-700",  border: "border-amber-200",  dot: "bg-amber-500" },
+                    green:  { bg: "bg-green-50",  text: "text-green-700",  border: "border-green-200",  dot: "bg-green-500" },
+                    red:    { bg: "bg-red-50",    text: "text-red-700",    border: "border-red-200",    dot: "bg-red-500" },
+                    purple: { bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200", dot: "bg-purple-500" },
+                  };
+                  const c = colorMap[b.color];
+                  const Icon = b.icon;
+                  return (
+                    <div key={b.num} className={`flex gap-4 p-4 rounded-xl ${c.bg} border ${c.border}`}>
+                      <div className={`h-10 w-10 rounded-full ${c.dot} text-white flex items-center justify-center flex-shrink-0`}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`font-semibold text-sm ${c.text}`}>GVB #{b.num} — {b.name}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">{b.desc}</p>
+                        <div className="flex items-center gap-4 mt-2 text-xs flex-wrap">
+                          <span className={`font-medium ${c.text}`}>
+                            GV Required: <strong>{b.gvReq ? b.gvReq.toLocaleString() : "—"}</strong>
+                          </span>
+                          <span className={`font-medium ${c.text}`}>
+                            PV Required: <strong>{b.pvReq ? `${b.pvReq} PV` : "150 PV (standard)"}</strong>
+                          </span>
+                          {b.cap && (
+                            <span className={`font-medium ${c.text}`}>
+                              Max Payout: <strong>${b.cap.toLocaleString()}/mo</strong>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground mt-4 italic">
+                GV and PV requirements shown are the current configured values and may be adjusted by company administration. 
+                All 5 bonuses use the same standard PV requirement unless otherwise specified.
+              </p>
+            </CardContent>
           </Card>
         </TabsContent>
       </Tabs>

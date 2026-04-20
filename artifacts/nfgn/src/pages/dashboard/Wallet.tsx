@@ -13,7 +13,7 @@ import {
 const TYPE_LABELS: Record<string, string> = {
   commission_credit: "Commission Earned",
   referral_commission: "Referral Commission",
-  sales_commission: "Sales Commission",
+  sales_commission: "Products & Services Commission (PASC)",
   level_commission: "Level Bonus",
   payout: "Withdrawal",
   payout_request: "Withdrawal Request",

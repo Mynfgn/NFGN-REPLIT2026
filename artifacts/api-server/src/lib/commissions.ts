@@ -103,7 +103,7 @@ async function recordCommission(
     ? "Referral Commission"
     : type === "level"
     ? `Pro Member Registration Commission (PMRC) — Level ${level}`
-    : `Sales Commission — Level ${level}`;
+    : `Products & Services Commission (PASC) — Level ${level}`;
 
   await db.insert(walletTransactionsTable).values({
     walletId: wallet.id,

@@ -109,7 +109,7 @@ export function AdminBonusesPage() {
         <div>
           <h1 className="text-3xl font-serif font-bold">Pro Member Bonuses</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Configure the Power Squad Bonus program for Pro Members.
+            Configure the Core Leadership Bonus (CLB) and Money Circulation Bonus (MCB) for Pro Members.
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={loadRules} disabled={loading}>
@@ -124,12 +124,13 @@ export function AdminBonusesPage() {
           <div className="flex gap-3">
             <Info className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
             <div className="text-sm space-y-1">
-              <p className="font-semibold text-foreground">How the Power Squad Bonus works</p>
+              <p className="font-semibold text-foreground">Core Leadership Bonus (CLB) &amp; Money Circulation Bonus (MCB)</p>
               <ul className="text-muted-foreground space-y-0.5 list-disc list-inside">
-                <li>A Pro Member earns a cash bonus every time a set number of Pro Member Packages are purchased at their Level 2 position.</li>
-                <li>The bonus repeats every increment — e.g., at {validTrigger ? triggerNum : "N"}, {validTrigger ? triggerNum * 2 : "2N"}, {validTrigger ? triggerNum * 3 : "3N"}… Level 2 Pro Package purchases.</li>
-                <li>To qualify, the Pro Member must personally sponsor at least <strong className="text-foreground">{validTrigger ? triggerNum : "N"}</strong> Level 1 Pro Members.</li>
-                <li>Bonuses are auto-approved and immediately credited to the member's e-wallet.</li>
+                <li><strong className="text-foreground">CLB (Core 9 Bonus / Gen 1 Bonus / STB):</strong> Awarded every {validTrigger ? triggerNum : "N"} Pro Member Registration Products sold on Level 1.</li>
+                <li><strong className="text-foreground">MCB (Super 9 Bonus / Gen-2 Bonus / Level 2 Power Team Bonus):</strong> Awarded every {validTrigger ? triggerNum : "N"} Pro Member Registration Products sold on Level 2.</li>
+                <li>Both bonuses repeat at every increment — e.g., at {validTrigger ? triggerNum : "N"}, {validTrigger ? triggerNum * 2 : "2N"}, {validTrigger ? triggerNum * 3 : "3N"}… registrations.</li>
+                <li>To qualify for MCB, the Pro Member must personally sponsor at least <strong className="text-foreground">{validTrigger ? triggerNum : "N"}</strong> Level 1 Pro Members.</li>
+                <li>Bonuses are auto-approved and immediately credited to the member's e-wallet as a separate income stream.</li>
               </ul>
             </div>
           </div>
@@ -139,9 +140,9 @@ export function AdminBonusesPage() {
       {/* Power Squad Bonus Settings */}
       <Card>
         <CardHeader>
-          <CardTitle className="font-serif flex items-center gap-2">
+          <CardTitle className="font-serif flex items-center gap-2 flex-wrap">
             <Star className="h-5 w-5 text-primary fill-primary" />
-            Power Squad Bonus
+            Pro Member Bonuses — CLB &amp; MCB Configuration
             <Badge variant={bonusEnabled ? "default" : "secondary"} className="ml-2">
               {bonusEnabled ? "Active" : "Disabled"}
             </Badge>

@@ -48,6 +48,7 @@ import { AdminGenealogyPage } from "@/pages/admin/AdminGenealogy";
 import { AdminProductsPage } from "@/pages/admin/Products";
 import { AdminCategoriesPage } from "@/pages/admin/Categories";
 import { AdminBonusesPage } from "@/pages/admin/Bonuses";
+import { ProMemberBonusesPage } from "@/pages/dashboard/ProMemberBonuses";
 import { AdminBookingsPage } from "@/pages/admin/Bookings";
 import { AdminProfessionalsPage } from "@/pages/admin/Professionals";
 import { AdminReportsPage } from "@/pages/admin/Reports";
@@ -166,6 +167,11 @@ function Router() {
       <Route path="/dashboard/bpp">
         <RequireAuth>
           <DashboardLayout><BPPDashboardPage /></DashboardLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/dashboard/pro-member-bonuses">
+        <RequireAuth>
+          <DashboardLayout><ProMemberBonusesPage /></DashboardLayout>
         </RequireAuth>
       </Route>
       <Route path="/dashboard/bookings">

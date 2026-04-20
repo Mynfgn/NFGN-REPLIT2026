@@ -60,7 +60,7 @@ export function CommissionsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-serif font-bold">Commissions</h1>
-        <p className="text-muted-foreground">Your referral, sales, and Pro Member Registration Commission earnings</p>
+        <p className="text-muted-foreground">Your referral, PASC, PMRC, and Pro Member Bonus earnings</p>
       </div>
 
       {/* Summary cards */}
@@ -106,7 +106,7 @@ export function CommissionsPage() {
             )}
           </TabsTrigger>
           <TabsTrigger value="sales" className="gap-1.5">
-            Sales Commissions
+            PASC
             {salesCommissions.length > 0 && (
               <span className="text-xs bg-green-600 text-white rounded-full px-1.5 py-0 font-mono">{salesCommissions.length}</span>
             )}
@@ -115,6 +115,12 @@ export function CommissionsPage() {
             PMRC
             {prcCommissions.length > 0 && (
               <span className="text-xs bg-amber-500 text-white rounded-full px-1.5 py-0 font-mono">{prcCommissions.length}</span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="bonuses" className="gap-1.5">
+            Pro Member Bonuses
+            {bonusCommissions.length > 0 && (
+              <span className="text-xs bg-purple-600 text-white rounded-full px-1.5 py-0 font-mono">{bonusCommissions.length}</span>
             )}
           </TabsTrigger>
           <TabsTrigger value="all">All History</TabsTrigger>
@@ -168,20 +174,20 @@ export function CommissionsPage() {
           </div>
         </TabsContent>
 
-        {/* ── Sales Commissions Tab ── */}
+        {/* ── PASC Tab ── */}
         <TabsContent value="sales">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <span className="inline-block h-3 w-3 rounded-full bg-green-500" />
-                Sales Commission History
+                Products &amp; Services Commission (PASC) History
               </CardTitle>
             </CardHeader>
             <CardContent>
               {isLoading ? (
                 <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
               ) : salesCommissions.length === 0 ? (
-                <p className="text-center text-muted-foreground py-12">No sales commissions yet. Pro Members earn on downline purchases.</p>
+                <p className="text-center text-muted-foreground py-12">No PASC earnings yet. Pro Members earn on regular product and service purchases within their downline.</p>
               ) : (
                 <div className="space-y-3">
                   {salesCommissions.map(c => <CommissionRow key={c.id} c={c} />)}
@@ -212,6 +218,111 @@ export function CommissionsPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ── Pro Member Bonuses Tab ── */}
+        <TabsContent value="bonuses">
+          <div className="space-y-4">
+            {/* Explainer */}
+            <Card className="bg-gradient-to-br from-purple-50 to-purple-100/50 border-purple-200">
+              <CardContent className="pt-5 pb-4">
+                <div className="flex gap-3">
+                  <Gift className="h-5 w-5 text-purple-600 flex-shrink-0 mt-0.5" />
+                  <div className="space-y-2">
+                    <p className="font-semibold text-foreground">What are Pro Member Bonuses?</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Pro Member Bonuses are an entirely separate income stream from PASC and PMRC. They are triggered when you and your 
+                      Core Leaders sell <strong className="text-foreground">Pro Member Registration Products (PMRP)</strong> in increments 
+                      of 9. The more stores (Pro Members) you and your team open across Levels 1 and 2, the more bonuses you earn. 
+                      You must hold Pro Member status to qualify.
+                    </p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      There are <strong className="text-foreground">two types</strong> of Pro Member Bonuses:
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* CLB */}
+            <Card className="border-l-4 border-l-blue-500">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-serif">
+                  Core Leadership Bonus (CLB)
+                  <span className="ml-2 text-xs font-normal text-muted-foreground">Also called: Core 9 Bonus (C9B) · Super Team Bonus (STB) · Generation 1 Bonus (G1B) · Gen 1 Bonus</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="rounded-lg bg-blue-50 border border-blue-200 p-4 text-sm text-blue-900 space-y-1.5">
+                  <p className="flex items-center gap-2 font-semibold">
+                    <Users className="h-4 w-4 text-blue-600" />
+                    Trigger: Every 9 Pro Member Registrations sold on Level 1
+                  </p>
+                  <p className="text-blue-700 text-xs leading-relaxed">
+                    When you (and your direct Core Leaders) sell Pro Member Registration Products on <strong>Level 1</strong>, 
+                    every 9th sale triggers a Core Leadership Bonus. This bonus recognizes your direct leadership in opening 
+                    new "franchise stores" in your immediate circle.
+                  </p>
+                </div>
+                <p className="text-xs text-muted-foreground italic">
+                  Think of Level 1 as your own direct market or region — every 9 Pro Members you personally activate in that 
+                  region earns you a regional leadership bonus.
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* MCB */}
+            <Card className="border-l-4 border-l-purple-500">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-serif">
+                  Money Circulation Bonus (MCB)
+                  <span className="ml-2 text-xs font-normal text-muted-foreground">Also called: Level 2 Power Team Bonus · Super Group Bonus · Generation 2 Bonus (Gen-2) · Super 9 Bonus</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="rounded-lg bg-purple-50 border border-purple-200 p-4 text-sm text-purple-900 space-y-1.5">
+                  <p className="flex items-center gap-2 font-semibold">
+                    <TrendingUp className="h-4 w-4 text-purple-600" />
+                    Trigger: Every 9 Pro Member Registrations sold on Level 2
+                  </p>
+                  <p className="text-purple-700 text-xs leading-relaxed">
+                    When your Level 1 Pro Members (your "franchise partners") each grow their own teams and sell Pro Member 
+                    Registration Products on <strong>Level 2</strong>, every 9th collective sale triggers a Money Circulation 
+                    Bonus. This is the national expansion bonus — rewarding you for the growth of your entire Pro Member network.
+                  </p>
+                </div>
+                <p className="text-xs text-muted-foreground italic">
+                  Think of Level 2 as your national or expanded market — your franchise partners are opening stores all over, 
+                  and every 9 they collectively activate earns you a national growth bonus.
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Bonus History */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <span className="inline-block h-3 w-3 rounded-full bg-purple-500" />
+                  Pro Member Bonus History
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+                ) : bonusCommissions.length === 0 ? (
+                  <div className="text-center py-12 space-y-2">
+                    <Gift className="h-10 w-10 text-muted-foreground mx-auto" />
+                    <p className="text-muted-foreground">No Pro Member Bonuses earned yet.</p>
+                    <p className="text-sm text-muted-foreground">Bonuses are awarded every 9 Pro Member Registrations on Levels 1 &amp; 2.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {bonusCommissions.map(c => <CommissionRow key={c.id} c={c} />)}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         {/* ── All History Tab ── */}
@@ -286,27 +397,50 @@ export function CommissionsPage() {
               </CardContent>
             </Card>
 
-            {/* Sales Commission */}
+            {/* PASC */}
             <Card className="border-l-4 border-l-green-400">
               <CardHeader className="pb-3">
                 <CardTitle className="font-serif text-lg flex items-center gap-2">
                   <span className="text-xs px-2 py-1 rounded border font-medium bg-green-100 text-green-800 border-green-200">
-                    Sales Commission
+                    Products &amp; Services Commissions (PASC)
                   </span>
                   <span className="text-muted-foreground font-normal text-sm">— Pro Members Only</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Pro Members earn a Sales Commission on regular product purchases made within their downline genealogy tree.
-                </p>
+              <CardContent className="space-y-4">
+                <div className="text-sm text-muted-foreground space-y-3 leading-relaxed">
+                  <p>
+                    <strong className="text-foreground">PASC</strong> are commissions generated when NFGN members purchase products or 
+                    services — including <strong className="text-foreground">recurring monthly subscriptions</strong> — within your Group 
+                    or Community. The more products and services being purchased in your NFGN Community, the greater your 
+                    <strong className="text-foreground"> Group Volume (GV)</strong> and your PASC earnings become.
+                  </p>
+                  <p>
+                    <strong className="text-foreground">Think of it like a store:</strong> Your online NFGN business is a store that 
+                    sells products and services sourced from a particular warehouse in a particular region. Every time you register a 
+                    standard member, that's a <strong className="text-foreground">customer who shops in your store</strong>. Every purchase 
+                    they make increases their personal PV and your Group GV — and because you referred them, your 
+                    <strong className="text-foreground"> Referral Commission (RC)</strong> also goes up.
+                  </p>
+                  <p>
+                    When you register a <strong className="text-foreground">Pro Member</strong>, that's like selling someone a 
+                    <strong className="text-foreground"> franchise store</strong>. You're opening another store in another part of the 
+                    region or country — selling the same products and services from the same warehouse. Pro Members are not just 
+                    customers; they are <strong className="text-foreground">partners</strong> whose mission is to help you move big 
+                    volumes of products and services out of the warehouse. This is what drives your PASC earnings exponentially.
+                  </p>
+                  <p>
+                    PASC is separate from Referral Commissions — RC is earned on direct referral purchases, while PASC is earned across 
+                    multiple levels of your downline genealogy tree (Pro Members only).
+                  </p>
+                </div>
                 <div className="space-y-2">
                   {salesLevels.map(l => (
                     <div key={l.level} className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
                       <div className="h-8 w-8 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-bold">{l.level}</div>
                       <div className="flex-1">
                         <div className="font-medium">Level {l.level}</div>
-                        <div className="text-xs text-muted-foreground">Paid on regular product purchases by downline at Level {l.level}</div>
+                        <div className="text-xs text-muted-foreground">Paid on regular product &amp; service purchases by your downline at Level {l.level}</div>
                       </div>
                       <div className="font-bold text-lg text-green-700">{l.rate}%</div>
                     </div>
@@ -344,6 +478,58 @@ export function CommissionsPage() {
                     </div>
                   ))}
                 </div>
+              </CardContent>
+            </Card>
+            {/* Pro Member Bonuses — CLB & MCB */}
+            <Card className="border-l-4 border-l-purple-500">
+              <CardHeader className="pb-3">
+                <CardTitle className="font-serif text-lg flex items-center gap-2">
+                  <span className="text-xs px-2 py-1 rounded border font-medium bg-purple-100 text-purple-800 border-purple-200">
+                    Pro Member Bonuses (CLB &amp; MCB)
+                  </span>
+                  <span className="text-muted-foreground font-normal text-sm">— Pro Members Only · Separate Income Stream</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="rounded-lg bg-purple-50 border border-purple-200 p-3 text-sm text-purple-900 space-y-2">
+                  <p className="font-semibold">Completely Separate from PASC and PMRC</p>
+                  <p className="text-xs leading-relaxed text-purple-800">
+                    Pro Member Bonuses (CLB and MCB) are an entirely different income stream from Products &amp; Services Commissions 
+                    (PASC) and Pro Member Registration Commissions (PMRC). If they are connected to anything, it is the 
+                    <strong> Pro Member Registration Product (PMRP)</strong> — because the more PMRPs you and your team sell and meet 
+                    the requirements, the more bonuses you earn. You must be a Pro Member to receive these bonuses.
+                  </p>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div className="rounded-xl bg-blue-50 border border-blue-200 p-4 space-y-2">
+                    <p className="font-semibold text-blue-900 text-sm">Core Leadership Bonus (CLB)</p>
+                    <p className="text-xs text-blue-700">Also called: Core 9 Bonus (C9B) · Super Team Bonus (STB) · Gen 1 Bonus (G1B)</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Users className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                      <span className="text-xs font-semibold text-blue-900">Every 9 PMRPs on Level 1</span>
+                    </div>
+                    <p className="text-xs text-blue-700 leading-relaxed">
+                      You earn a CLB for every 9 Pro Member Registration Products sold on your Level 1. Think of this as your 
+                      regional bonus — you're opening franchise stores in your direct market.
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-purple-50 border border-purple-200 p-4 space-y-2">
+                    <p className="font-semibold text-purple-900 text-sm">Money Circulation Bonus (MCB)</p>
+                    <p className="text-xs text-purple-700">Also called: Super 9 Bonus · Level 2 Power Team Bonus · Super Group Bonus · Gen-2 Bonus</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <TrendingUp className="h-4 w-4 text-purple-600 flex-shrink-0" />
+                      <span className="text-xs font-semibold text-purple-900">Every 9 PMRPs on Level 2</span>
+                    </div>
+                    <p className="text-xs text-purple-700 leading-relaxed">
+                      You earn an MCB for every 9 Pro Member Registration Products sold on your Level 2. This is your national 
+                      expansion bonus — your franchise partners are opening their own stores and growing the network.
+                    </p>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground italic">
+                  Bonuses repeat in increments of 9: at 9, 18, 27, 36… Pro Member Registrations on the respective level. 
+                  The more stores you and your Core Leaders open, the more bonuses you make.
+                </p>
               </CardContent>
             </Card>
           </div>

@@ -43,7 +43,7 @@ export function ProMemberBonusesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-serif font-bold">Pro Member Bonuses</h1>
+        <h1 className="text-3xl font-serif font-bold">PMB — Pro Member Bonuses</h1>
         <p className="text-muted-foreground text-sm mt-1">
           Core Leadership Bonus (CLB) &amp; Money Circulation Bonus (MCB)
         </p>

@@ -40,7 +40,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
     { name: "Transfer Funds", href: "/dashboard/transfer", icon: ArrowRightLeft },
     { name: "Payouts", href: "/dashboard/payouts", icon: Banknote },
     { name: "Commissions", href: "/dashboard/commissions", icon: Award },
-    { name: "Pro Member Bonuses", href: "/dashboard/pro-member-bonuses", icon: Star },
+    { name: "PMB", href: "/dashboard/pro-member-bonuses", icon: Star },
     { name: "Bill Payer Program", href: "/dashboard/bpp", icon: Home },
     { name: "Bookings", href: "/dashboard/bookings", icon: Calendar },
     { name: "Mailbox", href: "/dashboard/mailbox", icon: Inbox },

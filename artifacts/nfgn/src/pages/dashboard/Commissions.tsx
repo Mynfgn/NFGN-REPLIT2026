@@ -60,7 +60,7 @@ export function CommissionsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-serif font-bold">Commissions</h1>
-        <p className="text-muted-foreground">Your referral, PASC, PMRC, and Pro Member Bonus earnings</p>
+        <p className="text-muted-foreground">Your referral, PASC, PMRC, and PMB earnings</p>
       </div>
 
       {/* Summary cards */}
@@ -118,7 +118,7 @@ export function CommissionsPage() {
             )}
           </TabsTrigger>
           <TabsTrigger value="bonuses" className="gap-1.5">
-            Pro Member Bonuses
+            PMB
             {bonusCommissions.length > 0 && (
               <span className="text-xs bg-purple-600 text-white rounded-full px-1.5 py-0 font-mono">{bonusCommissions.length}</span>
             )}
@@ -220,7 +220,7 @@ export function CommissionsPage() {
           </Card>
         </TabsContent>
 
-        {/* ── Pro Member Bonuses Tab ── */}
+        {/* ── PMB Tab ── */}
         <TabsContent value="bonuses">
           <div className="space-y-4">
             {/* Explainer */}
@@ -229,15 +229,15 @@ export function CommissionsPage() {
                 <div className="flex gap-3">
                   <Gift className="h-5 w-5 text-purple-600 flex-shrink-0 mt-0.5" />
                   <div className="space-y-2">
-                    <p className="font-semibold text-foreground">What are Pro Member Bonuses?</p>
+                    <p className="font-semibold text-foreground">What are Pro Member Bonuses (PMB)?</p>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      Pro Member Bonuses are an entirely separate income stream from PASC and PMRC. They are triggered when you and your 
+                      PMB is an entirely separate income stream from PASC and PMRC. PMB are triggered when you and your 
                       Core Leaders sell <strong className="text-foreground">Pro Member Registration Products (PMRP)</strong> in increments 
                       of 9. The more stores (Pro Members) you and your team open across Levels 1 and 2, the more bonuses you earn. 
                       You must hold Pro Member status to qualify.
                     </p>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      There are <strong className="text-foreground">two types</strong> of Pro Member Bonuses:
+                      There are <strong className="text-foreground">two types</strong> of PMB:
                     </p>
                   </div>
                 </div>
@@ -303,7 +303,7 @@ export function CommissionsPage() {
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <span className="inline-block h-3 w-3 rounded-full bg-purple-500" />
-                  Pro Member Bonus History
+                  PMB History
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -312,7 +312,7 @@ export function CommissionsPage() {
                 ) : bonusCommissions.length === 0 ? (
                   <div className="text-center py-12 space-y-2">
                     <Gift className="h-10 w-10 text-muted-foreground mx-auto" />
-                    <p className="text-muted-foreground">No Pro Member Bonuses earned yet.</p>
+                    <p className="text-muted-foreground">No PMB earnings yet.</p>
                     <p className="text-sm text-muted-foreground">Bonuses are awarded every 9 Pro Member Registrations on Levels 1 &amp; 2.</p>
                   </div>
                 ) : (
@@ -348,6 +348,53 @@ export function CommissionsPage() {
         {/* ── Comp Plan Tab ── */}
         <TabsContent value="structure">
           <div className="space-y-4">
+
+            {/* ── Overview ── */}
+            <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="font-serif text-lg">NFGN Compensation Plan Overview</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  The NFGN Compensation Plan is built around <strong className="text-foreground">five distinct income streams</strong>, 
+                  each rewarding a different type of activity. No single income stream depends on another — they operate independently 
+                  and stack on top of each other, allowing you to build a diverse, multi-source income.
+                </p>
+                <div className="grid sm:grid-cols-2 gap-2">
+                  {[
+                    { code: "RC", label: "Referral Commission", color: "blue", who: "All Members", trigger: "Your referred member makes any purchase" },
+                    { code: "PASC", label: "Products & Services Commissions", color: "green", who: "Pro Members Only", trigger: "Any product/service purchase in your downline (up to 9 levels)" },
+                    { code: "PMRC", label: "Pro Member Registration Commission", color: "amber", who: "Pro Members Only", trigger: "Someone in your upline buys the Pro Member Registration Package" },
+                    { code: "PMB", label: "Pro Member Bonuses (CLB & MCB)", color: "purple", who: "Pro Members Only", trigger: "Every 9 PMRPs sold on Level 1 (CLB) or Level 2 (MCB)" },
+                    { code: "GVB", label: "Group Volume Bonuses (BPP)", color: "rose", who: "Pro Members Only", trigger: "Monthly GV/PV targets met — pays toward 5 real-life bills" },
+                  ].map(item => (
+                    <div key={item.code} className="flex items-start gap-3 p-3 rounded-lg border bg-background/80">
+                      <div className={`text-xs font-bold px-2 py-1 rounded flex-shrink-0 ${
+                        item.color === "blue" ? "bg-blue-100 text-blue-800 border border-blue-200" :
+                        item.color === "green" ? "bg-green-100 text-green-800 border border-green-200" :
+                        item.color === "amber" ? "bg-amber-100 text-amber-800 border border-amber-200" :
+                        item.color === "purple" ? "bg-purple-100 text-purple-800 border border-purple-200" :
+                        "bg-rose-100 text-rose-800 border border-rose-200"
+                      }`}>{item.code}</div>
+                      <div>
+                        <p className="font-medium text-xs">{item.label}</p>
+                        <p className="text-xs text-muted-foreground">{item.who}</p>
+                        <p className="text-xs text-muted-foreground italic mt-0.5">{item.trigger}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900 leading-relaxed">
+                  <strong className="text-amber-800">The Store Analogy:</strong> Your NFGN business is an online store sourcing wellness 
+                  products from a warehouse. Standard members you register are <em>customers</em> who shop in your store. Pro Members you 
+                  register are <em>franchise partners</em> — they open their own store in a new region, sell the same products from the 
+                  same warehouse, and help you move massive volume. RC is your customer loyalty bonus. PASC is your franchise royalty. 
+                  PMRC is your franchise fee share. PMB is your regional/national store-opening bonus. GVB is the company paying your real-life bills 
+                  when you hit volume targets.
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Referral Commission */}
             <Card className="border-l-4 border-l-blue-400">
               <CardHeader className="pb-3">
@@ -480,12 +527,12 @@ export function CommissionsPage() {
                 </div>
               </CardContent>
             </Card>
-            {/* Pro Member Bonuses — CLB & MCB */}
+            {/* PMB — CLB & MCB */}
             <Card className="border-l-4 border-l-purple-500">
               <CardHeader className="pb-3">
                 <CardTitle className="font-serif text-lg flex items-center gap-2">
                   <span className="text-xs px-2 py-1 rounded border font-medium bg-purple-100 text-purple-800 border-purple-200">
-                    Pro Member Bonuses (CLB &amp; MCB)
+                    Pro Member Bonuses (PMB) — CLB &amp; MCB
                   </span>
                   <span className="text-muted-foreground font-normal text-sm">— Pro Members Only · Separate Income Stream</span>
                 </CardTitle>
@@ -532,6 +579,61 @@ export function CommissionsPage() {
                 </p>
               </CardContent>
             </Card>
+
+            {/* GVB / BPP */}
+            <Card className="border-l-4 border-l-rose-500">
+              <CardHeader className="pb-3">
+                <CardTitle className="font-serif text-lg flex items-center gap-2">
+                  <span className="text-xs px-2 py-1 rounded border font-medium bg-rose-100 text-rose-800 border-rose-200">
+                    Group Volume Bonuses (GVB) — Bill Payer Program
+                  </span>
+                  <span className="text-muted-foreground font-normal text-sm">— Pro Members Only · Monthly</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  The <strong className="text-foreground">Bill Payer Program (BPP)</strong> is NFGN's most distinctive benefit — 
+                  the company literally pays your real-life monthly bills for you. When you hit your monthly Group Volume (GV) 
+                  and Personal Volume (PV) targets, you qualify for up to <strong className="text-foreground">five separate GV Bonuses</strong>, 
+                  each earmarked for a specific life expense.
+                </p>
+                <div className="rounded-lg bg-rose-50 border border-rose-200 p-3 text-sm text-rose-900 space-y-1">
+                  <p className="font-semibold">How it works</p>
+                  <ul className="text-xs space-y-1 list-disc list-inside text-rose-800 leading-relaxed">
+                    <li>You must be a <strong>Pro Member</strong> — activating your Pro Member Registration unlocks BPP eligibility.</li>
+                    <li>Each month, the company pools a portion of revenue into 5 separate fund buckets.</li>
+                    <li>When your monthly GV and PV meet each fund's threshold, you receive a payout from that fund — credited to your e-wallet.</li>
+                    <li>Payouts are proportional to your GV relative to other qualifying members in the fund pool.</li>
+                    <li>Funds reset monthly — eligibility is re-evaluated every month based on current GV/PV.</li>
+                    <li>Standard PV requirement is typically <strong>150 PV</strong> for the base fund tier.</li>
+                  </ul>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-2">
+                  {[
+                    { icon: "🏠", name: "Rent / Mortgage Fund", desc: "Helps cover your monthly housing payment." },
+                    { icon: "🚗", name: "Car Fund", desc: "Contributes toward your car payment or transportation cost." },
+                    { icon: "⚡", name: "Utilities Fund", desc: "Covers electricity, water, gas, and household utilities." },
+                    { icon: "❤️", name: "Medical Fund", desc: "Helps offset health insurance or medical expenses." },
+                    { icon: "📱", name: "Phone / Internet Fund", desc: "Pays toward your phone or internet subscription." },
+                  ].map(f => (
+                    <div key={f.name} className="flex items-start gap-2 p-3 rounded-lg border bg-background/80">
+                      <span className="text-xl flex-shrink-0">{f.icon}</span>
+                      <div>
+                        <p className="font-medium text-xs">{f.name}</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{f.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900 leading-relaxed">
+                  <strong className="text-amber-800">Important:</strong> GVBs are classified as <em>Money Circulation Bonuses</em> — 
+                  they are drawn from the group's collective volume activity, not fixed commission rates on individual transactions. 
+                  GVBs are entirely separate from RC, PASC, PMRC, and PMB. See the <strong>Bill Payer Program</strong> page in the 
+                  sidebar for your live fund status, GV/PV progress, and estimated payouts for the current month.
+                </div>
+              </CardContent>
+            </Card>
+
           </div>
         </TabsContent>
       </Tabs>

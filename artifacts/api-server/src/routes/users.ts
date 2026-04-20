@@ -168,6 +168,45 @@ router.post("/users/:id/upgrade-pro", requireAdmin, async (req, res): Promise<vo
   });
 });
 
+// ── Change Referral Code (Admin only) ──────────────────────────────────────
+router.patch("/users/:id/referral-code", requireAdmin, async (req, res): Promise<void> => {
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const { referralCode } = req.body;
+  if (!referralCode || typeof referralCode !== "string") {
+    res.status(400).json({ error: "referralCode is required" }); return;
+  }
+
+  const cleaned = referralCode.trim().replace(/\s+/g, "-");
+  if (cleaned.length < 4 || cleaned.length > 40) {
+    res.status(400).json({ error: "Referral code must be 4–40 characters" }); return;
+  }
+
+  // Check uniqueness — exclude current user
+  const [conflict] = await db.select({ id: usersTable.id })
+    .from(usersTable)
+    .where(and(eq(usersTable.referralCode, cleaned), sql`${usersTable.id} <> ${id}`));
+  if (conflict) {
+    res.status(409).json({ error: `Referral code "${cleaned}" is already in use by another member` }); return;
+  }
+
+  const [existing] = await db.select().from(usersTable).where(eq(usersTable.id, id));
+  if (!existing) { res.status(404).json({ error: "User not found" }); return; }
+
+  const [updated] = await db.update(usersTable)
+    .set({ referralCode: cleaned, updatedAt: new Date() })
+    .where(eq(usersTable.id, id))
+    .returning();
+
+  let sponsorName: string | undefined;
+  if (updated.sponsorId) {
+    const [sponsor] = await db.select().from(usersTable).where(eq(usersTable.id, updated.sponsorId));
+    if (sponsor) sponsorName = `${sponsor.firstName} ${sponsor.lastName}`;
+  }
+  res.json({ ...formatUser(updated, sponsorName), previousCode: existing.referralCode });
+});
+
 // ── Manual PV / GV Adjustment (Admin only) ─────────────────────────────────
 router.post("/users/:id/volume-adjustment", requireAdmin, async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);

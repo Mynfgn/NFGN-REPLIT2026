@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Search, Loader2, Star, Users, SlidersHorizontal } from "lucide-react";
+import { Search, Loader2, Star, Users, SlidersHorizontal, Link2, AlertCircle, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { roleLabel } from "@/lib/labels";
 import { customFetch } from "@/lib/custom-fetch";
@@ -29,6 +29,9 @@ export function UsersPage() {
   const [adjustUser, setAdjustUser] = useState<any | null>(null);
   const [pvAdj, setPvAdj] = useState("0");
   const [gvAdj, setGvAdj] = useState("0");
+  const [refCodeUser, setRefCodeUser] = useState<any | null>(null);
+  const [newRefCode, setNewRefCode] = useState("");
+  const [refCodeError, setRefCodeError] = useState("");
   const { toast } = useToast();
 
   const { data, isLoading, refetch } = useListUsers({ page, limit: 20, search: search || undefined, role: role !== "all" ? role : undefined });
@@ -50,6 +53,31 @@ export function UsersPage() {
       refetch();
     },
     onError: (e: any) => toast({ variant: "destructive", title: "Error", description: e.message }),
+  });
+
+  const refCodeMutation = useMutation({
+    mutationFn: async ({ userId, referralCode }: { userId: number; referralCode: string }) => {
+      const res = await customFetch(`/api/users/${userId}/referral-code`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ referralCode }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? "Failed to update referral code");
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({ title: "Referral code updated", description: `New code: ${data.referralCode}` });
+      setRefCodeUser(null);
+      setNewRefCode("");
+      setRefCodeError("");
+      refetch();
+    },
+    onError: (e: any) => {
+      setRefCodeError(e.message);
+    },
   });
 
   const users = data?.users ?? [];
@@ -144,6 +172,9 @@ export function UsersPage() {
                       <Button variant="outline" size="sm" className="text-xs h-7 gap-1 border-blue-200 text-blue-700 hover:bg-blue-50" onClick={() => openAdjust(user)}>
                         <SlidersHorizontal className="h-3 w-3" /> Adjust PV/GV
                       </Button>
+                      <Button variant="outline" size="sm" className="text-xs h-7 gap-1 border-amber-200 text-amber-700 hover:bg-amber-50" onClick={() => { setRefCodeUser(user); setNewRefCode(user.referralCode ?? ""); setRefCodeError(""); }}>
+                        <Link2 className="h-3 w-3" /> Change Ref Code
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -159,6 +190,71 @@ export function UsersPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Change Referral Code Modal */}
+      <Dialog open={!!refCodeUser} onOpenChange={() => { setRefCodeUser(null); setRefCodeError(""); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Link2 className="h-5 w-5 text-amber-600" />
+              Change Sponsor Referral Code
+            </DialogTitle>
+          </DialogHeader>
+          {refCodeUser && (
+            <div className="space-y-4">
+              <div className="bg-muted/40 rounded-lg p-3 text-sm">
+                <p className="font-bold">{refCodeUser.firstName} {refCodeUser.lastName}</p>
+                <p className="text-muted-foreground text-xs">{refCodeUser.email}</p>
+                <p className="text-xs mt-1">Current code: <span className="font-mono font-semibold text-amber-700">{refCodeUser.referralCode}</span></p>
+              </div>
+
+              <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900 space-y-1">
+                <p className="font-semibold text-amber-800">Important</p>
+                <ul className="list-disc list-inside space-y-0.5 leading-relaxed">
+                  <li>The old code will stop working immediately after saving.</li>
+                  <li>Any existing affiliate links using the old code will break.</li>
+                  <li>Codes must be 4–40 characters. Spaces become hyphens.</li>
+                  <li>Codes must be unique across all members.</li>
+                </ul>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="newRefCode" className="text-sm font-semibold text-amber-700">New Referral Code</Label>
+                <Input
+                  id="newRefCode"
+                  value={newRefCode}
+                  onChange={e => { setNewRefCode(e.target.value); setRefCodeError(""); }}
+                  placeholder="e.g. jmarcelino-NFGN99"
+                  className={refCodeError ? "border-red-400 focus-visible:ring-red-400" : ""}
+                  onKeyDown={e => { if (e.key === "Enter") refCodeMutation.mutate({ userId: refCodeUser.id, referralCode: newRefCode }); }}
+                />
+                {refCodeError && (
+                  <p className="text-xs text-red-600 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" /> {refCodeError}
+                  </p>
+                )}
+                <p className="text-[10px] text-muted-foreground">Letters, numbers, and hyphens recommended. Case-sensitive.</p>
+              </div>
+
+              <div className="flex gap-2 pt-1">
+                <Button variant="outline" className="flex-1" onClick={() => { setRefCodeUser(null); setRefCodeError(""); }}>
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1 gap-1.5 bg-amber-600 hover:bg-amber-700 text-white"
+                  onClick={() => refCodeMutation.mutate({ userId: refCodeUser.id, referralCode: newRefCode })}
+                  disabled={refCodeMutation.isPending || !newRefCode.trim() || newRefCode.trim() === refCodeUser.referralCode}
+                >
+                  {refCodeMutation.isPending
+                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                    : <CheckCircle2 className="h-4 w-4" />}
+                  Save New Code
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Volume Adjustment Modal */}
       <Dialog open={!!adjustUser} onOpenChange={() => setAdjustUser(null)}>

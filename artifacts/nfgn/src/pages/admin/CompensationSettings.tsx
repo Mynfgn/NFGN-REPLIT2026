@@ -164,7 +164,7 @@ export function CompensationSettingsPage() {
 
   async function handleSave() {
     if (prcLevels.some(l => l.rate < 0 || l.rate > 100)) {
-      toast.error("PRC rates must be between 0% and 100%");
+      toast.error("PMRC rates must be between 0% and 100%");
       return;
     }
     if (salesLevels.some(l => l.rate < 0 || l.rate > 100)) {
@@ -255,7 +255,7 @@ export function CompensationSettingsPage() {
             bg: "bg-green-50 border-green-200",
           },
           {
-            label: "Pro Registration Commission (PRC)",
+            label: "Pro Member Registration Commission (PMRC)",
             desc: `Pro Members Only · ${prcLevels.length} level${prcLevels.length !== 1 ? "s" : ""} · Pro Package purchases only`,
             value: `${prcLevels.length} Level${prcLevels.length !== 1 ? "s" : ""}`,
             color: "text-amber-600",
@@ -320,7 +320,7 @@ export function CompensationSettingsPage() {
 
       {/* PRC Levels */}
       <LevelEditor
-        title="Pro Registration Commission — PRC (Uni-Level)"
+        title="Pro Member Registration Commission — PMRC (Uni-Level)"
         description="Earned by Pro Members ONLY when a member in their downline purchases the Pro Registration Package."
         color="text-amber-600"
         icon={DollarSign}

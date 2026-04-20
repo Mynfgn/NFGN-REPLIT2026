@@ -60,7 +60,7 @@ export function CommissionsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-serif font-bold">Commissions</h1>
-        <p className="text-muted-foreground">Your referral, sales, and Pro Registration Commission earnings</p>
+        <p className="text-muted-foreground">Your referral, sales, and Pro Member Registration Commission earnings</p>
       </div>
 
       {/* Summary cards */}
@@ -112,7 +112,7 @@ export function CommissionsPage() {
             )}
           </TabsTrigger>
           <TabsTrigger value="prc" className="gap-1.5">
-            PRC
+            PMRC
             {prcCommissions.length > 0 && (
               <span className="text-xs bg-amber-500 text-white rounded-full px-1.5 py-0 font-mono">{prcCommissions.length}</span>
             )}
@@ -197,14 +197,14 @@ export function CommissionsPage() {
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <span className="inline-block h-3 w-3 rounded-full bg-amber-500" />
-                Pro Registration Commission (PRC) History
+                Pro Member Registration Commission (PMRC) History
               </CardTitle>
             </CardHeader>
             <CardContent>
               {isLoading ? (
                 <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
               ) : prcCommissions.length === 0 ? (
-                <p className="text-center text-muted-foreground py-12">No PRC earnings yet. Earned when your downline purchases the Pro Registration Package.</p>
+                <p className="text-center text-muted-foreground py-12">No PMRC earnings yet. Earned when your downline purchases the Pro Member Registration Package.</p>
               ) : (
                 <div className="space-y-3">
                   {prcCommissions.map(c => <CommissionRow key={c.id} c={c} />)}
@@ -281,7 +281,7 @@ export function CommissionsPage() {
                 </div>
                 <p className="text-xs text-muted-foreground italic">
                   Referral Commissions are the only commissions available to standard Members and Community Builders. Pro Members earn 
-                  RC in addition to Sales Commissions and Pro Registration Commissions.
+                  RC in addition to Sales Commissions and Pro Member Registration Commissions (PMRC).
                 </p>
               </CardContent>
             </Card>
@@ -320,14 +320,14 @@ export function CommissionsPage() {
               <CardHeader className="pb-3">
                 <CardTitle className="font-serif text-lg flex items-center gap-2">
                   <span className="text-xs px-2 py-1 rounded border font-medium bg-amber-100 text-amber-800 border-amber-200">
-                    Pro Registration Commission (PRC)
+                    Pro Member Registration Commission (PMRC)
                   </span>
                   <span className="text-muted-foreground font-normal text-sm">— Pro Members Only · Pro Package Purchases</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-3">
-                  PRCs are generated ONLY from Pro Member Registration Package purchases across your upline.
+                  PMRCs are generated ONLY from Pro Member Registration Package purchases across your upline.
                 </p>
                 <div className="space-y-2">
                   {prcLevels.map(l => (

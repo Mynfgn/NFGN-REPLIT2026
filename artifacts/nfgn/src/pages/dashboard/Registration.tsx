@@ -291,13 +291,13 @@ export function RegistrationPage() {
                   <td className="py-2 text-right font-bold text-green-600">12%</td>
                 </tr>
                 <tr>
-                  <td className="py-2 font-medium text-foreground">Level 1 Bonus (PRC)</td>
+                  <td className="py-2 font-medium text-foreground">Level 1 Bonus (PMRC)</td>
                   <td className="py-2">Pro Members only</td>
                   <td className="py-2">Pro Package purchased by Level 1 member</td>
                   <td className="py-2 text-right font-bold text-green-600">12%</td>
                 </tr>
                 <tr>
-                  <td className="py-2 font-medium text-foreground">Level 2 Power Bonus (PRC)</td>
+                  <td className="py-2 font-medium text-foreground">Level 2 Power Bonus (PMRC)</td>
                   <td className="py-2">Pro Members only</td>
                   <td className="py-2">Pro Package purchased by Level 2 member</td>
                   <td className="py-2 text-right font-bold text-primary text-base">22%</td>

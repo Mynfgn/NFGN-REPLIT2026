@@ -102,7 +102,7 @@ async function recordCommission(
   const typeLabel = type === "referral"
     ? "Referral Commission"
     : type === "level"
-    ? `Pro Registration Commission (PRC) — Level ${level}`
+    ? `Pro Member Registration Commission (PMRC) — Level ${level}`
     : `Sales Commission — Level ${level}`;
 
   await db.insert(walletTransactionsTable).values({

@@ -441,7 +441,7 @@ export default function AdminSettingsPage() {
 
             {/* PRC */}
             <div className="rounded-lg border p-4 space-y-2">
-              <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Pro Registration Commission (PRC) — Pro Members Only</p>
+              <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Pro Member Registration Commission (PMRC) — Pro Members Only</p>
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                 {(commissionRules.prcLevels ?? []).map(l => (
                   <div key={l.level} className="rounded-lg border border-primary/40 bg-primary/5 p-3 text-center">
@@ -451,7 +451,7 @@ export default function AdminSettingsPage() {
                 ))}
               </div>
               {(commissionRules.prcLevels ?? []).length === 0 && (
-                <p className="text-xs text-muted-foreground italic">No PRC levels configured.</p>
+                <p className="text-xs text-muted-foreground italic">No PMRC levels configured.</p>
               )}
             </div>
 
@@ -468,7 +468,7 @@ export default function AdminSettingsPage() {
                   Pro Members earn a{" "}
                   <strong className="text-foreground">${Number(commissionRules.powerBonusAmount).toFixed(2)} bonus</strong>
                   {" "}for every{" "}
-                  <strong className="text-foreground">{commissionRules.powerBonusTrigger} Level 2 PRC purchases</strong>.
+                  <strong className="text-foreground">{commissionRules.powerBonusTrigger} Level 2 PMRC purchases</strong>.
                   Requires personally sponsoring at least{" "}
                   <strong className="text-foreground">{commissionRules.powerBonusTrigger} Level 1 Pro Members</strong> to qualify.{" "}
                   <Link href="/admin/bonuses" className="text-primary underline underline-offset-2 hover:opacity-80">

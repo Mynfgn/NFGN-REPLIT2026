@@ -90,8 +90,8 @@ export function Login() {
               <InfoIcon className="h-4 w-4 text-primary" />
               <AlertTitle className="text-sm font-bold text-primary">Demo Credentials</AlertTitle>
               <AlertDescription className="text-xs mt-1 space-y-1">
-                <div><strong>Admin:</strong> joemarcelino99@gmail.com / admin123</div>
-                <div><strong>Pro Member:</strong> promember@nfgn.com / ProMember!2026#</div>
+                <div><strong>Admin:</strong> joemarcelino99@gmail.com / Admin123</div>
+                <div><strong>Pro Member:</strong> promember@nfgn.com / Promember123</div>
               </AlertDescription>
             </Alert>
 

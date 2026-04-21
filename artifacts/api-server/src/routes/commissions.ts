@@ -110,40 +110,49 @@ const DEFAULT_SALES_LEVELS = [
   { level: 1, rate: 10 },
 ];
 
+function formatRules(rules: typeof commissionRulesTable.$inferSelect | null) {
+  return {
+    referralRate: parseFloat(rules?.referralRate ?? "10"),
+    prcLevels: rules?.levels ?? DEFAULT_PRC_LEVELS,
+    salesLevels: rules?.salesLevels ?? DEFAULT_SALES_LEVELS,
+    // MCB settings
+    powerBonusEnabled: rules?.powerBonusEnabled ?? true,
+    powerBonusAmount: parseFloat(rules?.powerBonusAmount ?? "200"),
+    powerBonusTrigger: rules?.powerBonusTrigger ?? 9,
+    // CLB settings
+    clbEnabled: rules?.clbEnabled ?? true,
+    clbAmount: parseFloat(rules?.clbAmount ?? "200"),
+    clbTrigger: rules?.clbTrigger ?? 9,
+    clbWindowDays: rules?.clbWindowDays ?? 90,
+  };
+}
+
 router.get("/commission-rules", async (req, res): Promise<void> => {
   const [rules] = await db.select().from(commissionRulesTable).limit(1);
-  if (!rules) {
-    res.json({
-      referralRate: 10,
-      prcLevels: DEFAULT_PRC_LEVELS,
-      salesLevels: DEFAULT_SALES_LEVELS,
-      powerBonusAmount: 200,
-      powerBonusTrigger: 9,
-      powerBonusEnabled: true,
-    });
-    return;
-  }
-  res.json({
-    referralRate: parseFloat(rules.referralRate ?? "10"),
-    prcLevels: rules.levels ?? DEFAULT_PRC_LEVELS,
-    salesLevels: rules.salesLevels ?? DEFAULT_SALES_LEVELS,
-    powerBonusAmount: parseFloat(rules.powerBonusAmount),
-    powerBonusTrigger: rules.powerBonusTrigger,
-    powerBonusEnabled: rules.powerBonusEnabled,
-  });
+  res.json(formatRules(rules ?? null));
 });
 
 router.put("/commission-rules", requireAdmin, async (req, res): Promise<void> => {
-  const { prcLevels, salesLevels, referralRate, powerBonusAmount, powerBonusTrigger, powerBonusEnabled } = req.body;
+  const {
+    prcLevels, salesLevels, referralRate,
+    powerBonusAmount, powerBonusTrigger, powerBonusEnabled,
+    clbEnabled, clbAmount, clbTrigger, clbWindowDays,
+  } = req.body;
 
   const [existing] = await db.select().from(commissionRulesTable).limit(1);
   const updates = {
     levels: prcLevels ?? existing?.levels ?? DEFAULT_PRC_LEVELS,
     salesLevels: salesLevels ?? existing?.salesLevels ?? DEFAULT_SALES_LEVELS,
     referralRate: String(referralRate ?? existing?.referralRate ?? 10),
+    // MCB
     powerBonusAmount: String(powerBonusAmount ?? existing?.powerBonusAmount ?? 200),
     powerBonusTrigger: powerBonusTrigger ?? existing?.powerBonusTrigger ?? 9,
     powerBonusEnabled: powerBonusEnabled ?? existing?.powerBonusEnabled ?? true,
+    // CLB
+    clbEnabled: clbEnabled ?? existing?.clbEnabled ?? true,
+    clbAmount: String(clbAmount ?? existing?.clbAmount ?? 200),
+    clbTrigger: clbTrigger ?? existing?.clbTrigger ?? 9,
+    clbWindowDays: clbWindowDays ?? existing?.clbWindowDays ?? 90,
   };
 
   let result;
@@ -153,14 +162,7 @@ router.put("/commission-rules", requireAdmin, async (req, res): Promise<void> =>
     [result] = await db.insert(commissionRulesTable).values(updates).returning();
   }
 
-  res.json({
-    referralRate: parseFloat(result!.referralRate ?? "10"),
-    prcLevels: result!.levels,
-    salesLevels: result!.salesLevels ?? DEFAULT_SALES_LEVELS,
-    powerBonusAmount: parseFloat(result!.powerBonusAmount),
-    powerBonusTrigger: result!.powerBonusTrigger,
-    powerBonusEnabled: result!.powerBonusEnabled,
-  });
+  res.json(formatRules(result!));
 });
 
 router.get("/commissions/referral", requireAdmin, async (req, res): Promise<void> => {

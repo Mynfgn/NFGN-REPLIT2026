@@ -13,7 +13,7 @@ import { logger } from "./logger";
  *     ‣ RATE:      Configurable via admin (default 10%)
  *     ‣ NOTE:      Fires on EVERY single purchase by the referred member
  *
- *  2. SALES COMMISSION (type: "sales")
+ *  2. SALES COMMISSION / PSC (type: "sales")
  *     ‣ WHO earns: Pro Members ONLY
  *     ‣ WHEN:      Regular (non-Pro-Package) product purchases by downline
  *     ‣ RATE:      Configurable per-level via admin (default L1 = 10%)
@@ -28,16 +28,19 @@ import { logger } from "./logger";
  *
  *  4. CLB — Core Leadership Bonus (type: "power_squad_bonus", level: 1)
  *     ‣ WHO earns: Pro Members ONLY
- *     ‣ WHEN:      Every N (default 9) PMRC Level 1 commissions earned (cumulative)
- *                  Counts initial registrations AND every subscription renewal
+ *     ‣ WHEN:      ONE-TIME — when the first N (default 9) new PMRPs are purchased
+ *                  on the sponsor's Level 1, within the sponsor's first 90 days
+ *                  as a Pro Member. Never awarded again after that.
  *     ‣ AMOUNT:    Configurable via admin (default $200)
- *     ‣ NOTE:      No extra qualification beyond being a Pro Member
+ *     ‣ QUALIFY:   Must be Pro Member; sponsor must be within 90-day CLB window
  *
  *  5. MCB — Money Circulation Bonus (type: "power_squad_bonus", level: 2)
- *     ‣ WHO earns: Pro Members ONLY (with at least N Level 1 Pro Members)
- *     ‣ WHEN:      Every N (default 9) PMRC Level 2 commissions earned (cumulative)
- *                  Counts initial registrations AND every subscription renewal
+ *     ‣ WHO earns: Qualifying Upline Sponsor — a Pro Member on Level 2 who has
+ *                  at least N active Level 1 Pro Members (Core Leadership Group)
+ *     ‣ WHEN:      RECURRING — every N (default 9) PMRP purchases on Level 2.
+ *                  Fires at 9, 18, 27, 36… purchases each month.
  *     ‣ AMOUNT:    Configurable via admin (default $200)
+ *     ‣ NOTE:      Counts all Level 2 PMRP purchases (initial + renewals)
  * ═══════════════════════════════════════════════════════
  */
 
@@ -59,9 +62,15 @@ interface CompensationRules {
   referralRate: number;
   prcLevels: LevelRate[];
   salesLevels: LevelRate[];
+  // MCB settings
   powerBonusEnabled: boolean;
   powerBonusAmount: number;
   powerBonusTrigger: number;
+  // CLB settings
+  clbEnabled: boolean;
+  clbAmount: number;
+  clbTrigger: number;
+  clbWindowDays: number;
 }
 
 async function loadRules(): Promise<CompensationRules> {
@@ -73,6 +82,10 @@ async function loadRules(): Promise<CompensationRules> {
     powerBonusEnabled: rules?.powerBonusEnabled ?? true,
     powerBonusAmount: parseFloat(rules?.powerBonusAmount ?? "200"),
     powerBonusTrigger: rules?.powerBonusTrigger ?? 9,
+    clbEnabled: rules?.clbEnabled ?? true,
+    clbAmount: parseFloat(rules?.clbAmount ?? "200"),
+    clbTrigger: rules?.clbTrigger ?? 9,
+    clbWindowDays: rules?.clbWindowDays ?? 90,
   };
 }
 
@@ -158,115 +171,200 @@ async function getUplineChain(
 
 /**
  * ═══════════════════════════════════════════════════════
- *  PRO MEMBER BONUSES — CLB & MCB
+ *  CLB — Core Leadership Bonus (ONE-TIME)
  * ═══════════════════════════════════════════════════════
  *
- *  CLB (Core Leadership Bonus / Core 9 / Gen 1 Bonus / STB)
- *  ─────────────────────────────────────────────────────
- *  TRIGGER:  Every N (default 9) PMRC Level 1 commissions earned
- *            Counted cumulatively — fires on EVERY purchase & subscription renewal
- *  QUALIFY:  Sponsor must be a Pro Member
- *  AMOUNT:   Configurable via admin (default $200)
+ *  Awards the CLB exactly ONCE to a qualifying Pro Member sponsor when
+ *  their cumulative Level 1 PMRC count reaches the trigger (default 9).
  *
- *  MCB (Money Circulation Bonus / Super 9 / Gen 2 / Level 2 Power Team Bonus)
- *  ────────────────────────────────────────────────────────────────────────────
- *  TRIGGER:  Every N (default 9) PMRC Level 2 commissions earned
- *            Counted cumulatively — fires on EVERY purchase & subscription renewal
- *  QUALIFY:  Sponsor must be a Pro Member with at least N Level 1 Pro Members
- *  AMOUNT:   Configurable via admin (default $200)
- *
- *  NOTE: Both bonuses count ALL PMRC commissions lifetime — initial registrations
- *        AND recurring monthly subscription renewals each increment the counter.
- *        Example: 18 Level 2 members buy PMRP in March → MCB #1 & #2 awarded.
- *        Those same 18 renew in April → MCB #3 & #4 awarded (running total: 36).
- * ═══════════════════════════════════════════════════════
+ *  Qualification:
+ *   1. clbEnabled must be true
+ *   2. Sponsor must be a Pro Member
+ *   3. Sponsor's `proMemberSince` must be within the CLB window (default 90 days)
+ *   4. Sponsor must NOT have already received a CLB (count of existing CLB records == 0)
+ *   5. Sponsor's Level 1 PMRC count must equal exactly the trigger (not a multiple)
  */
+async function awardCLB(
+  sponsor: typeof usersTable.$inferSelect,
+  orderId: number,
+  orderNumber: string,
+  rules: CompensationRules,
+): Promise<void> {
+  if (!rules.clbEnabled) return;
+  if (!sponsor.isProMember) return;
 
-async function awardPMB(
-  userId: number,
-  pmrLevel: 1 | 2,
+  // Check 90-day window from proMemberSince
+  if (!sponsor.proMemberSince) return;
+  const windowMs = rules.clbWindowDays * 24 * 60 * 60 * 1000;
+  const elapsedMs = Date.now() - new Date(sponsor.proMemberSince).getTime();
+  if (elapsedMs > windowMs) {
+    logger.info({ userId: sponsor.id, elapsedDays: Math.floor(elapsedMs / 86400000), window: rules.clbWindowDays },
+      "CLB not awarded — Pro Member is outside the CLB qualification window");
+    return;
+  }
+
+  // Check if CLB was already awarded (one-time only)
+  const [{ existingClb }] = await db
+    .select({ existingClb: count() })
+    .from(commissionsTable)
+    .where(and(
+      eq(commissionsTable.userId, sponsor.id),
+      eq(commissionsTable.type, "power_squad_bonus"),
+      eq(commissionsTable.level, 1),
+    ));
+
+  if (Number(existingClb) > 0) {
+    logger.info({ userId: sponsor.id }, "CLB already awarded — one-time bonus");
+    return;
+  }
+
+  // Count Level 1 PMRC commissions earned so far
+  const [{ pmrcCount }] = await db
+    .select({ pmrcCount: count() })
+    .from(commissionsTable)
+    .where(and(
+      eq(commissionsTable.userId, sponsor.id),
+      eq(commissionsTable.level, 1),
+      eq(commissionsTable.type, "level"),
+    ));
+
+  const total = Number(pmrcCount);
+
+  // CLB fires only when count reaches the trigger exactly (not multiples — it's one-time)
+  if (total !== rules.clbTrigger) return;
+
+  // Award CLB
+  await db.insert(commissionsTable).values({
+    userId: sponsor.id,
+    fromUserId: sponsor.id,
+    orderId,
+    orderNumber,
+    level: 1,
+    rate: "0",
+    saleAmount: "0",
+    commissionAmount: String(rules.clbAmount),
+    status: "approved",
+    type: "power_squad_bonus",
+    notes: `CLB (Core Leadership Bonus) — ONE-TIME — ${total} Level 1 PMRPs reached within ${rules.clbWindowDays}-day window. Award: $${rules.clbAmount}`,
+  });
+
+  const [wallet] = await db.select().from(walletsTable).where(eq(walletsTable.userId, sponsor.id));
+  if (!wallet) return;
+
+  const newBalance = parseFloat((parseFloat(wallet.balance) + rules.clbAmount).toFixed(2));
+  const newTotalEarned = parseFloat((parseFloat(wallet.totalEarned) + rules.clbAmount).toFixed(2));
+
+  await db.update(walletsTable).set({
+    balance: String(newBalance),
+    totalEarned: String(newTotalEarned),
+  }).where(eq(walletsTable.userId, sponsor.id));
+
+  await db.insert(walletTransactionsTable).values({
+    walletId: wallet.id,
+    type: "commission_credit",
+    amount: String(rules.clbAmount),
+    balance: String(newBalance),
+    description: `CLB (Core Leadership Bonus) — ONE-TIME — $${rules.clbAmount} (${total} Level 1 PMRPs)`,
+    reference: orderNumber,
+  });
+
+  logger.info({ userId: sponsor.id, total, clbAmount: rules.clbAmount }, "CLB (Core Leadership Bonus) awarded — one-time");
+}
+
+/**
+ * ═══════════════════════════════════════════════════════
+ *  MCB — Money Circulation Bonus (RECURRING)
+ * ═══════════════════════════════════════════════════════
+ *
+ *  Awards an MCB to the Qualifying Upline Sponsor every time their
+ *  cumulative Level 2 PMRC count reaches a new multiple of the trigger.
+ *
+ *  "Qualifying Upline Sponsor" = the Level 2 upline Pro Member who has
+ *  at least N (default 9) active Level 1 Pro Members (Core Leadership Group).
+ *  This is the active Pro Member two levels above the buyer in the genealogy.
+ *
+ *  Qualification:
+ *   1. powerBonusEnabled must be true
+ *   2. Sponsor must be a Pro Member
+ *   3. Sponsor's Level 2 PMRC count must be > 0 AND a multiple of the trigger
+ *   4. Sponsor must have at least N personally sponsored active Level 1 Pro Members
+ */
+async function awardMCB(
+  sponsor: typeof usersTable.$inferSelect,
   orderId: number,
   orderNumber: string,
   rules: CompensationRules,
 ): Promise<void> {
   if (!rules.powerBonusEnabled) return;
+  if (!sponsor.isProMember) return;
 
-  const { powerBonusAmount, powerBonusTrigger } = rules;
-  const bonusLabel = pmrLevel === 1
-    ? "CLB (Core Leadership Bonus)"
-    : "MCB (Money Circulation Bonus)";
-
-  // Count ALL historical PMRC commissions at this level for this sponsor.
-  // This includes initial registrations AND every subscription renewal —
-  // each purchase creates a new commission record that increments this total.
-  const [{ pmrCount }] = await db
-    .select({ pmrCount: count() })
+  // Count cumulative Level 2 PMRC commissions (initial + renewals)
+  const [{ pmrcCount }] = await db
+    .select({ pmrcCount: count() })
     .from(commissionsTable)
     .where(and(
-      eq(commissionsTable.userId, userId),
-      eq(commissionsTable.level, pmrLevel),
+      eq(commissionsTable.userId, sponsor.id),
+      eq(commissionsTable.level, 2),
       eq(commissionsTable.type, "level"),
     ));
 
-  const total = Number(pmrCount);
-  if (total === 0 || total % powerBonusTrigger !== 0) return;
+  const total = Number(pmrcCount);
+  if (total === 0 || total % rules.powerBonusTrigger !== 0) return;
 
-  // MCB qualification: must have at least N Level 1 Pro Members (CLB has no extra requirement)
-  if (pmrLevel === 2) {
-    const [{ l1Count }] = await db
-      .select({ l1Count: count() })
-      .from(usersTable)
-      .where(and(
-        eq(usersTable.sponsorId, userId),
-        eq(usersTable.isProMember, true),
-      ));
+  // MCB qualification: must have at least N active Level 1 Pro Members (Core Leadership Group)
+  const [{ l1Count }] = await db
+    .select({ l1Count: count() })
+    .from(usersTable)
+    .where(and(
+      eq(usersTable.sponsorId, sponsor.id),
+      eq(usersTable.isProMember, true),
+    ));
 
-    if (Number(l1Count) < powerBonusTrigger) {
-      logger.info(
-        { userId, total, l1Count, powerBonusTrigger },
-        `${bonusLabel} not awarded — insufficient Level 1 Pro Members`,
-      );
-      return;
-    }
+  if (Number(l1Count) < rules.powerBonusTrigger) {
+    logger.info(
+      { userId: sponsor.id, total, l1Count, required: rules.powerBonusTrigger },
+      "MCB not awarded — insufficient Level 1 Pro Members in Core Leadership Group",
+    );
+    return;
   }
 
-  const bonusNum = total / powerBonusTrigger;
+  const bonusNum = total / rules.powerBonusTrigger;
 
   await db.insert(commissionsTable).values({
-    userId,
-    fromUserId: userId,
+    userId: sponsor.id,
+    fromUserId: sponsor.id,
     orderId,
     orderNumber,
-    level: pmrLevel,
+    level: 2,
     rate: "0",
     saleAmount: "0",
-    commissionAmount: String(powerBonusAmount),
+    commissionAmount: String(rules.powerBonusAmount),
     status: "approved",
     type: "power_squad_bonus",
-    notes: `${bonusLabel} #${bonusNum} — ${total} PMRC Level ${pmrLevel} (purchases + renewals), every ${powerBonusTrigger} = $${powerBonusAmount}`,
+    notes: `MCB (Money Circulation Bonus) #${bonusNum} — RECURRING — ${total} Level 2 PMRP purchases/renewals (every ${rules.powerBonusTrigger} = $${rules.powerBonusAmount}). Qualifying Upline Sponsor has ${l1Count} active Level 1 Pro Members.`,
   });
 
-  const [wallet] = await db.select().from(walletsTable).where(eq(walletsTable.userId, userId));
+  const [wallet] = await db.select().from(walletsTable).where(eq(walletsTable.userId, sponsor.id));
   if (!wallet) return;
 
-  const newBalance = parseFloat((parseFloat(wallet.balance) + powerBonusAmount).toFixed(2));
-  const newTotalEarned = parseFloat((parseFloat(wallet.totalEarned) + powerBonusAmount).toFixed(2));
+  const newBalance = parseFloat((parseFloat(wallet.balance) + rules.powerBonusAmount).toFixed(2));
+  const newTotalEarned = parseFloat((parseFloat(wallet.totalEarned) + rules.powerBonusAmount).toFixed(2));
 
   await db.update(walletsTable).set({
     balance: String(newBalance),
     totalEarned: String(newTotalEarned),
-  }).where(eq(walletsTable.userId, userId));
+  }).where(eq(walletsTable.userId, sponsor.id));
 
   await db.insert(walletTransactionsTable).values({
     walletId: wallet.id,
     type: "commission_credit",
-    amount: String(powerBonusAmount),
+    amount: String(rules.powerBonusAmount),
     balance: String(newBalance),
-    description: `${bonusLabel} #${bonusNum} — $${powerBonusAmount} (${total} PMRC Level ${pmrLevel} purchases/renewals)`,
+    description: `MCB (Money Circulation Bonus) #${bonusNum} — RECURRING — $${rules.powerBonusAmount} (${total} Level 2 PMRP purchases/renewals)`,
     reference: orderNumber,
   });
 
-  logger.info({ userId, total, pmrLevel, powerBonusAmount, bonusNum }, `${bonusLabel} awarded`);
+  logger.info({ userId: sponsor.id, total, bonusNum, powerBonusAmount: rules.powerBonusAmount }, "MCB (Money Circulation Bonus) awarded — recurring");
 }
 
 /**
@@ -274,8 +372,12 @@ async function awardPMB(
  *
  * Commission flow:
  *  - REFERRAL: Personal sponsor (Level 1) earns on EVERY purchase, regardless of role.
- *  - SALES: Pro Member sponsors earn across all configured Sales levels on regular purchases.
- *  - PRC: Pro Member sponsors earn across all configured PRC levels on Pro Package purchases.
+ *  - PSC:      Pro Member sponsors earn across all configured Sales levels on regular purchases.
+ *  - PMRC:     Pro Member sponsors earn across all configured PRC levels on Pro Package purchases.
+ *  - CLB:      One-time bonus to Level 1 PMRC earner when their first N PMRPs are reached
+ *              within the 90-day CLB qualification window.
+ *  - MCB:      Recurring bonus to Level 2 PMRC earner (Qualifying Upline Sponsor) at every
+ *              multiple of N Level 2 PMRP purchases.
  *
  * @param orderId             DB order ID
  * @param orderNumber         Human-readable order number
@@ -320,9 +422,9 @@ export async function processCommissions(
     );
 
     if (containsProPackage) {
-      // ── 3. PRO REGISTRATION COMMISSIONS (PRC) ─────────────────────────────
+      // ── 3. PRO REGISTRATION COMMISSIONS (PMRC) ────────────────────────────
       //    Paid to Pro Members across all configured PRC levels when a
-      //    Pro Member Registration Package is purchased.
+      //    Pro Member Registration Package is purchased or renewed.
       for (let i = 0; i < rules.prcLevels.length; i++) {
         const sponsor = uplineChain[i];
         if (!sponsor) break;
@@ -340,16 +442,18 @@ export async function processCommissions(
           "level",
         );
 
-        // Check CLB for Level 1 PMRC earners; MCB for Level 2 PMRC earners.
-        // Both bonuses count ALL cumulative PMRC purchases + subscription renewals.
-        if (levelConfig.level === 1 && sponsor.isProMember) {
-          await awardPMB(sponsor.id, 1, orderId, orderNumber, rules);
-        } else if (levelConfig.level === 2) {
-          await awardPMB(sponsor.id, 2, orderId, orderNumber, rules);
+        // ── 4. CLB — Level 1 sponsor, one-time, within 90-day window ─────────
+        if (levelConfig.level === 1) {
+          await awardCLB(sponsor, orderId, orderNumber, rules);
+        }
+
+        // ── 5. MCB — Level 2 sponsor (Qualifying Upline Sponsor), recurring ──
+        if (levelConfig.level === 2) {
+          await awardMCB(sponsor, orderId, orderNumber, rules);
         }
       }
     } else {
-      // ── 2. SALES COMMISSIONS ──────────────────────────────────────────────
+      // ── 2. SALES COMMISSIONS (PSC) ────────────────────────────────────────
       //    Paid to Pro Members across all configured Sales levels on regular
       //    (non-Pro-Package) product purchases.
       for (let i = 0; i < rules.salesLevels.length; i++) {

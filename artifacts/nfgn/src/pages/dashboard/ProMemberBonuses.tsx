@@ -109,22 +109,16 @@ export function ProMemberBonusesPage() {
               <p className="font-semibold text-foreground">What are Pro Member Bonuses?</p>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Pro Member Bonuses are a completely separate income stream from your Product Sales Commissions 
-                (PSC) and Pro Member Registration Commissions (PMRC). They are triggered when you and your 
-                <strong className="text-foreground"> Core Leaders</strong> sell{" "}
-                <strong className="text-foreground">Pro Member Registration Products (PMRP)</strong> in increments of 9.
+                (PSC) and Pro Member Registration Commissions (PMRC). There are two bonuses — CLB and MCB — 
+                and they have <strong className="text-foreground">very different rules</strong>. CLB is one-time. 
+                MCB is recurring. Both are triggered by <strong className="text-foreground">Pro Member Registration Products (PMRP)</strong>.
               </p>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                <strong className="text-foreground">Think of it this way:</strong> When you look at your online NFGN business 
-                as a store, registering a <em>standard member</em> is like gaining a new customer. But registering a{" "}
+                <strong className="text-foreground">Think of it this way:</strong> Registering a{" "}
                 <strong className="text-foreground">Pro Member</strong> is like selling someone a{" "}
                 <strong className="text-foreground">franchise store</strong> — they are now a business partner opening their 
-                own store in another region or city, selling the same products and services from the same warehouse.
-                The Pro Member's mission is to help you move massive volumes of products and services.
-              </p>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Pro Member Bonuses are your <strong className="text-foreground">regional and national store bonuses</strong>. 
-                The more franchise stores (Pro Members) you and your Core Leaders open on Levels 1 and 2 — in increments 
-                of 9 — the more bonuses you earn.
+                own store in another region or city. The CLB rewards you for opening your first 9 franchise stores. 
+                The MCB rewards you continuously every time your franchise partners' stores collectively hit 9 new registrations on Level 2.
               </p>
             </div>
           </div>
@@ -134,8 +128,9 @@ export function ProMemberBonusesPage() {
       {/* CLB */}
       <Card className="border-l-4 border-l-blue-500">
         <CardHeader className="pb-3">
-          <CardTitle className="font-serif text-lg">
+          <CardTitle className="font-serif text-lg flex items-center gap-2">
             Core Leadership Bonus (CLB)
+            <Badge className="bg-blue-600 text-white text-xs">ONE-TIME</Badge>
           </CardTitle>
           <div className="flex flex-wrap gap-1 mt-1">
             {["Core 9 Bonus (C9B)", "Super Team Bonus (STB)", "Generation 1 Bonus (G1B)", "Gen 1 Bonus"].map(alias => (
@@ -147,31 +142,34 @@ export function ProMemberBonusesPage() {
           <div className="rounded-lg bg-blue-50 border border-blue-200 p-4 space-y-2">
             <p className="font-semibold text-blue-900 flex items-center gap-2">
               <Users className="h-4 w-4 text-blue-600" />
-              Trigger: Every 9 PMRPs on Level 1 — initial purchases AND monthly renewals
+              Trigger: First 9 new PMRP purchases on Level 1 — within your first 90 days as a Pro Member
             </p>
             <p className="text-sm text-blue-700 leading-relaxed">
-              Every time 9 PMRP purchases or subscription renewals accumulate on your <strong>Level 1</strong>, 
-              you earn a CLB. The counter is <strong>cumulative and never resets</strong> — at 9, 18, 27, 36 
-              and beyond, for as long as your team keeps their subscriptions active.
+              The CLB is paid <strong>exactly once</strong>. It is awarded when your first 9 new Pro Member 
+              Registration Products are purchased on your Level 1, within the first 90 days of your own Pro Member 
+              activation date. If you do not reach 9 Level 1 PMRPs within that 90-day window, the CLB opportunity 
+              is forfeited. <strong>There is no second chance and no recurring payout for CLB.</strong>
             </p>
           </div>
-          <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-xs text-green-900 space-y-1">
-            <p className="font-medium text-green-800">Monthly Renewal Example</p>
+          <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900 space-y-1">
+            <p className="font-medium text-amber-800">Important — One-Time Only</p>
             <p className="leading-relaxed">
-              If 9 Level 1 members each have an active PMRP subscription, every month those 9 renewals 
-              increment your counter by 9 — awarding you a CLB bonus every single month, automatically.
+              CLB is NOT a recurring bonus. It fires once at 9 Level 1 PMRPs and never again. Once you have 
+              received your CLB, you will no longer receive CLB payments — focus on building your Core Leadership 
+              Group (9 active Level 1 Pro Members) to qualify for the recurring MCB.
             </p>
           </div>
           <div className="rounded-lg bg-white border p-3 text-sm text-muted-foreground space-y-1">
             <p className="font-medium text-foreground">Store Analogy</p>
             <p className="text-xs leading-relaxed">
-              Level 1 is your direct regional market. Every 9 franchise renewals (active partner stores) in that 
-              market earns you a regional leadership bonus — rewards you for keeping your team active, not just 
-              recruiting new ones.
+              The CLB is your grand opening bonus. When you open your first 9 franchise partner stores (Level 1 
+              Pro Members) within your first 90 days, NFGN rewards you with a one-time cash bonus for establishing 
+              your Core Leadership Group. After that, the recurring MCB takes over as your ongoing monthly income.
             </p>
           </div>
           <p className="text-xs text-muted-foreground italic">
-            Must be a Pro Member to qualify for CLB. No minimum team size required.
+            Qualification: Must be a Pro Member. No minimum team size required. Must complete the first 9 Level 1 
+            PMRPs within 90 days of your Pro Member activation date.
           </p>
         </CardContent>
       </Card>
@@ -179,8 +177,9 @@ export function ProMemberBonusesPage() {
       {/* MCB */}
       <Card className="border-l-4 border-l-purple-500">
         <CardHeader className="pb-3">
-          <CardTitle className="font-serif text-lg">
+          <CardTitle className="font-serif text-lg flex items-center gap-2">
             Money Circulation Bonus (MCB)
+            <Badge className="bg-purple-600 text-white text-xs">RECURRING</Badge>
           </CardTitle>
           <div className="flex flex-wrap gap-1 mt-1">
             {["Super 9 Bonus", "Level 2 Power Team Bonus", "Super Group Bonus", "Generation 2 Bonus (Gen-2)"].map(alias => (
@@ -192,32 +191,47 @@ export function ProMemberBonusesPage() {
           <div className="rounded-lg bg-purple-50 border border-purple-200 p-4 space-y-2">
             <p className="font-semibold text-purple-900 flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-purple-600" />
-              Trigger: Every 9 PMRPs on Level 2 — initial purchases AND monthly renewals
+              Trigger: Every 9 PMRP purchases on Level 2 — recurring monthly — counts initial + renewals
             </p>
             <p className="text-sm text-purple-700 leading-relaxed">
-              Every time 9 PMRP purchases or subscription renewals accumulate on your <strong>Level 2</strong>, 
-              you earn an MCB. The counter is <strong>cumulative and never resets</strong> — it continues at 
-              9, 18, 27, 36, 45… indefinitely for as long as active subscriptions flow through Level 2.
+              The MCB is a <strong>recurring bonus</strong> paid to the <strong>Qualifying Upline Sponsor</strong> — 
+              you, the Level 2 upline Pro Member — every time 9 PMRP purchases (initial registrations or monthly 
+              subscription renewals) accumulate on your Level 2. It fires at 9, 18, 27, 36, 45… and continues 
+              indefinitely for as long as your team keeps purchasing.
             </p>
           </div>
-          <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-xs text-green-900 space-y-1">
-            <p className="font-medium text-green-800">Monthly Renewal Example</p>
+
+          {/* Qualifying Upline Sponsor explanation */}
+          <div className="rounded-lg bg-indigo-50 border border-indigo-200 p-3 text-xs text-indigo-900 space-y-1">
+            <p className="font-medium text-indigo-800">Who is the Qualifying Upline Sponsor?</p>
             <p className="leading-relaxed">
-              If 18 Level 2 members purchase PMRP in March, your counter hits 18 — MCBs #1 and #2 are awarded. 
-              Those same 18 members renew in April, counter reaches 36 — MCBs #3 and #4 awarded. Fully automatic, 
-              every month they stay subscribed.
+              The <strong>Qualifying Upline Sponsor</strong> is the Pro Member who sits two levels above the 
+              buyer in the NFGN genealogy tree — i.e., the sponsor of the buyer's direct sponsor. To qualify 
+              for MCB, this upline Pro Member must have at least <strong>9 active Level 1 Pro Members</strong> 
+              (their Core Leadership Group). If they do not have 9 active Level 1 Pro Members, the MCB is not 
+              awarded even if the Level 2 PMRP count reaches the trigger.
+            </p>
+          </div>
+
+          <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-xs text-green-900 space-y-1">
+            <p className="font-medium text-green-800">Recurring Monthly Example</p>
+            <p className="leading-relaxed">
+              March: 9 Level 2 members buy PMRP → MCB #1 awarded. April: those same 9 members renew → 
+              MCB #2 awarded. May: 9 more new members join on Level 2 → MCB #3 awarded. The counter is 
+              cumulative and never resets. Every qualifying purchase or renewal on Level 2 moves the counter forward.
             </p>
           </div>
           <div className="rounded-lg bg-white border p-3 text-sm text-muted-foreground space-y-1">
             <p className="font-medium text-foreground">Store Analogy</p>
             <p className="text-xs leading-relaxed">
-              Level 2 is your national market. Your franchise partners (Level 1 Pro Members) have their own 
-              franchise partners (Level 2). Every 9 of those Level 2 active subscriptions earns you a national 
-              growth bonus — rewarding you for building a sustainable, recurring revenue network.
+              Level 2 is your national expansion market. Your franchise partners (Level 1 Pro Members) are opening 
+              their own franchise partner stores (Level 2). Every 9 new registrations or renewals at Level 2 earns 
+              you a national growth bonus — rewarding you for building a sustainable, active network across two levels.
             </p>
           </div>
           <p className="text-xs text-muted-foreground italic">
-            Must be a Pro Member with at least 9 personally sponsored Level 1 Pro Members to qualify for MCB.
+            Qualification: Must be a Pro Member (Qualifying Upline Sponsor) with at least 9 actively enrolled 
+            Level 1 Pro Members (Core Leadership Group). MCB is issued once per month per qualifying increment of 9.
           </p>
         </CardContent>
       </Card>

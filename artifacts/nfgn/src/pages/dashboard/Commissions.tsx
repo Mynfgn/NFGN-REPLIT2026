@@ -519,7 +519,11 @@ export function CommissionsPage() {
                           Level {l.level} — {l.level === 1 ? "Direct Sponsor" : l.level === 2 ? "Power Level" : `Upline Level ${l.level}`}
                           {l.level === 2 && <Badge className="text-xs ml-2">Power Bonus</Badge>}
                         </div>
-                        <div className="text-xs text-muted-foreground">Must be a Pro Member. Earned on Pro Registration Package purchases.</div>
+                        <div className="text-xs text-muted-foreground">
+                          Must be a Pro Member. Earned on Pro Registration Package purchases and renewals.
+                          {l.level === 1 && " · First 9 = CLB (one-time) within 90 days of becoming Pro Member."}
+                          {l.level === 2 && " · Qualifying Upline Sponsor earns MCB every 9 purchases (recurring)."}
+                        </div>
                       </div>
                       <div className="font-bold text-lg text-primary">{l.rate}%</div>
                     </div>
@@ -539,45 +543,51 @@ export function CommissionsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="rounded-lg bg-purple-50 border border-purple-200 p-3 text-sm text-purple-900 space-y-2">
-                  <p className="font-semibold">Completely Separate from PSC and PMRC · Counts Renewals Too</p>
+                  <p className="font-semibold">Two Completely Different Bonuses — CLB is One-Time, MCB is Recurring</p>
                   <p className="text-xs leading-relaxed text-purple-800">
-                    CLB and MCB are an entirely different income stream from PSC and PMRC. They are triggered by 
-                    <strong> Pro Member Registration Product (PMRP)</strong> purchases — both <strong>first-time registrations 
-                    and monthly subscription renewals</strong> count. Every purchase by every qualifying Level 1 or Level 2 
-                    member increments your cumulative counter, so your bonuses grow continuously month after month.
+                    Pro Member Bonuses (CLB and MCB) are an entirely separate income stream from PSC and PMRC. 
+                    <strong> CLB fires exactly once</strong>; MCB repeats every month. Both are triggered by 
+                    <strong> Pro Member Registration Product (PMRP)</strong> purchases.
                   </p>
                 </div>
                 <div className="grid sm:grid-cols-2 gap-3">
                   <div className="rounded-xl bg-blue-50 border border-blue-200 p-4 space-y-2">
-                    <p className="font-semibold text-blue-900 text-sm">Core Leadership Bonus (CLB)</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-blue-900 text-sm">Core Leadership Bonus (CLB)</p>
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-blue-600 text-white font-bold">ONE-TIME</span>
+                    </div>
                     <p className="text-xs text-blue-700">Also called: Core 9 Bonus (C9B) · Super Team Bonus (STB) · Gen 1 Bonus (G1B)</p>
                     <div className="flex items-center gap-2 mt-2">
                       <Users className="h-4 w-4 text-blue-600 flex-shrink-0" />
-                      <span className="text-xs font-semibold text-blue-900">Every 9 PMRPs on Level 1 — including renewals</span>
+                      <span className="text-xs font-semibold text-blue-900">First 9 new PMRPs on Level 1 — within your first 90 days as Pro Member</span>
                     </div>
                     <p className="text-xs text-blue-700 leading-relaxed">
-                      Earned for every 9 PMRP purchases (initial or monthly renewal) on Level 1. If 9 Level 1 members each 
-                      subscribe and renew monthly, you earn a CLB every single month. The counter is cumulative and never resets.
+                      Awarded exactly once when your first 9 Level 1 PMRPs are purchased within your first 90 days 
+                      as a Pro Member. No second payout — ever. After CLB, the MCB takes over as your ongoing income.
                     </p>
                   </div>
                   <div className="rounded-xl bg-purple-50 border border-purple-200 p-4 space-y-2">
-                    <p className="font-semibold text-purple-900 text-sm">Money Circulation Bonus (MCB)</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-purple-900 text-sm">Money Circulation Bonus (MCB)</p>
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-purple-600 text-white font-bold">RECURRING</span>
+                    </div>
                     <p className="text-xs text-purple-700">Also called: Super 9 Bonus · Level 2 Power Team Bonus · Super Group Bonus · Gen-2 Bonus</p>
                     <div className="flex items-center gap-2 mt-2">
                       <TrendingUp className="h-4 w-4 text-purple-600 flex-shrink-0" />
-                      <span className="text-xs font-semibold text-purple-900">Every 9 PMRPs on Level 2 — including renewals</span>
+                      <span className="text-xs font-semibold text-purple-900">Every 9 PMRPs on Level 2 — initial + renewals — repeats monthly</span>
                     </div>
                     <p className="text-xs text-purple-700 leading-relaxed">
-                      Earned for every 9 PMRP purchases (initial or monthly renewal) on Level 2. Example: 18 Level 2 members 
-                      buy in March → MCBs #1 and #2. Those same 18 renew in April → MCBs #3 and #4. Counter is cumulative.
+                      Awarded to the <strong>Qualifying Upline Sponsor</strong> (the Level 2 upline Pro Member with 9+ 
+                      active Level 1 Pro Members) every time 9 PMRP purchases accumulate on Level 2. Fires at 9, 18, 27… 
+                      and repeats each month as the team renews and grows.
                     </p>
                   </div>
                 </div>
-                <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-xs text-green-900 leading-relaxed">
-                  <strong className="text-green-800">How the counter works:</strong> The counter tracks all PMRC commissions 
-                  earned at each level, lifetime. Each purchase — initial or renewal — creates a new commission record and 
-                  increments the total. Bonuses fire at every multiple of 9: 9, 18, 27, 36, 45… There is no monthly reset. 
-                  A growing active subscriber base means growing monthly PMB income.
+                <div className="rounded-lg bg-indigo-50 border border-indigo-200 p-3 text-xs text-indigo-900 leading-relaxed">
+                  <strong className="text-indigo-800">What is a Qualifying Upline Sponsor?</strong> The Qualifying Upline 
+                  Sponsor is the Pro Member two levels above the PMRP buyer in the genealogy tree (the sponsor's sponsor). 
+                  To qualify for MCB, this upline Pro Member must have at least 9 active Level 1 Pro Members — their 
+                  Core Leadership Group. Without the Core Leadership Group, MCB is not awarded.
                 </div>
               </CardContent>
             </Card>

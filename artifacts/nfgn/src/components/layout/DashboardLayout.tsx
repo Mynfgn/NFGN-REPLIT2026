@@ -6,7 +6,7 @@ import {
   LayoutDashboard, ShoppingBag, Wallet, Users, 
   Award, Banknote, Calendar, Inbox, UserCircle, 
   BarChart3, LogOut, Menu, X, UserPlus, ArrowRightLeft,
-  TrendingUp, Wrench, Home, Star,
+  TrendingUp, Wrench, Home, Star, BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -44,7 +44,8 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
     { name: "Bill Payer Program", href: "/dashboard/bpp", icon: Home },
     { name: "Bookings", href: "/dashboard/bookings", icon: Calendar },
     { name: "Mailbox", href: "/dashboard/mailbox", icon: Inbox },
-    { name: "Tools", href: "/dashboard/tools", icon: Wrench },
+    { name: "Tools", href: "/dashboard/tools", icon: Wrench, exact: true },
+    { name: "Basic Training", href: "/dashboard/tools/training", icon: BookOpen, sub: true },
     { name: "Reports", href: "/dashboard/reports", icon: BarChart3 },
   ];
 
@@ -88,19 +89,27 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
         </div>
 
-        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
           {navItems.map((item) => {
-            const isActive = location === item.href || location.startsWith(`${item.href}/`);
+            const isActive = (item as any).exact
+              ? location === item.href
+              : location === item.href || location.startsWith(`${item.href}/`);
+            const isSub = !!(item as any).sub;
             return (
               <Link key={item.name} href={item.href}>
                 <span className={`
-                  flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors
-                  ${isActive 
-                    ? "bg-primary text-primary-foreground" 
+                  flex items-center gap-3 rounded-md text-sm font-medium transition-colors
+                  ${isSub ? "px-3 py-2 ml-6 border-l border-border" : "px-3 py-2.5"}
+                  ${isActive
+                    ? isSub
+                      ? "bg-primary/10 text-primary border-l-2 border-primary"
+                      : "bg-primary text-primary-foreground"
+                    : isSub
+                    ? "text-muted-foreground/70 hover:bg-muted hover:text-foreground"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }
                 `}>
-                  <item.icon className="h-4 w-4" />
+                  <item.icon className={`flex-shrink-0 ${isSub ? "h-3.5 w-3.5" : "h-4 w-4"}`} />
                   {item.name}
                 </span>
               </Link>

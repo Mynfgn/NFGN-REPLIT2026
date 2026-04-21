@@ -36,6 +36,7 @@ import { PayoutsPage } from "@/pages/dashboard/Payouts";
 import { EarningsPage } from "@/pages/dashboard/Earnings";
 import { ProfilePage } from "@/pages/dashboard/Profile";
 import { ToolsPage } from "@/pages/dashboard/Tools";
+import { MemberReportsPage } from "@/pages/dashboard/Reports";
 import { MailboxPage } from "@/pages/dashboard/Mailbox";
 
 // Admin Pages
@@ -207,7 +208,7 @@ function Router() {
       </Route>
       <Route path="/dashboard/reports">
         <RequireAuth>
-          <DashboardLayout><Stub name="Reports" /></DashboardLayout>
+          <DashboardLayout><MemberReportsPage /></DashboardLayout>
         </RequireAuth>
       </Route>
 

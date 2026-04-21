@@ -94,7 +94,7 @@ export function AdminProductsPage() {
   });
 
   const { data: categoriesData } = useListCategories();
-  const categories = categoriesData?.categories ?? [];
+  const categories = categoriesData ?? [];
 
   const fetchProducts = async () => {
     setLoading(true);

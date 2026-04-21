@@ -5,7 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   Loader2, CheckCircle2, XCircle, RefreshCw, Clock,
@@ -58,6 +60,9 @@ export function OrdersAwaitingApprovalPage() {
   const [approveOrder, setApproveOrder] = useState<any | null>(null);
   const [rejectOrder, setRejectOrder] = useState<any | null>(null);
   const [actionNote, setActionNote] = useState("");
+  const [fundsReceived, setFundsReceived] = useState(false);
+  const [fundsLocation, setFundsLocation] = useState("");
+  const [fundsReceivedBy, setFundsReceivedBy] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -66,6 +71,18 @@ export function OrdersAwaitingApprovalPage() {
     queryFn: () => fetchPendingOrders(page),
   });
 
+  const buildApprovalNote = () => {
+    const parts: string[] = [];
+    const isManualPayment = approveOrder && ["cod", "cashapp"].includes(approveOrder.paymentMethod);
+    if (isManualPayment) {
+      parts.push(`Funds received: ${fundsReceived ? "Yes" : "No"}`);
+      if (fundsLocation) parts.push(`Received at/via: ${fundsLocation}`);
+      if (fundsReceivedBy) parts.push(`Received by: ${fundsReceivedBy}`);
+    }
+    if (actionNote) parts.push(actionNote);
+    return parts.join(" | ");
+  };
+
   const approveMutation = useMutation({
     mutationFn: ({ orderId, note }: { orderId: number; note: string }) =>
       updateOrder(orderId, "processing", "paid", note || undefined),
@@ -73,6 +90,9 @@ export function OrdersAwaitingApprovalPage() {
       toast({ title: "Order approved", description: "Payment confirmed and order moved to Processing." });
       setApproveOrder(null);
       setActionNote("");
+      setFundsReceived(false);
+      setFundsLocation("");
+      setFundsReceivedBy("");
       queryClient.invalidateQueries({ queryKey: ["orders-awaiting"] });
       refetch();
     },
@@ -241,7 +261,13 @@ export function OrdersAwaitingApprovalPage() {
                       <Button
                         size="sm"
                         className="h-8 text-xs gap-1.5 w-full bg-green-600 hover:bg-green-700 text-white"
-                        onClick={() => { setApproveOrder(order); setActionNote(""); }}
+                        onClick={() => {
+                          setApproveOrder(order);
+                          setActionNote("");
+                          setFundsReceived(false);
+                          setFundsLocation("");
+                          setFundsReceivedBy("");
+                        }}
                       >
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         Approve
@@ -282,7 +308,7 @@ export function OrdersAwaitingApprovalPage() {
       <ReceiptModal order={receiptOrder} open={!!receiptOrder} onClose={() => setReceiptOrder(null)} />
 
       {/* Approve dialog */}
-      <Dialog open={!!approveOrder} onOpenChange={() => setApproveOrder(null)}>
+      <Dialog open={!!approveOrder} onOpenChange={() => { setApproveOrder(null); setFundsReceived(false); setFundsLocation(""); setFundsReceivedBy(""); setActionNote(""); }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-green-700">
@@ -290,35 +316,95 @@ export function OrdersAwaitingApprovalPage() {
               Approve Payment
             </DialogTitle>
           </DialogHeader>
-          {approveOrder && (
-            <div className="space-y-4">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm space-y-1">
-                <p className="font-mono font-bold text-green-900">{approveOrder.orderNumber}</p>
-                <p className="text-green-800">{approveOrder.userName}</p>
-                <p className="text-green-900 font-bold text-base">${approveOrder.total.toFixed(2)}</p>
-                <div>{paymentMethodBadge(approveOrder.paymentMethod)}</div>
+          {approveOrder && (() => {
+            const isManualPayment = ["cod", "cashapp"].includes(approveOrder.paymentMethod);
+            return (
+              <div className="space-y-4">
+                {/* Order summary */}
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm space-y-1">
+                  <p className="font-mono font-bold text-green-900">{approveOrder.orderNumber}</p>
+                  <p className="text-green-800">{approveOrder.userName}</p>
+                  <p className="text-green-900 font-bold text-base">${approveOrder.total.toFixed(2)}</p>
+                  <div>{paymentMethodBadge(approveOrder.paymentMethod)}</div>
+                </div>
+
+                {/* Funds verification — COD / CashApp only */}
+                {isManualPayment && (
+                  <div className="border rounded-lg p-4 space-y-4 bg-amber-50 border-amber-200">
+                    <p className="text-xs font-semibold text-amber-900 uppercase tracking-wide">Payment Verification</p>
+
+                    {/* Were funds received? */}
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        id="fundsReceived"
+                        checked={fundsReceived}
+                        onCheckedChange={(v) => setFundsReceived(!!v)}
+                        className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+                      />
+                      <Label htmlFor="fundsReceived" className="text-sm font-medium cursor-pointer">
+                        Funds have been received
+                        <span className={`ml-2 text-xs font-bold px-1.5 py-0.5 rounded ${fundsReceived ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
+                          {fundsReceived ? "YES" : "NO"}
+                        </span>
+                      </Label>
+                    </div>
+
+                    {/* Where were funds received */}
+                    <div className="space-y-1.5">
+                      <Label htmlFor="fundsLocation" className="text-sm font-medium">
+                        Where were the funds received?
+                      </Label>
+                      <Input
+                        id="fundsLocation"
+                        placeholder={approveOrder.paymentMethod === "cashapp"
+                          ? "e.g. CashApp — $Cashtag or transaction ID"
+                          : "e.g. at the door, branch office, via courier"}
+                        value={fundsLocation}
+                        onChange={e => setFundsLocation(e.target.value)}
+                      />
+                    </div>
+
+                    {/* Who received the funds */}
+                    <div className="space-y-1.5">
+                      <Label htmlFor="fundsReceivedBy" className="text-sm font-medium">
+                        Who received the funds?
+                      </Label>
+                      <Input
+                        id="fundsReceivedBy"
+                        placeholder="e.g. Jane Doe (Delivery Rep), Admin Name"
+                        value={fundsReceivedBy}
+                        onChange={e => setFundsReceivedBy(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-sm text-muted-foreground">
+                  Approving will mark this order as <strong>Paid</strong> and move it to <strong>Processing</strong>.{" "}
+                  {isManualPayment
+                    ? "Only approve after confirming cash or payment receipt."
+                    : "Only approve after confirming payment."}
+                </p>
+
+                {/* Additional note */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="approveNote">Additional Note (optional)</Label>
+                  <Textarea
+                    id="approveNote"
+                    placeholder="Any extra details about this payment…"
+                    rows={2}
+                    value={actionNote}
+                    onChange={e => setActionNote(e.target.value)}
+                  />
+                </div>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Approving will mark this order as <strong>Paid</strong> and move it to <strong>Processing</strong>. 
-                Only approve after confirming payment has been received.
-              </p>
-              <div className="space-y-1.5">
-                <Label htmlFor="approveNote">Payment Note (optional)</Label>
-                <Textarea
-                  id="approveNote"
-                  placeholder="e.g. CashApp payment $XX received from @handle, reference #XXXX"
-                  rows={3}
-                  value={actionNote}
-                  onChange={e => setActionNote(e.target.value)}
-                />
-              </div>
-            </div>
-          )}
+            );
+          })()}
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setApproveOrder(null)}>Cancel</Button>
             <Button
               className="bg-green-600 hover:bg-green-700 text-white gap-1.5"
-              onClick={() => approveMutation.mutate({ orderId: approveOrder.id, note: actionNote })}
+              onClick={() => approveMutation.mutate({ orderId: approveOrder.id, note: buildApprovalNote() })}
               disabled={approveMutation.isPending}
             >
               {approveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}

@@ -8,6 +8,17 @@ import {
   Flame, Home, Clock, Lightbulb, MessageCircle, Leaf,
   BarChart3, Shield, Phone, Heart,
 } from "lucide-react";
+import { TrainingQuiz } from "@/components/training/TrainingQuiz";
+import {
+  gettingStartedQuiz,
+  compPlanQuiz,
+  incomeplanQuiz,
+  bppQuiz,
+  ninetyDayQuiz,
+  igniteQuiz,
+  bigBonusesQuiz,
+  additionalTrainingQuiz,
+} from "@/data/trainingQuizzes";
 
 const GOLD = "#C9A84C";
 const GREEN = "#2D6A4F";
@@ -186,6 +197,63 @@ export function BasicTrainingPage() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Day 1-30 Action Guide */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <div className="h-1 w-6 rounded" style={{ background: GOLD }} />
+                    <p className="font-serif font-bold text-base">Your First 30 Days — Day-by-Day Action Guide</p>
+                  </div>
+                  <p className="text-sm text-muted-foreground">This is exactly what you should be doing every single day for your first 30 days. Do not skip steps. Every action builds on the previous one.</p>
+
+                  <div className="space-y-2">
+                    {[
+                      { day: "Day 1", title: "Foundation Day", tasks: ["Call or text your upline sponsor — introduce yourself and schedule a 30-minute welcome call", "Place your personal IGNITE order (this starts your PSC and BPP clock)", "Write your 100-person contact list in a notebook or phone notes", "Add your referral link to your social media bio on every platform you use"] },
+                      { day: "Day 2", title: "Know Your Story", tasks: ["Begin using IGNITE today — document how you feel in a notes app (this becomes your testimonial)", "Watch all training sections in this portal at least once", "Write your personal 3-sentence story: what you were dealing with, what you tried, what NFGN did for you", "Share your first post on social media about starting your wellness journey (no sales pitch — just authentic)"] },
+                      { day: "Day 3", title: "First Conversations", tasks: ["Reach out to the first 10 people on your contact list with a personal, conversational message (not a copy-paste blast)", "Share IGNITE with 3 people specifically who talk about gut health, bloating, or weight", "Follow up with anyone from Day 1–2 who viewed your social post or responded to your message", "Review the Comp Plan training section and ask your upline any questions"] },
+                      { day: "Day 4", title: "Prospect & Post", tasks: ["Reach out to 10 more contacts from your list", "Post your Day 3 wellness check-in on social media (how do you feel after 3 days of IGNITE?)", "Share the NFGN business opportunity with 2 people who you think could be great Pro Members", "Watch the IGNITE Training section — practice the 3-step selling conversation"] },
+                      { day: "Day 5", title: "Virtual Info Session Prep", tasks: ["Schedule your first virtual info session for Day 7 or 8 — invite 5–10 people from your list via DM", "Reach out to 10 new contacts from your list", "Follow up with everyone you messaged on Days 3–4 who hasn't responded", "Post a social media story about what you're building with NFGN"] },
+                      { day: "Day 6", title: "Social Media Blitz", tasks: ["Post a detailed product post with your referral link on Facebook, Instagram, and any other platforms you use", "Engage in 2–3 wellness Facebook groups — provide value, answer questions, and share your journey", "Reach out to 10 more contacts", "Begin preparing your virtual info session presentation or talk track with your upline"] },
+                      { day: "Day 7", title: "First Customer Goal", tasks: ["Your target: close your FIRST retail customer today", "Host your first virtual info session (or reschedule to Day 8 if needed)", "Follow up with every prospect from Days 3–6", "Review your contact list — who have you not reached out to yet? Add more names if needed"] },
+                      { day: "Day 8", title: "First Pro Member Push", tasks: ["Share the NFGN opportunity more directly with your 3–5 hottest prospects from your list", "Follow up with your virtual info session attendees", "Post your first weekly results update on social media (Day 7 check-in with IGNITE)", "Reach out to 10 new contacts — never stop adding new people to your outreach"] },
+                      { day: "Day 9", title: "Enroll Your First Pro Member", tasks: ["Target: enroll your FIRST Pro Member today if you haven't yet", "Call (don't text) your most interested prospects — a real conversation closes faster than messages", "Reach out to 10 new contacts", "Thank your first retail customer personally and ask for a testimonial or referral"] },
+                      { day: "Day 10", title: "Momentum Building", tasks: ["Post a social media update: 10 days into your wellness journey — share specific results", "Reach out to 10 new contacts", "Follow up with every prospect who hasn't responded yet (Day 3 follow-up)", "Help your first Pro Member place their first product order and share their referral link"] },
+                      { day: "Day 11–13", title: "Build Your Pipeline", tasks: ["Reach out to 10–15 new contacts each day", "Follow up consistently with anyone who hasn't responded (Day 7–10 prospects)", "Post on social media every day — wellness tips, product check-ins, your journey", "Have your upline sponsor join a 3-way call with your most interested prospects if you're having trouble closing"] },
+                      { day: "Day 14", title: "Two-Week Review", tasks: ["Review your numbers: How many conversations? How many interested? How many customers? How many Pro Members?", "Check in with your upline sponsor — share your progress and get coaching on your gaps", "Reach out to your Day 1–3 contacts again for a soft follow-up close", "Host or attend a team training call or webinar"] },
+                      { day: "Day 15–19", title: "Accelerate Enrollment", tasks: ["Target: reach 3 enrolled Pro Members by Day 19", "Post your Day 15 results update on social media — show consistency and authenticity", "Reach out to 10–15 new contacts each day", "Begin coaching your first Pro Member — help them build their contact list and make their first sales"] },
+                      { day: "Day 20", title: "Social Media Credibility Push", tasks: ["Post a comprehensive 20-day journey update — before/after feelings, product experience, team progress", "Ask your satisfied retail customers to write a short testimonial you can share (with their permission)", "Reach out to 10 new contacts", "Review the Big Bonuses training section — understand exactly what you need for CLB"] },
+                      { day: "Day 21–24", title: "Team Activation", tasks: ["Hold a mini team call with your enrolled Pro Members — review their contact lists and first conversations", "Help each Pro Member send their first 10 outreach messages (show them exactly what you did)", "Reach out to 10 new contacts each day", "Post daily on social media — your story is your most powerful lead magnet"] },
+                      { day: "Day 25", title: "Five Pro Member Push", tasks: ["Your target: 5 Pro Members enrolled by Day 30", "Review your pipeline — who is close to saying yes? Call them directly today", "Schedule your second virtual info session for this week — invite new people who haven't heard your story yet", "Post a social media call-to-action post with your referral link"] },
+                      { day: "Day 26–29", title: "Close & Consolidate", tasks: ["Follow up with EVERY prospect who hasn't made a decision — this is your most important follow-up window", "Help your Pro Members make their first retail sales if they haven't yet", "Reach out to 10+ new contacts each day", "Post daily — share your team's wins, your results, your journey"] },
+                      { day: "Day 30", title: "Month 1 Complete — Review & Reset", tasks: ["Count your results: retail customers, Pro Members enrolled, commissions earned", "Celebrate every win — no matter how small", "Call your upline sponsor for a full Month 1 debrief and Month 2 planning session", "Write your Month 2 plan: who are you helping duplicate, what are your new enrollment targets, what income do you expect?"] },
+                    ].map((d, i) => (
+                      <div key={i} className="border rounded-xl overflow-hidden">
+                        <div className="flex items-center gap-3 px-4 py-3 bg-muted/30 border-b">
+                          <div
+                            className="h-7 w-16 rounded-md flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                            style={{ background: i < 7 ? GOLD : i < 14 ? GREEN : i < 21 ? "#7c3aed" : "#dc2626" }}
+                          >
+                            {d.day}
+                          </div>
+                          <p className="text-sm font-semibold">{d.title}</p>
+                        </div>
+                        <div className="px-4 py-3 space-y-1.5">
+                          {d.tasks.map((t, ti) => (
+                            <div key={ti} className="flex gap-2 text-xs text-muted-foreground">
+                              <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0 mt-0.5 text-green-600" />
+                              {t}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <TrainingQuiz
+                  title="Getting Started — Proficiency Quiz"
+                  questions={gettingStartedQuiz}
+                />
               </CardContent>
             </Card>
           )}
@@ -288,6 +356,11 @@ export function BasicTrainingPage() {
                   <p className="text-sm font-semibold mb-3" style={{ color: GOLD }}>The Power of Stacking All 6 Streams</p>
                   <p className="text-xs text-white/70 leading-relaxed">Most people focus on one or two income streams. Top earners activate all six simultaneously. RC pays you immediately. PSC rewards your personal usage. PMRC creates passive monthly income. CLB gives you a fast-start bonus. MCB rewards your leadership. BPP keeps your personal bills covered. Together, they create a compounding, self-sustaining income that grows month after month.</p>
                 </div>
+
+                <TrainingQuiz
+                  title="Compensation Plan — Proficiency Quiz"
+                  questions={compPlanQuiz}
+                />
               </CardContent>
             </Card>
           )}
@@ -473,6 +546,11 @@ export function BasicTrainingPage() {
 
                 </CardContent>
               </Card>
+
+              <TrainingQuiz
+                title="$3,500/Month Plan — Proficiency Quiz"
+                questions={incomeplanQuiz}
+              />
             </div>
           )}
 
@@ -516,6 +594,11 @@ export function BasicTrainingPage() {
                     </div>
                   </CardContent>
                 </Card>
+
+                <TrainingQuiz
+                  title="Bill Payer Program — Proficiency Quiz"
+                  questions={bppQuiz}
+                />
               </CardContent>
             </Card>
           )}
@@ -567,6 +650,11 @@ export function BasicTrainingPage() {
                   </div>
                   <p className="text-xs text-muted-foreground">*These figures are projections based on consistent activity. Results vary based on effort and team size.</p>
                 </div>
+
+                <TrainingQuiz
+                  title="90-Day Residual Plan — Proficiency Quiz"
+                  questions={ninetyDayQuiz}
+                />
               </CardContent>
             </Card>
           )}
@@ -660,6 +748,11 @@ export function BasicTrainingPage() {
                     </div>
                   </CardContent>
                 </Card>
+
+                <TrainingQuiz
+                  title="IGNITE Product Training — Proficiency Quiz"
+                  questions={igniteQuiz}
+                />
               </CardContent>
             </Card>
           )}
@@ -751,6 +844,11 @@ export function BasicTrainingPage() {
                     ))}
                   </div>
                 </div>
+
+                <TrainingQuiz
+                  title="Earn Big Bonuses — Proficiency Quiz"
+                  questions={bigBonusesQuiz}
+                />
               </CardContent>
             </Card>
           )}
@@ -857,6 +955,11 @@ export function BasicTrainingPage() {
                     </div>
                   </CardContent>
                 </Card>
+
+                <TrainingQuiz
+                  title="Additional Training — Proficiency Quiz"
+                  questions={additionalTrainingQuiz}
+                />
               </CardContent>
             </Card>
           )}

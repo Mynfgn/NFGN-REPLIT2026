@@ -208,7 +208,7 @@ export function BasicTrainingPage() {
 
                   <div className="space-y-2">
                     {[
-                      { day: "Day 1", title: "Foundation Day", tasks: ["Call or text your upline sponsor — introduce yourself and schedule a 30-minute welcome call", "Place your personal IGNITE order (this starts your PSC and BPP clock)", "Write your 100-person contact list in a notebook or phone notes", "Add your referral link to your social media bio on every platform you use"] },
+                      { day: "Day 1", title: "Foundation Day", tasks: ["Call or text your upline sponsor — introduce yourself and schedule a 30-minute welcome call", "Place your personal IGNITE order (this starts your BPP PV clock and gives you a real testimonial)", "Write your 100-person contact list in a notebook or phone notes", "Add your referral link to your social media bio on every platform you use"] },
                       { day: "Day 2", title: "Know Your Story", tasks: ["Begin using IGNITE today — document how you feel in a notes app (this becomes your testimonial)", "Watch all training sections in this portal at least once", "Write your personal 3-sentence story: what you were dealing with, what you tried, what NFGN did for you", "Share your first post on social media about starting your wellness journey (no sales pitch — just authentic)"] },
                       { day: "Day 3", title: "First Conversations", tasks: ["Reach out to the first 10 people on your contact list with a personal, conversational message (not a copy-paste blast)", "Share IGNITE with 3 people specifically who talk about gut health, bloating, or weight", "Follow up with anyone from Day 1–2 who viewed your social post or responded to your message", "Review the Comp Plan training section and ask your upline any questions"] },
                       { day: "Day 4", title: "Prospect & Post", tasks: ["Reach out to 10 more contacts from your list", "Post your Day 3 wellness check-in on social media (how do you feel after 3 days of IGNITE?)", "Share the NFGN business opportunity with 2 people who you think could be great Pro Members", "Watch the IGNITE Training section — practice the 3-step selling conversation"] },
@@ -290,8 +290,8 @@ export function BasicTrainingPage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                      <p className="text-xs text-muted-foreground">Earn a commission on your own personal product orders based on CV (Commission Value). The more you sell and purchase, the higher your PSC earnings.</p>
-                      <div className="text-xs font-semibold text-green-700">Paid on: Your own product orders (CV-based)</div>
+                      <p className="text-xs text-muted-foreground">Earn a commission on every retail sale you personally make to customers. Each time a retail customer purchases through your direct selling activity, PSC is credited to you based on the CV of those sales. Note: no one earns PSC on their own personal purchases.</p>
+                      <div className="text-xs font-semibold text-green-700">Paid on: Your personal retail sales to customers (CV-based)</div>
                     </CardContent>
                   </Card>
 
@@ -300,12 +300,12 @@ export function BasicTrainingPage() {
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm flex items-center gap-2 text-purple-800">
                         <Badge className="bg-purple-100 text-purple-800 border-purple-200">PMRC</Badge>
-                        Pro Member Residual Commission
+                        Pro Member Registration Commissions
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                      <p className="text-xs text-muted-foreground">As a Pro Member, you earn residual commissions on the purchases of Pro Members in your downline — up to multiple levels deep. This is the engine of your long-term passive income.</p>
-                      <div className="text-xs font-semibold text-purple-700">Paid on: Downline Pro Member purchases (multi-level)</div>
+                      <p className="text-xs text-muted-foreground">As a Pro Member, you earn commissions on the product registrations (purchases) of Pro Members in your downline — up to 5 generations deep. No one earns PMRC on their own purchases; it is generated entirely by the activity of your enrolled team.</p>
+                      <div className="text-xs font-semibold text-purple-700">Paid on: Downline Pro Member product registrations — up to 5 generations</div>
                     </CardContent>
                   </Card>
 
@@ -354,7 +354,7 @@ export function BasicTrainingPage() {
 
                 <div className="rounded-xl bg-[#0a0a0a] p-5 text-white">
                   <p className="text-sm font-semibold mb-3" style={{ color: GOLD }}>The Power of Stacking All 6 Streams</p>
-                  <p className="text-xs text-white/70 leading-relaxed">Most people focus on one or two income streams. Top earners activate all six simultaneously. RC pays you immediately. PSC rewards your personal usage. PMRC creates passive monthly income. CLB gives you a fast-start bonus. MCB rewards your leadership. BPP keeps your personal bills covered. Together, they create a compounding, self-sustaining income that grows month after month.</p>
+                  <p className="text-xs text-white/70 leading-relaxed">Most people focus on one or two income streams. Top earners activate all six simultaneously. RC pays you immediately from referral purchases. PSC rewards your direct retail customer sales. PMRC builds deep passive income across up to 5 generations of your team. CLB gives you a fast-start bonus. MCB rewards your leadership. BPP keeps your personal bills covered. Together, they create a compounding, self-sustaining income that grows month after month.</p>
                 </div>
 
                 <TrainingQuiz
@@ -394,8 +394,8 @@ export function BasicTrainingPage() {
                     <div className="space-y-2 mt-2">
                       {[
                         { stream: "Retail Sales + RC", amount: "$800", color: "#2D6A4F", desc: "12–15 active retail customers buying 1–2 products/month each. RC fires on every purchase through your referral link." },
-                        { stream: "Personal Sales Commission (PSC)", amount: "$300", color: "#1d4ed8", desc: "Your own monthly product orders generate PSC. Stay on IGNITE and any other products personally — this also keeps your testimonials authentic." },
-                        { stream: "Level 1 PMRC", amount: "$900", color: "#7c3aed", desc: "6–8 personally enrolled Pro Members who are each ordering products monthly. Every order they place generates PMRC credited to you." },
+                        { stream: "Personal Sales Commission (PSC)", amount: "$300", color: "#1d4ed8", desc: "Earned on your direct retail sales to customers. The more customers you sell to personally, the higher your PSC. No one earns PSC on their own purchases — this is purely from customer-facing retail selling activity." },
+                        { stream: "Level 1 PMRC", amount: "$900", color: "#7c3aed", desc: "6–8 personally enrolled Pro Members who are each registering products monthly. Every registration they make generates PMRC credited to you. PMRC reaches up to 5 generations deep in your team." },
                         { stream: "Level 2 MCB — Money Circulation Bonus", amount: "$800", color: "#dc2626", desc: "Your biggest recurring bonus. When your L1 Pro Members each enroll their own Pro Members (your Level 2), and those L2 members purchase, the MCB fires repeatedly. With 5 L1 × 3 L2 each = 15 Level 2 members generating orders, MCB cycles continuously." },
                         { stream: "Bill Payer Program (BPP)", amount: "$200", color: "#0891b2", desc: "Hit your personal PV threshold each month as a Pro Member and NFGN covers your bills. This activates automatically when your monthly PV is met." },
                         { stream: "CLB Fast-Start Bonus (Month 1)", amount: "$500+", color: GOLD, desc: "Triggered ONCE in your first 90 days when your L1 PMRC count reaches the qualifying threshold. Move fast — this bonus rewards speed." },
@@ -509,7 +509,7 @@ export function BasicTrainingPage() {
                     <div className="space-y-0 border-l-2 ml-4" style={{ borderColor: GREEN }}>
                       <Step number={1} title="Month 1 — Launch Hard (Target: $800–$1,200 + CLB)">
                         <p><strong>Week 1:</strong> Call your upline sponsor. Review this training together. Build your contact list of 100 names. Make your first 5 product conversations that same day.</p>
-                        <p><strong>Week 2:</strong> Enroll your first 3–5 retail customers. Place your personal IGNITE order (activates PSC + BPP progress). Enroll your first 2 Pro Members.</p>
+                        <p><strong>Week 2:</strong> Enroll your first 3–5 retail customers (your PSC builds from their purchases). Place your personal IGNITE order (activates BPP PV progress). Enroll your first 2 Pro Members.</p>
                         <p><strong>Week 3–4:</strong> Push to 5 enrolled Pro Members. Help each one make their first retail sale. Your CLB window is open — every L1 PMRC counts toward it. Maintain 5–7 new prospect conversations every day.</p>
                         <p><strong>Income this month:</strong> RC + PSC + early PMRC + CLB = $800–$1,500 depending on speed.</p>
                       </Step>

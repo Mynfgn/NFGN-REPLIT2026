@@ -168,6 +168,26 @@ router.post("/users/:id/upgrade-pro", requireAdmin, async (req, res): Promise<vo
   });
 });
 
+// ── Admin Reset Password (Admin only, no current password required) ────────
+router.post("/users/:id/admin-reset-password", requireAdmin, async (req, res): Promise<void> => {
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const { newPassword } = req.body;
+  if (!newPassword || typeof newPassword !== "string") {
+    res.status(400).json({ error: "newPassword is required" }); return;
+  }
+  if (newPassword.length < 8) {
+    res.status(400).json({ error: "Password must be at least 8 characters" }); return;
+  }
+
+  const { hashPassword } = await import("../lib/auth");
+  const hash = await hashPassword(newPassword);
+  const [updated] = await db.update(usersTable).set({ passwordHash: hash }).where(eq(usersTable.id, id)).returning({ id: usersTable.id });
+  if (!updated) { res.status(404).json({ error: "User not found" }); return; }
+  res.json({ success: true });
+});
+
 // ── Change Referral Code (Admin only) ──────────────────────────────────────
 router.patch("/users/:id/referral-code", requireAdmin, async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);

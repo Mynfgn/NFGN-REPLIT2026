@@ -86,7 +86,7 @@ function CompRow({ label, value, sub, highlight }: { label: string; value: strin
 const SECTIONS = [
   { id: "getting-started",  label: "Getting Started",        icon: BookOpen },
   { id: "comp-plan",        label: "Comp Plan",              icon: DollarSign },
-  { id: "2500-plan",        label: "$2,500/Month Plan",      icon: Target },
+  { id: "2500-plan",        label: "$3,500/Month Plan",      icon: Target },
   { id: "bpp",              label: "Bill Payer Program",     icon: Home },
   { id: "90-day",           label: "90-Day $3,500 Plan",    icon: TrendingUp },
   { id: "ignite",           label: "IGNITE Training",        icon: Flame },
@@ -112,7 +112,7 @@ export function BasicTrainingPage() {
         </div>
         <div className="flex flex-wrap gap-2 mt-4">
           <Badge className="text-xs" style={{ background: `${GOLD}30`, color: GOLD, border: `1px solid ${GOLD}40` }}>Comp Plan</Badge>
-          <Badge className="text-xs" style={{ background: `${GOLD}30`, color: GOLD, border: `1px solid ${GOLD}40` }}>$2,500/Month Strategy</Badge>
+          <Badge className="text-xs" style={{ background: `${GOLD}30`, color: GOLD, border: `1px solid ${GOLD}40` }}>$3,500/Month Strategy</Badge>
           <Badge className="text-xs" style={{ background: `${GOLD}30`, color: GOLD, border: `1px solid ${GOLD}40` }}>90-Day Residual Plan</Badge>
           <Badge className="text-xs" style={{ background: `${GOLD}30`, color: GOLD, border: `1px solid ${GOLD}40` }}>IGNITE Product Training</Badge>
           <Badge className="text-xs" style={{ background: `${GOLD}30`, color: GOLD, border: `1px solid ${GOLD}40` }}>Big Bonus Strategy</Badge>
@@ -292,62 +292,188 @@ export function BasicTrainingPage() {
             </Card>
           )}
 
-          {/* ── $2,500/MONTH PLAN ─────────────────────────── */}
+          {/* ── $3,500/MONTH PLAN ─────────────────────────── */}
           {activeSection === "2500-plan" && (
-            <Card>
-              <CardContent className="pt-6 space-y-6">
-                <SectionHeader icon={Target} title="How to Earn $2,500/Month" subtitle="A realistic step-by-step product and sales plan" color={GREEN} />
+            <div className="space-y-6">
 
-                <div className="rounded-xl border p-5 space-y-4">
-                  <p className="text-sm font-semibold">The $2,500/Month Formula</p>
-                  <p className="text-sm text-muted-foreground">Achieving $2,500/month is built on three pillars working simultaneously: your personal retail sales, your referral commissions, and your growing team's PMRC.</p>
-
-                  <div className="grid sm:grid-cols-3 gap-4 mt-4">
-                    {[
-                      { label: "Retail Sales", target: "$1,000", desc: "10 customers buying ~$100/mo each in product" },
-                      { label: "Referral Commissions", target: "$500", desc: "RC from 20–30 active referred customers" },
-                      { label: "Team PMRC", target: "$1,000", desc: "Residual from 5–8 Pro Members in your downline" },
-                    ].map(p => (
-                      <div key={p.label} className="rounded-lg border p-4 text-center bg-muted/30">
-                        <p className="text-2xl font-bold" style={{ color: GOLD }}>{p.target}</p>
-                        <p className="text-xs font-semibold mt-1">{p.label}</p>
-                        <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{p.desc}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <p className="font-semibold text-sm">Month-by-Month Action Plan</p>
-                  <div className="space-y-0 border-l-2 ml-4" style={{ borderColor: GREEN }}>
-                    <Step number={1} title="Month 1 — Launch (Target: $500–$800)">
-                      <p>Start with 5 personal retail customers. Use your own results as your pitch. Post 3× per week on social media. Enroll your first 2 Pro Members. Your RC + PSC should generate $500–$800 in your first month if you're consistent.</p>
-                    </Step>
-                    <Step number={2} title="Month 2 — Build (Target: $1,200–$1,800)">
-                      <p>Grow your retail customer base to 10. Help your first 2 Pro Members each enroll their first customer. Your PMRC begins. Aim to enroll 1 more Pro Member. Use email and social templates from the Tools section daily.</p>
-                    </Step>
-                    <Step number={3} title="Month 3 — Scale (Target: $2,500+)">
-                      <p>With 10+ retail customers, 5+ Pro Members, and those members starting to produce, your PMRC compounds. The CLB bonus may have already fired. MCB activates as your Level 2 team grows. You're now building passive income.</p>
-                    </Step>
-                  </div>
-                </div>
-
-                <Card className="bg-green-50 border-green-200">
-                  <CardContent className="pt-5 space-y-3">
-                    <p className="text-sm font-semibold text-green-900">Daily Non-Negotiables to Hit $2,500</p>
-                    <div className="space-y-2">
-                      {[
-                        "Share a product post or story on social media every single day",
-                        "Send 3 personalized messages to prospects from your contact list",
-                        "Follow up with at least 1 warm prospect from a previous conversation",
-                        "Check your back office daily to track sales, commissions, and team activity",
-                        "Help at least one of your Pro Members with their first sale or enrollment",
-                      ].map((t, i) => <Tip key={i}>{t}</Tip>)}
+              {/* Upline callout */}
+              <Card className="border-primary/40 bg-primary/5">
+                <CardContent className="pt-5 pb-5">
+                  <div className="flex gap-3 items-start">
+                    <Users className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="text-sm font-bold text-foreground">Your First Move: Contact Your Upline Sponsor</p>
+                      <p className="text-sm text-muted-foreground leading-relaxed">Before you do anything else — reach out to your upline sponsor. They have already walked this path, know what works, and are personally invested in your success because your growth directly benefits them too. Schedule a call, ask them to walk you through this 90-day plan, and stay in weekly contact. You are not doing this alone. Your upline is your most powerful resource — use them.</p>
                     </div>
-                  </CardContent>
-                </Card>
-              </CardContent>
-            </Card>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="pt-6 space-y-6">
+                  <SectionHeader icon={Target} title="How to Earn $3,500/Month in 90 Days or Less" subtitle="A detailed, income-stream-by-income-stream blueprint with daily targets" color={GREEN} />
+
+                  {/* Income breakdown */}
+                  <div className="rounded-xl border p-5 space-y-4">
+                    <p className="text-sm font-bold">The $3,500/Month Income Breakdown</p>
+                    <p className="text-sm text-muted-foreground">All five income streams work simultaneously. Your job is to activate each one as quickly as possible — some in Week 1, others by the end of Month 2.</p>
+
+                    <div className="space-y-2 mt-2">
+                      {[
+                        { stream: "Retail Sales + RC", amount: "$800", color: "#2D6A4F", desc: "12–15 active retail customers buying 1–2 products/month each. RC fires on every purchase through your referral link." },
+                        { stream: "Personal Sales Commission (PSC)", amount: "$300", color: "#1d4ed8", desc: "Your own monthly product orders generate PSC. Stay on IGNITE and any other products personally — this also keeps your testimonials authentic." },
+                        { stream: "Level 1 PMRC", amount: "$900", color: "#7c3aed", desc: "6–8 personally enrolled Pro Members who are each ordering products monthly. Every order they place generates PMRC credited to you." },
+                        { stream: "Level 2 MCB — Money Circulation Bonus", amount: "$800", color: "#dc2626", desc: "Your biggest recurring bonus. When your L1 Pro Members each enroll their own Pro Members (your Level 2), and those L2 members purchase, the MCB fires repeatedly. With 5 L1 × 3 L2 each = 15 Level 2 members generating orders, MCB cycles continuously." },
+                        { stream: "Bill Payer Program (BPP)", amount: "$200", color: "#0891b2", desc: "Hit your personal PV threshold each month as a Pro Member and NFGN covers your bills. This activates automatically when your monthly PV is met." },
+                        { stream: "CLB Fast-Start Bonus (Month 1)", amount: "$500+", color: GOLD, desc: "Triggered ONCE in your first 90 days when your L1 PMRC count reaches the qualifying threshold. Move fast — this bonus rewards speed." },
+                      ].map((s, i) => (
+                        <div key={i} className="flex gap-3 p-3 rounded-lg border bg-white items-start">
+                          <div className="h-2 w-2 rounded-full flex-shrink-0 mt-2" style={{ background: s.color }} />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-start gap-2 flex-wrap">
+                              <p className="text-sm font-semibold text-foreground">{s.stream}</p>
+                              <span className="text-base font-bold flex-shrink-0" style={{ color: s.color }}>{s.amount}/mo</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{s.desc}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex justify-between items-center border-t pt-4 mt-2">
+                      <p className="text-sm font-bold">Combined Monthly Target</p>
+                      <p className="text-2xl font-bold" style={{ color: GOLD }}>$3,500+</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground">*CLB is one-time. Ongoing monthly run-rate after Month 1 is $3,000–$3,500 from the remaining five streams, with MCB growing as your L2 team expands.</p>
+                  </div>
+
+                  {/* Time commitment */}
+                  <div className="rounded-xl bg-[#0a0a0a] p-5 text-white space-y-4">
+                    <p className="text-sm font-bold flex items-center gap-2" style={{ color: GOLD }}>
+                      <Clock className="h-4 w-4" /> How Many Hours Per Day?
+                    </p>
+                    <div className="grid sm:grid-cols-3 gap-4">
+                      {[
+                        { phase: "Month 1", hours: "2–3 hrs/day", label: "Full Launch Mode", items: ["1 hr: outreach & messages", "45 min: social media content", "30 min: follow-ups", "30 min: team check-in with upline"] },
+                        { phase: "Month 2", hours: "1.5–2 hrs/day", label: "Build & Duplicate", items: ["45 min: new prospect outreach", "30 min: support your L1 Pro Members", "30 min: social media", "15 min: back-office review"] },
+                        { phase: "Month 3", hours: "1–1.5 hrs/day", label: "Scale & Sustain", items: ["30 min: new lead outreach", "30 min: team leadership & coaching", "30 min: content & follow-ups"] },
+                      ].map(p => (
+                        <div key={p.phase} className="bg-white/5 rounded-lg p-4 space-y-2">
+                          <p className="text-xs text-white/50">{p.phase}</p>
+                          <p className="text-lg font-bold" style={{ color: GOLD }}>{p.hours}</p>
+                          <p className="text-xs font-semibold text-white/80">{p.label}</p>
+                          <ul className="space-y-1 mt-2">
+                            {p.items.map((item, i) => (
+                              <li key={i} className="text-xs text-white/60 flex gap-1.5">
+                                <ChevronRight className="h-3 w-3 flex-shrink-0 mt-0.5" style={{ color: GOLD }} />
+                                {item}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Daily customer conversations */}
+                  <div className="rounded-xl border p-5 space-y-4">
+                    <p className="text-sm font-bold flex items-center gap-2">
+                      <MessageCircle className="h-4 w-4 text-primary" /> How Many Customer Conversations Per Day?
+                    </p>
+                    <p className="text-sm text-muted-foreground">This is the single most important number in your business. The pipeline is the business. If you are talking to enough people every day, everything else follows.</p>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      {[
+                        { type: "New Prospect Conversations", target: "5–7 per day", detail: "These are first-touch conversations — people you're reaching out to for the first time about the products or opportunity. This can be DMs, texts, in-person, or social media comments. 5 new conversations per day = 150/month = statistically 10–15 new customers or recruits." },
+                        { type: "Warm Follow-Ups", target: "3–5 per day", detail: "People who already know about NFGN but haven't bought or joined yet. Follow-up is where most sales are actually made. 80% of sales happen after the 5th contact. Most reps quit after 1–2. Your follow-up discipline is your competitive advantage." },
+                        { type: "Team Check-Ins (L1 Pro Members)", target: "1–2 per day", detail: "Call, text, or message one of your Pro Members every day. Ask how their business is going, what challenges they're facing, and who they're talking to. Their success is your MCB. Their duplication is your residual income." },
+                        { type: "Social Media Engagements", target: "10–15 per day", detail: "Comment on posts in wellness groups, respond to stories, answer DMs, and reply to comments on your content. Social selling is a numbers game — the more you show up, the more you attract." },
+                      ].map(c => (
+                        <div key={c.type} className="border rounded-lg p-4 space-y-2">
+                          <div className="flex justify-between items-start gap-2">
+                            <p className="text-sm font-semibold text-foreground">{c.type}</p>
+                            <Badge className="flex-shrink-0 text-xs" style={{ background: `${GOLD}20`, color: GOLD, border: `1px solid ${GOLD}40` }}>{c.target}</Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{c.detail}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <p className="text-xs font-bold text-green-900">The Math: 5 new conversations/day × 30 days = 150 contacts. At a 10% conversion rate = 15 new customers or recruits per month. Over 90 days = 45 new people in your pipeline. That is how you build $3,500/month.</p>
+                    </div>
+                  </div>
+
+                  {/* MCB deep dive */}
+                  <Card className="border-red-200 bg-red-50/50">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm flex items-center gap-2 text-red-800">
+                        <TrendingUp className="h-4 w-4" /> Level 2 MCB — Your Biggest Recurring Income Driver
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <p className="text-xs text-muted-foreground leading-relaxed">The Money Circulation Bonus (MCB) is what separates a $1,000/month earner from a $3,500/month earner. It fires every time your <strong>Level 2 Pro Members</strong> hit the purchase trigger — and it fires repeatedly, with no cap, as long as you maintain your qualifying L1 count.</p>
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold text-foreground">How MCB Compounds Over 90 Days:</p>
+                        {[
+                          { wk: "Month 1", ev: "You enroll 5 L1 Pro Members. MCB is not yet active — your L1 team is just getting started." },
+                          { wk: "Month 2", ev: "Your L1 Pro Members each enroll 2–3 of their own (your L2). MCB begins firing as L2 members make purchases. Each cycle = a bonus to you." },
+                          { wk: "Month 3", ev: "With 10–15 L2 Pro Members ordering each month, MCB fires repeatedly. At this scale it can contribute $600–$1,000+/month in bonus income alone." },
+                        ].map((r, i) => (
+                          <div key={i} className="flex gap-3 text-xs">
+                            <span className="font-bold text-red-700 w-16 flex-shrink-0">{r.wk}</span>
+                            <span className="text-muted-foreground">{r.ev}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="bg-red-100 border border-red-200 rounded-lg p-3">
+                        <p className="text-xs font-bold text-red-900">Action: Help every one of your L1 Pro Members enroll their first 2 Pro Members within 30 days of joining. This is the single fastest way to activate MCB and push your income past $3,500/month.</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Month-by-month plan */}
+                  <div className="space-y-4">
+                    <p className="font-semibold text-sm">90-Day Month-by-Month Action Plan</p>
+                    <div className="space-y-0 border-l-2 ml-4" style={{ borderColor: GREEN }}>
+                      <Step number={1} title="Month 1 — Launch Hard (Target: $800–$1,200 + CLB)">
+                        <p><strong>Week 1:</strong> Call your upline sponsor. Review this training together. Build your contact list of 100 names. Make your first 5 product conversations that same day.</p>
+                        <p><strong>Week 2:</strong> Enroll your first 3–5 retail customers. Place your personal IGNITE order (activates PSC + BPP progress). Enroll your first 2 Pro Members.</p>
+                        <p><strong>Week 3–4:</strong> Push to 5 enrolled Pro Members. Help each one make their first retail sale. Your CLB window is open — every L1 PMRC counts toward it. Maintain 5–7 new prospect conversations every day.</p>
+                        <p><strong>Income this month:</strong> RC + PSC + early PMRC + CLB = $800–$1,500 depending on speed.</p>
+                      </Step>
+                      <Step number={2} title="Month 2 — Build Your L2 (Target: $1,800–$2,500)">
+                        <p>Your primary job this month is helping your L1 Pro Members enroll their first 2–3 people. This builds your Level 2 and activates MCB. Hold weekly team calls. Coach your L1 daily.</p>
+                        <p>Continue your own outreach (5 new convos/day). Grow retail customers to 12–15. Your PMRC L1 income is growing as your team orders. MCB starts firing as L2 members purchase.</p>
+                        <p><strong>Income this month:</strong> RC + PSC + PMRC L1 + MCB (early) + BPP = $1,800–$2,500.</p>
+                      </Step>
+                      <Step number={3} title="Month 3 — Scale &amp; Collect (Target: $3,500+)">
+                        <p>By now you have 5+ L1 Pro Members each with 2–3 of their own L2 members (10–15 Level 2 total). MCB is firing repeatedly. PMRC from both levels is compounding. BPP is locked in monthly.</p>
+                        <p>Keep enrolling. The more L2 members your team builds, the more MCB fires. Every new L2 Pro Member is another MCB trigger waiting to happen.</p>
+                        <p><strong>Income this month:</strong> RC + PSC + PMRC L1 + PMRC L2 + MCB (recurring) + BPP = $3,000–$3,500+.</p>
+                      </Step>
+                    </div>
+                  </div>
+
+                  {/* Daily non-negotiables */}
+                  <Card className="bg-green-50 border-green-200">
+                    <CardContent className="pt-5 space-y-3">
+                      <p className="text-sm font-semibold text-green-900">Daily Non-Negotiables to Hit $3,500</p>
+                      <div className="space-y-2">
+                        {[
+                          "Talk to 5–7 new prospects every single day — no exceptions, no days off",
+                          "Follow up with 3–5 warm contacts who haven't decided yet",
+                          "Post wellness/lifestyle content on at least one social platform daily",
+                          "Check in with 1–2 of your L1 Pro Members — ask how their conversations are going",
+                          "Review your back office daily: commissions, team activity, BPP progress",
+                          "Check in with your upline sponsor at least once a week for coaching and accountability",
+                          "Help at least one L1 Pro Member enroll their first new member each week",
+                        ].map((t, i) => <Tip key={i}>{t}</Tip>)}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                </CardContent>
+              </Card>
+            </div>
           )}
 
           {/* ── BILL PAYER PROGRAM ────────────────────────── */}

@@ -64,6 +64,7 @@ import { AdminBPPPage } from "@/pages/admin/BPP";
 import { AdminPromoCodesPage } from "@/pages/admin/PromoCodes";
 import { AdminMessagesPage } from "@/pages/admin/AdminMessages";
 import { OrdersAwaitingApprovalPage } from "@/pages/admin/OrdersAwaitingApproval";
+import { AdminProfilePage } from "@/pages/admin/AdminProfile";
 
 // Stubs for pages still being built
 const Stub = ({ name }: { name: string }) => (
@@ -312,6 +313,11 @@ function Router() {
       <Route path="/admin/genealogy">
         <RequireAuth requireAdmin>
           <AdminLayout><AdminGenealogyPage /></AdminLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/admin/profile">
+        <RequireAuth requireAdmin>
+          <AdminLayout><AdminProfilePage /></AdminLayout>
         </RequireAuth>
       </Route>
 

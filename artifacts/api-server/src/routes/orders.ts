@@ -48,28 +48,27 @@ router.get("/orders", requireAuth, async (req, res): Promise<void> => {
   const status = req.query.status as string | undefined;
   const userId = req.query.userId ? parseInt(String(req.query.userId)) : undefined;
 
+  const paymentStatus = req.query.paymentStatus as string | undefined;
   const isAdmin = ["super_admin", "admin", "store_admin"].includes(currentUser.role);
   const targetUserId = isAdmin ? userId : currentUser.id;
+
+  const whereClause = and(
+    targetUserId ? eq(ordersTable.userId, targetUserId) : undefined,
+    status ? eq(ordersTable.status, status) : undefined,
+    paymentStatus ? eq(ordersTable.paymentStatus, paymentStatus) : undefined,
+  );
 
   const orders = await db.select({
     order: ordersTable,
     user: usersTable,
   }).from(ordersTable)
     .leftJoin(usersTable, eq(ordersTable.userId, usersTable.id))
-    .where(and(
-      targetUserId ? eq(ordersTable.userId, targetUserId) : undefined,
-      status ? eq(ordersTable.status, status) : undefined,
-    ))
+    .where(whereClause)
     .limit(limit)
     .offset(offset)
     .orderBy(desc(ordersTable.createdAt));
 
-  const [{ value: total }] = await db.select({ value: count() }).from(ordersTable).where(
-    and(
-      targetUserId ? eq(ordersTable.userId, targetUserId) : undefined,
-      status ? eq(ordersTable.status, status) : undefined,
-    )
-  );
+  const [{ value: total }] = await db.select({ value: count() }).from(ordersTable).where(whereClause);
 
   const result = [];
   for (const row of orders) {

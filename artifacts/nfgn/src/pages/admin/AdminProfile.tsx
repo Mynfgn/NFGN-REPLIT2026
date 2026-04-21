@@ -204,6 +204,50 @@ export function AdminProfilePage() {
   /* ── Member: status ── */
   const [mStatusSaving, setMStatusSaving] = useState(false);
 
+  /* ── Member: change sponsor ── */
+  const [sponsorSearch, setSponsorSearch] = useState("");
+  const [sponsorResults, setSponsorResults] = useState<any[]>([]);
+  const [sponsorSearching, setSponsorSearching] = useState(false);
+  const [newSponsor, setNewSponsor] = useState<any | null>(null);
+  const [sponsorSaving, setSponsorSaving] = useState(false);
+  const [sponsorMsg, setSponsorMsg] = useState<{ type: "success" | "error" | "warn"; text: string } | null>(null);
+
+  const searchSponsors = useCallback(async (q: string) => {
+    if (!q.trim()) { setSponsorResults([]); return; }
+    setSponsorSearching(true);
+    try {
+      const res = await customFetch(`/api/users?search=${encodeURIComponent(q)}&limit=8`);
+      const data = await res.json();
+      setSponsorResults(data.users ?? []);
+    } catch { setSponsorResults([]); }
+    finally { setSponsorSearching(false); }
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => searchSponsors(sponsorSearch), 350);
+    return () => clearTimeout(t);
+  }, [sponsorSearch, searchSponsors]);
+
+  async function changeSponsor() {
+    if (!selectedMember || !newSponsor) return;
+    setSponsorSaving(true); setSponsorMsg(null);
+    try {
+      const res = await customFetch(`/api/users/${selectedMember.id}/change-sponsor`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newSponsorId: newSponsor.id }),
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "Failed");
+      const result = await res.json();
+      setSelectedMember((p: any) => ({ ...p, sponsorId: newSponsor.id }));
+      setNewSponsor(null);
+      setSponsorSearch("");
+      setSponsorResults([]);
+      setSponsorMsg({ type: "success", text: `Sponsor updated — ${selectedMember.firstName} is now under ${result.newSponsor.name}.` });
+    } catch (e: any) { setSponsorMsg({ type: "error", text: e.message }); }
+    finally { setSponsorSaving(false); }
+  }
+
   /* ── Member: PV/GV ── */
   const [mPV, setMPV] = useState("");
   const [mGV, setMGV] = useState("");
@@ -218,8 +262,9 @@ export function AdminProfilePage() {
     setMRef(m.referralCode ?? "");
     setMPV(String(m.pvAdjustment ?? 0));
     setMGV(String(m.gvAdjustment ?? 0));
-    setUNameMsg(null); setMPwdMsg(null); setMRefMsg(null); setMVolMsg(null);
+    setUNameMsg(null); setMPwdMsg(null); setMRefMsg(null); setMVolMsg(null); setSponsorMsg(null);
     setMPwd({ next: "", confirm: "" });
+    setNewSponsor(null); setSponsorSearch("");
   }
 
   async function saveMemberUsername() {
@@ -670,6 +715,99 @@ export function AdminProfilePage() {
                 </div>
               </Section>
 
+              {/* ── Change Upline Sponsor ── */}
+              <Section title="Change Upline Sponsor" icon={Users} sub="Move this member under a different personal sponsor. Only allowed within 72 hours of joining with no downline.">
+                {sponsorMsg && <Alert type={sponsorMsg.type}>{sponsorMsg.text}</Alert>}
+
+                {/* Eligibility display */}
+                {(() => {
+                  const hoursElapsed = (Date.now() - new Date(selectedMember.createdAt).getTime()) / (1000 * 60 * 60);
+                  const hoursLeft = Math.max(0, 72 - hoursElapsed);
+                  const eligible = hoursElapsed <= 72;
+                  return (
+                    <div className={`rounded-lg border p-3 text-xs flex items-start gap-2 ${eligible ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-800"}`}>
+                      {eligible
+                        ? <CheckCircle2 className="h-4 w-4 flex-shrink-0 mt-0.5 text-green-600" />
+                        : <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5 text-red-600" />
+                      }
+                      <span>
+                        {eligible
+                          ? <><strong>Eligible for sponsor change.</strong> {Math.floor(hoursLeft)}h {Math.round((hoursLeft % 1) * 60)}m remaining in the 72-hour window.</>
+                          : <><strong>Window closed.</strong> {selectedMember.firstName} joined {Math.floor(hoursElapsed)} hours ago — the 72-hour window has passed.</>
+                        }
+                      </span>
+                    </div>
+                  );
+                })()}
+
+                {/* New sponsor search */}
+                <Field label="Search for New Sponsor" hint="Type the name or email of the member you want to reassign as this member's upline sponsor.">
+                  <div className="relative mt-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      className="pl-9 pr-9"
+                      placeholder="Type name or email…"
+                      value={sponsorSearch}
+                      onChange={e => { setSponsorSearch(e.target.value); setNewSponsor(null); }}
+                    />
+                    {sponsorSearch && (
+                      <button className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => { setSponsorSearch(""); setSponsorResults([]); }}>
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                  {sponsorSearching && <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1"><Loader2 className="h-3 w-3 animate-spin" /> Searching…</div>}
+                  {sponsorResults.length > 0 && (
+                    <div className="border rounded-lg divide-y overflow-hidden mt-1">
+                      {sponsorResults.filter(r => r.id !== selectedMember.id).map(r => (
+                        <button
+                          key={r.id}
+                          onClick={() => { setNewSponsor(r); setSponsorSearch(""); setSponsorResults([]); }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted/50 text-left text-sm transition-colors"
+                        >
+                          <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs flex-shrink-0">
+                            {r.firstName?.charAt(0)}{r.lastName?.charAt(0)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span className="font-medium">{r.firstName} {r.lastName}</span>
+                            <span className="text-xs text-muted-foreground ml-2 font-mono">{r.referralCode}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </Field>
+
+                {/* Selected new sponsor preview */}
+                {newSponsor && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg border-2 border-primary/30 bg-primary/5">
+                    <div className="h-9 w-9 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-xs flex-shrink-0">
+                      {newSponsor.firstName?.charAt(0)}{newSponsor.lastName?.charAt(0)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm">{newSponsor.firstName} {newSponsor.lastName}</p>
+                      <p className="text-xs text-muted-foreground font-mono">{newSponsor.referralCode} · #{newSponsor.id}</p>
+                    </div>
+                    <button onClick={() => setNewSponsor(null)} className="text-muted-foreground hover:text-foreground">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+
+                {newSponsor && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
+                    <strong>⚠ Confirm:</strong> This will move <strong>{selectedMember.firstName} {selectedMember.lastName}</strong> out from under their current sponsor and place them under <strong>{newSponsor.firstName} {newSponsor.lastName}</strong>. This action updates the genealogy tree and cannot be reversed after 72 hours.
+                  </div>
+                )}
+
+                <div className="flex justify-end">
+                  <Button onClick={changeSponsor} disabled={sponsorSaving || !newSponsor} className="gap-2">
+                    {sponsorSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                    {sponsorSaving ? "Moving…" : "Change Sponsor"}
+                  </Button>
+                </div>
+              </Section>
+
               {/* ── Activate / Deactivate ── */}
               <Section title="Account Status" icon={ToggleRight} sub="Activate or deactivate this member's access to the platform.">
                 <div className="flex items-center justify-between gap-4 p-4 rounded-lg border bg-muted/20">
@@ -699,31 +837,49 @@ export function AdminProfilePage() {
               </Section>
 
               {/* ── PV / GV Adjustment ── */}
-              <Section title="Adjust PV / GV" icon={SlidersHorizontal} sub="Manually set the Personal Volume and Group Volume adjustments for this member.">
+              <Section title="Adjust PV / GV" icon={SlidersHorizontal} sub="Set the manual volume adjustment for this member. Use positive numbers to increase, negative numbers to decrease.">
                 {mVolMsg && <Alert type={mVolMsg.type}>{mVolMsg.text}</Alert>}
+
+                <div className="grid grid-cols-2 gap-6 p-4 bg-muted/20 rounded-lg border">
+                  <div className="text-center">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Current PV Adjustment</p>
+                    <p className={`text-2xl font-bold font-mono ${(selectedMember.pvAdjustment ?? 0) < 0 ? "text-red-600" : "text-green-600"}`}>
+                      {(selectedMember.pvAdjustment ?? 0) > 0 ? "+" : ""}{selectedMember.pvAdjustment ?? 0} CV
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Current GV Adjustment</p>
+                    <p className={`text-2xl font-bold font-mono ${(selectedMember.gvAdjustment ?? 0) < 0 ? "text-red-600" : "text-green-600"}`}>
+                      {(selectedMember.gvAdjustment ?? 0) > 0 ? "+" : ""}{selectedMember.gvAdjustment ?? 0} CV
+                    </p>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
-                  <Field label="PV Adjustment (CV)" hint="Added to this member's monthly Personal Volume.">
+                  <Field label="New PV Adjustment (CV)" hint="Positive = increase · Negative = decrease">
                     <Input
                       className="mt-1 font-mono"
                       type="number"
                       value={mPV}
                       onChange={e => setMPV(e.target.value)}
-                      placeholder="0"
+                      placeholder="e.g. 50 or -30"
                     />
                   </Field>
-                  <Field label="GV Adjustment (CV)" hint="Added to this member's Group Volume total.">
+                  <Field label="New GV Adjustment (CV)" hint="Positive = increase · Negative = decrease">
                     <Input
                       className="mt-1 font-mono"
                       type="number"
                       value={mGV}
                       onChange={e => setMGV(e.target.value)}
-                      placeholder="0"
+                      placeholder="e.g. 100 or -50"
                     />
                   </Field>
                 </div>
-                <div className="bg-muted/30 rounded-lg p-3 text-xs text-muted-foreground border">
-                  Current adjustments — PV: <strong>{selectedMember.pvAdjustment ?? 0} CV</strong> · GV: <strong>{selectedMember.gvAdjustment ?? 0} CV</strong>
+
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
+                  <strong>Note:</strong> These adjustments are added on top of the member's actual earned volume. Entering a negative value will reduce their effective PV or GV accordingly.
                 </div>
+
                 <div className="flex justify-end">
                   <Button onClick={saveMemberVolume} disabled={mVolSaving} className="gap-2">
                     {mVolSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <SlidersHorizontal className="h-4 w-4" />}

@@ -252,4 +252,77 @@ router.post("/users/:id/volume-adjustment", requireAdmin, async (req, res): Prom
   res.json(formatUser(updated, sponsorName));
 });
 
+// ── Change Upline Sponsor (Admin only, 72h window, no downline) ─────────────
+router.post("/users/:id/change-sponsor", requireAdmin, async (req, res): Promise<void> => {
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const { newSponsorId } = req.body;
+  if (!newSponsorId) { res.status(400).json({ error: "newSponsorId is required" }); return; }
+  const newSponsorIdInt = parseInt(String(newSponsorId));
+  if (isNaN(newSponsorIdInt)) { res.status(400).json({ error: "newSponsorId must be a number" }); return; }
+
+  const [member] = await db.select().from(usersTable).where(eq(usersTable.id, id));
+  if (!member) { res.status(404).json({ error: "Member not found" }); return; }
+
+  // ── 72-hour window check ──
+  const hoursSinceJoining = (Date.now() - member.createdAt.getTime()) / (1000 * 60 * 60);
+  if (hoursSinceJoining > 72) {
+    res.status(400).json({
+      error: `Sponsor change is only allowed within 72 hours of joining. ${member.firstName} joined ${Math.floor(hoursSinceJoining)} hours ago.`,
+    });
+    return;
+  }
+
+  // ── No downline check ──
+  const [{ value: downlineCount }] = await db.select({ value: count() }).from(usersTable).where(eq(usersTable.sponsorId, id));
+  if (downlineCount > 0) {
+    res.status(400).json({
+      error: `Sponsor cannot be changed because ${member.firstName} already has ${downlineCount} member(s) under them.`,
+    });
+    return;
+  }
+
+  // ── Validate new sponsor exists ──
+  const [newSponsor] = await db.select().from(usersTable).where(eq(usersTable.id, newSponsorIdInt));
+  if (!newSponsor) { res.status(404).json({ error: "New sponsor not found" }); return; }
+  if (newSponsorIdInt === id) { res.status(400).json({ error: "A member cannot be their own sponsor" }); return; }
+
+  // ── Update user sponsorId ──
+  await db.update(usersTable).set({ sponsorId: newSponsorIdInt }).where(eq(usersTable.id, id));
+
+  // ── Update genealogy node ──
+  const [memberNode] = await db.select().from(genealogyNodesTable).where(eq(genealogyNodesTable.userId, id));
+  const [newSponsorNode] = await db.select().from(genealogyNodesTable).where(eq(genealogyNodesTable.userId, newSponsorIdInt));
+
+  if (memberNode && newSponsorNode) {
+    const newGeneration = newSponsorNode.generation + 1;
+    const newPath = newSponsorNode.path
+      ? `${newSponsorNode.path}/${newSponsorNode.id}`
+      : `${newSponsorNode.id}`;
+    await db.update(genealogyNodesTable)
+      .set({ parentId: newSponsorNode.id, generation: newGeneration, path: newPath })
+      .where(eq(genealogyNodesTable.id, memberNode.id));
+  } else if (!memberNode) {
+    // Create genealogy node if missing
+    const newGeneration = newSponsorNode ? newSponsorNode.generation + 1 : 1;
+    const newPath = newSponsorNode
+      ? (newSponsorNode.path ? `${newSponsorNode.path}/${newSponsorNode.id}` : `${newSponsorNode.id}`)
+      : "";
+    await db.insert(genealogyNodesTable).values({
+      userId: id,
+      parentId: newSponsorNode?.id ?? undefined,
+      generation: newGeneration,
+      path: newPath,
+    });
+  }
+
+  const [updatedMember] = await db.select().from(usersTable).where(eq(usersTable.id, id));
+  res.json({
+    success: true,
+    member: formatUser(updatedMember, `${newSponsor.firstName} ${newSponsor.lastName}`),
+    newSponsor: { id: newSponsor.id, name: `${newSponsor.firstName} ${newSponsor.lastName}`, referralCode: newSponsor.referralCode },
+  });
+});
+
 export default router;

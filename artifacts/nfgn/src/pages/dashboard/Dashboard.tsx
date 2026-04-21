@@ -16,18 +16,54 @@ import { commissionTypeLabel } from "@/lib/labels";
 const BRAND_GOLD = "#C9A84C";
 const BRAND_GREEN = "#2D6A4F";
 
-function StatCard({ title, value, sub, icon: Icon, accent }: {
-  title: string; value: string; sub: string; icon: any; accent?: boolean;
+type StatCardColor = "gold" | "green-dark" | "green-light" | "default";
+
+const STAT_CARD_STYLES: Record<StatCardColor, {
+  border: string; bg: string; iconColor: string; valueColor: string; subColor: string;
+}> = {
+  "green-dark": {
+    border: "border-l-4",
+    bg: "bg-gradient-to-br from-[#1a4a36] to-[#2D6A4F]",
+    iconColor: "text-[#74c69d]",
+    valueColor: "text-white",
+    subColor: "text-[#b7e4c7]",
+  },
+  "green-light": {
+    border: "border-l-4 border-l-[#52b788]",
+    bg: "bg-gradient-to-br from-[#d8f3dc] to-[#b7e4c7]",
+    iconColor: "text-[#2D6A4F]",
+    valueColor: "text-[#1b4332]",
+    subColor: "text-[#40916c]",
+  },
+  gold: {
+    border: "border-l-4 border-l-primary",
+    bg: "",
+    iconColor: "text-primary",
+    valueColor: "text-foreground",
+    subColor: "text-muted-foreground",
+  },
+  default: {
+    border: "",
+    bg: "",
+    iconColor: "text-muted-foreground",
+    valueColor: "text-foreground",
+    subColor: "text-muted-foreground",
+  },
+};
+
+function StatCard({ title, value, sub, icon: Icon, accent, color = "default" }: {
+  title: string; value: string; sub: string; icon: any; accent?: boolean; color?: StatCardColor;
 }) {
+  const scheme = accent && color === "default" ? STAT_CARD_STYLES["gold"] : STAT_CARD_STYLES[color];
   return (
-    <Card className={accent ? "border-l-4 border-l-primary" : ""}>
+    <Card className={`${scheme.border} ${scheme.bg} overflow-hidden`}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        <Icon className={`h-4 w-4 ${accent ? "text-primary" : "text-muted-foreground"}`} />
+        <CardTitle className={`text-sm font-medium ${color === "green-dark" ? "text-[#b7e4c7]" : "text-muted-foreground"}`}>{title}</CardTitle>
+        <Icon className={`h-4 w-4 ${scheme.iconColor}`} />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-muted-foreground mt-1">{sub}</p>
+        <div className={`text-2xl font-bold ${scheme.valueColor}`}>{value}</div>
+        <p className={`text-xs mt-1 ${scheme.subColor}`}>{sub}</p>
       </CardContent>
     </Card>
   );
@@ -453,8 +489,8 @@ export function Dashboard() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Wallet Balance" value={`$${(data?.walletBalance ?? 0).toFixed(2)}`} sub="Available for withdrawal" icon={Wallet} accent />
-        <StatCard title="Total Earnings" value={`$${(data?.totalEarnings ?? 0).toFixed(2)}`} sub="Lifetime commissions" icon={ArrowUpRight} />
+        <StatCard title="Wallet Balance" value={`$${(data?.walletBalance ?? 0).toFixed(2)}`} sub="Available for withdrawal" icon={Wallet} color="green-dark" />
+        <StatCard title="Total Earnings" value={`$${(data?.totalEarnings ?? 0).toFixed(2)}`} sub="Lifetime commissions" icon={ArrowUpRight} color="green-light" />
         <StatCard title="Team Size" value={String(data?.teamSize ?? 0)} sub={`${data?.personallyEnrolled ?? 0} personally enrolled`} icon={Users} />
         <StatCard title="Members" value={String(data?.retailCustomers ?? 0)} sub="Active buyers" icon={ShoppingBag} />
       </div>

@@ -209,7 +209,7 @@ export function RegistrationPage() {
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-                <span>Maintain <strong>100 CV/month</strong> to keep Pro Member status</span>
+                <span>Maintain <strong>100 PCV/month</strong> to keep Pro Member status</span>
               </div>
             </div>
           </CardContent>

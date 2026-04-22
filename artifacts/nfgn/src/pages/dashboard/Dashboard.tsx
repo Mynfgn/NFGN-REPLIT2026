@@ -84,28 +84,28 @@ function CVCard({ pv, gv, required }: { pv: number; gv: number; required: number
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="text-center p-3 bg-muted rounded-lg">
-            <div className="text-xl font-bold text-primary">{pv} CV</div>
-            <div className="text-xs text-muted-foreground">Personal Volume (PV)</div>
-            <div className="text-xs text-muted-foreground mt-0.5">Your purchases</div>
+            <div className="text-xl font-bold text-primary">{pv} PCV</div>
+            <div className="text-xs text-muted-foreground">PCV — Personal Commissionable Volume</div>
+            <div className="text-xs text-muted-foreground mt-0.5">Also known as PV</div>
           </div>
           <div className="text-center p-3 bg-muted rounded-lg">
-            <div className="text-xl font-bold text-green-600">{gv} CV</div>
-            <div className="text-xs text-muted-foreground">Group Volume (GV)</div>
-            <div className="text-xs text-muted-foreground mt-0.5">Entire community</div>
+            <div className="text-xl font-bold text-green-600">{gv} GCV</div>
+            <div className="text-xs text-muted-foreground">GCV — Group Commissionable Volume</div>
+            <div className="text-xs text-muted-foreground mt-0.5">Also known as GV</div>
           </div>
         </div>
         <div>
           <div className="flex justify-between text-xs mb-1.5">
-            <span className="text-muted-foreground">Monthly maintenance ({required} CV required)</span>
+            <span className="text-muted-foreground">Monthly maintenance ({required} PCV required)</span>
             <span className={maintained ? "text-green-600 font-semibold" : "text-yellow-600 font-semibold"}>
-              {pv} / {required} CV
+              {pv} / {required} PCV
             </span>
           </div>
           <Progress value={pvPercent} className="h-2" />
           <p className={`text-xs mt-1.5 flex items-center gap-1 ${maintained ? "text-green-600" : "text-yellow-600"}`}>
             {maintained
               ? <><CheckCircle2 className="h-3 w-3" /> Pro Member status maintained</>
-              : <><AlertCircle className="h-3 w-3" /> Need {required - pv} more CV to maintain Pro status</>
+              : <><AlertCircle className="h-3 w-3" /> Need {required - pv} more PCV to maintain Pro status</>
             }
           </p>
         </div>
@@ -251,7 +251,7 @@ function MonthlySalesChart({ data }: { data: any[] }) {
           <BarChart3 className="h-4 w-4 text-primary" />
           Community Monthly Sales
         </CardTitle>
-        <p className="text-xs text-muted-foreground">Sales $ and Commissionable Volume (CV) — last 12 months</p>
+        <p className="text-xs text-muted-foreground">Sales $ and Commissionable Volume (CV / GCV) — last 12 months</p>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={220}>
@@ -259,14 +259,14 @@ function MonthlySalesChart({ data }: { data: any[] }) {
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis dataKey="month" tick={{ fontSize: 11 }} />
             <YAxis yAxisId="sales" orientation="left" tick={{ fontSize: 11 }} tickFormatter={v => `$${v}`} />
-            <YAxis yAxisId="cv" orientation="right" tick={{ fontSize: 11 }} tickFormatter={v => `${v}cv`} />
+            <YAxis yAxisId="cv" orientation="right" tick={{ fontSize: 11 }} tickFormatter={v => `${v} GCV`} />
             <Tooltip
               formatter={(value: any, name: string) => [
-                name === "totalSales" ? `$${Number(value).toFixed(2)}` : `${value} CV`,
-                name === "totalSales" ? "Sales" : "CV",
+                name === "totalSales" ? `$${Number(value).toFixed(2)}` : `${value} GCV`,
+                name === "totalSales" ? "Sales" : "GCV",
               ]}
             />
-            <Legend formatter={v => v === "totalSales" ? "Sales ($)" : "Group CV"} />
+            <Legend formatter={v => v === "totalSales" ? "Sales ($)" : "GCV (Group Commissionable Volume)"} />
             <Bar yAxisId="sales" dataKey="totalSales" fill={BRAND_GOLD} radius={[3, 3, 0, 0]} />
             <Bar yAxisId="cv" dataKey="totalCV" fill={BRAND_GREEN} radius={[3, 3, 0, 0]} opacity={0.8} />
           </BarChart>

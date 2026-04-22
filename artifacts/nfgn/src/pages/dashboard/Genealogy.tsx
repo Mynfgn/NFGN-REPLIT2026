@@ -160,12 +160,12 @@ function MemberPopup({ pos, onClose, svgW }: { pos: Pos; onClose: () => void; sv
           </div>
           <hr className="border-border" />
           <div className="flex justify-between">
-            <span className="text-blue-600 font-medium">Personal Volume</span>
-            <span className="font-bold text-blue-700">{n.personalVolume ?? 0} CV</span>
+            <span className="text-blue-600 font-medium">PCV <span className="font-normal text-xs">(Personal Commissionable Volume)</span></span>
+            <span className="font-bold text-blue-700">{n.personalVolume ?? 0} PCV</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-green-600 font-medium">Group Volume</span>
-            <span className="font-bold text-green-700">{n.groupVolume ?? 0} CV</span>
+            <span className="text-green-600 font-medium">GCV <span className="font-normal text-xs">(Group Commissionable Volume)</span></span>
+            <span className="font-bold text-green-700">{n.groupVolume ?? 0} GCV</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Total Earnings</span>

@@ -332,8 +332,8 @@ export function BPPDashboardPage() {
       {/* Volume summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Your Monthly PV", value: data.personalVolume.toLocaleString(), sub: "Personal Volume", icon: Users, color: "text-blue-600" },
-          { label: "Your Monthly GV", value: data.groupVolume.toLocaleString(), sub: "Group Volume", icon: TrendingUp, color: "text-purple-600" },
+          { label: "Your Monthly PCV", value: data.personalVolume.toLocaleString(), sub: "Personal Commissionable Volume (also: PV)", icon: Users, color: "text-blue-600" },
+          { label: "Your Monthly GCV", value: data.groupVolume.toLocaleString(), sub: "Group Commissionable Volume (also: GV)", icon: TrendingUp, color: "text-purple-600" },
           { label: "Bonuses Qualified", value: qualifiedFunds, sub: "this month", icon: CheckCircle2, color: "text-green-600" },
           { label: "Paid This Month", value: `$${totalEarnedThisMonth.toFixed(2)}`, sub: `${paidFunds} bonus${paidFunds !== 1 ? "es" : ""}`, icon: DollarSign, color: "text-emerald-600" },
         ].map(s => (

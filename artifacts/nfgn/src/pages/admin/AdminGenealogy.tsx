@@ -129,12 +129,12 @@ function MemberPopup({ pos, onClose }: { pos: Pos; onClose: () => void }) {
           </div>
           <hr className="border-border" />
           <div className="flex justify-between">
-            <span className="text-blue-600 font-medium">Personal Volume</span>
-            <span className="font-bold text-blue-700">{n.personalVolume ?? 0} CV</span>
+            <span className="text-blue-600 font-medium">PCV <span className="font-normal text-xs">(Personal Commissionable Volume)</span></span>
+            <span className="font-bold text-blue-700">{n.personalVolume ?? 0} PCV</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-green-600 font-medium">Group Volume</span>
-            <span className="font-bold text-green-700">{n.groupVolume ?? 0} CV</span>
+            <span className="text-green-600 font-medium">GCV <span className="font-normal text-xs">(Group Commissionable Volume)</span></span>
+            <span className="font-bold text-green-700">{n.groupVolume ?? 0} GCV</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Total Earnings</span>
@@ -411,7 +411,7 @@ export function AdminGenealogyPage() {
                         <th className="pb-3 font-medium text-muted-foreground">Role</th>
                         <th className="pb-3 font-medium text-muted-foreground">Status</th>
                         <th className="pb-3 font-medium text-muted-foreground">Sponsor</th>
-                        <th className="pb-3 font-medium text-muted-foreground text-right text-blue-700">PV</th>
+                        <th className="pb-3 font-medium text-muted-foreground text-right text-blue-700">PCV</th>
                         <th className="pb-3 font-medium text-muted-foreground text-right">Earnings</th>
                         <th className="pb-3 font-medium text-muted-foreground text-right">Joined</th>
                       </tr>
@@ -444,7 +444,7 @@ export function AdminGenealogyPage() {
                             </span>
                           </td>
                           <td className="py-3 pr-4 text-muted-foreground text-xs">{m.sponsorName}</td>
-                          <td className="py-3 text-right text-xs font-semibold text-blue-600">{m.personalVolume ?? 0} CV</td>
+                          <td className="py-3 text-right text-xs font-semibold text-blue-600">{m.personalVolume ?? 0} PCV</td>
                           <td className="py-3 text-right font-semibold text-green-600">${m.totalEarnings.toFixed(2)}</td>
                           <td className="py-3 text-right text-xs text-muted-foreground">{new Date(m.joinedAt).toLocaleDateString()}</td>
                         </tr>

@@ -37,11 +37,9 @@ export function AdminLayout({ children }: { children: ReactNode }) {
 
   const isOrdersSection = location.startsWith("/admin/orders");
   const isCommissionsSection = location.startsWith("/admin/referral-commissions") || location.startsWith("/admin/bonuses") || location.startsWith("/admin/bpp") || location.startsWith("/admin/commissions");
-  const isAdminSettingsSection = location.startsWith("/admin/settings") || location.startsWith("/admin/compensation");
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     Orders: isOrdersSection,
     Commissions: isCommissionsSection,
-    "Administrative Settings": isAdminSettingsSection,
   });
 
   const handleLogout = () => {
@@ -87,15 +85,8 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     { name: "Professionals", href: "/admin/professionals", icon: Users },
     { name: "Messages", href: "/admin/messages", icon: MessageSquare },
     { name: "Promos", href: "/admin/promos", icon: Tag },
-    {
-      name: "Administrative Settings",
-      href: "/admin/settings",
-      icon: Settings,
-      exact: true,
-      children: [
-        { name: "Pro Compensation Settings", href: "/admin/compensation", icon: Percent },
-      ],
-    },
+    { name: "Administrative Settings", href: "/admin/settings", icon: Settings },
+    { name: "Pro Compensation Settings", href: "/admin/compensation", icon: Percent },
     { name: "Reports", href: "/admin/reports", icon: BarChart },
     { name: "Genealogy", href: "/admin/genealogy", icon: Network },
     { name: "Profile Management", href: "/admin/profile", icon: UserCircle },

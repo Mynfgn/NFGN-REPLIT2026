@@ -1,11 +1,11 @@
-import { useState, useRef } from "react";
-import { useGetGenealogyTree, useGetGenealogyStats, useGetDownline } from "@workspace/api-client-react";
+import { useState, useEffect } from "react";
+import { useGetGenealogyTree } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Star, TrendingUp, Loader2, Search, Network, List, X } from "lucide-react";
 import { roleLabel } from "@/lib/labels";
+import { customFetch } from "@/lib/custom-fetch";
 
 type TreeNode = {
   id: number;
@@ -247,13 +247,24 @@ const ROLE_COLORS: Record<string, string> = {
 /* ── Page ─────────────────────────────────────────────────────── */
 export function AdminGenealogyPage() {
   const [search, setSearch] = useState("");
+  const [allMembers, setAllMembers] = useState<any[]>([]);
+  const [adminStats, setAdminStats] = useState<any>(null);
+  const [membersLoading, setMembersLoading] = useState(true);
 
   const { data: tree, isLoading: treeLoading } = useGetGenealogyTree({ userId: 1, depth: 9 });
-  const { data: stats } = useGetGenealogyStats({ userId: 1 });
-  const { data: downline, isLoading: downlineLoading } = useGetDownline({ userId: 1 });
 
-  const flatList: any[] = Array.isArray(downline) ? downline : [];
-  const filteredFlat = flatList.filter(m =>
+  useEffect(() => {
+    setMembersLoading(true);
+    Promise.all([
+      customFetch<any[]>("/api/genealogy/admin-all"),
+      customFetch<any>("/api/genealogy/admin-stats"),
+    ]).then(([members, stats]) => {
+      setAllMembers(Array.isArray(members) ? members : []);
+      setAdminStats(stats);
+    }).finally(() => setMembersLoading(false));
+  }, []);
+
+  const filteredFlat = allMembers.filter(m =>
     !search ||
     m.name.toLowerCase().includes(search.toLowerCase()) ||
     m.email.toLowerCase().includes(search.toLowerCase()) ||
@@ -272,16 +283,16 @@ export function AdminGenealogyPage() {
         <Card className="border-l-4 border-l-primary">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
-              <Users className="h-4 w-4" /> Total Network
+              <Users className="h-4 w-4" /> Total Members
             </CardTitle>
           </CardHeader>
-          <CardContent><div className="text-2xl font-bold">{stats?.totalTeamSize ?? 0}</div></CardContent>
+          <CardContent><div className="text-2xl font-bold">{adminStats?.totalMembers ?? allMembers.length}</div></CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground">Active Members</CardTitle>
           </CardHeader>
-          <CardContent><div className="text-2xl font-bold text-green-600">{stats?.activeMembers ?? 0}</div></CardContent>
+          <CardContent><div className="text-2xl font-bold text-green-600">{adminStats?.activeMembers ?? 0}</div></CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
@@ -289,36 +300,17 @@ export function AdminGenealogyPage() {
               <Star className="h-4 w-4 text-orange-500" /> Pro Members
             </CardTitle>
           </CardHeader>
-          <CardContent><div className="text-2xl font-bold text-orange-500">{stats?.proMembers ?? 0}</div></CardContent>
+          <CardContent><div className="text-2xl font-bold text-orange-500">{adminStats?.proMembers ?? 0}</div></CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" /> Generations Active
+              <TrendingUp className="h-4 w-4" /> No Sponsor
             </CardTitle>
           </CardHeader>
-          <CardContent><div className="text-2xl font-bold">{stats?.generationBreakdown?.length ?? 0}</div></CardContent>
+          <CardContent><div className="text-2xl font-bold text-amber-500">{adminStats?.noSponsor ?? 0}</div></CardContent>
         </Card>
       </div>
-
-      {/* Generation breakdown */}
-      {stats?.generationBreakdown && stats.generationBreakdown.length > 0 && (
-        <Card>
-          <CardHeader><CardTitle className="font-serif text-lg">Generation Breakdown</CardTitle></CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-2">
-              {stats.generationBreakdown
-                .sort((a: any, b: any) => a.generation - b.generation)
-                .map((g: any) => (
-                  <div key={g.generation} className="text-center p-3 bg-muted rounded-lg">
-                    <div className="text-xs text-muted-foreground mb-1">Gen {g.generation}</div>
-                    <div className="font-bold text-lg">{g.count}</div>
-                  </div>
-                ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Search */}
       <div className="relative">
@@ -372,7 +364,7 @@ export function AdminGenealogyPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {downlineLoading ? (
+              {membersLoading ? (
                 <div className="flex justify-center py-16">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
@@ -387,10 +379,9 @@ export function AdminGenealogyPage() {
                       <tr className="border-b text-left">
                         <th className="pb-3 font-medium text-muted-foreground">Member</th>
                         <th className="pb-3 font-medium text-muted-foreground">Role</th>
-                        <th className="pb-3 font-medium text-muted-foreground text-center">Gen</th>
+                        <th className="pb-3 font-medium text-muted-foreground">Status</th>
                         <th className="pb-3 font-medium text-muted-foreground">Sponsor</th>
                         <th className="pb-3 font-medium text-muted-foreground text-right text-blue-700">PV</th>
-                        <th className="pb-3 font-medium text-muted-foreground text-right text-green-700">GV</th>
                         <th className="pb-3 font-medium text-muted-foreground text-right">Earnings</th>
                         <th className="pb-3 font-medium text-muted-foreground text-right">Joined</th>
                       </tr>
@@ -417,14 +408,13 @@ export function AdminGenealogyPage() {
                               {roleLabel(m.role)}
                             </span>
                           </td>
-                          <td className="py-3 text-center">
-                            <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-muted text-xs font-bold">
-                              {m.generation}
+                          <td className="py-3 pr-4">
+                            <span className={`text-xs font-medium capitalize ${m.status === "active" ? "text-green-600" : "text-red-500"}`}>
+                              {m.status}
                             </span>
                           </td>
                           <td className="py-3 pr-4 text-muted-foreground text-xs">{m.sponsorName}</td>
                           <td className="py-3 text-right text-xs font-semibold text-blue-600">{m.personalVolume ?? 0} CV</td>
-                          <td className="py-3 text-right text-xs font-semibold text-green-600">{m.groupVolume ?? 0} CV</td>
                           <td className="py-3 text-right font-semibold text-green-600">${m.totalEarnings.toFixed(2)}</td>
                           <td className="py-3 text-right text-xs text-muted-foreground">{new Date(m.joinedAt).toLocaleDateString()}</td>
                         </tr>

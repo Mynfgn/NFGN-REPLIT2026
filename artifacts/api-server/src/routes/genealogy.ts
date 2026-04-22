@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, usersTable, genealogyNodesTable, walletsTable, ordersTable, orderItemsTable } from "@workspace/db";
-import { eq, count, sum, inArray, and } from "drizzle-orm";
+import { eq, count, sum, inArray, and, isNotNull, isNull } from "drizzle-orm";
 import { requireAuth } from "../lib/auth";
 
 const router: IRouter = Router();
@@ -53,7 +53,7 @@ async function buildTree(userId: number, depth: number = 9, currentDepth: number
   const children: any[] = [];
   if (currentDepth < depth) {
     const directDownline = await db.select().from(usersTable).where(eq(usersTable.sponsorId, userId));
-    for (const member of directDownline.slice(0, 10)) {
+    for (const member of directDownline) {
       const child = await buildTree(member.id, depth, currentDepth + 1);
       if (child) children.push(child);
     }
@@ -168,6 +168,92 @@ router.get("/genealogy/stats", requireAuth, async (req, res): Promise<void> => {
     personallyEnrolled: Number(personallyEnrolled),
     generationBreakdown: Object.entries(generationMap).map(([gen, cnt]) => ({ generation: parseInt(gen), count: cnt })),
   });
+});
+
+/** Admin-only: fetch every member in the platform regardless of sponsor chain. */
+router.get("/genealogy/admin-all", requireAuth, async (req, res): Promise<void> => {
+  const currentUser = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
+  if (!["super_admin", "admin"].includes(currentUser.role)) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+
+  const allUsers = await db.select().from(usersTable);
+
+  const userIds = allUsers.map(u => u.id);
+
+  // batch fetch wallets
+  const wallets = userIds.length
+    ? await db.select().from(walletsTable).where(inArray(walletsTable.userId, userIds))
+    : [];
+  const walletMap = new Map(wallets.map(w => [w.userId, w]));
+
+  // batch fetch orders
+  const orders = userIds.length
+    ? await db.select({ id: ordersTable.id, userId: ordersTable.userId }).from(ordersTable).where(inArray(ordersTable.userId, userIds))
+    : [];
+  const ordersByUser = new Map<number, number[]>();
+  for (const o of orders) {
+    if (!ordersByUser.has(o.userId)) ordersByUser.set(o.userId, []);
+    ordersByUser.get(o.userId)!.push(o.id);
+  }
+
+  // batch fetch order items cv
+  const allOrderIds = orders.map(o => o.id);
+  const cvRows = allOrderIds.length
+    ? await db.select({ orderId: orderItemsTable.orderId, cv: sum(orderItemsTable.cvTotal) })
+        .from(orderItemsTable)
+        .where(inArray(orderItemsTable.orderId, allOrderIds))
+        .groupBy(orderItemsTable.orderId)
+    : [];
+  const cvByOrder = new Map(cvRows.map(r => [r.orderId, parseInt(r.cv ?? "0")]));
+
+  // sponsor name map
+  const sponsorMap = new Map(allUsers.map(u => [u.id, `${u.firstName} ${u.lastName}`]));
+
+  const result = allUsers
+    .filter(u => !["super_admin", "admin", "store_admin"].includes(u.role))
+    .map(u => {
+      const userOrderIds = ordersByUser.get(u.id) ?? [];
+      const pv = userOrderIds.reduce((sum, oid) => sum + (cvByOrder.get(oid) ?? 0), 0);
+      const wallet = walletMap.get(u.id);
+      return {
+        userId: u.id,
+        name: `${u.firstName} ${u.lastName}`,
+        email: u.email,
+        avatar: u.avatar ?? null,
+        role: u.role,
+        isProMember: u.isProMember,
+        status: u.status,
+        sponsorId: u.sponsorId,
+        sponsorName: u.sponsorId ? (sponsorMap.get(u.sponsorId) ?? "Unknown") : "No Sponsor",
+        personalVolume: pv,
+        totalEarnings: parseFloat(wallet?.totalEarned ?? "0"),
+        joinedAt: u.createdAt.toISOString(),
+      };
+    });
+
+  res.json(result);
+});
+
+/** Admin-only: global stats across ALL members. */
+router.get("/genealogy/admin-stats", requireAuth, async (req, res): Promise<void> => {
+  const currentUser = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
+  if (!["super_admin", "admin"].includes(currentUser.role)) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+
+  const allMembers = await db.select().from(usersTable).where(
+    inArray(usersTable.role, ["pro_member", "affiliate", "customer"])
+  );
+
+  const totalMembers = allMembers.length;
+  const activeMembers = allMembers.filter(m => m.status === "active").length;
+  const proMembers = allMembers.filter(m => m.isProMember).length;
+  const noSponsor = allMembers.filter(m => !m.sponsorId).length;
+
+  res.json({ totalMembers, activeMembers, proMembers, noSponsor });
 });
 
 export default router;

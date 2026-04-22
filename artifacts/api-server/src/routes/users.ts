@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, usersTable, walletsTable, commissionsTable, ordersTable, genealogyNodesTable } from "@workspace/db";
+import { db, usersTable, walletsTable, commissionsTable, ordersTable, genealogyNodesTable, professionalsTable } from "@workspace/db";
 import { eq, like, and, or, sql, count } from "drizzle-orm";
 import { requireAuth, requireAdmin } from "../lib/auth";
 
@@ -33,6 +33,10 @@ function formatUser(user: typeof usersTable.$inferSelect, sponsorName?: string) 
     payoutCashAppHandle: user.payoutCashAppHandle ?? null,
     pvAdjustment: user.pvAdjustment ?? 0,
     gvAdjustment: user.gvAdjustment ?? 0,
+    isBookAProProvider: user.isBookAProProvider ?? false,
+    bookAProCategory: user.bookAProCategory ?? null,
+    bookAProSubServices: (user.bookAProSubServices as string[] | null) ?? [],
+    bookAProBio: user.bookAProBio ?? null,
   };
 }
 
@@ -243,6 +247,54 @@ router.post("/users/:id/volume-adjustment", requireAdmin, async (req, res): Prom
 
   const [updated] = await db.update(usersTable).set(updates).where(eq(usersTable.id, id)).returning();
   if (!updated) { res.status(404).json({ error: "Not found" }); return; }
+
+  let sponsorName: string | undefined;
+  if (updated.sponsorId) {
+    const [sponsor] = await db.select().from(usersTable).where(eq(usersTable.id, updated.sponsorId));
+    if (sponsor) sponsorName = `${sponsor.firstName} ${sponsor.lastName}`;
+  }
+  res.json(formatUser(updated, sponsorName));
+});
+
+// ── Update Book-A-Pro Provider Settings (self or admin) ──────────────────────
+router.patch("/users/me/book-a-pro", requireAuth, async (req, res): Promise<void> => {
+  const currentUser = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
+  const { isBookAProProvider, bookAProCategory, bookAProSubServices, bookAProBio } = req.body;
+
+  const updates: Partial<typeof usersTable.$inferInsert> = {};
+  if (typeof isBookAProProvider === "boolean") updates.isBookAProProvider = isBookAProProvider;
+  if (bookAProCategory !== undefined) updates.bookAProCategory = bookAProCategory || null;
+  if (Array.isArray(bookAProSubServices)) updates.bookAProSubServices = bookAProSubServices;
+  if (bookAProBio !== undefined) updates.bookAProBio = bookAProBio || null;
+
+  const [updated] = await db.update(usersTable).set(updates).where(eq(usersTable.id, currentUser.id)).returning();
+  if (!updated) { res.status(404).json({ error: "User not found" }); return; }
+
+  // Sync professional record if provider is active
+  if (updated.isBookAProProvider && updated.bookAProCategory) {
+    const [existingPro] = await db.select().from(professionalsTable).where(eq(professionalsTable.userId, currentUser.id));
+    if (existingPro) {
+      await db.update(professionalsTable).set({
+        specialty: updated.bookAProCategory,
+        services: (updated.bookAProSubServices as string[] | null) ?? [],
+        bio: updated.bookAProBio ?? existingPro.bio,
+        isAvailable: true,
+      }).where(eq(professionalsTable.userId, currentUser.id));
+    } else {
+      await db.insert(professionalsTable).values({
+        userId: currentUser.id,
+        name: `${updated.firstName} ${updated.lastName}`,
+        bio: updated.bookAProBio ?? `${updated.bookAProCategory} professional on NFGN Book-A-Pro.`,
+        specialty: updated.bookAProCategory,
+        hourlyRate: "0",
+        services: (updated.bookAProSubServices as string[] | null) ?? [],
+        isAvailable: true,
+      });
+    }
+  } else if (updated.isBookAProProvider === false) {
+    // Deactivate professional listing
+    await db.update(professionalsTable).set({ isAvailable: false }).where(eq(professionalsTable.userId, currentUser.id));
+  }
 
   let sponsorName: string | undefined;
   if (updated.sponsorId) {

@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, boolean, integer, date } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, boolean, integer, date, json } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -40,6 +40,11 @@ export const usersTable = pgTable("users", {
   country: text("country").default("United States"),
 
   organizationName: text("organization_name"),
+
+  isBookAProProvider: boolean("is_book_a_pro_provider").notNull().default(false),
+  bookAProCategory: text("book_a_pro_category"),
+  bookAProSubServices: json("book_a_pro_sub_services").$type<string[]>().default([]),
+  bookAProBio: text("book_a_pro_bio"),
 });
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({ id: true, createdAt: true, updatedAt: true });

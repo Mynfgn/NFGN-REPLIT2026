@@ -1,7 +1,8 @@
 import { Router, type IRouter } from "express";
-import { db, bookingsTable, professionalsTable, usersTable } from "@workspace/db";
-import { eq, and, desc, count } from "drizzle-orm";
+import { db, bookingsTable, professionalsTable, usersTable, messagesTable } from "@workspace/db";
+import { eq, and, desc, count, or, inArray } from "drizzle-orm";
 import { requireAuth, requireAdmin } from "../lib/auth";
+import { sendEmail, bookingConfirmationHtml } from "../lib/mailer";
 
 const router: IRouter = Router();
 
@@ -54,7 +55,8 @@ router.get("/bookings", requireAuth, async (req, res): Promise<void> => {
 });
 
 router.post("/bookings", requireAuth, async (req, res): Promise<void> => {
-  const userId = (req as typeof req & { user: typeof usersTable.$inferSelect }).user.id;
+  const currentUser = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
+  const userId = currentUser.id;
   const { professionalId, serviceType, scheduledAt, duration, paymentMethod, amount, notes } = req.body;
 
   const [booking] = await db.insert(bookingsTable).values({
@@ -70,10 +72,105 @@ router.post("/bookings", requireAuth, async (req, res): Promise<void> => {
     notes: notes ?? undefined,
   }).returning();
 
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
+  const [member] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
   const [pro] = await db.select().from(professionalsTable).where(eq(professionalsTable.id, professionalId));
 
-  res.status(201).json(formatBooking(booking, user ? `${user.firstName} ${user.lastName}` : "Unknown", pro?.name ?? "Unknown"));
+  // ── Post-booking notifications (non-blocking) ─────────────────────────────
+  try {
+    const dashboardUrl = process.env.APP_URL ? `${process.env.APP_URL}/dashboard` : "https://nfgn.com/dashboard";
+    const memberName = member ? `${member.firstName} ${member.lastName}` : "Unknown Member";
+    const providerName = pro?.name ?? "Unknown Professional";
+    const scheduledAtFormatted = new Date(scheduledAt).toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" });
+    const bookingAmt = parseFloat(String(amount));
+
+    // ── Find admin users ──
+    const admins = await db.select().from(usersTable).where(
+      or(eq(usersTable.role, "admin"), eq(usersTable.role, "super_admin"), eq(usersTable.role, "store_admin"))
+    );
+
+    // ── Find provider's linked user (if any) ──
+    let providerUser: typeof usersTable.$inferSelect | null = null;
+    if (pro?.userId) {
+      const [pu] = await db.select().from(usersTable).where(eq(usersTable.id, pro.userId));
+      providerUser = pu ?? null;
+    }
+
+    const msgBody = (role: "member" | "provider" | "admin") =>
+      `A Book-A-Pro booking has been placed.\n\nService: ${serviceType}\nProfessional: ${providerName}\nMember: ${memberName}\nDate & Time: ${scheduledAtFormatted}\nDuration: ${duration ?? 60} minutes\nAmount: $${bookingAmt.toFixed(2)}\nBooking #${booking.id}\n\nLog in to your back office to view full details.`;
+
+    // ── Insert back-office messages ──
+    const messageInserts: (typeof messagesTable.$inferInsert)[] = [];
+
+    // To member
+    messageInserts.push({
+      fromUserId: null,
+      toUserId: userId,
+      subject: `✅ Booking Confirmed — ${serviceType} with ${providerName}`,
+      body: msgBody("member"),
+      isBroadcast: false,
+    });
+
+    // To provider (if linked user)
+    if (providerUser) {
+      messageInserts.push({
+        fromUserId: null,
+        toUserId: providerUser.id,
+        subject: `📅 New Booking — ${serviceType} from ${memberName}`,
+        body: msgBody("provider"),
+        isBroadcast: false,
+      });
+    }
+
+    // To each admin
+    for (const admin of admins) {
+      messageInserts.push({
+        fromUserId: null,
+        toUserId: admin.id,
+        subject: `📋 New Booking Alert — ${memberName} booked ${serviceType}`,
+        body: msgBody("admin"),
+        isBroadcast: false,
+      });
+    }
+
+    if (messageInserts.length > 0) {
+      await db.insert(messagesTable).values(messageInserts);
+    }
+
+    // ── Send emails ──
+    const emailJobs: Promise<void>[] = [];
+
+    if (member?.email) {
+      emailJobs.push(sendEmail({
+        to: member.email,
+        subject: `Booking Confirmed — ${serviceType} with ${providerName}`,
+        html: bookingConfirmationHtml({ recipientName: memberName, memberName, providerName, serviceType, scheduledAt: scheduledAtFormatted, duration: duration ?? 60, amount: bookingAmt, bookingId: booking.id, dashboardUrl, role: "member" }),
+      }));
+    }
+
+    if (providerUser?.email) {
+      emailJobs.push(sendEmail({
+        to: providerUser.email,
+        subject: `New Booking — ${serviceType} from ${memberName}`,
+        html: bookingConfirmationHtml({ recipientName: providerName, memberName, providerName, serviceType, scheduledAt: scheduledAtFormatted, duration: duration ?? 60, amount: bookingAmt, bookingId: booking.id, dashboardUrl, role: "provider" }),
+      }));
+    }
+
+    for (const admin of admins) {
+      if (admin.email) {
+        emailJobs.push(sendEmail({
+          to: admin.email,
+          subject: `[NFGN Admin] New Booking — ${memberName} booked ${serviceType}`,
+          html: bookingConfirmationHtml({ recipientName: `${admin.firstName} ${admin.lastName}`, memberName, providerName, serviceType, scheduledAt: scheduledAtFormatted, duration: duration ?? 60, amount: bookingAmt, bookingId: booking.id, dashboardUrl, role: "admin" }),
+        }));
+      }
+    }
+
+    await Promise.allSettled(emailJobs);
+  } catch (err) {
+    console.error("[BOOKINGS] Notification error (non-blocking):", err);
+  }
+
+  res.status(201).json(formatBooking(booking, member ? `${member.firstName} ${member.lastName}` : "Unknown", pro?.name ?? "Unknown"));
 });
 
 router.get("/bookings/:id", requireAuth, async (req, res): Promise<void> => {

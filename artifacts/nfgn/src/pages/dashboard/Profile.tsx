@@ -12,7 +12,13 @@ import {
   AlertCircle, CheckCircle2, Star, Calendar, Phone, Mail,
   Building2, CreditCard, Wallet, Users, Award, ChevronRight,
   Eye, EyeOff, Sparkles, ArrowRight, Crown, Zap, TrendingUp, Lock, Camera,
+  Briefcase,
 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { BAP_CATEGORIES } from "@/lib/bapCategories";
 import { customFetch } from "@/lib/custom-fetch";
 import { roleLabel } from "@/lib/labels";
 import { useCartStore } from "@/hooks/use-cart-store";
@@ -239,6 +245,23 @@ export function ProfilePage() {
   const [avatarSaving, setAvatarSaving] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
+  // Book-A-Pro state
+  const [bapEnabled, setBapEnabled] = useState(false);
+  const [bapCategory, setBapCategory] = useState("");
+  const [bapSubServices, setBapSubServices] = useState<string[]>([]);
+  const [bapCustomService, setBapCustomService] = useState("");
+  const [bapBio, setBapBio] = useState("");
+  const [bapSaving, setBapSaving] = useState(false);
+  const [bapMsg, setBapMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const bapCategoryOptions = BAP_CATEGORIES[bapCategory] ?? [];
+  const toggleBapService = (s: string) => setBapSubServices(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
+  const addBapCustom = () => {
+    const s = bapCustomService.trim();
+    if (s && !bapSubServices.includes(s)) setBapSubServices(prev => [...prev, s]);
+    setBapCustomService("");
+  };
+
   useEffect(() => {
     if (user) {
       setFirstName((user as any).firstName ?? "");
@@ -253,6 +276,10 @@ export function ProfilePage() {
       setPayoutMethod((user as any).payoutMethod ?? "bank");
       setPayoutPaypalEmail((user as any).payoutPaypalEmail ?? "");
       setPayoutCashAppHandle((user as any).payoutCashAppHandle ?? "");
+      setBapEnabled((user as any).isBookAProProvider ?? false);
+      setBapCategory((user as any).bookAProCategory ?? "");
+      setBapSubServices((user as any).bookAProSubServices ?? []);
+      setBapBio((user as any).bookAProBio ?? "");
     }
   }, [user]);
 
@@ -298,6 +325,26 @@ export function ProfilePage() {
     } catch (e: any) {
       setPayoutMsg({ type: "error", text: e.message });
     } finally { setPayoutSaving(false); }
+  }
+
+  async function handleSaveBAP() {
+    setBapSaving(true); setBapMsg(null);
+    try {
+      const res = await customFetch("/api/users/me/book-a-pro", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          isBookAProProvider: bapEnabled,
+          bookAProCategory: bapEnabled ? bapCategory : null,
+          bookAProSubServices: bapEnabled ? bapSubServices : [],
+          bookAProBio: bapEnabled ? bapBio || null : null,
+        }),
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "Failed to save.");
+      refetch();
+      setBapMsg({ type: "success", text: bapEnabled ? "Book-A-Pro provider profile saved and activated!" : "Book-A-Pro provider services deactivated." });
+    } catch (e: any) { setBapMsg({ type: "error", text: e.message }); }
+    finally { setBapSaving(false); }
   }
 
   async function handleChangePassword() {
@@ -752,6 +799,114 @@ export function ProfilePage() {
           <Button onClick={handleSavePayout} disabled={payoutSaving} className="gap-2">
             {payoutSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             Save Payout Preferences
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Book-A-Pro Provider */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Briefcase className="h-4 w-4" />
+                Book-A-Pro Provider Services
+              </CardTitle>
+              <CardDescription className="mt-1">
+                List your professional services on the NFGN marketplace. Members can discover and book you directly.
+              </CardDescription>
+            </div>
+            <Switch
+              checked={bapEnabled}
+              onCheckedChange={v => { setBapEnabled(v); if (!v) { setBapCategory(""); setBapSubServices([]); setBapBio(""); } }}
+            />
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {bapEnabled ? (
+            <>
+              {/* Category */}
+              <div className="space-y-1.5">
+                <Label>Service Category *</Label>
+                <Select value={bapCategory} onValueChange={v => { setBapCategory(v); setBapSubServices([]); }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select your service category…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.keys(BAP_CATEGORIES).map(cat => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Sub-services */}
+              {bapCategory && (
+                <div className="space-y-2">
+                  <Label>Your Services in <span className="text-primary font-semibold">{bapCategory}</span></Label>
+                  <p className="text-xs text-muted-foreground">Check all the specific services you offer.</p>
+                  <div className="grid grid-cols-2 gap-1.5 p-3 border rounded-lg bg-muted/10">
+                    {bapCategoryOptions.map(svc => (
+                      <label key={svc} className="flex items-center gap-2 cursor-pointer py-1 px-1 rounded hover:bg-muted/40 transition-colors">
+                        <Checkbox
+                          checked={bapSubServices.includes(svc)}
+                          onCheckedChange={() => toggleBapService(svc)}
+                          className="h-3.5 w-3.5"
+                        />
+                        <span className="text-xs">{svc}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Add a custom service…"
+                      value={bapCustomService}
+                      onChange={e => setBapCustomService(e.target.value)}
+                      onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addBapCustom())}
+                      className="text-sm h-8"
+                    />
+                    <button
+                      type="button"
+                      onClick={addBapCustom}
+                      className="px-3 h-8 text-xs border rounded-md hover:bg-muted transition-colors"
+                    >Add</button>
+                  </div>
+                  {bapSubServices.filter(s => !bapCategoryOptions.includes(s)).length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {bapSubServices.filter(s => !bapCategoryOptions.includes(s)).map(s => (
+                        <Badge
+                          key={s}
+                          variant="secondary"
+                          className="text-xs cursor-pointer"
+                          onClick={() => toggleBapService(s)}
+                        >{s} ×</Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <Label>Professional Bio (optional)</Label>
+                <Textarea
+                  rows={3}
+                  value={bapBio}
+                  onChange={e => setBapBio(e.target.value)}
+                  placeholder="Describe your background, certifications, and specialties…"
+                />
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/20 border border-dashed text-sm text-muted-foreground">
+              <Briefcase className="h-8 w-8 opacity-30 flex-shrink-0" />
+              <span>Toggle the switch above to activate your Book-A-Pro provider profile and start accepting bookings from NFGN members.</span>
+            </div>
+          )}
+
+          <StatusMessage msg={bapMsg} />
+          <Button onClick={handleSaveBAP} disabled={bapSaving || (bapEnabled && !bapCategory)} className="gap-2">
+            {bapSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            Save Book-A-Pro Settings
           </Button>
         </CardContent>
       </Card>

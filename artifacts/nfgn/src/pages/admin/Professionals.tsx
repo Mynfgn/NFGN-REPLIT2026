@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { customFetch } from "@/lib/custom-fetch";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,10 +8,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Users, Plus, Search, Star, Edit2, RefreshCw, CheckCircle2, AlertCircle, X, DollarSign
+  Users, Plus, Search, Star, Edit2, RefreshCw, CheckCircle2, AlertCircle, DollarSign
 } from "lucide-react";
+
+import { BAP_CATEGORIES } from "@/lib/bapCategories";
+export { BAP_CATEGORIES };
 
 const BRAND_GOLD = "#C9A84C";
 const BRAND_GREEN = "#2D6A4F";
@@ -30,10 +35,6 @@ interface Professional {
   createdAt: string;
 }
 
-const EMPTY_FORM = {
-  name: "", bio: "", specialty: "", avatar: "", hourlyRate: "", services: "", isAvailable: true,
-};
-
 function ProModal({
   initial,
   onClose,
@@ -44,37 +45,44 @@ function ProModal({
   onSaved: () => void;
 }) {
   const isEdit = !!initial;
+  const [category, setCategory] = useState(initial?.specialty ?? "");
+  const [selectedServices, setSelectedServices] = useState<string[]>(initial?.services ?? []);
+  const [customService, setCustomService] = useState("");
   const [form, setForm] = useState({
     name: initial?.name ?? "",
     bio: initial?.bio ?? "",
-    specialty: initial?.specialty ?? "",
     avatar: initial?.avatar ?? "",
     hourlyRate: String(initial?.hourlyRate ?? ""),
-    services: (initial?.services ?? []).join(", "),
     isAvailable: initial?.isAvailable ?? true,
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const field = (k: keyof typeof form, v: string | boolean) => setForm(f => ({ ...f, [k]: v }));
+  const categoryOptions = BAP_CATEGORIES[category] ?? [];
+
+  const toggleService = (s: string) =>
+    setSelectedServices(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
+
+  const addCustom = () => {
+    const s = customService.trim();
+    if (s && !selectedServices.includes(s)) setSelectedServices(prev => [...prev, s]);
+    setCustomService("");
+  };
 
   const handleSave = async () => {
     setError(null);
-    if (!form.name.trim() || !form.specialty.trim() || !form.hourlyRate) {
-      setError("Name, specialty, and hourly rate are required.");
-      return;
-    }
+    if (!form.name.trim() || !category) { setError("Name and service category are required."); return; }
     const rate = parseFloat(form.hourlyRate);
-    if (isNaN(rate) || rate <= 0) { setError("Enter a valid hourly rate."); return; }
+    if (isNaN(rate) || rate < 0) { setError("Enter a valid hourly rate."); return; }
 
     setSaving(true);
     const payload = {
       name: form.name.trim(),
       bio: form.bio.trim(),
-      specialty: form.specialty.trim(),
+      specialty: category,
       avatar: form.avatar.trim() || undefined,
       hourlyRate: rate,
-      services: form.services.split(",").map(s => s.trim()).filter(Boolean),
+      services: selectedServices,
       isAvailable: form.isAvailable,
     };
 
@@ -97,43 +105,86 @@ function ProModal({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="col-span-2">
-              <Label>Full Name *</Label>
-              <Input value={form.name} onChange={e => field("name", e.target.value)} placeholder="Dr. Jane Smith" />
-            </div>
-            <div className="col-span-2">
-              <Label>Specialty *</Label>
-              <Input value={form.specialty} onChange={e => field("specialty", e.target.value)} placeholder="Naturopathic Medicine" />
-            </div>
+        <div className="space-y-5">
+          {/* Basic Info */}
+          <div className="space-y-3">
             <div>
-              <Label>Hourly Rate (USD) *</Label>
-              <div className="relative">
-                <DollarSign className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input className="pl-8" type="number" min={1} value={form.hourlyRate} onChange={e => field("hourlyRate", e.target.value)} placeholder="150" />
+              <Label>Full Name *</Label>
+              <Input className="mt-1" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Dr. Jane Smith" />
+            </div>
+
+            {/* Category (Specialty) */}
+            <div>
+              <Label>Service Category *</Label>
+              <Select value={category} onValueChange={v => { setCategory(v); setSelectedServices([]); }}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select a category…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.keys(BAP_CATEGORIES).map(cat => (
+                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">e.g. Beauty & Hair, Barbering, Mental Health…</p>
+            </div>
+
+            {/* Sub-services */}
+            {category && (
+              <div>
+                <Label>Services Offered</Label>
+                <p className="text-xs text-muted-foreground mb-2 mt-1">Check all services this professional offers in the <strong>{category}</strong> category.</p>
+                <div className="grid grid-cols-2 gap-1.5 p-3 border rounded-lg bg-muted/10">
+                  {categoryOptions.map(svc => (
+                    <label key={svc} className="flex items-center gap-2 cursor-pointer py-1 px-1 rounded hover:bg-muted/40 transition-colors">
+                      <Checkbox
+                        checked={selectedServices.includes(svc)}
+                        onCheckedChange={() => toggleService(svc)}
+                        className="h-3.5 w-3.5"
+                      />
+                      <span className="text-xs">{svc}</span>
+                    </label>
+                  ))}
+                </div>
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    placeholder="Add custom service…"
+                    value={customService}
+                    onChange={e => setCustomService(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addCustom())}
+                    className="text-sm h-8"
+                  />
+                  <Button type="button" size="sm" variant="outline" onClick={addCustom} className="h-8 text-xs">Add</Button>
+                </div>
+                {selectedServices.filter(s => !categoryOptions.includes(s)).map(s => (
+                  <Badge key={s} variant="secondary" className="mr-1 mt-1 text-xs">{s} ×</Badge>
+                ))}
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Hourly Rate (USD)</Label>
+                <div className="relative mt-1">
+                  <DollarSign className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input className="pl-8" type="number" min={0} value={form.hourlyRate} onChange={e => setForm(f => ({ ...f, hourlyRate: e.target.value }))} placeholder="150" />
+                </div>
+              </div>
+              <div className="flex items-center gap-3 pt-6">
+                <Switch checked={form.isAvailable} onCheckedChange={v => setForm(f => ({ ...f, isAvailable: v }))} />
+                <Label className="text-sm">Available</Label>
               </div>
             </div>
-            <div className="flex items-center gap-3 pt-6">
-              <Switch checked={form.isAvailable} onCheckedChange={v => field("isAvailable", v)} />
-              <Label>Available for bookings</Label>
+
+            <div>
+              <Label>Professional Bio</Label>
+              <Textarea className="mt-1" rows={3} value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))} placeholder="Professional background, certifications, approach, years of experience…" />
             </div>
-          </div>
 
-          <div>
-            <Label>Bio</Label>
-            <Textarea rows={3} value={form.bio} onChange={e => field("bio", e.target.value)} placeholder="Professional background, certifications, approach…" />
-          </div>
-
-          <div>
-            <Label>Services (comma-separated)</Label>
-            <Input value={form.services} onChange={e => field("services", e.target.value)} placeholder="Naturopathic Consultation, Herb Protocol Design, Hormone Balancing" />
-            <p className="text-xs text-muted-foreground mt-1">Separate each service with a comma.</p>
-          </div>
-
-          <div>
-            <Label>Avatar URL (optional)</Label>
-            <Input value={form.avatar} onChange={e => field("avatar", e.target.value)} placeholder="https://…" />
+            <div>
+              <Label>Avatar URL (optional)</Label>
+              <Input className="mt-1" value={form.avatar} onChange={e => setForm(f => ({ ...f, avatar: e.target.value }))} placeholder="https://…" />
+            </div>
           </div>
 
           {error && (
@@ -143,7 +194,7 @@ function ProModal({
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="mt-2">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button onClick={handleSave} disabled={saving}>
             {saving ? <><RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Saving…</> : "Save Professional"}

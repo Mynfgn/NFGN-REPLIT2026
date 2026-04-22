@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, usersTable, walletsTable, genealogyNodesTable, notificationsTable } from "@workspace/db";
+import { db, usersTable, walletsTable, genealogyNodesTable, notificationsTable, professionalsTable } from "@workspace/db";
 import { eq, count } from "drizzle-orm";
 import { hashPassword, verifyPassword, generateToken, generateReferralCode, requireAuth } from "../lib/auth";
 import { LoginBody, RegisterBody } from "@workspace/api-zod";
@@ -36,6 +36,10 @@ function formatUser(user: typeof usersTable.$inferSelect, sponsorName?: string) 
     city: user.city ?? null,
     state: user.state ?? null,
     country: user.country ?? "United States",
+    isBookAProProvider: user.isBookAProProvider ?? false,
+    bookAProCategory: user.bookAProCategory ?? null,
+    bookAProSubServices: (user.bookAProSubServices as string[] | null) ?? [],
+    bookAProBio: user.bookAProBio ?? null,
   };
 }
 
@@ -95,6 +99,10 @@ router.post("/auth/register", async (req, res): Promise<void> => {
   const state: string | undefined = req.body.state ?? undefined;
   const country: string | undefined = req.body.country ?? "United States";
   const organizationName: string | undefined = req.body.organizationName ?? undefined;
+  const isBookAProProvider: boolean = req.body.isBookAProProvider === true || req.body.isBookAProProvider === "true";
+  const bookAProCategory: string | undefined = req.body.bookAProCategory ?? undefined;
+  const bookAProSubServices: string[] = Array.isArray(req.body.bookAProSubServices) ? req.body.bookAProSubServices : [];
+  const bookAProBio: string | undefined = req.body.bookAProBio ?? undefined;
 
   const [existing] = await db.select().from(usersTable).where(eq(usersTable.email, email.toLowerCase()));
   if (existing) {
@@ -127,9 +135,28 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     state: state ?? null,
     country: country ?? "United States",
     organizationName: organizationName ?? null,
+    isBookAProProvider: isBookAProProvider,
+    bookAProCategory: isBookAProProvider && bookAProCategory ? bookAProCategory : null,
+    bookAProSubServices: isBookAProProvider && bookAProSubServices.length > 0 ? bookAProSubServices : [],
+    bookAProBio: isBookAProProvider && bookAProBio ? bookAProBio : null,
   }).returning();
 
   await db.insert(walletsTable).values({ userId: newUser.id });
+
+  // 📋 Auto-create professional record if registering as Book-A-Pro provider
+  if (isBookAProProvider && bookAProCategory) {
+    try {
+      await db.insert(professionalsTable).values({
+        userId: newUser.id,
+        name: `${firstName} ${lastName}`,
+        bio: bookAProBio ?? `${bookAProCategory} professional on NFGN Book-A-Pro.`,
+        specialty: bookAProCategory,
+        hourlyRate: "0",
+        services: bookAProSubServices,
+        isAvailable: true,
+      });
+    } catch { /* Non-blocking */ }
+  }
 
   // Add to genealogy
   if (sponsorId) {

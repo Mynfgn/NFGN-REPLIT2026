@@ -350,7 +350,7 @@ export function AdminProfilePage() {
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "Failed");
       const updated = await res.json();
       setSelectedMember((p: any) => ({ ...p, pvAdjustment: updated.pvAdjustment, gvAdjustment: updated.gvAdjustment }));
-      setMVolMsg({ type: "success", text: `PV set to ${updated.pvAdjustment} · GV set to ${updated.gvAdjustment}` });
+      setMVolMsg({ type: "success", text: `PCV set to ${updated.pvAdjustment} · GCV set to ${updated.gvAdjustment}` });
     } catch (e: any) { setMVolMsg({ type: "error", text: e.message }); }
     finally { setMVolSaving(false); }
   }
@@ -837,26 +837,26 @@ export function AdminProfilePage() {
               </Section>
 
               {/* ── PV / GV Adjustment ── */}
-              <Section title="Adjust PV / GV" icon={SlidersHorizontal} sub="Set the manual volume adjustment for this member. Use positive numbers to increase, negative numbers to decrease.">
+              <Section title="Adjust PCV / GCV" icon={SlidersHorizontal} sub="Set the manual volume adjustment for this member. PCV = Personal Commissionable Volume · GCV = Group Commissionable Volume. Use positive numbers to increase, negative to decrease.">
                 {mVolMsg && <Alert type={mVolMsg.type}>{mVolMsg.text}</Alert>}
 
                 <div className="grid grid-cols-2 gap-6 p-4 bg-muted/20 rounded-lg border">
                   <div className="text-center">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Current PV Adjustment</p>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Current PCV Adjustment</p>
                     <p className={`text-2xl font-bold font-mono ${(selectedMember.pvAdjustment ?? 0) < 0 ? "text-red-600" : "text-green-600"}`}>
-                      {(selectedMember.pvAdjustment ?? 0) > 0 ? "+" : ""}{selectedMember.pvAdjustment ?? 0} CV
+                      {(selectedMember.pvAdjustment ?? 0) > 0 ? "+" : ""}{selectedMember.pvAdjustment ?? 0} PCV
                     </p>
                   </div>
                   <div className="text-center">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Current GV Adjustment</p>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Current GCV Adjustment</p>
                     <p className={`text-2xl font-bold font-mono ${(selectedMember.gvAdjustment ?? 0) < 0 ? "text-red-600" : "text-green-600"}`}>
-                      {(selectedMember.gvAdjustment ?? 0) > 0 ? "+" : ""}{selectedMember.gvAdjustment ?? 0} CV
+                      {(selectedMember.gvAdjustment ?? 0) > 0 ? "+" : ""}{selectedMember.gvAdjustment ?? 0} GCV
                     </p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <Field label="New PV Adjustment (CV)" hint="Positive = increase · Negative = decrease">
+                  <Field label="New PCV Adjustment" hint="Positive = increase PCV · Negative = decrease PCV">
                     <Input
                       className="mt-1 font-mono"
                       type="number"
@@ -865,7 +865,7 @@ export function AdminProfilePage() {
                       placeholder="e.g. 50 or -30"
                     />
                   </Field>
-                  <Field label="New GV Adjustment (CV)" hint="Positive = increase · Negative = decrease">
+                  <Field label="New GCV Adjustment" hint="Positive = increase GCV · Negative = decrease GCV">
                     <Input
                       className="mt-1 font-mono"
                       type="number"
@@ -877,7 +877,7 @@ export function AdminProfilePage() {
                 </div>
 
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
-                  <strong>Note:</strong> These adjustments are added on top of the member's actual earned volume. Entering a negative value will reduce their effective PV or GV accordingly.
+                  <strong>Note:</strong> These adjustments are added on top of the member's actual earned volume. Entering a negative value will reduce their effective PCV or GCV accordingly.
                 </div>
 
                 <div className="flex justify-end">

@@ -158,7 +158,7 @@ export function UsersPage() {
                       <p className="text-xs text-muted-foreground">Ref: {user.referralCode} • Joined {new Date(user.createdAt).toLocaleDateString()}</p>
                       {((user.pvAdjustment ?? 0) !== 0 || (user.gvAdjustment ?? 0) !== 0) && (
                         <p className="text-xs text-blue-700 font-medium mt-0.5">
-                          Adj: PV +{user.pvAdjustment ?? 0} / GV +{user.gvAdjustment ?? 0}
+                          Adj: PCV +{user.pvAdjustment ?? 0} / GCV +{user.gvAdjustment ?? 0}
                         </p>
                       )}
                     </div>
@@ -170,7 +170,7 @@ export function UsersPage() {
                         </Button>
                       )}
                       <Button variant="outline" size="sm" className="text-xs h-7 gap-1 border-blue-200 text-blue-700 hover:bg-blue-50" onClick={() => openAdjust(user)}>
-                        <SlidersHorizontal className="h-3 w-3" /> Adjust PV/GV
+                        <SlidersHorizontal className="h-3 w-3" /> Adjust PCV/GCV
                       </Button>
                       <Button variant="outline" size="sm" className="text-xs h-7 gap-1 border-amber-200 text-amber-700 hover:bg-amber-50" onClick={() => { setRefCodeUser(user); setNewRefCode(user.referralCode ?? ""); setRefCodeError(""); }}>
                         <Link2 className="h-3 w-3" /> Change Ref Code
@@ -271,7 +271,7 @@ export function UsersPage() {
                 <p className="font-bold">{adjustUser.firstName} {adjustUser.lastName}</p>
                 <p className="text-muted-foreground text-xs">{adjustUser.email}</p>
                 <p className="text-xs text-blue-700 font-medium mt-1">
-                  Current adjustments — PV: +{adjustUser.pvAdjustment ?? 0} / GV: +{adjustUser.gvAdjustment ?? 0}
+                  Current adjustments — PCV: +{adjustUser.pvAdjustment ?? 0} / GCV: +{adjustUser.gvAdjustment ?? 0}
                 </p>
               </div>
 
@@ -281,7 +281,7 @@ export function UsersPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="pvAdj" className="text-sm font-semibold text-blue-700">PV Adjustment</Label>
+                  <Label htmlFor="pvAdj" className="text-sm font-semibold text-blue-700">PCV Adjustment</Label>
                   <Input
                     id="pvAdj"
                     type="number"
@@ -290,10 +290,10 @@ export function UsersPage() {
                     onChange={e => setPvAdj(e.target.value)}
                     placeholder="0"
                   />
-                  <p className="text-[10px] text-muted-foreground">Personal Volume</p>
+                  <p className="text-[10px] text-muted-foreground">Personal Commissionable Volume</p>
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="gvAdj" className="text-sm font-semibold text-blue-700">GV Adjustment</Label>
+                  <Label htmlFor="gvAdj" className="text-sm font-semibold text-blue-700">GCV Adjustment</Label>
                   <Input
                     id="gvAdj"
                     type="number"
@@ -302,7 +302,7 @@ export function UsersPage() {
                     onChange={e => setGvAdj(e.target.value)}
                     placeholder="0"
                   />
-                  <p className="text-[10px] text-muted-foreground">Group Volume</p>
+                  <p className="text-[10px] text-muted-foreground">Group Commissionable Volume</p>
                 </div>
               </div>
 

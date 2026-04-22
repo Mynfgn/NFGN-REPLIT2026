@@ -208,7 +208,7 @@ export function BasicTrainingPage() {
 
                   <div className="space-y-2">
                     {[
-                      { day: "Day 1", title: "Foundation Day", tasks: ["Call or text your upline sponsor — introduce yourself and schedule a 30-minute welcome call", "Place your personal IGNITE order (this starts your BPP PV clock and gives you a real testimonial)", "Write your 100-person contact list in a notebook or phone notes", "Add your referral link to your social media bio on every platform you use"] },
+                      { day: "Day 1", title: "Foundation Day", tasks: ["Call or text your upline sponsor — introduce yourself and schedule a 30-minute welcome call", "Place your personal IGNITE order (this starts your BPP PCV clock and gives you a real testimonial)", "Write your 100-person contact list in a notebook or phone notes", "Add your referral link to your social media bio on every platform you use"] },
                       { day: "Day 2", title: "Know Your Story", tasks: ["Begin using IGNITE today — document how you feel in a notes app (this becomes your testimonial)", "Watch all training sections in this portal at least once", "Write your personal 3-sentence story: what you were dealing with, what you tried, what NFGN did for you", "Share your first post on social media about starting your wellness journey (no sales pitch — just authentic)"] },
                       { day: "Day 3", title: "First Conversations", tasks: ["Reach out to the first 10 people on your contact list with a personal, conversational message (not a copy-paste blast)", "Share IGNITE with 3 people specifically who talk about gut health, bloating, or weight", "Follow up with anyone from Day 1–2 who viewed your social post or responded to your message", "Review the Comp Plan training section and ask your upline any questions"] },
                       { day: "Day 4", title: "Prospect & Post", tasks: ["Reach out to 10 more contacts from your list", "Post your Day 3 wellness check-in on social media (how do you feel after 3 days of IGNITE?)", "Share the NFGN business opportunity with 2 people who you think could be great Pro Members", "Watch the IGNITE Training section — practice the 3-step selling conversation"] },
@@ -457,8 +457,8 @@ export function BasicTrainingPage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                      <p className="text-xs text-muted-foreground">When you reach your monthly Personal Volume (PV) threshold as a Pro Member, you qualify for the Bill Payer Program — a bonus that helps offset your personal bills and living expenses. Think of it as NFGN paying your utilities, phone bill, or car payment.</p>
-                      <div className="text-xs font-semibold text-teal-700">Paid: Monthly — when Pro Member PV threshold is met</div>
+                      <p className="text-xs text-muted-foreground">When you reach your monthly Personal Commissionable Volume (PCV) threshold as a Pro Member, you qualify for the Bill Payer Program — a bonus that helps offset your personal bills and living expenses. Think of it as NFGN paying your utilities, phone bill, or car payment.</p>
+                      <div className="text-xs font-semibold text-teal-700">Paid: Monthly — when Pro Member PCV threshold is met</div>
                     </CardContent>
                   </Card>
                 </div>
@@ -508,7 +508,7 @@ export function BasicTrainingPage() {
                         { stream: "Personal Sales Commission (PSC)", amount: "$300", color: "#1d4ed8", desc: "Earned on your direct retail sales to customers. The more customers you sell to personally, the higher your PSC. No one earns PSC on their own purchases — this is purely from customer-facing retail selling activity." },
                         { stream: "Level 1 PMRC", amount: "$900", color: "#7c3aed", desc: "6–8 personally enrolled Pro Members who are each registering products monthly. Every registration they make generates PMRC credited to you. PMRC reaches up to 5 generations deep in your team." },
                         { stream: "Level 2 MCB — Money Circulation Bonus", amount: "$800", color: "#dc2626", desc: "Your biggest recurring bonus. When your L1 Pro Members each enroll their own Pro Members (your Level 2), and those L2 members purchase, the MCB fires repeatedly. With 5 L1 × 3 L2 each = 15 Level 2 members generating orders, MCB cycles continuously." },
-                        { stream: "Bill Payer Program (BPP)", amount: "$200", color: "#0891b2", desc: "Hit your personal PV threshold each month as a Pro Member and NFGN covers your bills. This activates automatically when your monthly PV is met." },
+                        { stream: "Bill Payer Program (BPP)", amount: "$200", color: "#0891b2", desc: "Hit your personal PCV threshold each month as a Pro Member and NFGN covers your bills. This activates automatically when your monthly PCV is met." },
                         { stream: "CLB Fast-Start Bonus (Month 1)", amount: "$500+", color: GOLD, desc: "Triggered ONCE in your first 90 days when your L1 PMRC count reaches the qualifying threshold. Move fast — this bonus rewards speed." },
                       ].map((s, i) => (
                         <div key={i} className="flex gap-3 p-3 rounded-lg border bg-white items-start">
@@ -620,7 +620,7 @@ export function BasicTrainingPage() {
                     <div className="space-y-0 border-l-2 ml-4" style={{ borderColor: GREEN }}>
                       <Step number={1} title="Month 1 — Launch Hard (Target: $800–$1,200 + CLB)">
                         <p><strong>Week 1:</strong> Call your upline sponsor. Review this training together. Build your contact list of 100 names. Make your first 5 product conversations that same day.</p>
-                        <p><strong>Week 2:</strong> Enroll your first 3–5 retail customers (your PSC builds from their purchases). Place your personal IGNITE order (activates BPP PV progress). Enroll your first 2 Pro Members.</p>
+                        <p><strong>Week 2:</strong> Enroll your first 3–5 retail customers (your PSC builds from their purchases). Place your personal IGNITE order (activates BPP PCV progress). Enroll your first 2 Pro Members.</p>
                         <p><strong>Week 3–4:</strong> Push to 5 enrolled Pro Members. Help each one make their first retail sale. Your CLB window is open — every L1 PMRC counts toward it. Maintain 5–7 new prospect conversations every day.</p>
                         <p><strong>Income this month:</strong> RC + PSC + early PMRC + CLB = $800–$1,500 depending on speed.</p>
                       </Step>
@@ -686,7 +686,7 @@ export function BasicTrainingPage() {
                       <p>PCV (Personal Commissionable Volume, also known as PV) is calculated from your own product orders each month. The CV value of each product contributes to your PCV. Check the BPP page in your dashboard to see your current month's progress toward the threshold.</p>
                     </Step>
                     <Step number={3} title="Maintain Consistency">
-                      <p>BPP is a monthly recurring bonus. Every month you qualify, you receive it. Set up a personal product routine — use the products yourself so your PV stays active and your results stay authentic.</p>
+                      <p>BPP is a monthly recurring bonus. Every month you qualify, you receive it. Set up a personal product routine — use the products yourself so your PCV stays active and your results stay authentic.</p>
                     </Step>
                   </div>
                 </div>
@@ -697,7 +697,7 @@ export function BasicTrainingPage() {
                     <div className="space-y-2">
                       {[
                         "Order your personal supply early in the month — don't wait until the last few days",
-                        "Track your PV progress from the Bill Payer Program page in your dashboard",
+                        "Track your PCV progress from the Bill Payer Program page in your dashboard",
                         "If you're close to the threshold, placing one additional product order puts you over",
                         "The BPP bonus compounds with your other income streams — it's not a replacement, it's a supplement",
                         "Encourage your Pro Members to do the same — when their BPP activates, your MCB grows too",

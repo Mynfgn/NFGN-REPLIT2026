@@ -48,6 +48,15 @@ router.get("/dashboard/summary", requireAdmin, async (req, res): Promise<void> =
   const [{ activeMembers }] = await db.select({ activeMembers: count() }).from(usersTable).where(eq(usersTable.status, "active"));
   const [{ proMembers }] = await db.select({ proMembers: count() }).from(usersTable).where(eq(usersTable.isProMember, true));
 
+  // Platform-wide GCV (total CV from all orders — all-time)
+  const [{ platformGCV }] = await db.select({ platformGCV: sum(orderItemsTable.cvTotal) }).from(orderItemsTable);
+  // Platform GCV this month
+  const startOfThisMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  const [{ platformGCVThisMonth }] = await db.select({ platformGCVThisMonth: sum(orderItemsTable.cvTotal) })
+    .from(orderItemsTable)
+    .innerJoin(ordersTable, eq(orderItemsTable.orderId, ordersTable.id))
+    .where(gte(ordersTable.createdAt, startOfThisMonth));
+
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   const [{ newCustomers }] = await db.select({ newCustomers: count() }).from(usersTable).where(
@@ -97,6 +106,8 @@ router.get("/dashboard/summary", requireAdmin, async (req, res): Promise<void> =
     activeMembers: Number(activeMembers),
     proMembers: Number(proMembers),
     newCustomers: Number(newCustomers),
+    platformGCV: parseInt(platformGCV ?? "0"),
+    platformGCVThisMonth: parseInt(platformGCVThisMonth ?? "0"),
     pendingPayouts: parseFloat(pendingPayouts ?? "0"),
     pendingCommissions: parseFloat(pendingCommissions ?? "0"),
     totalBookings: Number(totalBookings),

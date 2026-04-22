@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/use-auth";
+import { useGetMe } from "@workspace/api-client-react";
 import { useEffect } from "react";
 
 // Layouts
@@ -80,15 +81,22 @@ const queryClient = new QueryClient({
 
 function RequireAuth({ children, requireAdmin = false }: { children: React.ReactNode, requireAdmin?: boolean }) {
   const { isAuthenticated } = useAuth();
+  const { data: me } = useGetMe();
   const [location, setLocation] = useLocation();
+
+  const isAdmin = me && ["super_admin", "admin", "store_admin"].includes(me.role);
 
   useEffect(() => {
     if (!isAuthenticated) {
       setLocation("/login");
+    } else if (requireAdmin && me && !isAdmin) {
+      setLocation("/dashboard");
     }
-  }, [isAuthenticated, setLocation]);
+  }, [isAuthenticated, requireAdmin, me, isAdmin, setLocation]);
 
   if (!isAuthenticated) return null;
+  if (requireAdmin && !me) return null;
+  if (requireAdmin && me && !isAdmin) return null;
   return <>{children}</>;
 }
 

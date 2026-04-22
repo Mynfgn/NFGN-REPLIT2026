@@ -79,8 +79,9 @@ function edgePath({ x1, y1, x2, y2 }: Edge) {
 /* ── Member popup ─────────────────────────────────────────────── */
 function MemberPopup({ pos, onClose }: { pos: Pos; onClose: () => void }) {
   const n = pos.node;
-  const firstName = n.name.split(" ")[0];
-  const lastName = n.name.split(" ").slice(1).join(" ");
+  const safeName = n.name ?? "";
+  const firstName = safeName.split(" ")[0];
+  const lastName = safeName.split(" ").slice(1).join(" ");
   return (
     <div
       className="absolute z-50 pointer-events-auto"
@@ -89,10 +90,10 @@ function MemberPopup({ pos, onClose }: { pos: Pos; onClose: () => void }) {
       <div className="bg-white border border-border rounded-xl shadow-2xl w-64 text-sm overflow-hidden">
         <div className={`px-4 py-3 flex items-center gap-3 ${n.isProMember ? "bg-orange-50 border-b border-orange-100" : "bg-blue-50 border-b border-blue-100"}`}>
           <div className={`h-10 w-10 rounded-full flex items-center justify-center text-base font-bold text-white flex-shrink-0 ${n.isProMember ? "bg-orange-500" : "bg-blue-500"}`}>
-            {n.name.charAt(0)}
+            {safeName.charAt(0)}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-semibold text-foreground truncate">{n.name}</div>
+            <div className="font-semibold text-foreground truncate">{safeName}</div>
             <div className={`text-xs font-medium ${n.isProMember ? "text-orange-600" : "text-blue-600"}`}>
               {n.isProMember ? "⭐ Pro Member" : "Member"}
             </div>
@@ -159,7 +160,8 @@ function NodeEl({ pos, selected, onSelect }: { pos: Pos; selected: boolean; onSe
   const n = pos.node;
   const [hovered, setHovered] = useState(false);
   const isVirtualRoot = n.userId === 0;
-  const initials = isVirtualRoot ? "🌐" : n.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+  const safeName = n.name ?? "";
+  const initials = isVirtualRoot ? "🌐" : safeName.split(" ").map((w: string) => w[0]).filter(Boolean).join("").slice(0, 2).toUpperCase() || "?";
 
   if (isVirtualRoot) {
     return (
@@ -199,7 +201,7 @@ function NodeEl({ pos, selected, onSelect }: { pos: Pos; selected: boolean; onSe
         </g>
       )}
       <text y={CR + 14} textAnchor="middle" fill="#111827" fontSize="10" fontWeight="600" fontFamily="system-ui, sans-serif">
-        {n.name.length > 14 ? n.name.slice(0, 13) + "…" : n.name}
+        {safeName.length > 14 ? safeName.slice(0, 13) + "…" : safeName}
       </text>
       <text y={CR + 28} textAnchor="middle" fill={n.isProMember ? "#c2410c" : "#1d4ed8"} fontSize="9" fontFamily="system-ui, sans-serif">
         {n.isProMember ? "Pro Member" : "Member"}
@@ -272,14 +274,20 @@ export function AdminGenealogyPage() {
   useEffect(() => {
     setMembersLoading(true);
     setTreeLoading(true);
-    Promise.all([
+    Promise.allSettled([
       customFetch<any[]>("/api/genealogy/admin-all"),
       customFetch<any>("/api/genealogy/admin-stats"),
       customFetch<TreeNode>("/api/genealogy/admin-tree"),
-    ]).then(([members, stats, adminTree]) => {
-      setAllMembers(Array.isArray(members) ? members : []);
-      setAdminStats(stats);
-      setTree(adminTree ?? null);
+    ]).then(([membersRes, statsRes, treeRes]) => {
+      if (membersRes.status === "fulfilled" && Array.isArray(membersRes.value)) {
+        setAllMembers(membersRes.value);
+      }
+      if (statsRes.status === "fulfilled" && statsRes.value && !("error" in statsRes.value)) {
+        setAdminStats(statsRes.value);
+      }
+      if (treeRes.status === "fulfilled" && treeRes.value && !("error" in treeRes.value) && treeRes.value.name) {
+        setTree(treeRes.value);
+      }
     }).finally(() => {
       setMembersLoading(false);
       setTreeLoading(false);

@@ -366,7 +366,7 @@ export function CommissionsPage() {
                     { code: "PSC", label: "Product Sales Commissions", color: "green", who: "Pro Members Only", trigger: "Any product/service purchase in your downline (up to 9 levels)" },
                     { code: "PMRC", label: "Pro Member Registration Commission", color: "amber", who: "Pro Members Only", trigger: "Someone in your upline buys the Pro Member Registration Package" },
                     { code: "PMB", label: "Pro Member Bonuses (CLB & MCB)", color: "purple", who: "Pro Members Only", trigger: "Every 9 PMRPs sold on Level 1 (CLB) or Level 2 (MCB)" },
-                    { code: "GVB", label: "Group Volume Bonuses (BPP)", color: "rose", who: "Pro Members Only", trigger: "Monthly GV/PV targets met — pays toward 5 real-life bills" },
+                    { code: "GVB", label: "Group Volume Bonuses (BPP)", color: "rose", who: "Pro Members Only", trigger: "Monthly GCV/PCV targets met — pays toward 5 real-life bills. Only Pro Members earn from GCV." },
                   ].map(item => (
                     <div key={item.code} className="flex items-start gap-3 p-3 rounded-lg border bg-background/80">
                       <div className={`text-xs font-bold px-2 py-1 rounded flex-shrink-0 ${
@@ -460,13 +460,13 @@ export function CommissionsPage() {
                     <strong className="text-foreground">PSC</strong> are commissions generated when NFGN members purchase products or 
                     services — including <strong className="text-foreground">recurring monthly subscriptions</strong> — within your Group 
                     or Community. The more products and services being purchased in your NFGN Community, the greater your 
-                    <strong className="text-foreground"> Group Volume (GV)</strong> and your PSC earnings become.
+                    <strong className="text-foreground"> Group Commissionable Volume (GCV)</strong> and your PSC earnings become.
                   </p>
                   <p>
                     <strong className="text-foreground">Think of it like a store:</strong> Your online NFGN business is a store that 
                     sells products and services sourced from a particular warehouse in a particular region. Every time you register a 
                     standard member, that's a <strong className="text-foreground">customer who shops in your store</strong>. Every purchase 
-                    they make increases their personal PV and your Group GV — and because you referred them, your 
+                    they make increases their personal PCV and your Group GCV — and because you referred them, your 
                     <strong className="text-foreground"> Referral Commission (RC)</strong> also goes up.
                   </p>
                   <p>
@@ -603,10 +603,16 @@ export function CommissionsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="rounded-lg bg-amber-50 border border-amber-300 px-4 py-3 flex items-start gap-2">
+                  <span className="text-amber-500 flex-shrink-0 mt-0.5">⚠️</span>
+                  <p className="text-xs text-amber-800 font-semibold leading-relaxed">
+                    <strong className="text-amber-900">Pro Member status required to earn from GCV.</strong> Only Pro Members are eligible to receive GVB payouts. Your GCV accumulates regardless of membership level, but only Pro Members can unlock earnings from it. Upgrading to Pro Member is the one action that turns your team's GCV into real income.
+                  </p>
+                </div>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   The <strong className="text-foreground">Bill Payer Program (BPP)</strong> is NFGN's most distinctive benefit — 
-                  the company literally pays your real-life monthly bills for you. When you hit your monthly Group Volume (GV) 
-                  and Personal Volume (PV) targets, you qualify for up to <strong className="text-foreground">five separate GV Bonuses</strong>, 
+                  the company literally pays your real-life monthly bills for you. When you hit your monthly Group Commissionable Volume (GCV) 
+                  and Personal Commissionable Volume (PCV) targets, you qualify for up to <strong className="text-foreground">five separate GV Bonuses</strong>, 
                   each earmarked for a specific life expense.
                 </p>
                 <div className="rounded-lg bg-rose-50 border border-rose-200 p-3 text-sm text-rose-900 space-y-1">
@@ -614,10 +620,10 @@ export function CommissionsPage() {
                   <ul className="text-xs space-y-1 list-disc list-inside text-rose-800 leading-relaxed">
                     <li>You must be a <strong>Pro Member</strong> — activating your Pro Member Registration unlocks BPP eligibility.</li>
                     <li>Each month, the company pools a portion of revenue into 5 separate fund buckets.</li>
-                    <li>When your monthly GV and PV meet each fund's threshold, you receive a payout from that fund — credited to your e-wallet.</li>
-                    <li>Payouts are proportional to your GV relative to other qualifying members in the fund pool.</li>
-                    <li>Funds reset monthly — eligibility is re-evaluated every month based on current GV/PV.</li>
-                    <li>Standard PV requirement is typically <strong>150 PV</strong> for the base fund tier.</li>
+                    <li>When your monthly GCV and PCV meet each fund's threshold, you receive a payout from that fund — credited to your e-wallet.</li>
+                    <li>Payouts are proportional to your GCV relative to other qualifying members in the fund pool.</li>
+                    <li>Funds reset monthly — eligibility is re-evaluated every month based on current GCV/PCV.</li>
+                    <li>Standard PCV requirement is typically <strong>150 PCV</strong> for the base fund tier.</li>
                   </ul>
                 </div>
                 <div className="grid sm:grid-cols-2 gap-2">
@@ -641,7 +647,7 @@ export function CommissionsPage() {
                   <strong className="text-amber-800">Important:</strong> GVBs are classified as <em>Money Circulation Bonuses</em> — 
                   they are drawn from the group's collective volume activity, not fixed commission rates on individual transactions. 
                   GVBs are entirely separate from RC, PSC, PMRC, and PMB. See the <strong>Bill Payer Program</strong> page in the 
-                  sidebar for your live fund status, GV/PV progress, and estimated payouts for the current month.
+                  sidebar for your live fund status, GCV/PCV progress, and estimated payouts for the current month.
                 </div>
               </CardContent>
             </Card>

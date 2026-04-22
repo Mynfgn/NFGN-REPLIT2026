@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useGetMemberDashboard, useGetMemberAnalytics } from "@workspace/api-client-react";
+import { useGetMemberDashboard, useGetMemberAnalytics, useGetMe } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -461,6 +461,7 @@ function EarningsLineChart({ data }: { data: any[] }) {
 export function Dashboard() {
   const { data, isLoading } = useGetMemberDashboard();
   const { data: analytics, isLoading: analyticsLoading } = useGetMemberAnalytics();
+  const { data: me } = useGetMe();
 
   if (isLoading) {
     return (
@@ -483,7 +484,7 @@ export function Dashboard() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-serif font-bold text-foreground">Welcome Back</h1>
+          <h1 className="text-3xl font-serif font-bold text-foreground">Welcome Back{me?.firstName ? `, ${me.firstName}` : ""}!</h1>
           <p className="text-muted-foreground">Here's your business at a glance.</p>
         </div>
       </div>

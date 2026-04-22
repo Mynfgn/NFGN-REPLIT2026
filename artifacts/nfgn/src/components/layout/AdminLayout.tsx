@@ -7,11 +7,26 @@ import {
   Award, Banknote, Calendar, Settings,
   MessageSquare, Tag, BarChart, LogOut, Menu, X,
   ShieldCheck, Network, Star, Percent, Gift, Home, Clock, UserCircle,
+  ChevronDown, ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { roleLabel } from "@/lib/labels";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
+
+interface NavChild {
+  name: string;
+  href: string;
+  icon: React.ElementType;
+}
+
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ElementType;
+  exact?: boolean;
+  children?: NavChild[];
+}
 
 export function AdminLayout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
@@ -19,6 +34,11 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   const logoutMutation = useLogout();
   const { logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const isOrdersSection = location.startsWith("/admin/orders");
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
+    Orders: isOrdersSection,
+  });
 
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {
@@ -29,12 +49,23 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     });
   };
 
-  const navItems = [
+  const toggleGroup = (name: string) => {
+    setOpenGroups(prev => ({ ...prev, [name]: !prev[name] }));
+  };
+
+  const navItems: NavItem[] = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { name: "Users", href: "/admin/users", icon: Users },
     { name: "Products", href: "/admin/products", icon: ShoppingBag },
-    { name: "Orders", href: "/admin/orders", icon: ShoppingBag, exact: true },
-    { name: "Awaiting Approval", href: "/admin/orders/awaiting", icon: Clock, sub: true },
+    {
+      name: "Orders",
+      href: "/admin/orders",
+      icon: ShoppingBag,
+      exact: true,
+      children: [
+        { name: "Awaiting Approval", href: "/admin/orders/awaiting", icon: Clock },
+      ],
+    },
     { name: "Categories", href: "/admin/categories", icon: FolderTree },
     { name: "Commissions", href: "/admin/commissions", icon: Award },
     { name: "Referral Commissions", href: "/admin/referral-commissions", icon: Gift },
@@ -100,27 +131,73 @@ export function AdminLayout({ children }: { children: ReactNode }) {
               : item.href === '/admin'
               ? location === '/admin'
               : location.startsWith(item.href);
+
+            const isGroupOpen = openGroups[item.name] ?? false;
+            const hasChildren = item.children && item.children.length > 0;
+
             return (
-              <Link key={item.name} href={item.href}>
-                <span className={`
-                  flex items-center gap-3 rounded-md text-sm font-medium transition-colors
-                  ${item.sub
-                    ? "px-3 py-2 ml-6 border-l border-white/20 rounded-none rounded-r-md"
-                    : "px-3 py-2.5"
-                  }
-                  ${isActive
-                    ? item.sub
-                      ? "bg-primary/80 text-primary-foreground border-l-2 border-primary"
-                      : "bg-primary text-primary-foreground"
-                    : item.sub
-                    ? "text-white/50 hover:bg-white/10 hover:text-white"
-                    : "text-white/70 hover:bg-white/10 hover:text-white"
-                  }
-                `}>
-                  <item.icon className={`flex-shrink-0 ${item.sub ? "h-3.5 w-3.5" : "h-4 w-4"}`} />
-                  {item.name}
-                </span>
-              </Link>
+              <div key={item.name}>
+                {hasChildren ? (
+                  <>
+                    {/* Parent row: clicking left side navigates, clicking chevron toggles */}
+                    <div className={`
+                      flex items-center rounded-md text-sm font-medium transition-colors
+                      ${isActive ? "bg-primary text-primary-foreground" : "text-white/70 hover:bg-white/10 hover:text-white"}
+                    `}>
+                      <Link href={item.href} className="flex items-center gap-3 flex-1 px-3 py-2.5">
+                        <item.icon className="flex-shrink-0 h-4 w-4" />
+                        {item.name}
+                      </Link>
+                      <button
+                        onClick={() => toggleGroup(item.name)}
+                        className="px-2 py-2.5 hover:text-white transition-colors"
+                        aria-label={isGroupOpen ? "Collapse" : "Expand"}
+                      >
+                        {isGroupOpen
+                          ? <ChevronDown className="h-3.5 w-3.5" />
+                          : <ChevronRight className="h-3.5 w-3.5" />
+                        }
+                      </button>
+                    </div>
+
+                    {/* Children */}
+                    {isGroupOpen && (
+                      <div className="ml-4 mt-0.5 border-l border-white/20 pl-2 space-y-0.5">
+                        {item.children!.map((child) => {
+                          const childActive = location === child.href || location.startsWith(child.href);
+                          return (
+                            <Link key={child.name} href={child.href}>
+                              <span className={`
+                                flex items-center gap-2.5 rounded-md text-sm font-medium transition-colors px-3 py-2
+                                ${childActive
+                                  ? "bg-primary/80 text-primary-foreground"
+                                  : "text-white/55 hover:bg-white/10 hover:text-white"
+                                }
+                              `}>
+                                <child.icon className="flex-shrink-0 h-3.5 w-3.5" />
+                                {child.name}
+                              </span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <Link href={item.href}>
+                    <span className={`
+                      flex items-center gap-3 rounded-md text-sm font-medium transition-colors px-3 py-2.5
+                      ${isActive
+                        ? "bg-primary text-primary-foreground"
+                        : "text-white/70 hover:bg-white/10 hover:text-white"
+                      }
+                    `}>
+                      <item.icon className="flex-shrink-0 h-4 w-4" />
+                      {item.name}
+                    </span>
+                  </Link>
+                )}
+              </div>
             );
           })}
         </nav>

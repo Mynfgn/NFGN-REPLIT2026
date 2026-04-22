@@ -36,8 +36,10 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const isOrdersSection = location.startsWith("/admin/orders");
+  const isCommissionsSection = location.startsWith("/admin/referral-commissions") || location.startsWith("/admin/bonuses") || location.startsWith("/admin/bpp") || location.startsWith("/admin/commissions");
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     Orders: isOrdersSection,
+    Commissions: isCommissionsSection,
   });
 
   const handleLogout = () => {
@@ -67,11 +69,18 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       ],
     },
     { name: "Categories", href: "/admin/categories", icon: FolderTree },
-    { name: "Commissions", href: "/admin/commissions", icon: Award },
-    { name: "Referral Commissions", href: "/admin/referral-commissions", icon: Gift },
+    {
+      name: "Commissions",
+      href: "/admin/commissions",
+      icon: Award,
+      exact: true,
+      children: [
+        { name: "Referral Commissions", href: "/admin/referral-commissions", icon: Gift },
+        { name: "Pro Member Bonuses", href: "/admin/bonuses", icon: Star },
+        { name: "Bill Payer Program", href: "/admin/bpp", icon: Home },
+      ],
+    },
     { name: "Pro Compensation Settings", href: "/admin/compensation", icon: Percent },
-    { name: "Pro Member Bonuses", href: "/admin/bonuses", icon: Star },
-    { name: "Bill Payer Program", href: "/admin/bpp", icon: Home },
     { name: "Payouts", href: "/admin/payouts", icon: Banknote },
     { name: "Bookings", href: "/admin/bookings", icon: Calendar },
     { name: "Professionals", href: "/admin/professionals", icon: Users },

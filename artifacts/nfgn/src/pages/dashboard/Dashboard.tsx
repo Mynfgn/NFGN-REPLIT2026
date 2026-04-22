@@ -485,7 +485,7 @@ export function Dashboard() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-serif font-bold text-foreground">Welcome Back{me?.firstName ? `, ${me.firstName}` : ""}!</h1>
-          <p className="text-muted-foreground">Here's your business at a glance.</p>
+          <p className="text-muted-foreground">Let's make some money together.</p>
         </div>
       </div>
 

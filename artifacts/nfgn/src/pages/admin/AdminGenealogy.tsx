@@ -136,6 +136,9 @@ function MemberPopup({ pos, onClose }: { pos: Pos; onClose: () => void }) {
             <span className="text-green-600 font-medium">GCV <span className="font-normal text-xs">(Group Commissionable Volume)</span></span>
             <span className="font-bold text-green-700">{n.groupVolume ?? 0} GCV</span>
           </div>
+          <div className="flex justify-between items-center">
+            <span className="text-[10px] text-amber-600 font-semibold bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 w-full text-center">⭐ Only Pro Members earn commissions from GCV</span>
+          </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Total Earnings</span>
             <span className="font-bold text-green-600">${n.totalEarnings.toFixed(2)}</span>

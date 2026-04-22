@@ -92,6 +92,7 @@ function CVCard({ pv, gv, required }: { pv: number; gv: number; required: number
             <div className="text-xl font-bold text-green-600">{gv} GCV</div>
             <div className="text-xs text-muted-foreground">GCV — Group Commissionable Volume</div>
             <div className="text-xs text-muted-foreground mt-0.5">Also known as GV</div>
+            <div className="text-xs font-semibold text-amber-600 mt-1.5">⭐ Pro Members only earn from GCV</div>
           </div>
         </div>
         <div>

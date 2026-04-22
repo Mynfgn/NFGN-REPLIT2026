@@ -170,6 +170,53 @@ router.get("/genealogy/stats", requireAuth, async (req, res): Promise<void> => {
   });
 });
 
+/** Admin-only: unified tree with a virtual root that includes ALL member subtrees. */
+router.get("/genealogy/admin-tree", requireAuth, async (req, res): Promise<void> => {
+  const currentUser = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
+  if (!["super_admin", "admin"].includes(currentUser.role)) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+
+  const depth = Math.min(parseInt(String(req.query.depth ?? "9")), 9);
+
+  // Find all member users with no sponsor (or whose sponsor is an admin)
+  const allUsers = await db.select({ id: usersTable.id, role: usersTable.role, sponsorId: usersTable.sponsorId })
+    .from(usersTable);
+
+  const adminIds = new Set(
+    allUsers.filter(u => ["super_admin", "admin", "store_admin"].includes(u.role)).map(u => u.id)
+  );
+
+  const memberRoots = allUsers.filter(
+    u => !adminIds.has(u.id) && (!u.sponsorId || adminIds.has(u.sponsorId))
+  );
+
+  const childTrees = await Promise.all(memberRoots.map(u => buildTree(u.id, depth)));
+  const validChildren = childTrees.filter(Boolean);
+
+  // Virtual root
+  const virtualRoot = {
+    id: 0,
+    userId: 0,
+    name: "NFGN Network",
+    email: "",
+    avatar: null,
+    role: "virtual",
+    isProMember: false,
+    status: "active",
+    generation: 0,
+    teamSize: validChildren.length,
+    totalEarnings: 0,
+    personalVolume: 0,
+    groupVolume: 0,
+    joinedAt: new Date().toISOString(),
+    children: validChildren,
+  };
+
+  res.json(virtualRoot);
+});
+
 /** Admin-only: fetch every member in the platform regardless of sponsor chain. */
 router.get("/genealogy/admin-all", requireAuth, async (req, res): Promise<void> => {
   const currentUser = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;

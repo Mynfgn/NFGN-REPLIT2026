@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useGetGenealogyTree } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -159,7 +158,24 @@ function MemberPopup({ pos, onClose }: { pos: Pos; onClose: () => void }) {
 function NodeEl({ pos, selected, onSelect }: { pos: Pos; selected: boolean; onSelect: (p: Pos | null) => void }) {
   const n = pos.node;
   const [hovered, setHovered] = useState(false);
-  const initials = n.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+  const isVirtualRoot = n.userId === 0;
+  const initials = isVirtualRoot ? "🌐" : n.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+
+  if (isVirtualRoot) {
+    return (
+      <g transform={`translate(${pos.x},${pos.y + CCY})`}>
+        <circle r={CR + 4} fill="#C9A84C22" stroke="#C9A84C" strokeWidth="2" strokeDasharray="5,3" />
+        <circle r={CR} fill="#0a0a0a" stroke="#C9A84C" strokeWidth="2" />
+        <text textAnchor="middle" dominantBaseline="central" fontSize="16">{initials}</text>
+        <text y={CR + 14} textAnchor="middle" fill="#C9A84C" fontSize="10" fontWeight="700" fontFamily="system-ui, sans-serif">
+          NFGN Network
+        </text>
+        <text y={CR + 26} textAnchor="middle" fill="#6b7280" fontSize="8" fontFamily="system-ui, sans-serif">
+          All Members
+        </text>
+      </g>
+    );
+  }
 
   return (
     <g
@@ -250,18 +266,24 @@ export function AdminGenealogyPage() {
   const [allMembers, setAllMembers] = useState<any[]>([]);
   const [adminStats, setAdminStats] = useState<any>(null);
   const [membersLoading, setMembersLoading] = useState(true);
-
-  const { data: tree, isLoading: treeLoading } = useGetGenealogyTree({ userId: 1, depth: 9 });
+  const [tree, setTree] = useState<TreeNode | null>(null);
+  const [treeLoading, setTreeLoading] = useState(true);
 
   useEffect(() => {
     setMembersLoading(true);
+    setTreeLoading(true);
     Promise.all([
       customFetch<any[]>("/api/genealogy/admin-all"),
       customFetch<any>("/api/genealogy/admin-stats"),
-    ]).then(([members, stats]) => {
+      customFetch<TreeNode>("/api/genealogy/admin-tree"),
+    ]).then(([members, stats, adminTree]) => {
       setAllMembers(Array.isArray(members) ? members : []);
       setAdminStats(stats);
-    }).finally(() => setMembersLoading(false));
+      setTree(adminTree ?? null);
+    }).finally(() => {
+      setMembersLoading(false);
+      setTreeLoading(false);
+    });
   }, []);
 
   const filteredFlat = allMembers.filter(m =>

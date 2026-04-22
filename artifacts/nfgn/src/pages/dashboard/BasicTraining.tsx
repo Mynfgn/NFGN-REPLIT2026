@@ -291,6 +291,92 @@ export function BasicTrainingPage() {
                   <p className="text-xs text-muted-foreground italic border-t border-border pt-3">In short: CV is on every product. Your PCV (PV) is what you personally buy. Your GCV (GV) is what your whole team buys. All commissions flow from these three numbers.</p>
                 </div>
 
+                {/* CV Deep Dive — Why It Matters */}
+                <div className="rounded-xl border border-border bg-[#0a0a0a] text-white p-6 space-y-6">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "#C9A84C" }}>Master This First</p>
+                    <h3 className="text-base font-bold">Why Commissionable Volume (CV) Is the Engine Behind Every Dollar You Earn</h3>
+                    <p className="text-xs text-white/60 leading-relaxed mt-2">
+                      In network marketing, most people focus on rank, team size, or how many people they've recruited. The truth is simpler and more powerful than that: <strong className="text-white">every commission, every bonus, every rank advancement at NFGN is calculated from CV</strong>. Understanding CV — and specifically your PCV and GCV — is the single most important skill you can develop as a network marketer. It tells you exactly where your money comes from and exactly what levers to pull to earn more of it.
+                    </p>
+                  </div>
+
+                  {/* PCV section */}
+                  <div className="rounded-xl bg-white/5 border border-white/10 p-5 space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">P</div>
+                      <div>
+                        <p className="text-sm font-bold text-blue-300">Your PCV — Personal Commissionable Volume (also: PV)</p>
+                        <p className="text-xs text-white/50">3 Reasons You Must Pay Attention to It</p>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex gap-3">
+                        <div className="flex-shrink-0 h-6 w-6 rounded-full bg-blue-500/20 border border-blue-400/40 flex items-center justify-center text-blue-300 text-xs font-bold mt-0.5">1</div>
+                        <div>
+                          <p className="text-sm font-semibold text-white">PCV determines whether you stay active — and paid</p>
+                          <p className="text-xs text-white/60 leading-relaxed mt-0.5">Your Pro Member status is only maintained if you hit your monthly PCV threshold. If you fall short, you lose eligibility for all downline commissions, BPP bonuses, and rank qualifications — even if your team is on fire. One missed month of personal PCV can cost you far more in lost commissions than the cost of the products themselves. Treat your PCV target like a non-negotiable monthly bill.</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <div className="flex-shrink-0 h-6 w-6 rounded-full bg-blue-500/20 border border-blue-400/40 flex items-center justify-center text-blue-300 text-xs font-bold mt-0.5">2</div>
+                        <div>
+                          <p className="text-sm font-semibold text-white">PCV is your proof of product — and your best sales tool</p>
+                          <p className="text-xs text-white/60 leading-relaxed mt-0.5">When you personally order and use NFGN products, your PCV grows and you gain a real, authentic testimonial. People don't join or buy from someone who doesn't believe in what they sell. Your PCV activity is visible proof that you are a product of the product — and that authenticity closes more sales than any script ever could. High PCV = high credibility.</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <div className="flex-shrink-0 h-6 w-6 rounded-full bg-blue-500/20 border border-blue-400/40 flex items-center justify-center text-blue-300 text-xs font-bold mt-0.5">3</div>
+                        <div>
+                          <p className="text-sm font-semibold text-white">PCV unlocks your BPP — your monthly bill-paying machine</p>
+                          <p className="text-xs text-white/60 leading-relaxed mt-0.5">The Bill Payer Program pays you a bonus every single month you hit your PCV threshold. This is the most predictable, consistent income stream in the NFGN comp plan — and it is 100% controlled by you, not your team. No recruiting required. No downline required. Just consistently hitting your personal PCV target and NFGN writes you a check to cover a real-world bill. Over 12 months, that adds up to thousands of dollars in recovered expenses — before any team income is counted.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* GCV section */}
+                  <div className="rounded-xl bg-white/5 border border-white/10 p-5 space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">G</div>
+                      <div>
+                        <p className="text-sm font-bold text-green-300">Your GCV — Group Commissionable Volume (also: GV)</p>
+                        <p className="text-xs text-white/50">What It Is &amp; The 3 Things That Can Change Your Life</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-white/60 leading-relaxed">
+                      GCV is the sum of <em>every</em> CV generated by every person in your downline organization — all generations, every month. Unlike PCV which only you control, GCV multiplies as your team grows. It is the number that separates part-time extra income from life-changing, generational wealth. A team of 50 people each generating 100 PCV creates 5,000 GCV for you — automatically, even while you sleep. That is the compounding power of network marketing, and GCV is how you measure it.
+                    </p>
+                    <div className="space-y-3">
+                      <div className="flex gap-3">
+                        <div className="flex-shrink-0 h-6 w-6 rounded-full bg-green-500/20 border border-green-400/40 flex items-center justify-center text-green-300 text-xs font-bold mt-0.5">1</div>
+                        <div>
+                          <p className="text-sm font-semibold text-white">GCV is the multiplier that turns your effort into leverage</p>
+                          <p className="text-xs text-white/60 leading-relaxed mt-0.5">Every hour you spend building your team compounds into GCV that keeps accumulating long after that hour is gone. When you enroll and train a Pro Member who then enrolls three more, all of their PCV flows into your GCV. This is leverage — the ability to earn on the time and effort of others. Most careers pay you once for your time. GCV pays you every month for the culture and momentum you created. The higher your GCV climbs, the less dependent your income is on any single person — including yourself.</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <div className="flex-shrink-0 h-6 w-6 rounded-full bg-green-500/20 border border-green-400/40 flex items-center justify-center text-green-300 text-xs font-bold mt-0.5">2</div>
+                        <div>
+                          <p className="text-sm font-semibold text-white">GCV unlocks ranks, pools, and commission tiers that change your pay entirely</p>
+                          <p className="text-xs text-white/60 leading-relaxed mt-0.5">NFGN ranks are directly tied to GCV thresholds. As your GCV grows, you unlock higher PMRC percentages, eligibility for leadership pools, and access to deeper commission generations. At entry level, you earn commissions 2–3 generations deep. At higher GCV ranks, that window expands to 5 generations and beyond. The math is dramatic: the same downline activity that pays you $200/month at a low GCV rank can pay you $800–$1,200/month at a higher rank — with zero new people added. Growing GCV is not about working harder. It is about advancing to the rank where the comp plan pays you what your effort is actually worth.</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <div className="flex-shrink-0 h-6 w-6 rounded-full bg-green-500/20 border border-green-400/40 flex items-center justify-center text-green-300 text-xs font-bold mt-0.5">3</div>
+                        <div>
+                          <p className="text-sm font-semibold text-white">GCV creates residual income — the kind you can pass down</p>
+                          <p className="text-xs text-white/60 leading-relaxed mt-0.5">Residual income is income that keeps arriving after the work is done. A paycheck stops when you stop working. GCV-driven commissions do not — because your team keeps ordering, keeps enrolling, and keeps building whether you are actively working that day or not. A mature, high-GCV organization means you get paid on a Tuesday in July when you are on vacation with your family, because hundreds of people in your network made a purchase. That is freedom that a job cannot provide. Build your GCV long enough and with enough intention, and you are not just building an income — you are building an asset that can be passed to the people you love.</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="rounded-lg bg-[#C9A84C]/15 border border-[#C9A84C]/30 p-3 mt-2">
+                      <p className="text-xs font-semibold" style={{ color: "#C9A84C" }}>The Bottom Line on GCV</p>
+                      <p className="text-xs text-white/70 leading-relaxed mt-1">Track your GCV every single month. Set a GCV growth goal — not just a recruiting goal. When your GCV doubles, your commission potential more than doubles. When it grows 10x, your life changes. GCV is the scoreboard for your legacy.</p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="space-y-4">
                   {/* RC */}
                   <Card className="border-blue-200 bg-blue-50/50">

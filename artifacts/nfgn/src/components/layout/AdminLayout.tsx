@@ -86,7 +86,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     { name: "Professionals", href: "/admin/professionals", icon: Users },
     { name: "Messages", href: "/admin/messages", icon: MessageSquare },
     { name: "Promos", href: "/admin/promos", icon: Tag },
-    { name: "Admin Settings", href: "/admin/settings", icon: Settings },
+    { name: "Administrative Settings", href: "/admin/settings", icon: Settings },
     { name: "Reports", href: "/admin/reports", icon: BarChart },
     { name: "Genealogy", href: "/admin/genealogy", icon: Network },
     { name: "Profile Management", href: "/admin/profile", icon: UserCircle },

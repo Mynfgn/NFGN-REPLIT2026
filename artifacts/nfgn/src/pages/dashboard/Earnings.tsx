@@ -60,8 +60,8 @@ export function EarningsPage() {
     sales: parseFloat(m.sales?.toFixed(2) ?? "0"),
   }));
 
-  const walletBalance = parseFloat(wallet?.balance ?? "0");
-  const lifetimeEarned = parseFloat(wallet?.totalEarned ?? "0");
+  const walletBalance = wallet?.balance ?? 0;
+  const lifetimeEarned = wallet?.totalEarned ?? 0;
 
   return (
     <div className="space-y-6">

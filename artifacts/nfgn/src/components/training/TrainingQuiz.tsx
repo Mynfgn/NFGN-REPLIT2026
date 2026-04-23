@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 
 const GOLD = "#C9A84C";
+const GREEN = "#2D6A4F";
 
 export interface QuizQuestion {
   question: string;

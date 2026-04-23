@@ -278,18 +278,18 @@ export function AdminGenealogyPage() {
     setMembersLoading(true);
     setTreeLoading(true);
     Promise.allSettled([
-      customFetch<any[]>("/api/genealogy/admin-all"),
-      customFetch<any>("/api/genealogy/admin-stats"),
-      customFetch<TreeNode>("/api/genealogy/admin-tree"),
-    ]).then(([membersRes, statsRes, treeRes]) => {
+      customFetch("/api/genealogy/admin-all") as Promise<any>,
+      customFetch("/api/genealogy/admin-stats") as Promise<any>,
+      customFetch("/api/genealogy/admin-tree") as Promise<any>,
+    ]).then(([membersRes, statsRes, treeRes]: PromiseSettledResult<any>[]) => {
       if (membersRes.status === "fulfilled" && Array.isArray(membersRes.value)) {
         setAllMembers(membersRes.value);
       }
       if (statsRes.status === "fulfilled" && statsRes.value && !("error" in statsRes.value)) {
         setAdminStats(statsRes.value);
       }
-      if (treeRes.status === "fulfilled" && treeRes.value && !("error" in treeRes.value) && treeRes.value.name) {
-        setTree(treeRes.value);
+      if (treeRes.status === "fulfilled" && treeRes.value && !("error" in treeRes.value) && (treeRes.value as any).name) {
+        setTree(treeRes.value as TreeNode);
       }
     }).finally(() => {
       setMembersLoading(false);

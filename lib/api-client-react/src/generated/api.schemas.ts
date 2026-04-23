@@ -625,6 +625,8 @@ export interface DashboardSummary {
   recentRegistrations: User[];
   salesByMonth: DashboardSummarySalesByMonthItem[];
   topProducts: DashboardSummaryTopProductsItem[];
+  platformGCVThisMonth?: number;
+  platformGCV?: number;
 }
 
 export type MemberDashboardEarningsByMonthItem = {
@@ -702,6 +704,7 @@ export type ListProductsParams = {
   category?: string;
   search?: string;
   featured?: boolean;
+  isProPackage?: boolean;
   page?: number;
   limit?: number;
 };
@@ -757,6 +760,7 @@ export type ListPayoutsParams = {
   userId?: number;
   status?: string;
   page?: number;
+  limit?: number;
 };
 
 export type ListBookingsParams = {
@@ -774,6 +778,7 @@ export type ListProfessionalsParams = {
 export type ListMessagesParams = {
   folder?: string;
   page?: number;
+  limit?: number;
 };
 
 export type GetMemberAnalytics200MonthlySalesItem = {
@@ -806,6 +811,7 @@ export type GetMemberAnalytics200 = {
   groupVolume?: number;
   cvMaintenanceRequired?: number;
   proPackageProgress?: GetMemberAnalytics200ProPackageProgress;
+  powerSquadBonus?: Record<string, unknown>;
 };
 
 export type GetSalesReportParams = {

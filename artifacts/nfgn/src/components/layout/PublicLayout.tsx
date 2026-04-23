@@ -14,7 +14,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [location] = useLocation();
 
-  const { data: cart } = useGetCart({ query: { enabled: isAuthenticated } });
+  const { data: cart } = useGetCart({ query: { enabled: isAuthenticated } as any });
   const itemCount = cart?.itemCount ?? 0;
 
   const navLinks = [

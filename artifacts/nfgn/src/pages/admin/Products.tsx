@@ -84,11 +84,11 @@ export function AdminProductsPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { uploadFile, isUploading } = useUpload({
-    onSuccess: (response) => {
+    onSuccess: (response: any) => {
       setForm(f => ({ ...f, image: response.objectPath }));
       toast.success("Image uploaded successfully!");
     },
-    onError: (err) => {
+    onError: (err: any) => {
       toast.error(`Upload failed: ${err.message}`);
     },
   });

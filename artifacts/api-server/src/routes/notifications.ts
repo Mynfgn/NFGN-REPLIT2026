@@ -36,7 +36,7 @@ router.get("/notifications", requireAuth, async (req, res): Promise<void> => {
 // ── POST /notifications/:id/read ──────────────────────────────────────────────
 router.post("/notifications/:id/read", requireAuth, async (req, res): Promise<void> => {
   const userId = (req as any).user.id;
-  const id = parseInt(req.params.id);
+  const id = parseInt(req.params.id as string);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
   await db.update(notificationsTable)

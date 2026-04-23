@@ -314,7 +314,7 @@ router.get("/bpp/funds", requireAuth, async (req, res): Promise<void> => {
 // ─── Admin: Update a BPP fund ─────────────────────────────────────────────────
 router.put("/bpp/funds/:id", requireAdmin, async (req, res): Promise<void> => {
   const currentUser = (req as any).user;
-  const fundId = parseInt(req.params.id);
+  const fundId = parseInt(req.params.id as string);
   const {
     name, description, payoutMode, payoutPercentage, flatAmount,
     gvRequirement, pvRequirement, maxCap, isActive, displayOrder,
@@ -420,7 +420,7 @@ router.get("/bpp/qualifications", requireAdmin, async (req, res): Promise<void> 
 
 // ─── Admin: Approve / deny / pay a qualification ──────────────────────────────
 router.put("/bpp/qualifications/:id", requireAdmin, async (req, res): Promise<void> => {
-  const qualId = parseInt(req.params.id);
+  const qualId = parseInt(req.params.id as string);
   const { action, notes } = req.body; // action: "approve" | "deny" | "pay"
 
   const [qual] = await db

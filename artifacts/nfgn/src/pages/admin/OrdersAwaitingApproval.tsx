@@ -13,6 +13,7 @@ import {
   Loader2, CheckCircle2, XCircle, RefreshCw, Clock,
   CreditCard, Smartphone, Package, Receipt, AlertCircle, Info,
 } from "lucide-react";
+import type { JSX } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ReceiptModal } from "@/components/orders/ReceiptModal";
 

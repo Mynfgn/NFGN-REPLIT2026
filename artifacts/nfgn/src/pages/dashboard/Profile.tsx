@@ -81,7 +81,7 @@ function UpgradeSection({ user, onUpgraded }: { user: any; onUpgraded: () => voi
   const pkgId = (settings as any)?.registrationPackageId ?? null;
 
   const { data: product } = useGetProduct(pkgId ?? 0, {
-    query: { enabled: !!pkgId },
+    query: { enabled: !!pkgId } as any,
   });
   const addToCart = useAddToCart();
 

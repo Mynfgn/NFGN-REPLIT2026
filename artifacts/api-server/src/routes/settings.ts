@@ -132,7 +132,7 @@ router.post("/promos/validate", async (req, res): Promise<void> => {
 });
 
 router.put("/promos/:id", requireAdmin, async (req, res): Promise<void> => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(req.params.id as string);
   const { code, discountType, discountValue, minOrderAmount, maxUses, expiresAt, isActive } = req.body;
 
   const [existing] = await db.select().from(promoCodesTable).where(eq(promoCodesTable.id, id));
@@ -164,7 +164,7 @@ router.put("/promos/:id", requireAdmin, async (req, res): Promise<void> => {
 });
 
 router.delete("/promos/:id", requireAdmin, async (req, res): Promise<void> => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(req.params.id as string);
   const [existing] = await db.select().from(promoCodesTable).where(eq(promoCodesTable.id, id));
   if (!existing) { res.status(404).json({ error: "Promo code not found" }); return; }
   await db.delete(promoCodesTable).where(eq(promoCodesTable.id, id));

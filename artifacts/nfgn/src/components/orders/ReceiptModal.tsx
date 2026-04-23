@@ -67,13 +67,14 @@ export function ReceiptModal({ order, open, onClose, isProMember, currentMonthPv
   const { toast } = useToast();
 
   if (!order) return null;
+  const o = order as Order;
 
-  const totalPv = order.items.reduce((s, i) => s + (i.cvTotal ?? 0), 0);
+  const totalPv = o.items.reduce((s, i) => s + (i.cvTotal ?? 0), 0);
   const pvAfterOrder = (currentMonthPv ?? 0) + totalPv;
   const pvNeeded = Math.max(0, BPP_MIN_PV - pvAfterOrder);
   const bppMet = isProMember && pvAfterOrder >= BPP_MIN_PV;
 
-  const date = new Date(order.createdAt);
+  const date = new Date(o.createdAt);
   const formattedDate = date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
   const formattedTime = date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
 
@@ -84,7 +85,7 @@ export function ReceiptModal({ order, open, onClose, isProMember, currentMonthPv
     if (!printWindow) return;
     printWindow.document.write(`
       <!DOCTYPE html><html><head>
-      <title>Receipt – ${order.orderNumber}</title>
+      <title>Receipt – ${o.orderNumber}</title>
       <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: Arial, sans-serif; font-size: 13px; color: #0a0a0a; background: #fff; }
@@ -124,9 +125,9 @@ export function ReceiptModal({ order, open, onClose, isProMember, currentMonthPv
   }
 
   async function handleShare() {
-    const text = buildShareText(order, totalPv);
+    const text = buildShareText(o, totalPv);
     if (navigator.share) {
-      try { await navigator.share({ title: `Receipt – ${order.orderNumber}`, text }); return; } catch { /* fall through */ }
+      try { await navigator.share({ title: `Receipt – ${o.orderNumber}`, text }); return; } catch { /* fall through */ }
     }
     await navigator.clipboard.writeText(text);
     setCopied(true);
@@ -166,7 +167,7 @@ export function ReceiptModal({ order, open, onClose, isProMember, currentMonthPv
           <div className="flex justify-between items-start bg-muted/40 border rounded-lg px-4 py-3 text-xs mb-5">
             <div className="space-y-0.5">
               <p className="text-muted-foreground">Order Number</p>
-              <p className="font-mono font-bold text-sm text-foreground">{order.orderNumber}</p>
+              <p className="font-mono font-bold text-sm text-foreground">{o.orderNumber}</p>
             </div>
             <div className="space-y-0.5 text-center">
               <p className="text-muted-foreground">Date</p>
@@ -175,19 +176,19 @@ export function ReceiptModal({ order, open, onClose, isProMember, currentMonthPv
             </div>
             <div className="space-y-0.5 text-right">
               <p className="text-muted-foreground">Status</p>
-              <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${statusColors[order.status] ?? "bg-gray-100 text-gray-700"}`}>
-                {order.status}
+              <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${statusColors[o.status] ?? "bg-gray-100 text-gray-700"}`}>
+                {o.status}
               </span>
             </div>
           </div>
 
           {/* Refund notice if applicable */}
-          {(order.refundAmount ?? 0) > 0 && (
+          {(o.refundAmount ?? 0) > 0 && (
             <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-xs mb-4">
               <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="font-bold text-red-700">Refund Issued: −${fmt(order.refundAmount!)}</p>
-                {order.refundNote && <p className="text-red-600 mt-0.5">{order.refundNote}</p>}
+                <p className="font-bold text-red-700">Refund Issued: −${fmt(o.refundAmount!)}</p>
+                {o.refundNote && <p className="text-red-600 mt-0.5">{o.refundNote}</p>}
               </div>
             </div>
           )}
@@ -198,8 +199,8 @@ export function ReceiptModal({ order, open, onClose, isProMember, currentMonthPv
             <div className="grid grid-cols-2 gap-4 mb-3">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 border-b pb-1">Ship To</p>
-                <p className="font-bold text-sm">{order.userName}</p>
-                <p className="text-xs text-muted-foreground whitespace-pre-line mt-0.5">{order.shippingAddress ?? "No address on file"}</p>
+                <p className="font-bold text-sm">{o.userName}</p>
+                <p className="text-xs text-muted-foreground whitespace-pre-line mt-0.5">{o.shippingAddress ?? "No address on file"}</p>
               </div>
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 border-b pb-1">Ship From</p>
@@ -218,7 +219,7 @@ export function ReceiptModal({ order, open, onClose, isProMember, currentMonthPv
                   </tr>
                 </thead>
                 <tbody>
-                  {order.items.map(item => (
+                  {o.items.map(item => (
                     <tr key={item.id}>
                       <td className="py-0.5 font-medium">{item.productName}</td>
                       <td className="text-right py-0.5">× {item.quantity}</td>
@@ -228,10 +229,10 @@ export function ReceiptModal({ order, open, onClose, isProMember, currentMonthPv
                 </tbody>
               </table>
             </div>
-            {order.notes && (
+            {o.notes && (
               <div className="mt-3 pt-2 border-t">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Order Notes</p>
-                <p className="text-xs mt-0.5 italic">{order.notes}</p>
+                <p className="text-xs mt-0.5 italic">{o.notes}</p>
               </div>
             )}
           </div>
@@ -251,14 +252,14 @@ export function ReceiptModal({ order, open, onClose, isProMember, currentMonthPv
             <div className="flex justify-between text-xs mb-4">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Bill To / Sold To</p>
-                <p className="font-bold">{order.userName}</p>
-                <p className="text-muted-foreground capitalize">{order.paymentMethod?.replace("_", " ")} — <span className={order.paymentStatus === "demo_paid" ? "text-green-600 font-semibold" : ""}>{order.paymentStatus?.replace(/_/g, " ")}</span></p>
+                <p className="font-bold">{o.userName}</p>
+                <p className="text-muted-foreground capitalize">{o.paymentMethod?.replace("_", " ")} — <span className={o.paymentStatus === "demo_paid" ? "text-green-600 font-semibold" : ""}>{o.paymentStatus?.replace(/_/g, " ")}</span></p>
               </div>
-              {order.promoCode && (
+              {o.promoCode && (
                 <div className="text-right">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Promo Applied</p>
-                  <p className="font-mono font-bold text-primary">{order.promoCode}</p>
-                  <p className="text-muted-foreground">−${fmt(order.discount)}</p>
+                  <p className="font-mono font-bold text-primary">{o.promoCode}</p>
+                  <p className="text-muted-foreground">−${fmt(o.discount)}</p>
                 </div>
               )}
             </div>
@@ -275,7 +276,7 @@ export function ReceiptModal({ order, open, onClose, isProMember, currentMonthPv
                 </tr>
               </thead>
               <tbody>
-                {order.items.map(item => (
+                {o.items.map(item => (
                   <tr key={item.id} className="border-b border-muted/50">
                     <td className="py-2.5 pr-2">
                       <p className="font-semibold">{item.productName}</p>
@@ -295,32 +296,32 @@ export function ReceiptModal({ order, open, onClose, isProMember, currentMonthPv
             <div className="ml-auto max-w-[260px] mt-3 space-y-1 text-sm">
               <div className="flex justify-between text-muted-foreground">
                 <span>Subtotal</span>
-                <span>${fmt(order.subtotal)}</span>
+                <span>${fmt(o.subtotal)}</span>
               </div>
-              {order.discount > 0 && (
+              {o.discount > 0 && (
                 <div className="flex justify-between text-green-700">
-                  <span>Discount {order.promoCode ? `(${order.promoCode})` : ""}</span>
-                  <span>−${fmt(order.discount)}</span>
+                  <span>Discount {o.promoCode ? `(${o.promoCode})` : ""}</span>
+                  <span>−${fmt(o.discount)}</span>
                 </div>
               )}
               <div className="flex justify-between text-muted-foreground">
                 <span>Shipping</span>
-                <span>{order.shipping === 0 ? <span className="text-green-600 font-medium">Free</span> : `$${fmt(order.shipping)}`}</span>
+                <span>{o.shipping === 0 ? <span className="text-green-600 font-medium">Free</span> : `$${fmt(o.shipping)}`}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
                 <span>Tax</span>
-                <span>${fmt(order.tax)}</span>
+                <span>${fmt(o.tax)}</span>
               </div>
-              {(order.refundAmount ?? 0) > 0 && (
+              {(o.refundAmount ?? 0) > 0 && (
                 <div className="flex justify-between text-red-600 font-semibold">
                   <span>Refunded</span>
-                  <span>−${fmt(order.refundAmount!)}</span>
+                  <span>−${fmt(o.refundAmount!)}</span>
                 </div>
               )}
               <Separator className="my-1" />
               <div className="flex justify-between font-black text-base">
                 <span>Total</span>
-                <span className="text-primary">${fmt(order.total)}</span>
+                <span className="text-primary">${fmt(o.total)}</span>
               </div>
               {/* PV Earned Row */}
               <div className="flex justify-between text-blue-700 font-bold text-sm border-t border-blue-100 pt-2 mt-1">
@@ -379,7 +380,7 @@ function buildShareText(order: Order, totalPv: number): string {
     `Status: ${order.status.toUpperCase()}`,
     "─────────────────────────────",
     "ITEMS:",
-    ...order.items.map(i => `  ${i.productName} × ${i.quantity}  $${i.total.toFixed(2)}  (${i.cvTotal ?? 0} CV)`),
+    ...order.items.map((i: OrderItem) => `  ${i.productName} × ${i.quantity}  $${i.total.toFixed(2)}  (${i.cvTotal ?? 0} CV)`),
     "─────────────────────────────",
     `Subtotal: $${order.subtotal.toFixed(2)}`,
     ...(order.discount > 0 ? [`Discount: -$${order.discount.toFixed(2)}`] : []),

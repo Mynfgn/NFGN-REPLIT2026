@@ -395,10 +395,10 @@ export function CartDrawer() {
   const [lastOrder, setLastOrder] = useState<any>(null);
 
   const { data: cart, isLoading: cartLoading } = useGetCart({
-    query: { enabled: isAuthenticated && cartOpen },
+    query: { enabled: isAuthenticated && cartOpen } as any,
   });
   const { data: me } = useGetMe({
-    query: { enabled: isAuthenticated },
+    query: { enabled: isAuthenticated } as any,
   });
 
   const updateItem = useUpdateCartItem({

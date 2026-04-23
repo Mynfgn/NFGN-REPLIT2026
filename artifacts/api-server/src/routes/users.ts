@@ -64,7 +64,7 @@ router.get("/users", requireAdmin, async (req, res): Promise<void> => {
   const [{ value: total }] = await db.select({ value: count() }).from(usersTable);
 
   res.json({
-    users: users.map(formatUser),
+    users: users.map(u => formatUser(u)),
     total,
     page,
     totalPages: Math.ceil(total / limit),

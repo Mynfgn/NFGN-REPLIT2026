@@ -182,10 +182,10 @@ export function MemberMapCard({ title = "Community World Map" }: { title?: strin
                 projectionConfig={{ scale: 100, center: [10, 20] }}
                 style={{ width: "100%", height: "100%" }}
               >
-                <ZoomableGroup zoom={zoom} onMoveEnd={({ zoom: z }) => setZoom(z)}>
+                <ZoomableGroup zoom={zoom} onMoveEnd={({ zoom: z }: { zoom: number }) => setZoom(z)}>
                   <Geographies geography={GEO_URL}>
-                    {({ geographies }) =>
-                      geographies.map(geo => (
+                    {({ geographies }: { geographies: any[] }) =>
+                      geographies.map((geo: any) => (
                         <Geography
                           key={geo.rsmKey}
                           geography={geo}

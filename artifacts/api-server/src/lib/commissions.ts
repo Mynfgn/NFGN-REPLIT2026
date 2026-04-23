@@ -310,11 +310,11 @@ async function awardCLB(
     type: "commission_credit",
     amount: String(rules.clbAmount),
     balance: String(newBalance),
-    description: `CLB (Core Leadership Bonus) — ONE-TIME — $${rules.clbAmount} (${total} Level 1 PMRPs)`,
+    description: `CLB (Core Leadership Bonus) — ONE-TIME — $${rules.clbAmount} (${qualifiedL1Count} qualified Level 1 PMRPs)`,
     reference: orderNumber,
   });
 
-  logger.info({ userId: sponsor.id, total, clbAmount: rules.clbAmount }, "CLB (Core Leadership Bonus) awarded — one-time");
+  logger.info({ userId: sponsor.id, qualifiedL1Count, clbAmount: rules.clbAmount }, "CLB (Core Leadership Bonus) awarded — one-time");
 }
 
 /**

@@ -66,18 +66,21 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
 
     const scheduledAt = new Date(`${date}T${time}:00`).toISOString();
 
-    createBooking.mutate({
-      professionalId: professional.id,
-      serviceType: service,
-      scheduledAt,
-      duration: parseInt(duration),
-      paymentMethod,
-      amount,
-      notes: notes || undefined,
-    }, {
-      onSuccess: () => onBooked(),
-      onError: (err: any) => setError(err?.message ?? "Failed to book. Please try again."),
-    });
+    createBooking.mutate(
+      { data: {
+        professionalId: professional.id,
+        serviceType: service,
+        scheduledAt,
+        duration: parseInt(duration),
+        paymentMethod,
+        amount,
+        notes: notes || undefined,
+      }},
+      {
+        onSuccess: () => onBooked(),
+        onError: (err: any) => setError(err?.message ?? "Failed to book. Please try again."),
+      },
+    );
   };
 
   const today = new Date().toISOString().split("T")[0];

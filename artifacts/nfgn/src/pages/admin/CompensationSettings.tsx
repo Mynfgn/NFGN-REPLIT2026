@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import {
   Loader2, Save, Plus, Trash2, CheckCircle2, DollarSign,
-  Users, TrendingUp, Info, Percent,
+  Users, TrendingUp, Info, Percent, ToggleLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -147,6 +148,7 @@ export function CompensationSettingsPage() {
   const [justSaved, setJustSaved] = useState(false);
 
   const [referralRate, setReferralRate] = useState(20);
+  const [referralRateMode, setReferralRateMode] = useState<"global" | "per_product">("global");
   const [prcLevels, setPrcLevels] = useState<CommissionLevel[]>(DEFAULT_PRC);
   const [salesLevels, setSalesLevels] = useState<CommissionLevel[]>(DEFAULT_SALES);
 
@@ -155,6 +157,7 @@ export function CompensationSettingsPage() {
       .then(r => r.json())
       .then((data: any) => {
         setReferralRate(data.referralRate ?? 20);
+        setReferralRateMode(data.referralRateMode === "per_product" ? "per_product" : "global");
         setPrcLevels(Array.isArray(data.prcLevels) && data.prcLevels.length > 0 ? data.prcLevels : DEFAULT_PRC);
         setSalesLevels(Array.isArray(data.salesLevels) && data.salesLevels.length > 0 ? data.salesLevels : DEFAULT_SALES);
       })
@@ -176,7 +179,7 @@ export function CompensationSettingsPage() {
       const res = await customFetch("/api/commission-rules", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ referralRate, prcLevels, salesLevels }),
+        body: JSON.stringify({ referralRate, referralRateMode, prcLevels, salesLevels }),
       });
       if (res.ok) {
         toast.success("Compensation settings saved!");
@@ -283,10 +286,80 @@ export function CompensationSettingsPage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-3 max-w-xs">
-            <Label className="text-sm font-medium whitespace-nowrap">Rate (%)</Label>
-            <div className="flex items-center gap-2 flex-1">
+        <CardContent className="space-y-5">
+          {/* Mode toggle */}
+          <div className="rounded-xl border bg-muted/30 p-4 space-y-3">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold flex items-center gap-2">
+                  <ToggleLeft className="h-4 w-4 text-blue-600" />
+                  Rate Mode
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Choose how the Referral Commission percentage is determined for each order.
+                </p>
+              </div>
+              <Switch
+                checked={referralRateMode === "per_product"}
+                onCheckedChange={v => setReferralRateMode(v ? "per_product" : "global")}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              {/* Global option */}
+              <button
+                type="button"
+                onClick={() => setReferralRateMode("global")}
+                className={`text-left rounded-lg border p-3 transition-all ${referralRateMode === "global" ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200" : "border-border hover:border-blue-300 bg-background"}`}
+              >
+                <p className="text-sm font-semibold text-blue-700">
+                  {referralRate}% Global Fixed Rate
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  One platform-wide rate applies to every product equally. Simple and consistent.
+                </p>
+                {referralRateMode === "global" && (
+                  <Badge className="mt-2 bg-blue-600 text-white text-[10px]">Active</Badge>
+                )}
+              </button>
+
+              {/* Per-product option */}
+              <button
+                type="button"
+                onClick={() => setReferralRateMode("per_product")}
+                className={`text-left rounded-lg border p-3 transition-all ${referralRateMode === "per_product" ? "border-amber-500 bg-amber-50 ring-2 ring-amber-200" : "border-border hover:border-amber-300 bg-background"}`}
+              >
+                <p className="text-sm font-semibold text-amber-700">
+                  Manual Input % Rate
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Each product uses its own individually set commission rate. Great for services like Book a Pro.
+                </p>
+                {referralRateMode === "per_product" && (
+                  <Badge className="mt-2 bg-amber-500 text-white text-[10px]">Active</Badge>
+                )}
+              </button>
+            </div>
+
+            {referralRateMode === "per_product" && (
+              <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-900">
+                <Info className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+                <span>
+                  Per-product mode uses the <strong>Referral Commission Rate (%)</strong> field set on each individual product in the Products admin panel. Make sure each product has its rate configured.
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Global rate input — shown in both modes so admin can always keep it updated */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">
+              Global Fixed Rate (%)
+              {referralRateMode === "per_product" && (
+                <span className="ml-2 text-xs text-muted-foreground font-normal">(used as fallback if a product has no rate set)</span>
+              )}
+            </Label>
+            <div className="flex items-center gap-3">
               <Input
                 type="number"
                 min="0"
@@ -294,17 +367,17 @@ export function CompensationSettingsPage() {
                 step="0.5"
                 value={referralRate}
                 onChange={e => setReferralRate(parseFloat(e.target.value) || 0)}
-                className="font-mono text-right max-w-[100px]"
+                className="font-mono text-right max-w-[120px]"
               />
               <span className="text-muted-foreground">%</span>
+              <Badge className="bg-blue-100 text-blue-800 border-blue-200 border">All Members</Badge>
             </div>
-            <Badge className="bg-blue-100 text-blue-800 border-blue-200 border">
-              All Members
-            </Badge>
+            <p className="text-xs text-muted-foreground">
+              {referralRateMode === "global"
+                ? `Example: A member buys a $100 product → their sponsor earns $${referralRate.toFixed(2)}.`
+                : `Fallback: If a product has no commission rate set, this ${referralRate}% global rate is used instead.`}
+            </p>
           </div>
-          <p className="text-xs text-muted-foreground mt-3">
-            Example: A member buys a $100 product → their sponsor earns <strong>${referralRate.toFixed(2)}</strong>.
-          </p>
         </CardContent>
       </Card>
 

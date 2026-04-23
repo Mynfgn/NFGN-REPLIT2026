@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { db, ordersTable, orderItemsTable, cartItemsTable, productsTable, usersTable, appSettingsTable, promoCodesTable } from "@workspace/db";
 import { eq, and, desc, count, sql } from "drizzle-orm";
 import { requireAuth, requireAdmin } from "../lib/auth";
-import { processCommissions } from "../lib/commissions";
+import { processCommissions, type OrderItemForCommission } from "../lib/commissions";
 
 const router: IRouter = Router();
 
@@ -156,6 +156,7 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
   }
 
   let containsProPackage = false;
+  const commissionItems: OrderItemForCommission[] = [];
 
   for (const { cart, product } of cartItems) {
     if (!product) continue;
@@ -169,6 +170,12 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
       quantity: cart.quantity,
       total: String(lineTotal),
       cvTotal: (product.cv ?? 0) * cart.quantity,
+    });
+
+    commissionItems.push({
+      price: product.price,
+      quantity: cart.quantity,
+      commissionRate: product.commissionRate ?? "10",
     });
 
     await db.update(productsTable).set({ stock: Math.max(0, product.stock - cart.quantity) }).where(eq(productsTable.id, product.id));
@@ -185,7 +192,7 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
 
   await db.delete(cartItemsTable).where(eq(cartItemsTable.userId, currentUser.id));
 
-  await processCommissions(order.id, orderNumber, total, currentUser.id, containsProPackage);
+  await processCommissions(order.id, orderNumber, total, currentUser.id, containsProPackage, commissionItems);
 
   const items = await db.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, order.id));
   const userName = `${currentUser.firstName} ${currentUser.lastName}`;

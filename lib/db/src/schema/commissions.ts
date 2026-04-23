@@ -24,6 +24,7 @@ export const commissionRulesTable = pgTable("commission_rules", {
   levels: jsonb("levels").notNull(),
   salesLevels: jsonb("sales_levels"),
   referralRate: numeric("referral_rate", { precision: 5, scale: 2 }).default("10"),
+  referralRateMode: text("referral_rate_mode").notNull().default("global"),
   // MCB — Money Circulation Bonus (Level 2 PMRC, recurring, requires N active L1 Pro Members)
   powerBonusAmount: numeric("power_bonus_amount", { precision: 10, scale: 2 }).notNull().default("200"),
   powerBonusTrigger: integer("power_bonus_trigger").notNull().default(9),

@@ -113,6 +113,7 @@ const DEFAULT_SALES_LEVELS = [
 function formatRules(rules: typeof commissionRulesTable.$inferSelect | null) {
   return {
     referralRate: parseFloat(rules?.referralRate ?? "10"),
+    referralRateMode: rules?.referralRateMode ?? "global",
     prcLevels: rules?.levels ?? DEFAULT_PRC_LEVELS,
     salesLevels: rules?.salesLevels ?? DEFAULT_SALES_LEVELS,
     // MCB settings
@@ -134,7 +135,7 @@ router.get("/commission-rules", async (req, res): Promise<void> => {
 
 router.put("/commission-rules", requireAdmin, async (req, res): Promise<void> => {
   const {
-    prcLevels, salesLevels, referralRate,
+    prcLevels, salesLevels, referralRate, referralRateMode,
     powerBonusAmount, powerBonusTrigger, powerBonusEnabled,
     clbEnabled, clbAmount, clbTrigger, clbWindowDays,
   } = req.body;
@@ -144,6 +145,7 @@ router.put("/commission-rules", requireAdmin, async (req, res): Promise<void> =>
     levels: prcLevels ?? existing?.levels ?? DEFAULT_PRC_LEVELS,
     salesLevels: salesLevels ?? existing?.salesLevels ?? DEFAULT_SALES_LEVELS,
     referralRate: String(referralRate ?? existing?.referralRate ?? 10),
+    referralRateMode: referralRateMode ?? existing?.referralRateMode ?? "global",
     // MCB
     powerBonusAmount: String(powerBonusAmount ?? existing?.powerBonusAmount ?? 200),
     powerBonusTrigger: powerBonusTrigger ?? existing?.powerBonusTrigger ?? 9,

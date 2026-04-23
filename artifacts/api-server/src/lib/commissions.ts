@@ -60,6 +60,7 @@ interface LevelRate {
 
 interface CompensationRules {
   referralRate: number;
+  referralRateMode: "global" | "per_product";
   prcLevels: LevelRate[];
   salesLevels: LevelRate[];
   // MCB settings
@@ -77,6 +78,7 @@ async function loadRules(): Promise<CompensationRules> {
   const [rules] = await db.select().from(commissionRulesTable).limit(1);
   return {
     referralRate: parseFloat(rules?.referralRate ?? String(DEFAULT_REFERRAL_RATE)),
+    referralRateMode: (rules?.referralRateMode as "global" | "per_product") ?? "global",
     prcLevels: (rules?.levels as LevelRate[] | null) ?? DEFAULT_PRC_LEVELS,
     salesLevels: (rules?.salesLevels as LevelRate[] | null) ?? DEFAULT_SALES_LEVELS,
     powerBonusEnabled: rules?.powerBonusEnabled ?? true,
@@ -367,6 +369,12 @@ async function awardMCB(
   logger.info({ userId: sponsor.id, total, bonusNum, powerBonusAmount: rules.powerBonusAmount }, "MCB (Money Circulation Bonus) awarded — recurring");
 }
 
+export interface OrderItemForCommission {
+  price: string;
+  quantity: number;
+  commissionRate: string;
+}
+
 /**
  * Process all commissions for a completed order.
  *
@@ -384,6 +392,7 @@ async function awardMCB(
  * @param saleAmount          Total order amount (after discount)
  * @param buyerId             User who placed the order
  * @param containsProPackage  True when the order includes a Pro Member Registration Package
+ * @param orderItems          Line items with per-product commission rates (used in per_product mode)
  */
 export async function processCommissions(
   orderId: number,
@@ -391,6 +400,7 @@ export async function processCommissions(
   saleAmount: number,
   buyerId: number,
   containsProPackage = false,
+  orderItems: OrderItemForCommission[] = [],
 ): Promise<void> {
   try {
     const rules = await loadRules();
@@ -410,16 +420,45 @@ export async function processCommissions(
     //    The Personal Sponsor (direct/Level 1 sponsor) earns a Referral Commission
     //    on EVERY single purchase made by the member they personally referred.
     //    This fires regardless of the sponsor's membership type.
-    await recordCommission(
-      directSponsor.id,
-      buyerId,
-      orderId,
-      orderNumber,
-      1,
-      rules.referralRate,
-      saleAmount,
-      "referral",
-    );
+    //
+    //    In "global" mode: apply the single platform rate to the full order total.
+    //    In "per_product" mode: compute the referral commission per line item using
+    //    each product's individual commission rate, then sum the results.
+    if (rules.referralRateMode === "per_product" && orderItems.length > 0) {
+      // Per-product: fire one RC record per line, using the product's own rate.
+      // We use a weighted effective rate so a single commission record is created.
+      let totalReferralCommission = 0;
+      for (const item of orderItems) {
+        const lineTotal = parseFloat(item.price) * item.quantity;
+        const rate = parseFloat(item.commissionRate) || 0;
+        totalReferralCommission += parseFloat(((lineTotal * rate) / 100).toFixed(2));
+      }
+      if (saleAmount > 0 && totalReferralCommission > 0) {
+        const effectiveRate = parseFloat(((totalReferralCommission / saleAmount) * 100).toFixed(4));
+        await recordCommission(
+          directSponsor.id,
+          buyerId,
+          orderId,
+          orderNumber,
+          1,
+          effectiveRate,
+          saleAmount,
+          "referral",
+        );
+      }
+    } else {
+      // Global mode: single flat rate applied to the full order total.
+      await recordCommission(
+        directSponsor.id,
+        buyerId,
+        orderId,
+        orderNumber,
+        1,
+        rules.referralRate,
+        saleAmount,
+        "referral",
+      );
+    }
 
     if (containsProPackage) {
       // ── 3. PRO REGISTRATION COMMISSIONS (PMRC) ────────────────────────────

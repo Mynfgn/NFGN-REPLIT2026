@@ -696,10 +696,53 @@ function AffiliateLinkCard({ referralLink, referralCode: codeFromData }: { refer
           </div>
         )}
 
-        {/* ── Affiliate Link ── */}
-        <div>
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Your Affiliate Link</p>
-          <div className="flex items-center gap-2 p-3 rounded-lg bg-muted border border-border/60">
+        {/* ── Affiliate Page Preview ── */}
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Your Affiliate Page Preview</p>
+
+          {/* Live iframe preview */}
+          <div className="relative rounded-xl overflow-hidden border-2 border-primary/20 bg-muted" style={{ height: 240 }}>
+            {/* Non-interactive scaled iframe */}
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "200%",
+                height: "200%",
+                transform: "scale(0.5)",
+                transformOrigin: "top left",
+                pointerEvents: "none",
+              }}
+            >
+              <iframe
+                src={`${import.meta.env.BASE_URL}rep/${referralCode}`}
+                title="Affiliate page preview"
+                style={{ width: "100%", height: "100%", border: "none", display: "block" }}
+                scrolling="no"
+              />
+            </div>
+
+            {/* Gradient fade at the bottom */}
+            <div className="absolute inset-x-0 bottom-0 h-16 pointer-events-none" style={{ background: "linear-gradient(to bottom, transparent, rgba(255,255,255,0.92))" }} />
+
+            {/* Open button overlay */}
+            <div className="absolute bottom-2.5 right-2.5">
+              <a href={affiliateUrl} target="_blank" rel="noopener noreferrer">
+                <Button
+                  size="sm"
+                  className="gap-1.5 text-xs font-bold shadow-md text-black"
+                  style={{ background: "#C9A84C" }}
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  Open full page
+                </Button>
+              </a>
+            </div>
+          </div>
+
+          {/* Link row + copy */}
+          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted border border-border/60">
             <span className="flex-1 text-xs font-mono text-foreground truncate select-all" title={affiliateUrl}>
               {affiliateUrl}
             </span>
@@ -711,17 +754,6 @@ function AffiliateLinkCard({ referralLink, referralCode: codeFromData }: { refer
             >
               {copiedLink ? <><Check className="h-3.5 w-3.5" /> Copied!</> : <><Copy className="h-3.5 w-3.5" /> Copy</>}
             </Button>
-          </div>
-          <div className="flex flex-wrap gap-2 mt-1.5">
-            <a
-              href={affiliateUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
-            >
-              <ExternalLink className="h-3 w-3" />
-              Preview your affiliate page
-            </a>
           </div>
         </div>
 

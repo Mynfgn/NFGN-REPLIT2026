@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGetMemberDashboard, useGetMemberAnalytics, useGetMe } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Wallet, Users, ShoppingBag, ArrowUpRight, TrendingUp, MapPin, Star, CheckCircle2, AlertCircle, BarChart3, Link2, Copy, Check, ExternalLink } from "lucide-react";
 import { MemberMapCard } from "@/components/dashboard/MemberMapCard";
 import {
@@ -241,6 +242,138 @@ function PowerSquadBonusCard({ bonus }: { bonus: any }) {
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function ProMemberBonusTracker({ bonus }: { bonus: any }) {
+  const [showCongrats, setShowCongrats] = useState(false);
+  const [congratsShown, setCongratsShown] = useState(() => {
+    try { return sessionStorage.getItem("pmb_congrats_shown") === "1"; } catch { return false; }
+  });
+
+  const bonusTrigger: number = bonus?.bonusTrigger ?? 9;
+  const bonusAmount: number = bonus?.bonusAmount ?? 200;
+  const bonusEnabled: boolean = bonus?.bonusEnabled ?? true;
+  const level1ProMembers: number = bonus?.level1ProMembers ?? 0;
+  const bonusesEarned: number = bonus?.bonusesEarned ?? 0;
+
+  useEffect(() => {
+    if (!congratsShown && level1ProMembers >= bonusTrigger && bonusTrigger > 0) {
+      setShowCongrats(true);
+      setCongratsShown(true);
+      try { sessionStorage.setItem("pmb_congrats_shown", "1"); } catch {}
+    }
+  }, [level1ProMembers, bonusTrigger, congratsShown]);
+
+  if (!bonus || !bonusEnabled) return null;
+
+  const filledCount = Math.min(level1ProMembers, bonusTrigger);
+  const remaining = Math.max(0, bonusTrigger - filledCount);
+  const iconUrl = `${import.meta.env.BASE_URL}pro-member-icon.jpeg`;
+
+  return (
+    <>
+      <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50/60 to-white">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="font-serif text-base flex items-center gap-2">
+              <Users className="h-4 w-4 text-blue-500" />
+              Core Leadership Bonus Tracker
+            </CardTitle>
+            {bonusesEarned > 0 && (
+              <Badge className="bg-green-500 hover:bg-green-600 text-white text-xs">
+                {bonusesEarned} Bonus{bonusesEarned > 1 ? "es" : ""} Earned
+              </Badge>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed mt-1">
+            Personally sponsor <strong className="text-foreground">{bonusTrigger} Pro Members</strong> to earn your{" "}
+            <strong className="text-green-700">${bonusAmount.toLocaleString()} Core Leadership Bonus</strong>.
+            Each blue icon = one Pro Member package sold.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* 3×3 Icon Grid */}
+          <div className="grid grid-cols-3 gap-3 max-w-[280px] mx-auto">
+            {Array.from({ length: bonusTrigger }, (_, i) => {
+              const filled = i < filledCount;
+              return (
+                <div
+                  key={i}
+                  className={`relative flex items-center justify-center h-[78px] rounded-xl border-2 transition-all duration-500 ${
+                    filled
+                      ? "border-blue-400 bg-white shadow-md shadow-blue-100"
+                      : "border-dashed border-gray-200 bg-gray-50"
+                  }`}
+                >
+                  {filled ? (
+                    <img
+                      src={iconUrl}
+                      alt="Pro Member"
+                      className="h-[58px] w-[58px] object-contain drop-shadow-sm"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center gap-0.5 opacity-30">
+                      <div className="h-7 w-7 rounded-full bg-gray-300" />
+                      <div className="h-9 w-10 rounded-t-full bg-gray-300" />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Progress summary */}
+          <div className="text-center space-y-1">
+            <p className="text-sm font-semibold">
+              <span className="text-blue-600 text-2xl font-bold">{filledCount}</span>
+              <span className="text-muted-foreground text-base"> / {bonusTrigger} Pro Members</span>
+            </p>
+            {filledCount < bonusTrigger ? (
+              <p className="text-xs text-muted-foreground">
+                {remaining} more {remaining === 1 ? "enrollment" : "enrollments"} to earn your{" "}
+                <strong className="text-green-700">${bonusAmount.toLocaleString()} bonus</strong>
+              </p>
+            ) : (
+              <p className="text-xs text-green-700 font-semibold">
+                🎉 Core Leadership Bonus unlocked! Keep building for MCB cycles.
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Congratulations Dialog */}
+      <Dialog open={showCongrats} onOpenChange={setShowCongrats}>
+        <DialogContent className="max-w-sm text-center">
+          <DialogHeader>
+            <div className="flex justify-center mb-3">
+              <div className="grid grid-cols-3 gap-1.5">
+                {Array.from({ length: bonusTrigger }, (_, i) => (
+                  <img key={i} src={iconUrl} alt="" className="h-10 w-10 object-contain" />
+                ))}
+              </div>
+            </div>
+            <DialogTitle className="text-2xl font-serif text-center">Congratulations! 🎉</DialogTitle>
+            <DialogDescription className="text-center text-base text-foreground mt-2 leading-relaxed">
+              You've personally sponsored{" "}
+              <strong>{bonusTrigger} Pro Members</strong> and earned your{" "}
+              <strong className="text-green-700 text-lg">${bonusAmount.toLocaleString()} Core Leadership Bonus!</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground mt-1">
+            Your bonus has been credited to your NFGN wallet. Now focus on Level 2 growth to start earning the recurring Money Circulation Bonus every 9 cycles!
+          </p>
+          <Button
+            onClick={() => setShowCongrats(false)}
+            className="w-full mt-3 font-bold text-base text-black"
+            style={{ background: "#C9A84C" }}
+          >
+            Keep Going! 💪
+          </Button>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -496,6 +629,9 @@ export function Dashboard() {
         <StatCard title="Team Size" value={String(data?.teamSize ?? 0)} sub={`${data?.personallyEnrolled ?? 0} personally enrolled`} icon={Users} />
         <StatCard title="Members" value={String(data?.retailCustomers ?? 0)} sub="Active buyers" icon={ShoppingBag} />
       </div>
+
+      {/* Core Leadership Bonus Tracker */}
+      <ProMemberBonusTracker bonus={analytics?.powerSquadBonus} />
 
       {/* Affiliate Link */}
       {data?.referralLink && (

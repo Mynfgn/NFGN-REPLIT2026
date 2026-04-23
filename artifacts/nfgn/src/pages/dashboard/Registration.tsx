@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import {
   UserPlus, Star, ShoppingBag, CheckCircle2, Gift, DollarSign,
-  TrendingUp, Users, Percent, BadgeCheck, ArrowRight, Lock, Copy
+  TrendingUp, Users, Percent, BadgeCheck, ArrowRight, Lock, Copy, ExternalLink
 } from "lucide-react";
 
 const MEMBER_BENEFITS = [
@@ -49,6 +49,9 @@ export function RegistrationPage() {
   const referralLink = me?.referralCode
     ? `${window.location.origin}/join?ref=${me.referralCode}`
     : `${window.location.origin}/join`;
+  const storefrontUrl = me?.referralCode
+    ? `${window.location.origin}/rep/${me.referralCode}`
+    : null;
 
   return (
     <div className="space-y-8 max-w-5xl">
@@ -121,13 +124,84 @@ export function RegistrationPage() {
               >
                 <Copy className="h-3.5 w-3.5" /> Copy Link
               </Button>
-              <Button size="sm" asChild>
-                <Link href="/join">Preview <ArrowRight className="ml-1 h-3 w-3" /></Link>
-              </Button>
+              {storefrontUrl && (
+                <Button size="sm" variant="outline" asChild>
+                  <a href={storefrontUrl} target="_blank" rel="noopener noreferrer" className="gap-1.5">
+                    <ExternalLink className="h-3.5 w-3.5" /> View Storefront
+                  </a>
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Affiliate Storefront Preview */}
+      {storefrontUrl && (
+        <div className="space-y-3">
+          <div>
+            <h2 className="text-lg font-serif font-bold flex items-center gap-2">
+              <ExternalLink className="h-4 w-4 text-primary" />
+              Your Affiliate Storefront Preview
+            </h2>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              This is what prospects see when they visit your personal affiliate page. Share this link to let them browse and shop with your referral code pre-attached.
+            </p>
+          </div>
+
+          {/* Iframe preview */}
+          <div className="relative rounded-xl overflow-hidden border-2 border-primary/20 bg-muted" style={{ height: 280 }}>
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "200%",
+                height: "200%",
+                transform: "scale(0.5)",
+                transformOrigin: "top left",
+                pointerEvents: "none",
+              }}
+            >
+              <iframe
+                src={storefrontUrl}
+                title="Your affiliate storefront preview"
+                style={{ width: "100%", height: "100%", border: "none", display: "block" }}
+                scrolling="no"
+              />
+            </div>
+            {/* Fade at bottom */}
+            <div
+              className="absolute inset-x-0 bottom-0 h-20 pointer-events-none"
+              style={{ background: "linear-gradient(to bottom, transparent, rgba(255,255,255,0.95))" }}
+            />
+            {/* Open button */}
+            <div className="absolute bottom-3 right-3">
+              <a href={storefrontUrl} target="_blank" rel="noopener noreferrer">
+                <Button size="sm" className="gap-1.5 text-xs font-bold shadow-md text-black" style={{ background: "#C9A84C" }}>
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  Open full storefront
+                </Button>
+              </a>
+            </div>
+          </div>
+
+          {/* Storefront URL + copy */}
+          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted border border-border/60">
+            <span className="flex-1 text-xs font-mono text-foreground truncate select-all" title={storefrontUrl}>
+              {storefrontUrl}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-shrink-0 gap-1.5"
+              onClick={() => navigator.clipboard.writeText(storefrontUrl)}
+            >
+              <Copy className="h-3.5 w-3.5" /> Copy
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Important Note */}
       <Card className="border-amber-300 bg-amber-50">

@@ -309,7 +309,7 @@ export function BPPDashboardPage() {
               <p className="text-sm text-muted-foreground leading-relaxed">
                 These bonuses are called "Group Volume Bonuses" because they are primarily generated when a Pro Member's group reaches the 
                 required Group Volume (GV) threshold for each bonus level. Pro Members meet the Personal Volume requirement by personally 
-                purchasing NFGN products and services. However, only <strong className="text-foreground">Pro Member Registration Packages</strong> 
+                purchasing NFGN products and services. However, only <strong className="text-foreground">Pro Member Registration Packages</strong>{" "}
                 activate your eligibility to earn these bonuses. For example, if you purchase a Pro Member Registration item worth 50 PV, 
                 you will be upgraded to Pro Member status — but you will still need an additional 100 PV in products or services to meet 
                 the 150 PV Personal Volume requirement.

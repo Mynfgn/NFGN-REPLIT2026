@@ -6,8 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Wallet, Users, ShoppingBag, ArrowUpRight, TrendingUp, MapPin, Star, CheckCircle2, AlertCircle, BarChart3, Link2, Copy, Check, ExternalLink, DollarSign } from "lucide-react";
+import { Wallet, Users, ShoppingBag, ArrowUpRight, TrendingUp, MapPin, Star, CheckCircle2, AlertCircle, BarChart3, Link2, Copy, Check, ExternalLink, DollarSign, Sparkles, ShoppingCart } from "lucide-react";
 import { MemberMapCard } from "@/components/dashboard/MemberMapCard";
+import { customFetch } from "@/lib/custom-fetch";
+import { resolveImageSrc } from "@/lib/image";
+import { Link } from "wouter";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, Legend,
@@ -452,21 +455,28 @@ function MCBTracker({ bonus }: { bonus: any }) {
               {level1ProMembers} / {mcbTrigger}
             </span>
           </div>
-          {/* L1 icon strip */}
+          {/* L1 icon strip — same blue person icons as CLB tracker */}
           <div className="grid gap-1 w-full" style={{ gridTemplateColumns: `repeat(${mcbTrigger}, 1fr)` }}>
             {Array.from({ length: mcbTrigger }, (_, i) => {
               const filled = i < l1Filled;
+              const iconUrl = `${import.meta.env.BASE_URL}pro-member-icon.jpeg`;
               return (
                 <div
                   key={i}
-                  className={`aspect-square rounded-lg border flex items-center justify-center transition-colors ${
-                    filled ? "border-amber-400 bg-amber-100" : "border-dashed border-gray-200 bg-gray-50"
+                  className={`flex flex-col items-center justify-center aspect-square rounded-xl border-2 transition-all duration-500 overflow-hidden ${
+                    filled
+                      ? "border-blue-400 bg-white shadow-md shadow-blue-100"
+                      : "border-dashed border-gray-200 bg-gray-50"
                   }`}
                 >
-                  {filled
-                    ? <Users className="h-[50%] w-[50%] text-amber-600" />
-                    : <div className="w-[35%] h-[35%] rounded-full bg-gray-300 opacity-40" />
-                  }
+                  {filled ? (
+                    <img src={iconUrl} alt="Pro Member" className="w-[75%] h-[75%] object-contain drop-shadow-sm" />
+                  ) : (
+                    <div className="flex flex-col items-center gap-0.5 opacity-25 w-full h-full justify-center">
+                      <div className="w-[35%] aspect-square rounded-full bg-gray-400" />
+                      <div className="w-[45%] h-[40%] rounded-t-full bg-gray-400" />
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -496,25 +506,30 @@ function MCBTracker({ bonus }: { bonus: any }) {
               {mcbQualified ? `${l2BarFill} / ${mcbTrigger}` : "Locked"}
             </span>
           </div>
-          {/* L2 icon strip */}
+          {/* L2 icon strip — gold-bordered blue person icons for L2 Pro Package sales */}
           <div className="grid gap-1 w-full" style={{ gridTemplateColumns: `repeat(${mcbTrigger}, 1fr)` }}>
             {Array.from({ length: mcbTrigger }, (_, i) => {
               const filled = mcbQualified && i < l2BarFill;
+              const iconUrl = `${import.meta.env.BASE_URL}pro-member-icon.jpeg`;
               return (
                 <div
                   key={i}
-                  className={`aspect-square rounded-lg border flex items-center justify-center transition-colors ${
+                  className={`flex flex-col items-center justify-center aspect-square rounded-xl border-2 transition-all duration-500 overflow-hidden ${
                     filled
-                      ? "border-green-400 bg-green-100"
+                      ? "border-amber-400 bg-amber-50 shadow-md shadow-amber-100"
                       : mcbQualified
                       ? "border-dashed border-gray-200 bg-gray-50"
                       : "border-dashed border-gray-100 bg-gray-50 opacity-40"
                   }`}
                 >
-                  {filled
-                    ? <DollarSign className="h-[50%] w-[50%] text-green-600" />
-                    : <div className="w-[35%] h-[35%] rounded-full bg-gray-300 opacity-40" />
-                  }
+                  {filled ? (
+                    <img src={iconUrl} alt="L2 Pro Member" className="w-[75%] h-[75%] object-contain drop-shadow-sm opacity-90" style={{ filter: "sepia(0.3) saturate(1.2)" }} />
+                  ) : (
+                    <div className="flex flex-col items-center gap-0.5 opacity-20 w-full h-full justify-center">
+                      <div className="w-[35%] aspect-square rounded-full bg-gray-400" />
+                      <div className="w-[45%] h-[40%] rounded-t-full bg-gray-400" />
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -551,6 +566,97 @@ function MCBTracker({ bonus }: { bonus: any }) {
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function FeaturedProductCard({ referralCode }: { referralCode: string }) {
+  const [product, setProduct] = useState<any>(null);
+
+  useEffect(() => {
+    customFetch("/api/products?featured=true")
+      .then(r => r.json())
+      .then((data: any) => {
+        const items: any[] = Array.isArray(data) ? data : (data?.products ?? []);
+        const picks = items.filter(p => !p.isProPackage && p.status === "active");
+        if (picks.length > 0) setProduct(picks[0]);
+      })
+      .catch(() => {});
+  }, []);
+
+  if (!product) return null;
+
+  const shopHref = referralCode
+    ? `/shop/${product.slug}?ref=${referralCode}`
+    : `/shop/${product.slug}`;
+
+  return (
+    <div className="rounded-2xl overflow-hidden border-2 border-primary/20 bg-gradient-to-br from-[#0a0a0a] via-[#1a1a0a] to-[#0a1a0a] text-white shadow-xl relative">
+      {/* Glow accents */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-primary/20 blur-3xl" />
+        <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-green-800/20 blur-3xl" />
+      </div>
+
+      <div className="relative z-10 flex flex-col sm:flex-row gap-0">
+        {/* Product image */}
+        {resolveImageSrc(product.image) ? (
+          <div className="sm:w-64 h-52 sm:h-auto flex-shrink-0 overflow-hidden">
+            <img
+              src={resolveImageSrc(product.image)!}
+              alt={product.name}
+              className="w-full h-full object-cover opacity-90"
+            />
+          </div>
+        ) : (
+          <div className="sm:w-64 h-52 sm:h-auto flex-shrink-0 bg-primary/10 flex items-center justify-center">
+            <ShoppingCart className="h-16 w-16 text-primary/40" />
+          </div>
+        )}
+
+        {/* Content */}
+        <div className="flex-1 p-6 flex flex-col justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <span className="text-xs font-bold uppercase tracking-widest text-primary">Featured Product</span>
+            </div>
+            <h3 className="text-xl font-serif font-bold leading-tight text-white mb-2">{product.name}</h3>
+            {product.description && (
+              <p className="text-sm text-gray-300 line-clamp-3 leading-relaxed">{product.description}</p>
+            )}
+          </div>
+
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-bold text-primary">${parseFloat(product.price).toFixed(2)}</span>
+                {product.comparePrice && parseFloat(product.comparePrice) > parseFloat(product.price) && (
+                  <span className="text-sm text-gray-400 line-through">${parseFloat(product.comparePrice).toFixed(2)}</span>
+                )}
+              </div>
+              {product.cv > 0 && (
+                <p className="text-xs text-gray-400 mt-0.5">{product.cv} CV per unit</p>
+              )}
+            </div>
+            <Link href={shopHref}>
+              <Button
+                className="font-bold px-6 py-2.5 rounded-xl text-black shadow-lg hover:shadow-primary/30 transition-all"
+                style={{ background: "#C9A84C" }}
+              >
+                <ShoppingCart className="h-4 w-4 mr-2" />
+                Shop Now
+              </Button>
+            </Link>
+          </div>
+
+          {referralCode && (
+            <p className="text-[10px] text-gray-500 leading-relaxed">
+              Your referral code <strong className="text-primary">{referralCode}</strong> is pre-attached — anyone who purchases earns you a Referral Commission.
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -807,14 +913,23 @@ export function Dashboard() {
         <StatCard title="Members" value={String(data?.retailCustomers ?? 0)} sub="Active buyers" icon={ShoppingBag} />
       </div>
 
+      {/* Referral Tools — placed above trackers */}
+      {data?.referralLink && (
+        <div className="space-y-2">
+          <h2 className="text-lg font-serif font-bold text-foreground flex items-center gap-2">
+            <Link2 className="h-5 w-5 text-primary" />
+            Your Referral Tools
+          </h2>
+          <AffiliateLinkCard referralLink={data.referralLink} referralCode={(data as any)?.referralCode ?? ""} />
+        </div>
+      )}
+
       {/* Core Leadership Bonus Tracker */}
       <CLBTracker bonus={analytics?.powerSquadBonus} />
       <MCBTracker bonus={analytics?.powerSquadBonus} />
 
-      {/* Affiliate Link */}
-      {data?.referralLink && (
-        <AffiliateLinkCard referralLink={data.referralLink} referralCode={(data as any)?.referralCode ?? ""} />
-      )}
+      {/* Featured Product */}
+      <FeaturedProductCard referralCode={(data as any)?.referralCode ?? ""} />
 
       {/* Community World Map */}
       <MemberMapCard title="Your Community Map" />

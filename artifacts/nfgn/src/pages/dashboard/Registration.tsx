@@ -1,5 +1,6 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useGetMe, useListProducts } from "@workspace/api-client-react";
+import { resolveImageSrc } from "@/lib/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -230,9 +231,9 @@ export function RegistrationPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {proPackages.map((p: any) => (
               <Card key={p.id} className="border border-primary/30 hover:border-primary/60 transition-colors">
-                {p.image && (
+                {resolveImageSrc(p.image) && (
                   <div className="aspect-video rounded-t-lg overflow-hidden">
-                    <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                    <img src={resolveImageSrc(p.image)!} alt={p.name} className="w-full h-full object-cover" />
                   </div>
                 )}
                 <CardContent className="pt-4 pb-4 space-y-3">

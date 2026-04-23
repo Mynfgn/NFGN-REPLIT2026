@@ -1,5 +1,6 @@
 import { useParams, Link } from "wouter";
 import { useGetReplicatedPage, useListProfessionals } from "@workspace/api-client-react";
+import { resolveImageSrc } from "@/lib/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -173,8 +174,8 @@ export function AffiliateStorefront() {
               {featuredProducts.map(product => (
                 <Card key={product.id} className="overflow-hidden group hover:shadow-lg transition-shadow">
                   <div className="aspect-[4/3] bg-muted overflow-hidden">
-                    {product.image ? (
-                      <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    {resolveImageSrc(product.image) ? (
+                      <img src={resolveImageSrc(product.image)!} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
                         <Leaf className="h-12 w-12 text-muted-foreground/40" />

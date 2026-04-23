@@ -248,21 +248,26 @@ function PowerSquadBonusCard({ bonus }: { bonus: any }) {
   );
 }
 
-function CLBTracker({ bonus }: { bonus: any }) {
+function PowerSquadBonusTracker({ bonus }: { bonus: any }) {
   const [showCongrats, setShowCongrats] = useState(false);
   const [congratsShown, setCongratsShown] = useState(() => {
     try { return sessionStorage.getItem("clb_congrats_shown") === "1"; } catch { return false; }
   });
 
-  const clbTrigger: number      = bonus?.clbTrigger ?? 9;
-  const clbAmount: number       = bonus?.clbAmount ?? 200;
-  const clbEnabled: boolean     = bonus?.clbEnabled ?? true;
-  const clbEarned: number       = bonus?.clbEarned ?? 0;
+  const clbTrigger: number       = bonus?.clbTrigger ?? 9;
+  const clbAmount: number        = bonus?.clbAmount ?? 100;
+  const clbEnabled: boolean      = bonus?.clbEnabled ?? true;
+  const clbEarned: number        = bonus?.clbEarned ?? 0;
+  const mcbTrigger: number       = bonus?.mcbTrigger ?? 9;
+  const mcbAmount: number        = bonus?.mcbAmount ?? 200;
+  const mcbEnabled: boolean      = bonus?.mcbEnabled ?? true;
+  const mcbEarned: number        = bonus?.mcbEarned ?? 0;
   const level1ProMembers: number = bonus?.level1ProMembers ?? 0;
+  const level2Commissions: number = bonus?.level2Commissions ?? 0;
+  const toNextMcb: number        = bonus?.toNextMcb ?? mcbTrigger;
 
-  // MCB activation context shown inside CLB tracker
-  const mcbTrigger: number = bonus?.mcbTrigger ?? 9;
-  const mcbQualified: boolean = bonus?.mcbQualified ?? false;
+  // MCB is only qualified when L1 requirement is fully met
+  const mcbQualified: boolean = level1ProMembers >= mcbTrigger;
 
   useEffect(() => {
     if (!congratsShown && clbEarned > 0) {
@@ -272,103 +277,154 @@ function CLBTracker({ bonus }: { bonus: any }) {
     }
   }, [clbEarned, congratsShown]);
 
-  if (!bonus || !clbEnabled) return null;
+  if (!bonus || (!clbEnabled && !mcbEnabled)) return null;
 
-  const filledCount = Math.min(level1ProMembers, clbTrigger);
-  const remaining = Math.max(0, clbTrigger - filledCount);
   const iconUrl = `${import.meta.env.BASE_URL}pro-member-icon.jpeg`;
+  const l1Filled = Math.min(level1ProMembers, clbTrigger);
+  const remaining = Math.max(0, clbTrigger - l1Filled);
+  const l2Progress = level2Commissions % mcbTrigger;
+  const l2BarFill = mcbQualified
+    ? (l2Progress === 0 && level2Commissions > 0 ? mcbTrigger : l2Progress)
+    : 0;
+  const l1NeedForMcb = Math.max(0, mcbTrigger - level1ProMembers);
 
   return (
     <>
-      <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50/60 to-white">
+      <Card className="border-2 border-blue-200 overflow-hidden">
+        {/* Dual-tone header band */}
+        <div className="h-1 w-full" style={{ background: "linear-gradient(to right, #3b82f6 50%, #f59e0b 50%)" }} />
+
         <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <CardTitle className="font-serif text-base flex items-center gap-2">
               <Users className="h-4 w-4 text-blue-500" />
-              Core Leadership Bonus Tracker
+              Power Squad Bonus Tracker
+              <Star className="h-4 w-4 text-amber-400 fill-amber-300" />
             </CardTitle>
-            {clbEarned > 0 && (
-              <Badge className="bg-green-500 hover:bg-green-600 text-white text-xs">
-                CLB Earned ✓
-              </Badge>
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed mt-1">
-            Personally sponsor <strong className="text-foreground">{clbTrigger} Pro Members</strong> to earn your{" "}
-            <strong className="text-green-700">${clbAmount.toLocaleString()} Core Leadership Bonus (CLB)</strong>.
-            Each blue icon = one personally enrolled Pro Member.
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Single-row icon strip */}
-          <div className="grid gap-1.5 w-full" style={{ gridTemplateColumns: `repeat(${clbTrigger}, 1fr)` }}>
-            {Array.from({ length: clbTrigger }, (_, i) => {
-              const filled = i < filledCount;
-              return (
-                <div
-                  key={i}
-                  className={`flex flex-col items-center justify-center aspect-square rounded-xl border-2 transition-all duration-500 overflow-hidden ${
-                    filled
-                      ? "border-blue-400 bg-white shadow-md shadow-blue-100"
-                      : "border-dashed border-gray-200 bg-gray-50"
-                  }`}
-                >
-                  {filled ? (
-                    <img src={iconUrl} alt="Pro Member" className="w-[75%] h-[75%] object-contain drop-shadow-sm" />
-                  ) : (
-                    <div className="flex flex-col items-center gap-0.5 opacity-25 w-full h-full justify-center">
-                      <div className="w-[35%] aspect-square rounded-full bg-gray-400" />
-                      <div className="w-[45%] h-[40%] rounded-t-full bg-gray-400" />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Progress summary */}
-          <div className="text-center space-y-1">
-            <p className="text-sm font-semibold">
-              <span className="text-blue-600 text-2xl font-bold">{filledCount}</span>
-              <span className="text-muted-foreground text-base"> / {clbTrigger} Pro Members</span>
-            </p>
-            {clbEarned > 0 ? (
-              <p className="text-xs text-green-700 font-semibold">
-                Core Leadership Bonus earned! You're now eligible for MCB cycles.
-              </p>
-            ) : filledCount < clbTrigger ? (
-              <p className="text-xs text-muted-foreground">
-                {remaining} more {remaining === 1 ? "enrollment" : "enrollments"} to earn your{" "}
-                <strong className="text-green-700">${clbAmount.toLocaleString()} CLB</strong>
-              </p>
-            ) : (
-              <p className="text-xs text-green-700 font-semibold">
-                CLB threshold reached — bonus pending.
-              </p>
-            )}
-          </div>
-
-          {/* MCB activation note */}
-          <div className={`rounded-lg border px-3 py-2.5 text-xs flex items-start gap-2 ${
-            mcbQualified
-              ? "bg-amber-50 border-amber-200 text-amber-900"
-              : "bg-muted/50 border-border text-muted-foreground"
-          }`}>
-            <Star className={`h-3.5 w-3.5 mt-0.5 flex-shrink-0 ${mcbQualified ? "text-amber-500 fill-amber-400" : "text-muted-foreground"}`} />
-            <span>
-              {mcbQualified ? (
-                <>
-                  <strong className="text-amber-800">Money Circulation Bonus (MCB) activated!</strong>{" "}
-                  You have {level1ProMembers} Level 1 Pro Members — you now earn a recurring MCB on every {bonus?.mcbTrigger ?? 9} Level 2 Pro Package sales.
-                </>
-              ) : (
-                <>
-                  <strong>Money Circulation Bonus (MCB):</strong>{" "}
-                  You need <strong>{Math.max(0, mcbTrigger - level1ProMembers)} more</strong> Level 1 Pro {Math.max(0, mcbTrigger - level1ProMembers) === 1 ? "Member" : "Members"} ({level1ProMembers} / {mcbTrigger}) to activate your recurring MCB income. See the tracker below.
-                </>
+            <div className="flex gap-1.5">
+              {clbEarned > 0 && (
+                <Badge className="bg-blue-500 hover:bg-blue-600 text-white text-xs">CLB Earned ✓</Badge>
               )}
-            </span>
+              {mcbEarned > 0 && (
+                <Badge className="bg-amber-500 hover:bg-amber-600 text-white text-xs">
+                  {mcbEarned} MCB {mcbEarned === 1 ? "Cycle" : "Cycles"}
+                </Badge>
+              )}
+            </div>
           </div>
+        </CardHeader>
+
+        <CardContent className="space-y-5 pt-0">
+
+          {/* ── LEVEL 1 — CLB ── */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-blue-700 flex items-center gap-1">
+                <Users className="h-3 w-3" />
+                Level 1 — Core Leadership Bonus
+              </span>
+              <span className="font-bold text-blue-600">{l1Filled} / {clbTrigger}</span>
+            </div>
+            <div className="grid gap-1 w-full" style={{ gridTemplateColumns: `repeat(${clbTrigger}, 1fr)` }}>
+              {Array.from({ length: clbTrigger }, (_, i) => {
+                const filled = i < l1Filled;
+                return (
+                  <div
+                    key={i}
+                    className={`flex flex-col items-center justify-center aspect-square rounded-lg border-2 transition-all duration-500 overflow-hidden ${
+                      filled
+                        ? "border-blue-400 bg-white shadow-sm shadow-blue-100"
+                        : "border-dashed border-gray-200 bg-gray-50"
+                    }`}
+                  >
+                    {filled ? (
+                      <img src={iconUrl} alt="Pro Member" className="w-[75%] h-[75%] object-contain drop-shadow-sm" />
+                    ) : (
+                      <div className="flex flex-col items-center gap-0.5 opacity-25 w-full h-full justify-center">
+                        <div className="w-[35%] aspect-square rounded-full bg-gray-400" />
+                        <div className="w-[45%] h-[40%] rounded-t-full bg-gray-400" />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {clbEarned > 0 ? (
+                <span className="text-green-700 font-semibold flex items-center gap-1">
+                  <CheckCircle2 className="h-3 w-3 inline" /> CLB earned — ${clbAmount.toLocaleString()} credited to your wallet!
+                </span>
+              ) : remaining > 0 ? (
+                <><strong className="text-blue-700">{remaining}</strong> more personally sponsored Pro {remaining === 1 ? "Member" : "Members"} to earn your <strong className="text-green-700">${clbAmount.toLocaleString()} CLB</strong></>
+              ) : (
+                <span className="text-green-700 font-semibold">CLB threshold reached — bonus pending.</span>
+              )}
+            </p>
+          </div>
+
+          {/* Divider with MCB lock state */}
+          <div className="flex items-center gap-2">
+            <div className="flex-1 border-t border-dashed" />
+            {mcbQualified ? (
+              <span className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 flex items-center gap-1">
+                <CheckCircle2 className="h-2.5 w-2.5" /> MCB Activated
+              </span>
+            ) : (
+              <span className="text-[10px] font-bold text-gray-400 bg-gray-100 border border-gray-200 rounded-full px-2 py-0.5 flex items-center gap-1">
+                🔒 MCB Locked — {l1NeedForMcb} more L1 needed
+              </span>
+            )}
+            <div className="flex-1 border-t border-dashed" />
+          </div>
+
+          {/* ── LEVEL 2 — MCB ── */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className={`font-semibold flex items-center gap-1 ${mcbQualified ? "text-amber-700" : "text-muted-foreground"}`}>
+                <Star className="h-3 w-3 fill-current" />
+                Level 2 — Money Circulation Bonus
+              </span>
+              <span className={`font-bold ${mcbQualified ? "text-amber-600" : "text-muted-foreground"}`}>
+                {mcbQualified ? `${l2BarFill} / ${mcbTrigger}` : "Locked"}
+              </span>
+            </div>
+            <div className={`grid gap-1 w-full ${!mcbQualified ? "opacity-35" : ""}`} style={{ gridTemplateColumns: `repeat(${mcbTrigger}, 1fr)` }}>
+              {Array.from({ length: mcbTrigger }, (_, i) => {
+                const filled = mcbQualified && i < l2BarFill;
+                return (
+                  <div
+                    key={i}
+                    className={`flex flex-col items-center justify-center aspect-square rounded-lg border-2 transition-all duration-500 overflow-hidden ${
+                      filled
+                        ? "border-amber-400 bg-amber-50 shadow-sm shadow-amber-100"
+                        : "border-dashed border-gray-200 bg-gray-50"
+                    }`}
+                  >
+                    {filled ? (
+                      <img src={iconUrl} alt="L2 Sale" className="w-[75%] h-[75%] object-contain drop-shadow-sm" style={{ filter: "sepia(0.35) saturate(1.3)" }} />
+                    ) : (
+                      <div className="flex flex-col items-center gap-0.5 opacity-20 w-full h-full justify-center">
+                        <div className="w-[35%] aspect-square rounded-full bg-gray-400" />
+                        <div className="w-[45%] h-[40%] rounded-t-full bg-gray-400" />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {!mcbQualified ? (
+                <>Sponsor <strong className="text-blue-700">{l1NeedForMcb} more</strong> Level 1 Pro {l1NeedForMcb === 1 ? "Member" : "Members"} to unlock a <strong className="text-amber-700">${mcbAmount.toLocaleString()} recurring MCB</strong> per {mcbTrigger} Level 2 Pro Package sales.</>
+              ) : toNextMcb === 0 ? (
+                <span className="text-green-700 font-semibold flex items-center gap-1">
+                  <CheckCircle2 className="h-3 w-3 inline" /> MCB cycle complete — ${mcbAmount} credited! Next cycle starting.
+                </span>
+              ) : (
+                <><strong className="text-amber-700">{toNextMcb}</strong> more Level 2 Pro Package {toNextMcb === 1 ? "sale" : "sales"} to earn your next <strong className="text-amber-700">${mcbAmount} MCB</strong>{mcbEarned > 0 && ` — ${mcbEarned} ${mcbEarned === 1 ? "cycle" : "cycles"} earned so far`}.</>
+              )}
+            </p>
+          </div>
+
         </CardContent>
       </Card>
 
@@ -391,7 +447,7 @@ function CLBTracker({ bonus }: { bonus: any }) {
             </DialogDescription>
           </DialogHeader>
           <p className="text-sm text-muted-foreground mt-1">
-            Your CLB has been credited to your NFGN wallet. Keep growing your team — every {bonus?.mcbTrigger ?? 9} Level 2 Pro Package sales will now earn you a recurring Money Circulation Bonus!
+            Your CLB has been credited to your NFGN wallet. Keep growing your team — every {mcbTrigger} Level 2 Pro Package sales will now earn you a recurring ${mcbAmount} Money Circulation Bonus!
           </p>
           <Button
             onClick={() => setShowCongrats(false)}
@@ -403,169 +459,6 @@ function CLBTracker({ bonus }: { bonus: any }) {
         </DialogContent>
       </Dialog>
     </>
-  );
-}
-
-function MCBTracker({ bonus }: { bonus: any }) {
-  const mcbTrigger: number      = bonus?.mcbTrigger ?? 9;
-  const mcbAmount: number       = bonus?.mcbAmount ?? 200;
-  const mcbEnabled: boolean     = bonus?.mcbEnabled ?? true;
-  const mcbEarned: number       = bonus?.mcbEarned ?? 0;
-  const mcbQualified: boolean   = bonus?.mcbQualified ?? false;
-  const level1ProMembers: number = bonus?.level1ProMembers ?? 0;
-  const level2Commissions: number = bonus?.level2Commissions ?? 0;
-  const toNextMcb: number       = bonus?.toNextMcb ?? mcbTrigger;
-
-  if (!bonus || !mcbEnabled) return null;
-
-  const l2Progress = level2Commissions % mcbTrigger;
-  const l2BarFill = mcbQualified
-    ? (l2Progress === 0 && level2Commissions > 0 ? mcbTrigger : l2Progress)
-    : 0;
-  const l1Filled = Math.min(level1ProMembers, mcbTrigger);
-
-  return (
-    <Card className="border-2 border-amber-200 bg-gradient-to-br from-amber-50/50 to-white">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="font-serif text-base flex items-center gap-2">
-            <Star className="h-4 w-4 text-amber-500 fill-amber-400" />
-            Money Circulation Bonus Tracker
-          </CardTitle>
-          {mcbEarned > 0 && (
-            <Badge className="bg-amber-500 hover:bg-amber-600 text-white text-xs">
-              {mcbEarned} MCB {mcbEarned === 1 ? "Cycle" : "Cycles"} Earned
-            </Badge>
-          )}
-        </div>
-        <p className="text-xs text-muted-foreground leading-relaxed mt-1">
-          Recurring bonus — earn{" "}
-          <strong className="text-amber-700">${mcbAmount.toLocaleString()}</strong> for every{" "}
-          <strong className="text-foreground">{mcbTrigger} Level 2 Pro Package sales</strong>.
-          Requires {mcbTrigger} personally sponsored Level 1 Pro Members to activate.
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-4">
-
-        {/* L1 Activation Row */}
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground font-medium">Step 1 — Activate MCB: {mcbTrigger} Level 1 Pro Members</span>
-            <span className={`font-bold ${mcbQualified ? "text-green-600" : "text-amber-600"}`}>
-              {level1ProMembers} / {mcbTrigger}
-            </span>
-          </div>
-          {/* L1 icon strip — same blue person icons as CLB tracker */}
-          <div className="grid gap-1 w-full" style={{ gridTemplateColumns: `repeat(${mcbTrigger}, 1fr)` }}>
-            {Array.from({ length: mcbTrigger }, (_, i) => {
-              const filled = i < l1Filled;
-              const iconUrl = `${import.meta.env.BASE_URL}pro-member-icon.jpeg`;
-              return (
-                <div
-                  key={i}
-                  className={`flex flex-col items-center justify-center aspect-square rounded-xl border-2 transition-all duration-500 overflow-hidden ${
-                    filled
-                      ? "border-blue-400 bg-white shadow-md shadow-blue-100"
-                      : "border-dashed border-gray-200 bg-gray-50"
-                  }`}
-                >
-                  {filled ? (
-                    <img src={iconUrl} alt="Pro Member" className="w-[75%] h-[75%] object-contain drop-shadow-sm" />
-                  ) : (
-                    <div className="flex flex-col items-center gap-0.5 opacity-25 w-full h-full justify-center">
-                      <div className="w-[35%] aspect-square rounded-full bg-gray-400" />
-                      <div className="w-[45%] h-[40%] rounded-t-full bg-gray-400" />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          {mcbQualified ? (
-            <p className="text-xs text-green-700 font-semibold flex items-center gap-1">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              MCB Activated — you have {level1ProMembers} Level 1 Pro Members
-            </p>
-          ) : (
-            <p className="text-xs text-muted-foreground">
-              {Math.max(0, mcbTrigger - level1ProMembers)} more Level 1 Pro {Math.max(0, mcbTrigger - level1ProMembers) === 1 ? "Member" : "Members"} needed to activate MCB
-            </p>
-          )}
-        </div>
-
-        {/* Divider */}
-        <div className="border-t" />
-
-        {/* L2 Progress Row — only meaningful once activated */}
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between text-xs">
-            <span className={`font-medium ${mcbQualified ? "text-foreground" : "text-muted-foreground"}`}>
-              Step 2 — Level 2 Pro Package Sales toward next ${mcbAmount} MCB
-            </span>
-            <span className={`font-bold ${mcbQualified ? "text-amber-600" : "text-muted-foreground"}`}>
-              {mcbQualified ? `${l2BarFill} / ${mcbTrigger}` : "Locked"}
-            </span>
-          </div>
-          {/* L2 icon strip — gold-bordered blue person icons for L2 Pro Package sales */}
-          <div className="grid gap-1 w-full" style={{ gridTemplateColumns: `repeat(${mcbTrigger}, 1fr)` }}>
-            {Array.from({ length: mcbTrigger }, (_, i) => {
-              const filled = mcbQualified && i < l2BarFill;
-              const iconUrl = `${import.meta.env.BASE_URL}pro-member-icon.jpeg`;
-              return (
-                <div
-                  key={i}
-                  className={`flex flex-col items-center justify-center aspect-square rounded-xl border-2 transition-all duration-500 overflow-hidden ${
-                    filled
-                      ? "border-amber-400 bg-amber-50 shadow-md shadow-amber-100"
-                      : mcbQualified
-                      ? "border-dashed border-gray-200 bg-gray-50"
-                      : "border-dashed border-gray-100 bg-gray-50 opacity-40"
-                  }`}
-                >
-                  {filled ? (
-                    <img src={iconUrl} alt="L2 Pro Member" className="w-[75%] h-[75%] object-contain drop-shadow-sm opacity-90" style={{ filter: "sepia(0.3) saturate(1.2)" }} />
-                  ) : (
-                    <div className="flex flex-col items-center gap-0.5 opacity-20 w-full h-full justify-center">
-                      <div className="w-[35%] aspect-square rounded-full bg-gray-400" />
-                      <div className="w-[45%] h-[40%] rounded-t-full bg-gray-400" />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          {mcbQualified ? (
-            toNextMcb === 0 ? (
-              <p className="text-xs text-green-700 font-semibold flex items-center gap-1">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                MCB Cycle complete — ${mcbAmount} bonus credited! Next cycle starting.
-              </p>
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                <strong className="text-amber-700">{toNextMcb}</strong> more Level 2 Pro Package {toNextMcb === 1 ? "sale" : "sales"} to earn your next{" "}
-                <strong className="text-amber-700">${mcbAmount} MCB</strong>
-                {mcbEarned > 0 && ` — ${mcbEarned} ${mcbEarned === 1 ? "cycle" : "cycles"} earned so far`}
-              </p>
-            )
-          ) : (
-            <p className="text-xs text-muted-foreground">
-              Sponsor {Math.max(0, mcbTrigger - level1ProMembers)} more Level 1 Pro {Math.max(0, mcbTrigger - level1ProMembers) === 1 ? "Member" : "Members"} to unlock Level 2 tracking.
-            </p>
-          )}
-        </div>
-
-        {/* Earnings summary chip */}
-        {mcbEarned > 0 && (
-          <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-900">
-            <DollarSign className="h-3.5 w-3.5 flex-shrink-0 text-amber-600" />
-            <span>
-              Total MCB earned:{" "}
-              <strong>${(mcbEarned * mcbAmount).toLocaleString()}</strong> across {mcbEarned} {mcbEarned === 1 ? "cycle" : "cycles"}
-            </span>
-          </div>
-        )}
-      </CardContent>
-    </Card>
   );
 }
 
@@ -924,9 +817,8 @@ export function Dashboard() {
         </div>
       )}
 
-      {/* Core Leadership Bonus Tracker */}
-      <CLBTracker bonus={analytics?.powerSquadBonus} />
-      <MCBTracker bonus={analytics?.powerSquadBonus} />
+      {/* Power Squad Bonus Tracker — CLB + MCB combined */}
+      <PowerSquadBonusTracker bonus={analytics?.powerSquadBonus} />
 
       {/* Featured Product */}
       <FeaturedProductCard referralCode={(data as any)?.referralCode ?? ""} />

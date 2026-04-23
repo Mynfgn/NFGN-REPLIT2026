@@ -293,14 +293,14 @@ function ProMemberBonusTracker({ bonus }: { bonus: any }) {
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Single-row icon strip */}
-          <div className="flex gap-2 justify-center flex-wrap">
+          {/* Single-row icon strip — always 9 columns */}
+          <div className="grid gap-1.5 w-full" style={{ gridTemplateColumns: `repeat(${bonusTrigger}, 1fr)` }}>
             {Array.from({ length: bonusTrigger }, (_, i) => {
               const filled = i < filledCount;
               return (
                 <div
                   key={i}
-                  className={`flex items-center justify-center h-[64px] w-[64px] rounded-xl border-2 transition-all duration-500 flex-shrink-0 ${
+                  className={`flex flex-col items-center justify-center aspect-square rounded-xl border-2 transition-all duration-500 overflow-hidden ${
                     filled
                       ? "border-blue-400 bg-white shadow-md shadow-blue-100"
                       : "border-dashed border-gray-200 bg-gray-50"
@@ -310,12 +310,12 @@ function ProMemberBonusTracker({ bonus }: { bonus: any }) {
                     <img
                       src={iconUrl}
                       alt="Pro Member"
-                      className="h-[46px] w-[46px] object-contain drop-shadow-sm"
+                      className="w-[75%] h-[75%] object-contain drop-shadow-sm"
                     />
                   ) : (
-                    <div className="flex flex-col items-center gap-0.5 opacity-30">
-                      <div className="h-5 w-5 rounded-full bg-gray-300" />
-                      <div className="h-7 w-8 rounded-t-full bg-gray-300" />
+                    <div className="flex flex-col items-center gap-0.5 opacity-25 w-full h-full justify-center">
+                      <div className="w-[35%] aspect-square rounded-full bg-gray-400" />
+                      <div className="w-[45%] h-[40%] rounded-t-full bg-gray-400" />
                     </div>
                   )}
                 </div>

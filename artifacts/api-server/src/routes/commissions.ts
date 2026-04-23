@@ -119,12 +119,14 @@ function formatRules(rules: typeof commissionRulesTable.$inferSelect | null) {
     // MCB settings
     powerBonusEnabled: rules?.powerBonusEnabled ?? true,
     powerBonusAmount: parseFloat(rules?.powerBonusAmount ?? "200"),
-    powerBonusTrigger: rules?.powerBonusTrigger ?? 9,
+    powerBonusTrigger: rules?.powerBonusTrigger ?? 7,
     // CLB settings
     clbEnabled: rules?.clbEnabled ?? true,
-    clbAmount: parseFloat(rules?.clbAmount ?? "200"),
-    clbTrigger: rules?.clbTrigger ?? 9,
+    clbAmount: parseFloat(rules?.clbAmount ?? "100"),
+    clbTrigger: rules?.clbTrigger ?? 7,
     clbWindowDays: rules?.clbWindowDays ?? 90,
+    // UPM threshold — minimum PCV for a Pro Member to be "active" toward CLB/MCB/BPP
+    qualifyingCv: rules?.qualifyingCv ?? 150,
   };
 }
 
@@ -137,7 +139,7 @@ router.put("/commission-rules", requireAdmin, async (req, res): Promise<void> =>
   const {
     prcLevels, salesLevels, referralRate, referralRateMode,
     powerBonusAmount, powerBonusTrigger, powerBonusEnabled,
-    clbEnabled, clbAmount, clbTrigger, clbWindowDays,
+    clbEnabled, clbAmount, clbTrigger, clbWindowDays, qualifyingCv,
   } = req.body;
 
   const [existing] = await db.select().from(commissionRulesTable).limit(1);
@@ -148,13 +150,15 @@ router.put("/commission-rules", requireAdmin, async (req, res): Promise<void> =>
     referralRateMode: referralRateMode ?? existing?.referralRateMode ?? "global",
     // MCB
     powerBonusAmount: String(powerBonusAmount ?? existing?.powerBonusAmount ?? 200),
-    powerBonusTrigger: powerBonusTrigger ?? existing?.powerBonusTrigger ?? 9,
+    powerBonusTrigger: powerBonusTrigger ?? existing?.powerBonusTrigger ?? 7,
     powerBonusEnabled: powerBonusEnabled ?? existing?.powerBonusEnabled ?? true,
     // CLB
     clbEnabled: clbEnabled ?? existing?.clbEnabled ?? true,
-    clbAmount: String(clbAmount ?? existing?.clbAmount ?? 200),
-    clbTrigger: clbTrigger ?? existing?.clbTrigger ?? 9,
+    clbAmount: String(clbAmount ?? existing?.clbAmount ?? 100),
+    clbTrigger: clbTrigger ?? existing?.clbTrigger ?? 7,
     clbWindowDays: clbWindowDays ?? existing?.clbWindowDays ?? 90,
+    // UPM qualifying threshold
+    qualifyingCv: qualifyingCv ?? existing?.qualifyingCv ?? 150,
   };
 
   let result;

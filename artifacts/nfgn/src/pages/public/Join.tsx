@@ -345,6 +345,20 @@ export function Join() {
               </Card>
             )}
 
+            {/* UPM Policy notice */}
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm space-y-1.5">
+              <p className="font-semibold text-amber-800 flex items-center gap-1.5">
+                <span className="text-base">⚡</span> Pro Member Activation Requirement (UPM Policy)
+              </p>
+              <p className="text-amber-900 leading-relaxed text-xs">
+                New Pro Members must accumulate a minimum of <strong>150 CV</strong> in product purchases to become
+                a <strong>Qualified Pro Member</strong>. Pro Members below this threshold are classified as{" "}
+                <strong>Unqualified Pro Members (UPM)</strong> and do not count toward your sponsor's CLB (Core Leadership
+                Bonus) or MCB (Money Circulation Bonus) until they reach 150 CV.
+                UPMs can top up their CV at any time by purchasing additional products.
+              </p>
+            </div>
+
             <div className="space-y-4">
               <h3 className="font-serif font-bold text-lg">Why Join NFGN?</h3>
               {[

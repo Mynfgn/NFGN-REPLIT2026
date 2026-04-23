@@ -117,10 +117,42 @@ export function ProMemberBonusesPage() {
                 <strong className="text-foreground">Think of it this way:</strong> Registering a{" "}
                 <strong className="text-foreground">Pro Member</strong> is like selling someone a{" "}
                 <strong className="text-foreground">franchise store</strong> — they are now a business partner opening their 
-                own store in another region or city. The CLB rewards you for opening your first 9 franchise stores. 
-                The MCB rewards you continuously every time your franchise partners' stores collectively hit 9 new registrations on Level 2.
+                own store in another region or city. The CLB rewards you for opening your first 7 qualified franchise stores. 
+                The MCB rewards you continuously every time your franchise partners' stores collectively hit 7 new registrations on Level 2.
               </p>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* UPM Policy */}
+      <Card className="border-l-4 border-l-amber-400 bg-amber-50/40">
+        <CardHeader className="pb-2">
+          <CardTitle className="font-serif text-base flex items-center gap-2 text-amber-800">
+            Unqualified Pro Member (UPM) Policy
+            <Badge className="bg-amber-500 text-white text-xs">IMPORTANT</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm text-amber-900 leading-relaxed">
+          <p>
+            A <strong>Pro Member</strong> who has not yet reached <strong>150 CV</strong> in cumulative Product CV 
+            (PCV) is classified as an <strong>Unqualified Pro Member (UPM)</strong>. UPMs are recognized as Pro 
+            Members and can participate in the NFGN network, but they do <strong>not</strong> count toward the CLB, 
+            MCB, or Business Performance Package (BPP) thresholds.
+          </p>
+          <p>
+            To become a <strong>Qualified Pro Member</strong>, a member must accumulate a minimum of{" "}
+            <strong>150 CV</strong> in total product purchases. UPMs can top up their CV at any time by purchasing 
+            additional NFGN products.
+          </p>
+          <div className="rounded-lg bg-white/70 border border-amber-200 p-3 text-xs space-y-1">
+            <p className="font-semibold text-amber-800">Summary</p>
+            <ul className="list-disc pl-4 space-y-1">
+              <li>UPM = Pro Member with total PCV &lt; 150 CV</li>
+              <li>UPMs do NOT count toward your CLB or MCB headcount</li>
+              <li>To qualify: accumulate ≥ 150 PCV through product purchases (can be spread across multiple orders)</li>
+              <li>Your dashboard tracker will show UPM slots in amber — upgrade them by purchasing products</li>
+            </ul>
           </div>
         </CardContent>
       </Card>
@@ -133,7 +165,7 @@ export function ProMemberBonusesPage() {
             <Badge className="bg-blue-600 text-white text-xs">ONE-TIME</Badge>
           </CardTitle>
           <div className="flex flex-wrap gap-1 mt-1">
-            {["Core 9 Bonus (C9B)", "Super Team Bonus (STB)", "Generation 1 Bonus (G1B)", "Gen 1 Bonus"].map(alias => (
+            {["Core 7 Bonus (C7B)", "Super Team Bonus (STB)", "Generation 1 Bonus (G1B)", "Gen 1 Bonus"].map(alias => (
               <Badge key={alias} variant="outline" className="text-xs text-blue-700 border-blue-200 bg-blue-50">{alias}</Badge>
             ))}
           </div>
@@ -142,34 +174,35 @@ export function ProMemberBonusesPage() {
           <div className="rounded-lg bg-blue-50 border border-blue-200 p-4 space-y-2">
             <p className="font-semibold text-blue-900 flex items-center gap-2">
               <Users className="h-4 w-4 text-blue-600" />
-              Trigger: First 9 new PMRP purchases on Level 1 — within your first 90 days as a Pro Member
+              Trigger: First 7 qualified Level 1 Pro Members — within your first 90 days as a Pro Member
             </p>
             <p className="text-sm text-blue-700 leading-relaxed">
-              The CLB is paid <strong>exactly once</strong>. It is awarded when your first 9 new Pro Member 
-              Registration Products are purchased on your Level 1, within the first 90 days of your own Pro Member 
-              activation date. If you do not reach 9 Level 1 PMRPs within that 90-day window, the CLB opportunity 
-              is forfeited. <strong>There is no second chance and no recurring payout for CLB.</strong>
+              The CLB is paid <strong>exactly once</strong>. It is awarded when you have 7 <strong>qualified</strong> Level 1 
+              Pro Members (each with ≥ 150 PCV) within the first 90 days of your own Pro Member activation date.{" "}
+              <strong>Unqualified Pro Members (UPM) do not count.</strong> If you do not reach 7 qualified Level 1 
+              members within that 90-day window, the CLB opportunity is forfeited.{" "}
+              <strong>There is no second chance and no recurring payout for CLB.</strong>
             </p>
           </div>
           <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900 space-y-1">
             <p className="font-medium text-amber-800">Important — One-Time Only</p>
             <p className="leading-relaxed">
-              CLB is NOT a recurring bonus. It fires once at 9 Level 1 PMRPs and never again. Once you have 
-              received your CLB, you will no longer receive CLB payments — focus on building your Core Leadership 
-              Group (9 active Level 1 Pro Members) to qualify for the recurring MCB.
+              CLB is NOT a recurring bonus. It fires once when 7 qualified Level 1 Pro Members are reached and never again. 
+              Once you have received your CLB, focus on building your Core Leadership Group (7 qualified Level 1 Pro Members) 
+              to qualify for the recurring MCB.
             </p>
           </div>
           <div className="rounded-lg bg-white border p-3 text-sm text-muted-foreground space-y-1">
             <p className="font-medium text-foreground">Store Analogy</p>
             <p className="text-xs leading-relaxed">
-              The CLB is your grand opening bonus. When you open your first 9 franchise partner stores (Level 1 
-              Pro Members) within your first 90 days, NFGN rewards you with a one-time cash bonus for establishing 
-              your Core Leadership Group. After that, the recurring MCB takes over as your ongoing monthly income.
+              The CLB is your grand opening bonus. When you open your first 7 fully operational franchise partner stores 
+              (qualified Level 1 Pro Members with ≥ 150 PCV) within your first 90 days, NFGN rewards you with a one-time 
+              cash bonus for establishing your Core Leadership Group. After that, the recurring MCB takes over.
             </p>
           </div>
           <p className="text-xs text-muted-foreground italic">
-            Qualification: Must be a Pro Member. No minimum team size required. Must complete the first 9 Level 1 
-            PMRPs within 90 days of your Pro Member activation date.
+            Qualification: Must be a Pro Member. Must have 7 qualified Level 1 Pro Members (each ≥ 150 PCV cumulative) 
+            within 90 days of your Pro Member activation date. UPMs do not count.
           </p>
         </CardContent>
       </Card>
@@ -182,7 +215,7 @@ export function ProMemberBonusesPage() {
             <Badge className="bg-purple-600 text-white text-xs">RECURRING</Badge>
           </CardTitle>
           <div className="flex flex-wrap gap-1 mt-1">
-            {["Super 9 Bonus", "Level 2 Power Team Bonus", "Super Group Bonus", "Generation 2 Bonus (Gen-2)"].map(alias => (
+            {["Super 7 Bonus", "Level 2 Power Team Bonus", "Super Group Bonus", "Generation 2 Bonus (Gen-2)"].map(alias => (
               <Badge key={alias} variant="outline" className="text-xs text-purple-700 border-purple-200 bg-purple-50">{alias}</Badge>
             ))}
           </div>
@@ -191,12 +224,12 @@ export function ProMemberBonusesPage() {
           <div className="rounded-lg bg-purple-50 border border-purple-200 p-4 space-y-2">
             <p className="font-semibold text-purple-900 flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-purple-600" />
-              Trigger: Every 9 PMRP purchases on Level 2 — recurring monthly — counts initial + renewals
+              Trigger: Every 7 PMRP purchases on Level 2 — recurring monthly — counts initial + renewals
             </p>
             <p className="text-sm text-purple-700 leading-relaxed">
               The MCB is a <strong>recurring bonus</strong> paid to the <strong>Qualifying Upline Sponsor</strong> — 
-              you, the Level 2 upline Pro Member — every time 9 PMRP purchases (initial registrations or monthly 
-              subscription renewals) accumulate on your Level 2. It fires at 9, 18, 27, 36, 45… and continues 
+              you, the Level 2 upline Pro Member — every time 7 PMRP purchases (initial registrations or monthly 
+              subscription renewals) accumulate on your Level 2. It fires at 7, 14, 21, 28, 35… and continues 
               indefinitely for as long as your team keeps purchasing.
             </p>
           </div>
@@ -207,17 +240,18 @@ export function ProMemberBonusesPage() {
             <p className="leading-relaxed">
               The <strong>Qualifying Upline Sponsor</strong> is the Pro Member who sits two levels above the 
               buyer in the NFGN genealogy tree — i.e., the sponsor of the buyer's direct sponsor. To qualify 
-              for MCB, this upline Pro Member must have at least <strong>9 active Level 1 Pro Members</strong> 
-              (their Core Leadership Group). If they do not have 9 active Level 1 Pro Members, the MCB is not 
-              awarded even if the Level 2 PMRP count reaches the trigger.
+              for MCB, this upline Pro Member must have at least <strong>7 qualified Level 1 Pro Members</strong>{" "}
+              (each with ≥ 150 PCV) as their Core Leadership Group.{" "}
+              <strong>UPMs do not count toward this requirement.</strong> If they do not have 7 qualified Level 1 
+              Pro Members, the MCB is not awarded even if the Level 2 PMRP count reaches the trigger.
             </p>
           </div>
 
           <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-xs text-green-900 space-y-1">
             <p className="font-medium text-green-800">Recurring Monthly Example</p>
             <p className="leading-relaxed">
-              March: 9 Level 2 members buy PMRP → MCB #1 awarded. April: those same 9 members renew → 
-              MCB #2 awarded. May: 9 more new members join on Level 2 → MCB #3 awarded. The counter is 
+              March: 7 Level 2 members buy PMRP → MCB #1 awarded. April: those same 7 members renew → 
+              MCB #2 awarded. May: 7 more new members join on Level 2 → MCB #3 awarded. The counter is 
               cumulative and never resets. Every qualifying purchase or renewal on Level 2 moves the counter forward.
             </p>
           </div>
@@ -225,13 +259,13 @@ export function ProMemberBonusesPage() {
             <p className="font-medium text-foreground">Store Analogy</p>
             <p className="text-xs leading-relaxed">
               Level 2 is your national expansion market. Your franchise partners (Level 1 Pro Members) are opening 
-              their own franchise partner stores (Level 2). Every 9 new registrations or renewals at Level 2 earns 
+              their own franchise partner stores (Level 2). Every 7 new registrations or renewals at Level 2 earns 
               you a national growth bonus — rewarding you for building a sustainable, active network across two levels.
             </p>
           </div>
           <p className="text-xs text-muted-foreground italic">
-            Qualification: Must be a Pro Member (Qualifying Upline Sponsor) with at least 9 actively enrolled 
-            Level 1 Pro Members (Core Leadership Group). MCB is issued once per month per qualifying increment of 9.
+            Qualification: Must be a Pro Member (Qualifying Upline Sponsor) with at least 7 qualified Level 1 
+            Pro Members (each ≥ 150 PCV — UPMs do not count). MCB is issued once per qualifying increment of 7 Level 2 purchases.
           </p>
         </CardContent>
       </Card>
@@ -265,7 +299,7 @@ export function ProMemberBonusesPage() {
               <Gift className="h-10 w-10 text-muted-foreground mx-auto" />
               <p className="text-muted-foreground">No Pro Member Bonuses earned yet.</p>
               <p className="text-sm text-muted-foreground">
-                Bonuses are awarded every 9 Pro Member Registrations on Levels 1 &amp; 2.
+                Bonuses are awarded at 7 qualified Level 1 (CLB) and every 7 Level 2 Pro Package sales (MCB).
               </p>
             </div>
           ) : (

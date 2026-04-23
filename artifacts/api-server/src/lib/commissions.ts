@@ -1,5 +1,5 @@
-import { db, usersTable, commissionsTable, walletsTable, walletTransactionsTable, commissionRulesTable } from "@workspace/db";
-import { eq, and, count } from "drizzle-orm";
+import { db, usersTable, commissionsTable, walletsTable, walletTransactionsTable, commissionRulesTable, ordersTable, orderItemsTable } from "@workspace/db";
+import { eq, and, count, sum, inArray } from "drizzle-orm";
 import { logger } from "./logger";
 
 /**
@@ -72,6 +72,8 @@ interface CompensationRules {
   clbAmount: number;
   clbTrigger: number;
   clbWindowDays: number;
+  // UPM — Qualifying CV: minimum PCV for a Pro Member to count as "active" toward CLB/MCB/BPP
+  qualifyingCv: number;
 }
 
 async function loadRules(): Promise<CompensationRules> {
@@ -83,11 +85,12 @@ async function loadRules(): Promise<CompensationRules> {
     salesLevels: (rules?.salesLevels as LevelRate[] | null) ?? DEFAULT_SALES_LEVELS,
     powerBonusEnabled: rules?.powerBonusEnabled ?? true,
     powerBonusAmount: parseFloat(rules?.powerBonusAmount ?? "200"),
-    powerBonusTrigger: rules?.powerBonusTrigger ?? 9,
+    powerBonusTrigger: rules?.powerBonusTrigger ?? 7,
     clbEnabled: rules?.clbEnabled ?? true,
-    clbAmount: parseFloat(rules?.clbAmount ?? "200"),
-    clbTrigger: rules?.clbTrigger ?? 9,
+    clbAmount: parseFloat(rules?.clbAmount ?? "100"),
+    clbTrigger: rules?.clbTrigger ?? 7,
     clbWindowDays: rules?.clbWindowDays ?? 90,
+    qualifyingCv: rules?.qualifyingCv ?? 150,
   };
 }
 
@@ -148,6 +151,50 @@ async function getSponsor(userId: number): Promise<typeof usersTable.$inferSelec
   if (!user?.sponsorId) return null;
   const [sponsor] = await db.select().from(usersTable).where(eq(usersTable.id, user.sponsorId));
   return sponsor ?? null;
+}
+
+/**
+ * Count Level 1 Pro Members who are "qualified" — i.e., have cumulative PCV ≥ qualifyingCv.
+ * Only qualified (active) Pro Members count toward CLB, MCB, and BPP thresholds.
+ * Pro Members below the CV threshold are Unqualified Pro Members (UPM).
+ */
+async function countQualifiedL1Members(sponsorId: number, qualifyingCv: number): Promise<number> {
+  // Get all L1 Pro Members
+  const l1Members = await db.select({ id: usersTable.id })
+    .from(usersTable)
+    .where(and(eq(usersTable.sponsorId, sponsorId), eq(usersTable.isProMember, true)));
+
+  if (l1Members.length === 0) return 0;
+
+  const memberIds = l1Members.map(m => m.id);
+
+  // For each member, get their orders
+  const memberOrders = await db.select({ id: ordersTable.id, userId: ordersTable.userId })
+    .from(ordersTable)
+    .where(inArray(ordersTable.userId, memberIds));
+
+  if (memberOrders.length === 0) return 0;
+
+  // Sum CV per member
+  const cvPerMember: Record<number, number> = {};
+  for (const id of memberIds) cvPerMember[id] = 0;
+
+  const orderIds = memberOrders.map(o => o.id);
+  const cvRows = await db.select({ orderId: orderItemsTable.orderId, cvTotal: sum(orderItemsTable.cvTotal) })
+    .from(orderItemsTable)
+    .where(inArray(orderItemsTable.orderId, orderIds))
+    .groupBy(orderItemsTable.orderId);
+
+  // Map order → user
+  const orderUserMap: Record<number, number> = {};
+  for (const o of memberOrders) orderUserMap[o.id] = o.userId;
+
+  for (const row of cvRows) {
+    const uid = orderUserMap[row.orderId];
+    if (uid !== undefined) cvPerMember[uid] = (cvPerMember[uid] ?? 0) + Number(row.cvTotal ?? 0);
+  }
+
+  return Object.values(cvPerMember).filter(cv => cv >= qualifyingCv).length;
 }
 
 /**
@@ -220,20 +267,17 @@ async function awardCLB(
     return;
   }
 
-  // Count Level 1 PMRC commissions earned so far
-  const [{ pmrcCount }] = await db
-    .select({ pmrcCount: count() })
-    .from(commissionsTable)
-    .where(and(
-      eq(commissionsTable.userId, sponsor.id),
-      eq(commissionsTable.level, 1),
-      eq(commissionsTable.type, "level"),
-    ));
+  // Count qualified Level 1 Pro Members (PCV ≥ qualifyingCv) — only these count toward CLB
+  const qualifiedL1Count = await countQualifiedL1Members(sponsor.id, rules.qualifyingCv);
 
-  const total = Number(pmrcCount);
-
-  // CLB fires only when count reaches the trigger exactly (not multiples — it's one-time)
-  if (total !== rules.clbTrigger) return;
+  // CLB fires when qualified L1 count first reaches the trigger
+  if (qualifiedL1Count < rules.clbTrigger) {
+    logger.info(
+      { userId: sponsor.id, qualifiedL1Count, required: rules.clbTrigger, qualifyingCv: rules.qualifyingCv },
+      "CLB not awarded — insufficient qualified Level 1 Pro Members (some may be UPM)",
+    );
+    return;
+  }
 
   // Award CLB
   await db.insert(commissionsTable).values({
@@ -247,7 +291,7 @@ async function awardCLB(
     commissionAmount: String(rules.clbAmount),
     status: "approved",
     type: "power_squad_bonus",
-    notes: `CLB (Core Leadership Bonus) — ONE-TIME — ${total} Level 1 PMRPs reached within ${rules.clbWindowDays}-day window. Award: $${rules.clbAmount}`,
+    notes: `CLB (Core Leadership Bonus) — ONE-TIME — ${qualifiedL1Count} qualified Level 1 Pro Members (≥${rules.qualifyingCv} PCV each) within ${rules.clbWindowDays}-day window. Award: $${rules.clbAmount}`,
   });
 
   const [wallet] = await db.select().from(walletsTable).where(eq(walletsTable.userId, sponsor.id));
@@ -313,19 +357,13 @@ async function awardMCB(
   const total = Number(pmrcCount);
   if (total === 0 || total % rules.powerBonusTrigger !== 0) return;
 
-  // MCB qualification: must have at least N active Level 1 Pro Members (Core Leadership Group)
-  const [{ l1Count }] = await db
-    .select({ l1Count: count() })
-    .from(usersTable)
-    .where(and(
-      eq(usersTable.sponsorId, sponsor.id),
-      eq(usersTable.isProMember, true),
-    ));
+  // MCB qualification: must have at least N qualified Level 1 Pro Members (PCV ≥ qualifyingCv)
+  const qualifiedL1Count = await countQualifiedL1Members(sponsor.id, rules.qualifyingCv);
 
-  if (Number(l1Count) < rules.powerBonusTrigger) {
+  if (qualifiedL1Count < rules.powerBonusTrigger) {
     logger.info(
-      { userId: sponsor.id, total, l1Count, required: rules.powerBonusTrigger },
-      "MCB not awarded — insufficient Level 1 Pro Members in Core Leadership Group",
+      { userId: sponsor.id, total, qualifiedL1Count, required: rules.powerBonusTrigger, qualifyingCv: rules.qualifyingCv },
+      "MCB not awarded — insufficient qualified Level 1 Pro Members (Core Leadership Group); some may be UPM",
     );
     return;
   }
@@ -343,7 +381,7 @@ async function awardMCB(
     commissionAmount: String(rules.powerBonusAmount),
     status: "approved",
     type: "power_squad_bonus",
-    notes: `MCB (Money Circulation Bonus) #${bonusNum} — RECURRING — ${total} Level 2 PMRP purchases/renewals (every ${rules.powerBonusTrigger} = $${rules.powerBonusAmount}). Qualifying Upline Sponsor has ${l1Count} active Level 1 Pro Members.`,
+    notes: `MCB (Money Circulation Bonus) #${bonusNum} — RECURRING — ${total} Level 2 PMRP purchases/renewals (every ${rules.powerBonusTrigger} = $${rules.powerBonusAmount}). Sponsor has ${qualifiedL1Count} qualified L1 Pro Members (≥${rules.qualifyingCv} PCV each).`,
   });
 
   const [wallet] = await db.select().from(walletsTable).where(eq(walletsTable.userId, sponsor.id));

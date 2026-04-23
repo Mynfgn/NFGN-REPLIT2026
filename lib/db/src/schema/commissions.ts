@@ -25,15 +25,18 @@ export const commissionRulesTable = pgTable("commission_rules", {
   salesLevels: jsonb("sales_levels"),
   referralRate: numeric("referral_rate", { precision: 5, scale: 2 }).default("10"),
   referralRateMode: text("referral_rate_mode").notNull().default("global"),
-  // MCB — Money Circulation Bonus (Level 2 PMRC, recurring, requires N active L1 Pro Members)
+  // MCB — Money Circulation Bonus (Level 2 PMRC, recurring, requires N active qualified L1 Pro Members)
   powerBonusAmount: numeric("power_bonus_amount", { precision: 10, scale: 2 }).notNull().default("200"),
-  powerBonusTrigger: integer("power_bonus_trigger").notNull().default(9),
+  powerBonusTrigger: integer("power_bonus_trigger").notNull().default(7),
   powerBonusEnabled: boolean("power_bonus_enabled").notNull().default(true),
   // CLB — Core Leadership Bonus (Level 1 PMRC, one-time, within 90 days of becoming Pro Member)
   clbEnabled: boolean("clb_enabled").notNull().default(true),
-  clbAmount: numeric("clb_amount", { precision: 10, scale: 2 }).notNull().default("200"),
-  clbTrigger: integer("clb_trigger").notNull().default(9),
+  clbAmount: numeric("clb_amount", { precision: 10, scale: 2 }).notNull().default("100"),
+  clbTrigger: integer("clb_trigger").notNull().default(7),
   clbWindowDays: integer("clb_window_days").notNull().default(90),
+  // Qualifying CV — minimum Personal Commission Volume required for a Pro Member to be "active"
+  // and counted toward CLB, MCB, and BPP bonus thresholds. Pro Members below this are UPM.
+  qualifyingCv: integer("qualifying_cv").notNull().default(150),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

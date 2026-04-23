@@ -151,6 +151,7 @@ export function CompensationSettingsPage() {
   const [referralRateMode, setReferralRateMode] = useState<"global" | "per_product">("global");
   const [prcLevels, setPrcLevels] = useState<CommissionLevel[]>(DEFAULT_PRC);
   const [salesLevels, setSalesLevels] = useState<CommissionLevel[]>(DEFAULT_SALES);
+  const [qualifyingCv, setQualifyingCv] = useState(150);
 
   useEffect(() => {
     customFetch("/api/commission-rules")
@@ -160,6 +161,7 @@ export function CompensationSettingsPage() {
         setReferralRateMode(data.referralRateMode === "per_product" ? "per_product" : "global");
         setPrcLevels(Array.isArray(data.prcLevels) && data.prcLevels.length > 0 ? data.prcLevels : DEFAULT_PRC);
         setSalesLevels(Array.isArray(data.salesLevels) && data.salesLevels.length > 0 ? data.salesLevels : DEFAULT_SALES);
+        setQualifyingCv(data.qualifyingCv ?? 150);
       })
       .catch(() => toast.error("Failed to load compensation settings"))
       .finally(() => setLoading(false));
@@ -174,12 +176,16 @@ export function CompensationSettingsPage() {
       toast.error("PSC rates must be between 0% and 100%");
       return;
     }
+    if (qualifyingCv < 1 || qualifyingCv > 10000) {
+      toast.error("Qualifying CV must be between 1 and 10,000");
+      return;
+    }
     setSaving(true);
     try {
       const res = await customFetch("/api/commission-rules", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ referralRate, referralRateMode, prcLevels, salesLevels }),
+        body: JSON.stringify({ referralRate, referralRateMode, prcLevels, salesLevels, qualifyingCv }),
       });
       if (res.ok) {
         toast.success("Compensation settings saved!");
@@ -400,6 +406,49 @@ export function CompensationSettingsPage() {
         levels={prcLevels}
         onChange={setPrcLevels}
       />
+
+      {/* UPM Qualifying CV Threshold */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-amber-600" />
+            <div>
+              <CardTitle className="text-base">UPM Qualifying CV Threshold</CardTitle>
+              <CardDescription className="text-xs mt-0.5">
+                Minimum cumulative Product CV (PCV) a Pro Member must reach to count as a <strong>Qualified Pro Member</strong> toward CLB and MCB thresholds.
+                Pro Members below this threshold are classified as <strong>Unqualified Pro Members (UPM)</strong> and do not count toward sponsor headcount requirements.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Qualifying CV Minimum (PCV)</Label>
+            <div className="flex items-center gap-3">
+              <Input
+                type="number"
+                min="1"
+                max="10000"
+                step="1"
+                value={qualifyingCv}
+                onChange={e => setQualifyingCv(parseInt(e.target.value) || 150)}
+                className="font-mono text-right max-w-[140px]"
+              />
+              <span className="text-muted-foreground text-sm">CV</span>
+              <Badge className="bg-amber-100 text-amber-800 border-amber-200 border">Pro Members Only</Badge>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Current setting: Pro Members must accumulate ≥ <strong>{qualifyingCv} PCV</strong> (across all orders) to qualify. Adjust up or down as your compensation plan evolves.
+            </p>
+          </div>
+          <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900 flex gap-2">
+            <Info className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-amber-600" />
+            <span>
+              <strong>UPM Policy:</strong> A UPM is still a Pro Member and can earn commissions, but their sponsor's CLB/MCB counters will only include them once they reach {qualifyingCv} CV. UPMs can purchase products at any time to reach the threshold.
+            </span>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Save bottom */}
       <div className="flex justify-end pb-6">

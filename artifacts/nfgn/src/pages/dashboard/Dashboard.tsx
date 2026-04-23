@@ -254,20 +254,24 @@ function PowerSquadBonusTracker({ bonus }: { bonus: any }) {
     try { return sessionStorage.getItem("clb_congrats_shown") === "1"; } catch { return false; }
   });
 
-  const clbTrigger: number       = bonus?.clbTrigger ?? 9;
-  const clbAmount: number        = bonus?.clbAmount ?? 100;
-  const clbEnabled: boolean      = bonus?.clbEnabled ?? true;
-  const clbEarned: number        = bonus?.clbEarned ?? 0;
-  const mcbTrigger: number       = bonus?.mcbTrigger ?? 9;
-  const mcbAmount: number        = bonus?.mcbAmount ?? 200;
-  const mcbEnabled: boolean      = bonus?.mcbEnabled ?? true;
-  const mcbEarned: number        = bonus?.mcbEarned ?? 0;
-  const level1ProMembers: number = bonus?.level1ProMembers ?? 0;
+  const clbTrigger: number        = bonus?.clbTrigger ?? 7;
+  const clbAmount: number         = bonus?.clbAmount ?? 100;
+  const clbEnabled: boolean       = bonus?.clbEnabled ?? true;
+  const clbEarned: number         = bonus?.clbEarned ?? 0;
+  const mcbTrigger: number        = bonus?.mcbTrigger ?? 7;
+  const mcbAmount: number         = bonus?.mcbAmount ?? 200;
+  const mcbEnabled: boolean       = bonus?.mcbEnabled ?? true;
+  const mcbEarned: number         = bonus?.mcbEarned ?? 0;
+  const level1ProMembers: number  = bonus?.level1ProMembers ?? 0;
+  // UPM fields — qualified = PCV ≥ qualifyingCv, unqualified = UPM
+  const qualifyingCv: number      = bonus?.qualifyingCv ?? 150;
+  const qualifiedL1: number       = bonus?.qualifiedL1Members ?? 0;
+  const unqualifiedL1: number     = bonus?.unqualifiedL1Members ?? 0;
   const level2Commissions: number = bonus?.level2Commissions ?? 0;
-  const toNextMcb: number        = bonus?.toNextMcb ?? mcbTrigger;
+  const toNextMcb: number         = bonus?.toNextMcb ?? mcbTrigger;
 
-  // MCB is only qualified when L1 requirement is fully met
-  const mcbQualified: boolean = level1ProMembers >= mcbTrigger;
+  // MCB is only unlocked when QUALIFIED L1 requirement is fully met (UPM don't count)
+  const mcbQualified: boolean = qualifiedL1 >= mcbTrigger;
 
   useEffect(() => {
     if (!congratsShown && clbEarned > 0) {
@@ -280,13 +284,15 @@ function PowerSquadBonusTracker({ bonus }: { bonus: any }) {
   if (!bonus || (!clbEnabled && !mcbEnabled)) return null;
 
   const iconUrl = `${import.meta.env.BASE_URL}pro-member-icon.jpeg`;
-  const l1Filled = Math.min(level1ProMembers, clbTrigger);
-  const remaining = Math.max(0, clbTrigger - l1Filled);
+  // L1 icon strip: qualified (blue), then UPM (amber/muted), then empty — all capped at clbTrigger slots
+  const qualifiedFilled = Math.min(qualifiedL1, clbTrigger);
+  const upmFilled = Math.min(unqualifiedL1, clbTrigger - qualifiedFilled);
+  const remaining = Math.max(0, clbTrigger - qualifiedFilled);
   const l2Progress = level2Commissions % mcbTrigger;
   const l2BarFill = mcbQualified
     ? (l2Progress === 0 && level2Commissions > 0 ? mcbTrigger : l2Progress)
     : 0;
-  const l1NeedForMcb = Math.max(0, mcbTrigger - level1ProMembers);
+  const l1NeedForMcb = Math.max(0, mcbTrigger - qualifiedL1);
 
   return (
     <>
@@ -323,22 +329,31 @@ function PowerSquadBonusTracker({ bonus }: { bonus: any }) {
                 <Users className="h-3 w-3" />
                 Level 1 — Core Leadership Bonus
               </span>
-              <span className="font-bold text-blue-600">{l1Filled} / {clbTrigger}</span>
+              <span className="font-bold text-blue-600">{qualifiedFilled} / {clbTrigger} qualified</span>
             </div>
             <div className="grid gap-1 w-full" style={{ gridTemplateColumns: `repeat(${clbTrigger}, 1fr)` }}>
               {Array.from({ length: clbTrigger }, (_, i) => {
-                const filled = i < l1Filled;
+                const isQualified = i < qualifiedFilled;
+                const isUpm = !isQualified && i < qualifiedFilled + upmFilled;
                 return (
                   <div
                     key={i}
-                    className={`flex flex-col items-center justify-center aspect-square rounded-lg border-2 transition-all duration-500 overflow-hidden ${
-                      filled
+                    title={isQualified ? "Qualified Pro Member (≥150 PCV)" : isUpm ? "Unqualified Pro Member — UPM (< 150 PCV)" : "Slot available"}
+                    className={`relative flex flex-col items-center justify-center aspect-square rounded-lg border-2 transition-all duration-500 overflow-hidden ${
+                      isQualified
                         ? "border-blue-400 bg-white shadow-sm shadow-blue-100"
+                        : isUpm
+                        ? "border-amber-300 bg-amber-50 shadow-sm shadow-amber-100"
                         : "border-dashed border-gray-200 bg-gray-50"
                     }`}
                   >
-                    {filled ? (
-                      <img src={iconUrl} alt="Pro Member" className="w-[75%] h-[75%] object-contain drop-shadow-sm" />
+                    {isQualified ? (
+                      <img src={iconUrl} alt="Qualified Pro Member" className="w-[75%] h-[75%] object-contain drop-shadow-sm" />
+                    ) : isUpm ? (
+                      <>
+                        <img src={iconUrl} alt="UPM" className="w-[75%] h-[75%] object-contain opacity-50" style={{ filter: "grayscale(0.5) sepia(0.4)" }} />
+                        <span className="absolute bottom-0.5 right-0.5 text-[7px] font-black text-amber-600 bg-amber-100 border border-amber-300 rounded px-0.5 leading-tight">UPM</span>
+                      </>
                     ) : (
                       <div className="flex flex-col items-center gap-0.5 opacity-25 w-full h-full justify-center">
                         <div className="w-[35%] aspect-square rounded-full bg-gray-400" />
@@ -349,13 +364,23 @@ function PowerSquadBonusTracker({ bonus }: { bonus: any }) {
                 );
               })}
             </div>
+            {/* Legend */}
+            {unqualifiedL1 > 0 && (
+              <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                <span className="flex items-center gap-1"><span className="inline-block w-2.5 h-2.5 rounded border-2 border-blue-400 bg-white" /> Qualified (≥{qualifyingCv} PCV)</span>
+                <span className="flex items-center gap-1"><span className="inline-block w-2.5 h-2.5 rounded border-2 border-amber-300 bg-amber-50" /> UPM (&lt;{qualifyingCv} PCV)</span>
+              </div>
+            )}
             <p className="text-xs text-muted-foreground">
               {clbEarned > 0 ? (
                 <span className="text-green-700 font-semibold flex items-center gap-1">
                   <CheckCircle2 className="h-3 w-3 inline" /> CLB earned — ${clbAmount.toLocaleString()} credited to your wallet!
                 </span>
               ) : remaining > 0 ? (
-                <><strong className="text-blue-700">{remaining}</strong> more personally sponsored Pro {remaining === 1 ? "Member" : "Members"} to earn your <strong className="text-green-700">${clbAmount.toLocaleString()} CLB</strong></>
+                <>
+                  <strong className="text-blue-700">{remaining}</strong> more <strong>qualified</strong> Pro {remaining === 1 ? "Member" : "Members"} needed for your <strong className="text-green-700">${clbAmount.toLocaleString()} CLB</strong>.
+                  {unqualifiedL1 > 0 && <> <span className="text-amber-600">{unqualifiedL1} UPM {unqualifiedL1 === 1 ? "member" : "members"} must reach {qualifyingCv} PCV to qualify.</span></>}
+                </>
               ) : (
                 <span className="text-green-700 font-semibold">CLB threshold reached — bonus pending.</span>
               )}
@@ -371,7 +396,7 @@ function PowerSquadBonusTracker({ bonus }: { bonus: any }) {
               </span>
             ) : (
               <span className="text-[10px] font-bold text-gray-400 bg-gray-100 border border-gray-200 rounded-full px-2 py-0.5 flex items-center gap-1">
-                🔒 MCB Locked — {l1NeedForMcb} more L1 needed
+                🔒 MCB Locked — {l1NeedForMcb} qualified L1 needed
               </span>
             )}
             <div className="flex-1 border-t border-dashed" />
@@ -414,7 +439,7 @@ function PowerSquadBonusTracker({ bonus }: { bonus: any }) {
             </div>
             <p className="text-xs text-muted-foreground">
               {!mcbQualified ? (
-                <>Sponsor <strong className="text-blue-700">{l1NeedForMcb} more</strong> Level 1 Pro {l1NeedForMcb === 1 ? "Member" : "Members"} to unlock a <strong className="text-amber-700">${mcbAmount.toLocaleString()} recurring MCB</strong> per {mcbTrigger} Level 2 Pro Package sales.</>
+                <>Need <strong className="text-blue-700">{l1NeedForMcb} more</strong> <strong>qualified</strong> Level 1 Pro {l1NeedForMcb === 1 ? "Member" : "Members"} (≥{qualifyingCv} PCV each) to unlock a <strong className="text-amber-700">${mcbAmount.toLocaleString()} recurring MCB</strong> per {mcbTrigger} Level 2 Pro Package sales. UPM do not count.</>
               ) : toNextMcb === 0 ? (
                 <span className="text-green-700 font-semibold flex items-center gap-1">
                   <CheckCircle2 className="h-3 w-3 inline" /> MCB cycle complete — ${mcbAmount} credited! Next cycle starting.
@@ -441,8 +466,7 @@ function PowerSquadBonusTracker({ bonus }: { bonus: any }) {
             </div>
             <DialogTitle className="text-2xl font-serif text-center">Congratulations! 🎉</DialogTitle>
             <DialogDescription className="text-center text-base text-foreground mt-2 leading-relaxed">
-              You've personally sponsored{" "}
-              <strong>{clbTrigger} Pro Members</strong> and earned your{" "}
+              You've reached <strong>{clbTrigger} qualified Level 1 Pro Members</strong> (each with ≥{qualifyingCv} PCV) and earned your{" "}
               <strong className="text-green-700 text-lg">${clbAmount.toLocaleString()} Core Leadership Bonus!</strong>
             </DialogDescription>
           </DialogHeader>

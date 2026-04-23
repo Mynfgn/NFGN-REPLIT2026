@@ -114,6 +114,21 @@ Key rules:
 - Regular product purchases generate Referral + Sales commissions (for Pro Member sponsors)
 - Shared label utility: `artifacts/nfgn/src/lib/labels.ts` (roleLabel, commissionTypeLabel)
 
+## Power Squad Bonuses (CLB + MCB)
+
+| Bonus | Type | Trigger | Amount | Requirement |
+|-------|------|---------|--------|-------------|
+| **CLB** (Core Leadership Bonus) | One-time | 7 qualified L1 Pro Members within 90 days | $100 | ≥7 qualified L1 members |
+| **MCB** (Money Circulation Bonus) | Recurring | Every 7 Level 2 PMRP purchases | $200 | ≥7 qualified L1 members |
+
+### UPM Policy (Unqualified Pro Member)
+- A **Qualified Pro Member** = `isProMember: true` AND cumulative PCV (product CV) ≥ **150 CV**
+- A **UPM** = Pro Member who has not yet reached 150 PCV cumulative — they do NOT count toward CLB/MCB headcount
+- Qualifying threshold is configurable by admin in `/admin/settings` → Compensation Settings
+- DB column: `commission_rules.qualifying_cv` (default: 150)
+- Dashboard tracker shows UPM slots in amber (vs qualified in blue)
+- `countQualifiedL1Members(sponsorId, qualifyingCv)` in commission engine sums per-member order CV and filters by threshold
+
 ## Notifications System
 
 - **Table**: `notifications` (userId, type, message, relatedUserId, isRead, createdAt)

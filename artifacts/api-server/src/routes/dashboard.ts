@@ -291,22 +291,54 @@ router.get("/dashboard/analytics", requireAuth, async (req, res): Promise<void> 
   const [rules] = await db.select().from(commissionRulesTable).limit(1);
 
   // MCB (Money Circulation Bonus) settings — recurring L2 bonus
-  const mcbTrigger = rules?.powerBonusTrigger ?? 9;
+  const mcbTrigger = rules?.powerBonusTrigger ?? 7;
   const mcbAmount  = parseFloat(rules?.powerBonusAmount ?? "200");
   const mcbEnabled = rules?.powerBonusEnabled ?? true;
 
   // CLB (Core Leadership Bonus) settings — one-time L1 bonus within 90-day window
-  const clbTrigger     = rules?.clbTrigger ?? 9;
-  const clbAmount      = parseFloat(rules?.clbAmount ?? "200");
+  const clbTrigger     = rules?.clbTrigger ?? 7;
+  const clbAmount      = parseFloat(rules?.clbAmount ?? "100");
   const clbEnabled     = rules?.clbEnabled ?? true;
   const clbWindowDays  = rules?.clbWindowDays ?? 90;
 
-  // Level 1 Pro Members: personally sponsored members who are Pro Members
-  const [{ l1ProCount }] = await db.select({ l1ProCount: count() })
+  // UPM qualifying threshold — minimum PCV for a Pro Member to be "active"
+  const qualifyingCv = rules?.qualifyingCv ?? 150;
+
+  // All Level 1 Pro Members (personally sponsored)
+  const allL1ProMembers = await db.select({ id: usersTable.id })
     .from(usersTable)
     .where(and(eq(usersTable.sponsorId, userId), eq(usersTable.isProMember, true)));
-  const level1ProCount = Number(l1ProCount);
-  const mcbQualified   = level1ProCount >= mcbTrigger;
+  const totalL1ProCount = allL1ProMembers.length;
+
+  // Compute qualified L1 members (PCV ≥ qualifyingCv) — only these count toward CLB/MCB
+  let qualifiedL1Count = 0;
+  if (totalL1ProCount > 0) {
+    const memberIds = allL1ProMembers.map(m => m.id);
+    const memberOrders = await db.select({ id: ordersTable.id, userId: ordersTable.userId })
+      .from(ordersTable)
+      .where(inArray(ordersTable.userId, memberIds));
+
+    const cvPerMember: Record<number, number> = {};
+    for (const id of memberIds) cvPerMember[id] = 0;
+
+    if (memberOrders.length > 0) {
+      const orderIds = memberOrders.map(o => o.id);
+      const cvRows = await db.select({ orderId: orderItemsTable.orderId, cvSum: sum(orderItemsTable.cvTotal) })
+        .from(orderItemsTable)
+        .where(inArray(orderItemsTable.orderId, orderIds))
+        .groupBy(orderItemsTable.orderId);
+      const orderUserMap: Record<number, number> = {};
+      for (const o of memberOrders) orderUserMap[o.id] = o.userId;
+      for (const row of cvRows) {
+        const uid = orderUserMap[row.orderId];
+        if (uid !== undefined) cvPerMember[uid] = (cvPerMember[uid] ?? 0) + Number(row.cvSum ?? 0);
+      }
+    }
+    qualifiedL1Count = Object.values(cvPerMember).filter(cv => cv >= qualifyingCv).length;
+  }
+
+  const unqualifiedL1Count = totalL1ProCount - qualifiedL1Count;
+  const mcbQualified = qualifiedL1Count >= mcbTrigger;
 
   // Level 2 Pro Package commissions earned by this user (each = one L2 Pro Package purchase)
   const [{ l2CommCount }] = await db.select({ l2CommCount: count() })
@@ -363,9 +395,12 @@ router.get("/dashboard/analytics", requireAuth, async (req, res): Promise<void> 
       mcbEarned,
       nextMcbAt,
       toNextMcb,
-      // Shared L1 data used by both trackers
-      level1ProMembers: level1ProCount,
-      level1Needed: Math.max(0, mcbTrigger - level1ProCount),
+      // Shared L1 data — qualified (active) vs unqualified (UPM)
+      qualifyingCv,
+      level1ProMembers: totalL1ProCount,
+      qualifiedL1Members: qualifiedL1Count,
+      unqualifiedL1Members: unqualifiedL1Count,
+      level1Needed: Math.max(0, mcbTrigger - qualifiedL1Count),
       // L2 data for MCB tracker
       level2Commissions,
       // Legacy fields kept so PowerSquadBonusCard doesn't break

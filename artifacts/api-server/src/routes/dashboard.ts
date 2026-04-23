@@ -287,20 +287,28 @@ router.get("/dashboard/analytics", requireAuth, async (req, res): Promise<void> 
     }
   }
 
-  // ── Power Squad Bonus Progress ────────────────────────────────────────────
+  // ── Bonus Progress (CLB + MCB) ─────────────────────────────────────────────
   const [rules] = await db.select().from(commissionRulesTable).limit(1);
-  const bonusTrigger = rules?.powerBonusTrigger ?? 9;
-  const bonusAmount = parseFloat(rules?.powerBonusAmount ?? "200");
-  const bonusEnabled = rules?.powerBonusEnabled ?? true;
+
+  // MCB (Money Circulation Bonus) settings — recurring L2 bonus
+  const mcbTrigger = rules?.powerBonusTrigger ?? 9;
+  const mcbAmount  = parseFloat(rules?.powerBonusAmount ?? "200");
+  const mcbEnabled = rules?.powerBonusEnabled ?? true;
+
+  // CLB (Core Leadership Bonus) settings — one-time L1 bonus within 90-day window
+  const clbTrigger     = rules?.clbTrigger ?? 9;
+  const clbAmount      = parseFloat(rules?.clbAmount ?? "200");
+  const clbEnabled     = rules?.clbEnabled ?? true;
+  const clbWindowDays  = rules?.clbWindowDays ?? 90;
 
   // Level 1 Pro Members: personally sponsored members who are Pro Members
   const [{ l1ProCount }] = await db.select({ l1ProCount: count() })
     .from(usersTable)
     .where(and(eq(usersTable.sponsorId, userId), eq(usersTable.isProMember, true)));
   const level1ProCount = Number(l1ProCount);
-  const level1Qualified = level1ProCount >= bonusTrigger;
+  const mcbQualified   = level1ProCount >= mcbTrigger;
 
-  // Level 2 Pro Package commissions earned by this user (each = one Pro Package purchase from their L2)
+  // Level 2 Pro Package commissions earned by this user (each = one L2 Pro Package purchase)
   const [{ l2CommCount }] = await db.select({ l2CommCount: count() })
     .from(commissionsTable)
     .where(and(
@@ -308,20 +316,31 @@ router.get("/dashboard/analytics", requireAuth, async (req, res): Promise<void> 
       eq(commissionsTable.level, 2),
       eq(commissionsTable.type, "level"),
     ));
-  const level2L2Commissions = Number(l2CommCount);
+  const level2Commissions = Number(l2CommCount);
 
-  // How many Power Squad Bonuses has this user earned?
-  const [{ bonusCount }] = await db.select({ bonusCount: count() })
+  // CLB earned count (level 1 power_squad_bonus) — should only ever be 0 or 1
+  const [{ clbCount }] = await db.select({ clbCount: count() })
     .from(commissionsTable)
     .where(and(
       eq(commissionsTable.userId, userId),
       eq(commissionsTable.type, "power_squad_bonus"),
+      eq(commissionsTable.level, 1),
     ));
-  const bonusesEarned = Number(bonusCount);
+  const clbEarned = Number(clbCount);
 
-  // Next bonus milestone
-  const nextBonusAt = (bonusesEarned + 1) * bonusTrigger;
-  const toNextBonus = Math.max(0, nextBonusAt - level2L2Commissions);
+  // MCB earned count (level 2 power_squad_bonus) — recurring
+  const [{ mcbCount }] = await db.select({ mcbCount: count() })
+    .from(commissionsTable)
+    .where(and(
+      eq(commissionsTable.userId, userId),
+      eq(commissionsTable.type, "power_squad_bonus"),
+      eq(commissionsTable.level, 2),
+    ));
+  const mcbEarned = Number(mcbCount);
+
+  // MCB: next bonus milestone
+  const nextMcbAt  = (mcbEarned + 1) * mcbTrigger;
+  const toNextMcb  = Math.max(0, nextMcbAt - level2Commissions);
 
   res.json({
     monthlySales,
@@ -330,17 +349,34 @@ router.get("/dashboard/analytics", requireAuth, async (req, res): Promise<void> 
     groupVolume,
     cvMaintenanceRequired: 100,
     powerSquadBonus: {
-      bonusTrigger,
-      bonusAmount,
-      bonusEnabled,
+      // CLB — Core Leadership Bonus (one-time, L1)
+      clbTrigger,
+      clbAmount,
+      clbEnabled,
+      clbWindowDays,
+      clbEarned,
+      // MCB — Money Circulation Bonus (recurring, L2)
+      mcbTrigger,
+      mcbAmount,
+      mcbEnabled,
+      mcbQualified,
+      mcbEarned,
+      nextMcbAt,
+      toNextMcb,
+      // Shared L1 data used by both trackers
       level1ProMembers: level1ProCount,
-      level1Required: bonusTrigger,
-      level1Qualified,
-      level1Needed: Math.max(0, bonusTrigger - level1ProCount),
-      level2Commissions: level2L2Commissions,
-      bonusesEarned,
-      nextBonusAt,
-      toNextBonus,
+      level1Needed: Math.max(0, mcbTrigger - level1ProCount),
+      // L2 data for MCB tracker
+      level2Commissions,
+      // Legacy fields kept so PowerSquadBonusCard doesn't break
+      bonusTrigger: mcbTrigger,
+      bonusAmount: mcbAmount,
+      bonusEnabled: mcbEnabled,
+      level1Required: mcbTrigger,
+      level1Qualified: mcbQualified,
+      bonusesEarned: mcbEarned,
+      nextBonusAt: nextMcbAt,
+      toNextBonus: toNextMcb,
     },
   });
 });

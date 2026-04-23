@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -106,7 +107,27 @@ const SECTIONS = [
 ];
 
 export function BasicTrainingPage() {
-  const [activeSection, setActiveSection] = useState("getting-started");
+  const [loc] = useLocation();
+  const initialSection = (() => {
+    if (typeof window === "undefined") return "getting-started";
+    const s = new URLSearchParams(window.location.search).get("s");
+    return s && SECTIONS.some(sec => sec.id === s) ? s : "getting-started";
+  })();
+  const [activeSection, setActiveSection] = useState(initialSection);
+
+  useEffect(() => {
+    const syncSection = () => {
+      const s = new URLSearchParams(window.location.search).get("s");
+      if (s && SECTIONS.some(sec => sec.id === s)) setActiveSection(s);
+    };
+    syncSection();
+    window.addEventListener("nfgn:nav", syncSection);
+    window.addEventListener("popstate", syncSection);
+    return () => {
+      window.removeEventListener("nfgn:nav", syncSection);
+      window.removeEventListener("popstate", syncSection);
+    };
+  }, [loc]);
 
   return (
     <div className="space-y-6">

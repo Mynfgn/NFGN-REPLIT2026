@@ -1,69 +1,115 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useGetMe, useLogout } from "@workspace/api-client-react";
-import { 
-  LayoutDashboard, ShoppingBag, Wallet, Users, 
-  Award, Banknote, Calendar, Inbox, UserCircle, 
+import {
+  LayoutDashboard, ShoppingBag, Wallet, Users,
+  Award, Banknote, Calendar, Inbox, UserCircle,
   BarChart3, LogOut, Menu, X, UserPlus, ArrowRightLeft,
-  TrendingUp, Wrench, Home, Star, BookOpen,
+  TrendingUp, Wrench, Home, Star, BookOpen, DollarSign,
+  ChevronDown, ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 import { roleLabel } from "@/lib/labels";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
 
+type NavChild = { name: string; href: string };
+
+type NavItem =
+  | { name: string; href: string; icon: any; exact?: boolean; group?: never; children?: never }
+  | { name: string; href?: never; icon: any; group: string; children: NavChild[]; exact?: never };
+
+const navItems: NavItem[] = [
+  { name: "Overview",           href: "/dashboard",                   icon: LayoutDashboard },
+  { name: "Profile Management", href: "/dashboard/profile",           icon: UserCircle },
+  { name: "Genealogy",          href: "/dashboard/genealogy",         icon: Users },
+  { name: "Registration",       href: "/dashboard/registration",      icon: UserPlus },
+  { name: "User Earnings",      href: "/dashboard/earnings",          icon: TrendingUp },
+  { name: "Orders",             href: "/dashboard/orders",            icon: ShoppingBag },
+  { name: "E-Wallet",           href: "/dashboard/wallet",            icon: Wallet },
+  { name: "Transfer Funds",     href: "/dashboard/transfer",          icon: ArrowRightLeft },
+  { name: "Payouts",            href: "/dashboard/payouts",           icon: Banknote },
+  { name: "Commissions",        href: "/dashboard/commissions",       icon: Award },
+  { name: "Pro Member Bonus",   href: "/dashboard/pro-member-bonuses", icon: Star },
+  { name: "Bill Payer Program", href: "/dashboard/bpp",               icon: Home },
+  { name: "Bookings",           href: "/dashboard/bookings",          icon: Calendar },
+  { name: "Mailbox",            href: "/dashboard/mailbox",           icon: Inbox },
+  { name: "Tools",              href: "/dashboard/tools",             icon: Wrench, exact: true },
+  {
+    name: "Comp Plan",
+    icon: DollarSign,
+    group: "comp-plan",
+    children: [
+      { name: "Overview",                href: "/dashboard/comp-plan?s=overview" },
+      { name: "Referral Commission",     href: "/dashboard/comp-plan?s=rc" },
+      { name: "Product Sales Comm.",     href: "/dashboard/comp-plan?s=psc" },
+      { name: "Multi-Level Retail",      href: "/dashboard/comp-plan?s=pmrc" },
+      { name: "Power Squad Bonuses",     href: "/dashboard/comp-plan?s=psb" },
+      { name: "Bill Payer Program",      href: "/dashboard/comp-plan?s=bpp" },
+    ],
+  },
+  {
+    name: "Basic Training",
+    icon: BookOpen,
+    group: "training",
+    children: [
+      { name: "Getting Started",    href: "/dashboard/tools/training?s=getting-started" },
+      { name: "Comp Plan",          href: "/dashboard/tools/training?s=comp-plan" },
+      { name: "$3,500/Month Plan",  href: "/dashboard/tools/training?s=2500-plan" },
+      { name: "Bill Payer Program", href: "/dashboard/tools/training?s=bpp" },
+      { name: "90-Day Plan",        href: "/dashboard/tools/training?s=90-day" },
+      { name: "IGNITE Training",    href: "/dashboard/tools/training?s=ignite" },
+      { name: "Earn Big Bonuses",   href: "/dashboard/tools/training?s=big-bonuses" },
+      { name: "Additional Training", href: "/dashboard/tools/training?s=additional" },
+    ],
+  },
+  { name: "Reports", href: "/dashboard/reports", icon: BarChart3 },
+];
+
+function isGroupOpen(group: string, location: string): boolean {
+  if (group === "comp-plan") return location.startsWith("/dashboard/comp-plan");
+  if (group === "training") return location.startsWith("/dashboard/tools/training");
+  return false;
+}
+
 export function DashboardLayout({ children }: { children: ReactNode }) {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const { data: user } = useGetMe();
   const logoutMutation = useLogout();
   const { logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    const init: Record<string, boolean> = {};
+    navItems.forEach(item => {
+      if (item.group) init[item.group] = isGroupOpen(item.group, location);
+    });
+    return init;
+  });
+
+  const toggleGroup = (group: string) => {
+    setOpenGroups(prev => ({ ...prev, [group]: !prev[group] }));
+  };
 
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {
       onSuccess: () => {
         logout();
         window.location.href = "/login";
-      }
+      },
     });
   };
 
-  const navItems = [
-    { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Profile Management", href: "/dashboard/profile", icon: UserCircle },
-    { name: "Genealogy", href: "/dashboard/genealogy", icon: Users },
-    { name: "Registration", href: "/dashboard/registration", icon: UserPlus },
-    { name: "User Earnings", href: "/dashboard/earnings", icon: TrendingUp },
-    { name: "Orders", href: "/dashboard/orders", icon: ShoppingBag },
-    { name: "E-Wallet", href: "/dashboard/wallet", icon: Wallet },
-    { name: "Transfer Funds", href: "/dashboard/transfer", icon: ArrowRightLeft },
-    { name: "Payouts", href: "/dashboard/payouts", icon: Banknote },
-    { name: "Commissions", href: "/dashboard/commissions", icon: Award },
-    { name: "Pro Member Bonus", href: "/dashboard/pro-member-bonuses", icon: Star },
-    { name: "Bill Payer Program", href: "/dashboard/bpp", icon: Home },
-    { name: "Bookings", href: "/dashboard/bookings", icon: Calendar },
-    { name: "Mailbox", href: "/dashboard/mailbox", icon: Inbox },
-    { name: "Tools", href: "/dashboard/tools", icon: Wrench, exact: true },
-    { name: "Basic Training", href: "/dashboard/tools/training", icon: BookOpen, sub: true },
-    { name: "Reports", href: "/dashboard/reports", icon: BarChart3 },
-  ];
-
   return (
     <div className="min-h-screen flex bg-muted/30">
-      {/* Mobile sidebar overlay */}
       {sidebarOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-black/80 md:hidden" 
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="fixed inset-0 z-40 bg-black/80 md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Sidebar */}
       <aside className={`
         fixed inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform duration-200 ease-in-out flex flex-col
         md:translate-x-0 md:static md:block
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
         <div className="h-16 flex items-center px-6 border-b">
           <Link href="/" className="flex items-center gap-2">
@@ -90,26 +136,77 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
 
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
-          {navItems.map((item) => {
-            const isActive = (item as any).exact
+          {navItems.map(item => {
+            if (item.group) {
+              const open = openGroups[item.group] ?? false;
+              const anyChildActive = item.children.some(c => location.startsWith(c.href.split("?")[0]));
+              return (
+                <div key={item.group}>
+                  <button
+                    onClick={() => toggleGroup(item.group)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors
+                      ${anyChildActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      }`}
+                  >
+                    <item.icon className="h-4 w-4 flex-shrink-0" />
+                    <span className="flex-1 text-left">{item.name}</span>
+                    {open
+                      ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                      : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                    }
+                  </button>
+
+                  {open && (
+                    <div className="ml-3 mt-0.5 border-l border-border pl-3 space-y-0.5">
+                      {item.children.map(child => {
+                        const childPath = child.href.split("?")[0];
+                        const childSearch = child.href.includes("?") ? child.href.split("?")[1] : "";
+                        const childParam = childSearch ? new URLSearchParams(childSearch).get("s") : "";
+                        const isChildActive =
+                          location === childPath &&
+                          (childParam
+                            ? (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("s") === childParam)
+                            : true);
+                        return (
+                          <button
+                            key={child.name}
+                            onClick={() => {
+                              navigate(child.href);
+                              window.dispatchEvent(new CustomEvent("nfgn:nav", { detail: { href: child.href } }));
+                            }}
+                            className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-medium transition-colors text-left
+                              ${isChildActive
+                                ? "bg-primary/10 text-primary"
+                                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                              }`}
+                          >
+                            <span className="h-1.5 w-1.5 rounded-full bg-current flex-shrink-0" />
+                            {child.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            const isActive = item.exact
               ? location === item.href
               : location === item.href || location.startsWith(`${item.href}/`);
-            const isSub = !!(item as any).sub;
+
             return (
-              <Link key={item.name} href={item.href}>
-                <span className={`
-                  flex items-center gap-3 rounded-md text-sm font-medium transition-colors
-                  ${isSub ? "px-3 py-2 ml-6 border-l border-border" : "px-3 py-2.5"}
-                  ${isActive
-                    ? isSub
-                      ? "bg-primary/10 text-primary border-l-2 border-primary"
-                      : "bg-primary text-primary-foreground"
-                    : isSub
-                    ? "text-muted-foreground/70 hover:bg-muted hover:text-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }
-                `}>
-                  <item.icon className={`flex-shrink-0 ${isSub ? "h-3.5 w-3.5" : "h-4 w-4"}`} />
+              <Link key={item.name} href={item.href!}>
+                <span
+                  className={`flex items-center gap-3 rounded-md text-sm font-medium transition-colors px-3 py-2.5
+                    ${isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                >
+                  <item.icon className="h-4 w-4 flex-shrink-0" />
                   {item.name}
                 </span>
               </Link>
@@ -118,9 +215,9 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="p-4 border-t">
-          <Button 
-            variant="ghost" 
-            className="w-full justify-start text-muted-foreground hover:text-destructive" 
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-muted-foreground hover:text-destructive"
             onClick={handleLogout}
           >
             <LogOut className="mr-3 h-4 w-4" />
@@ -129,7 +226,6 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      {/* Main content */}
       <main className="flex-1 flex flex-col min-w-0">
         <header className="h-16 flex items-center px-4 md:px-6 border-b bg-card md:hidden">
           <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>

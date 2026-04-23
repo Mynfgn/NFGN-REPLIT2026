@@ -293,14 +293,14 @@ function ProMemberBonusTracker({ bonus }: { bonus: any }) {
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* 3×3 Icon Grid */}
-          <div className="grid grid-cols-3 gap-3 max-w-[280px] mx-auto">
+          {/* Single-row icon strip */}
+          <div className="flex gap-2 justify-center flex-wrap">
             {Array.from({ length: bonusTrigger }, (_, i) => {
               const filled = i < filledCount;
               return (
                 <div
                   key={i}
-                  className={`relative flex items-center justify-center h-[78px] rounded-xl border-2 transition-all duration-500 ${
+                  className={`flex items-center justify-center h-[64px] w-[64px] rounded-xl border-2 transition-all duration-500 flex-shrink-0 ${
                     filled
                       ? "border-blue-400 bg-white shadow-md shadow-blue-100"
                       : "border-dashed border-gray-200 bg-gray-50"
@@ -310,12 +310,12 @@ function ProMemberBonusTracker({ bonus }: { bonus: any }) {
                     <img
                       src={iconUrl}
                       alt="Pro Member"
-                      className="h-[58px] w-[58px] object-contain drop-shadow-sm"
+                      className="h-[46px] w-[46px] object-contain drop-shadow-sm"
                     />
                   ) : (
                     <div className="flex flex-col items-center gap-0.5 opacity-30">
-                      <div className="h-7 w-7 rounded-full bg-gray-300" />
-                      <div className="h-9 w-10 rounded-t-full bg-gray-300" />
+                      <div className="h-5 w-5 rounded-full bg-gray-300" />
+                      <div className="h-7 w-8 rounded-t-full bg-gray-300" />
                     </div>
                   )}
                 </div>

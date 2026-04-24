@@ -134,7 +134,11 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-medium leading-none">{user?.firstName} {user?.lastName}</span>
-              <span className="text-xs text-muted-foreground mt-1">{user?.role ? roleLabel(user.role) : ""}</span>
+              {(user as any)?.proMemberStatus === "pending_approval" ? (
+                <span className="text-xs font-semibold mt-1" style={{ color: "#C9A84C" }}>⏳ Pro Member — Awaiting Approval</span>
+              ) : (
+                <span className="text-xs text-muted-foreground mt-1">{user?.role ? roleLabel(user.role) : ""}</span>
+              )}
             </div>
           </div>
         </div>

@@ -22,6 +22,7 @@ function formatUser(user: typeof usersTable.$inferSelect, sponsorName?: string) 
     phone: user.phone,
     isProMember: user.isProMember,
     proMemberSince: user.proMemberSince?.toISOString() ?? null,
+    proMemberStatus: user.proMemberStatus ?? null,
     createdAt: user.createdAt.toISOString(),
     gender: user.gender ?? null,
     dateOfBirth: user.dateOfBirth ?? null,
@@ -349,18 +350,15 @@ router.post("/auth/register-pro", async (req, res): Promise<void> => {
     cvTotal: product.cv ?? 0,
   });
 
+  // Mark user as pending Pro Member — full activation happens when admin approves the order
   await db.update(usersTable).set({
-    isProMember: true,
+    isProMember: false,
     role: "pro_member",
-    proMemberSince: new Date(),
+    proMemberStatus: "pending_approval",
   }).where(eq(usersTable.id, newUser.id));
 
-  const commissionItems: OrderItemForCommission[] = [{
-    price: product.price,
-    quantity: 1,
-    commissionRate: product.commissionRate ?? "10",
-  }];
-  await processCommissions(order.id, orderNumber, total, newUser.id, true, commissionItems);
+  // Commissions are deferred until admin approves the order
+  // await processCommissions(...);
 
   const [updatedUser] = await db.select().from(usersTable).where(eq(usersTable.id, newUser.id));
   const token = generateToken(updatedUser.id, updatedUser.role);

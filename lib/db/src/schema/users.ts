@@ -16,6 +16,7 @@ export const usersTable = pgTable("users", {
   phone: text("phone"),
   isProMember: boolean("is_pro_member").notNull().default(false),
   proMemberSince: timestamp("pro_member_since", { withTimezone: true }),
+  proMemberStatus: text("pro_member_status"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 

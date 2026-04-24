@@ -195,6 +195,9 @@ export function UsersPage() {
                         <span className="font-medium truncate">{user.firstName} {user.lastName}</span>
                         {user.isProMember && <Star className="h-3 w-3 text-primary fill-primary" />}
                         <Badge variant={(roleColors[user.role] ?? "secondary") as any} className="text-xs">{roleLabel(user.role)}</Badge>
+                        {(user as any).proMemberStatus === "pending_approval" && (
+                          <Badge className="text-xs bg-amber-100 text-amber-800 border border-amber-300">⏳ Awaiting Approval</Badge>
+                        )}
                       </div>
                       <p className="text-sm text-muted-foreground truncate">{user.email}</p>
                       <p className="text-xs text-muted-foreground">Ref: {user.referralCode} • Joined {new Date(user.createdAt).toLocaleDateString()}</p>
@@ -206,7 +209,7 @@ export function UsersPage() {
                     </div>
                     <div className="text-right text-sm flex-shrink-0 flex flex-col items-end gap-1">
                       <Badge variant={user.status === "active" ? "default" : "destructive"}>{user.status}</Badge>
-                      {!user.isProMember && ["customer", "affiliate"].includes(user.role) && (
+                      {!user.isProMember && (user as any).proMemberStatus !== "pending_approval" && ["customer", "affiliate"].includes(user.role) && (
                         <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => handleUpgrade(user.id, `${user.firstName} ${user.lastName}`)}>
                           <Star className="h-3 w-3 mr-1" /> Upgrade Pro
                         </Button>

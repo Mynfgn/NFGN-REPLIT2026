@@ -83,7 +83,7 @@ export function AdminOrdersPage() {
     refundMutation.mutate({ orderId: refundOrder.id, amount, note: refundNote, full: fullRefund });
   }
 
-  const statusOptions = ["pending", "processing", "completed", "cancelled"];
+  const statusOptions = ["pending", "approved", "processing", "completed", "cancelled"];
 
   return (
     <div className="space-y-6">

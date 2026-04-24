@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, ordersTable, orderItemsTable, cartItemsTable, productsTable, usersTable, appSettingsTable, promoCodesTable } from "@workspace/db";
-import { eq, and, desc, count, sql } from "drizzle-orm";
+import { eq, and, desc, count, sql, inArray } from "drizzle-orm";
 import { requireAuth, requireAdmin } from "../lib/auth";
 import { processCommissions, type OrderItemForCommission } from "../lib/commissions";
 
@@ -190,17 +190,21 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
 
     if (product.isProPackage) {
       containsProPackage = true;
+      // Mark user as pending Pro Member — full upgrade happens when admin approves the order
       await db.update(usersTable).set({
-        isProMember: true,
+        proMemberStatus: "pending_approval",
         role: "pro_member",
-        proMemberSince: new Date(),
       }).where(eq(usersTable.id, currentUser.id));
     }
   }
 
   await db.delete(cartItemsTable).where(eq(cartItemsTable.userId, currentUser.id));
 
-  await processCommissions(order.id, orderNumber, total, currentUser.id, containsProPackage, commissionItems);
+  // Only process commissions immediately for non-pro-package orders
+  // Pro package orders: commissions are deferred until admin approval
+  if (!containsProPackage) {
+    await processCommissions(order.id, orderNumber, total, currentUser.id, false, commissionItems);
+  }
 
   const items = await db.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, order.id));
   const userName = `${currentUser.firstName} ${currentUser.lastName}`;
@@ -245,6 +249,36 @@ router.patch("/orders/:id", requireAdmin, async (req, res): Promise<void> => {
 
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, updated.userId));
   const items = await db.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, id));
+
+  // When an order is approved, check if it contains a Pro Package and activate the member
+  if (status === "approved" && user && user.proMemberStatus === "pending_approval") {
+    const productIds = items.map(i => i.productId).filter(Boolean) as number[];
+    if (productIds.length > 0) {
+      const proProducts = await db.select({ id: productsTable.id, isProPackage: productsTable.isProPackage })
+        .from(productsTable)
+        .where(inArray(productsTable.id, productIds));
+      const hasProPackage = proProducts.some(p => p.isProPackage);
+
+      if (hasProPackage) {
+        // Activate Pro Member status now that order is approved
+        await db.update(usersTable).set({
+          isProMember: true,
+          proMemberStatus: "active",
+          proMemberSince: new Date(),
+        }).where(eq(usersTable.id, user.id));
+
+        // Now process the deferred commissions for this order
+        const commissionItems: import("../lib/commissions").OrderItemForCommission[] = items.map(i => ({
+          price: i.price,
+          quantity: i.quantity,
+          commissionRate: "10",
+        }));
+        const orderTotal = parseFloat(updated.total);
+        await processCommissions(updated.id, updated.orderNumber, orderTotal, user.id, true, commissionItems);
+      }
+    }
+  }
+
   const userName = user ? `${user.firstName} ${user.lastName}` : "Unknown";
   res.json(formatOrder(updated, userName, items));
 });

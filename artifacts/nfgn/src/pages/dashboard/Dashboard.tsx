@@ -979,8 +979,27 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* Pro Upgrade Banner — non-Pro members only */}
-      {me && !me.isProMember && <ProUpgradeBanner />}
+      {/* Awaiting Approval notice — pending Pro Members */}
+      {me && !me.isProMember && (me as any).proMemberStatus === "pending_approval" && (
+        <div className="rounded-xl border-2 overflow-hidden" style={{ borderColor: "#C9A84C", background: "linear-gradient(135deg, #0a0a0a 0%, #1a0f00 100%)" }}>
+          <div className="flex items-start gap-4 p-5">
+            <div className="h-11 w-11 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ border: "2px solid #C9A84C", background: "#C9A84C22" }}>
+              <Star className="h-5 w-5" style={{ color: "#C9A84C" }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold uppercase tracking-widest mb-0.5" style={{ color: "#C9A84C" }}>Pro Member — Awaiting Approval</p>
+              <p className="text-white font-semibold text-base leading-snug">Your Pro Member registration is under review.</p>
+              <p className="text-white/60 text-sm mt-1">
+                Your order has been placed and is pending admin approval. Once approved, your Pro Member status will be activated and your commissions will begin processing automatically. No action is needed on your part.
+              </p>
+            </div>
+          </div>
+          <div className="h-0.5" style={{ background: `linear-gradient(to right, transparent, #C9A84C, transparent)` }} />
+        </div>
+      )}
+
+      {/* Pro Upgrade Banner — non-Pro, non-pending members only */}
+      {me && !me.isProMember && (me as any).proMemberStatus !== "pending_approval" && <ProUpgradeBanner />}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

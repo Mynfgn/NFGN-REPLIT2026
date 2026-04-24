@@ -20,6 +20,7 @@ function formatUser(user: typeof usersTable.$inferSelect, sponsorName?: string) 
     phone: user.phone,
     isProMember: user.isProMember,
     proMemberSince: user.proMemberSince?.toISOString() ?? null,
+    proMemberStatus: user.proMemberStatus ?? null,
     createdAt: user.createdAt.toISOString(),
     gender: user.gender ?? null,
     dateOfBirth: user.dateOfBirth ?? null,
@@ -152,6 +153,7 @@ router.post("/users/:id/upgrade-pro", requireAdmin, async (req, res): Promise<vo
     isProMember: true,
     role: "pro_member",
     proMemberSince: new Date(),
+    proMemberStatus: "active",
   }).where(eq(usersTable.id, id)).returning();
 
   if (!updated) { res.status(404).json({ error: "Not found" }); return; }
@@ -168,6 +170,7 @@ router.post("/users/:id/upgrade-pro", requireAdmin, async (req, res): Promise<vo
     avatar: updated.avatar,
     phone: updated.phone,
     isProMember: updated.isProMember,
+    proMemberStatus: updated.proMemberStatus ?? null,
     createdAt: updated.createdAt.toISOString(),
   });
 });

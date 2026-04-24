@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Search, Loader2, Star, Users, SlidersHorizontal, Link2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Search, Loader2, Star, Users, SlidersHorizontal, Link2, AlertCircle, CheckCircle2, KeyRound, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { roleLabel } from "@/lib/labels";
 import { customFetch } from "@/lib/custom-fetch";
@@ -32,6 +32,12 @@ export function UsersPage() {
   const [refCodeUser, setRefCodeUser] = useState<any | null>(null);
   const [newRefCode, setNewRefCode] = useState("");
   const [refCodeError, setRefCodeError] = useState("");
+  const [pwdUser, setPwdUser] = useState<any | null>(null);
+  const [newPwd, setNewPwd] = useState("");
+  const [confirmPwd, setConfirmPwd] = useState("");
+  const [pwdError, setPwdError] = useState("");
+  const [showNewPwd, setShowNewPwd] = useState(false);
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false);
   const { toast } = useToast();
 
   const { data, isLoading, refetch } = useListUsers({ page, limit: 20, search: search || undefined, role: role !== "all" ? role : undefined });
@@ -54,6 +60,42 @@ export function UsersPage() {
     },
     onError: (e: any) => toast({ variant: "destructive", title: "Error", description: e.message }),
   });
+
+  const pwdMutation = useMutation({
+    mutationFn: async ({ userId, newPassword }: { userId: number; newPassword: string }) => {
+      const res = await customFetch(`/api/users/${userId}/admin-reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newPassword }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? "Failed to reset password");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Password changed", description: "The member's password has been updated successfully." });
+      closePwdModal();
+    },
+    onError: (e: any) => setPwdError(e.message),
+  });
+
+  function closePwdModal() {
+    setPwdUser(null);
+    setNewPwd("");
+    setConfirmPwd("");
+    setPwdError("");
+    setShowNewPwd(false);
+    setShowConfirmPwd(false);
+  }
+
+  function handlePwdSubmit() {
+    if (newPwd.length < 8) { setPwdError("Password must be at least 8 characters."); return; }
+    if (newPwd !== confirmPwd) { setPwdError("Passwords do not match."); return; }
+    setPwdError("");
+    pwdMutation.mutate({ userId: pwdUser.id, newPassword: newPwd });
+  }
 
   const refCodeMutation = useMutation({
     mutationFn: async ({ userId, referralCode }: { userId: number; referralCode: string }) => {
@@ -175,6 +217,9 @@ export function UsersPage() {
                       <Button variant="outline" size="sm" className="text-xs h-7 gap-1 border-amber-200 text-amber-700 hover:bg-amber-50" onClick={() => { setRefCodeUser(user); setNewRefCode(user.referralCode ?? ""); setRefCodeError(""); }}>
                         <Link2 className="h-3 w-3" /> Change Ref Code
                       </Button>
+                      <Button variant="outline" size="sm" className="text-xs h-7 gap-1 border-red-200 text-red-700 hover:bg-red-50" onClick={() => { setPwdUser(user); setNewPwd(""); setConfirmPwd(""); setPwdError(""); }}>
+                        <KeyRound className="h-3 w-3" /> Change Password
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -249,6 +294,111 @@ export function UsersPage() {
                     ? <Loader2 className="h-4 w-4 animate-spin" />
                     : <CheckCircle2 className="h-4 w-4" />}
                   Save New Code
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Change Password Modal */}
+      <Dialog open={!!pwdUser} onOpenChange={closePwdModal}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-red-600" />
+              Change Member Password
+            </DialogTitle>
+          </DialogHeader>
+          {pwdUser && (
+            <div className="space-y-4">
+              <div className="bg-muted/40 rounded-lg p-3 text-sm">
+                <p className="font-bold">{pwdUser.firstName} {pwdUser.lastName}</p>
+                <p className="text-muted-foreground text-xs">{pwdUser.email}</p>
+              </div>
+
+              <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-xs text-red-900 space-y-1">
+                <p className="font-semibold text-red-800">Admin action — use responsibly</p>
+                <ul className="list-disc list-inside space-y-0.5 leading-relaxed">
+                  <li>The new password takes effect immediately.</li>
+                  <li>The member will need to use this new password on their next login.</li>
+                  <li>Minimum 8 characters required.</li>
+                </ul>
+              </div>
+
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="newPwd" className="text-sm font-semibold text-red-700">New Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="newPwd"
+                      type={showNewPwd ? "text" : "password"}
+                      value={newPwd}
+                      onChange={e => { setNewPwd(e.target.value); setPwdError(""); }}
+                      placeholder="Min 8 characters"
+                      className={`pr-9 ${pwdError ? "border-red-400 focus-visible:ring-red-400" : ""}`}
+                      onKeyDown={e => { if (e.key === "Enter") handlePwdSubmit(); }}
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      onClick={() => setShowNewPwd(v => !v)}
+                      tabIndex={-1}
+                    >
+                      {showNewPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="confirmPwd" className="text-sm font-semibold text-red-700">Confirm Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="confirmPwd"
+                      type={showConfirmPwd ? "text" : "password"}
+                      value={confirmPwd}
+                      onChange={e => { setConfirmPwd(e.target.value); setPwdError(""); }}
+                      placeholder="Re-enter new password"
+                      className={`pr-9 ${pwdError ? "border-red-400 focus-visible:ring-red-400" : ""}`}
+                      onKeyDown={e => { if (e.key === "Enter") handlePwdSubmit(); }}
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      onClick={() => setShowConfirmPwd(v => !v)}
+                      tabIndex={-1}
+                    >
+                      {showConfirmPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {pwdError && (
+                  <p className="text-xs text-red-600 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3 flex-shrink-0" /> {pwdError}
+                  </p>
+                )}
+
+                {confirmPwd && newPwd === confirmPwd && newPwd.length >= 8 && (
+                  <p className="text-xs text-green-700 flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3" /> Passwords match
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-2 pt-1">
+                <Button variant="outline" className="flex-1" onClick={closePwdModal}>
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1 gap-1.5 bg-red-600 hover:bg-red-700 text-white"
+                  onClick={handlePwdSubmit}
+                  disabled={pwdMutation.isPending || !newPwd || !confirmPwd}
+                >
+                  {pwdMutation.isPending
+                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                    : <KeyRound className="h-4 w-4" />}
+                  Set New Password
                 </Button>
               </div>
             </div>

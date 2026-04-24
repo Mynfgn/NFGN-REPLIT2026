@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import {
   UserPlus, Star, ShoppingBag, CheckCircle2, Gift, DollarSign,
-  TrendingUp, Users, Percent, BadgeCheck, ArrowRight, Lock, Copy, ExternalLink
+  TrendingUp, Users, Percent, BadgeCheck, ArrowRight, Lock, Copy, ExternalLink,
+  ShoppingCart,
 } from "lucide-react";
 
 const MEMBER_BENEFITS = [
@@ -291,6 +292,31 @@ export function RegistrationPage() {
         </Card>
       </div>
 
+      {/* Upgrade CTA — shown only to non-Pro members */}
+      {me && !me.isProMember && proPackages.length > 0 && (
+        <Card className="border-2 border-primary bg-primary/5">
+          <CardContent className="pt-5 pb-5">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                <TrendingUp className="h-6 w-6 text-primary-foreground" />
+              </div>
+              <div className="flex-1">
+                <p className="font-serif font-bold text-lg">Upgrade Your Account to Pro Member</p>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  You are currently a <strong>Member</strong>. Purchase any Pro Registration Package below to unlock the full compensation plan, team bonuses, and priority payouts — your account upgrades instantly.
+                </p>
+              </div>
+              <Link href="/shop">
+                <Button className="gap-2 flex-shrink-0">
+                  <ShoppingCart className="h-4 w-4" />
+                  Shop Pro Packages
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Pro Registration Products */}
       {proPackages.length > 0 && (
         <div>
@@ -309,6 +335,7 @@ export function RegistrationPage() {
           <p className="text-sm text-muted-foreground mb-5">
             Share the <strong>Pro Member Registration Form</strong> with your prospects — it includes package selection, 
             account creation, and payment all in one step. Your referral code is pre-filled automatically.
+            {me && !me.isProMember && <span className="text-primary font-medium"> Or click a package below to upgrade your own account.</span>}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {proPackages.map((p: any) => (
@@ -328,14 +355,15 @@ export function RegistrationPage() {
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-lg font-bold text-primary">${p.price?.toFixed(2)}</span>
+                      <span className="text-lg font-bold text-primary">${Number(p.price)?.toFixed(2)}</span>
                       <span className="text-xs text-muted-foreground ml-1">{p.cv} CV</span>
                     </div>
-                    <Button size="sm" asChild>
-                      <a href={`/join/pro?ref=${me?.referralCode ?? ""}`} target="_blank" rel="noopener noreferrer">
-                        Register Now
-                      </a>
-                    </Button>
+                    <Link href={`/product/${p.slug}`}>
+                      <Button size="sm" className="gap-1.5">
+                        <ShoppingCart className="h-3.5 w-3.5" />
+                        {me?.isProMember ? "View Package" : "Upgrade Now"}
+                      </Button>
+                    </Link>
                   </div>
                 </CardContent>
               </Card>

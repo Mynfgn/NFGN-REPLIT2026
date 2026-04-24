@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useListProducts } from "@workspace/api-client-react";
+import { useListProducts, useGetMe } from "@workspace/api-client-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +18,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   CheckCircle, Star, Loader2, UserCircle2, Briefcase,
   CreditCard, Truck, Smartphone, DollarSign, Package,
+  ShoppingCart, ArrowRight,
 } from "lucide-react";
 import { BAP_CATEGORIES } from "@/lib/bapCategories";
 import { resolveImageSrc } from "@/lib/image";
@@ -50,8 +51,9 @@ const PAYMENT_METHODS = [
 
 export function ProJoin() {
   const [, setLocation] = useLocation();
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const { toast } = useToast();
+  const { data: me } = useGetMe();
   const { data: productsData, isLoading: productsLoading } = useListProducts({ isProPackage: true });
 
   const proPackages = productsData?.products?.filter((p: any) => p.isProPackage) ?? [];
@@ -112,6 +114,68 @@ export function ProJoin() {
   };
 
   const selectedProduct = proPackages.find((p: any) => String(p.id) === selectedProductId);
+
+  if (isAuthenticated && me) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="max-w-xl w-full text-center space-y-6">
+          <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+            <Star className="h-10 w-10 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-serif font-bold mb-2">You Already Have an Account</h1>
+            <p className="text-muted-foreground">
+              Hi <strong>{me.firstName}</strong> — Pro Member Registration is for new members only.
+              Since you're already registered, you can upgrade your account to Pro Member status by purchasing a Pro Registration Package.
+            </p>
+          </div>
+
+          {me.isProMember ? (
+            <div className="rounded-xl border-2 border-primary bg-primary/5 p-5 text-center">
+              <Badge className="mb-2">Active Pro Member</Badge>
+              <p className="font-semibold">You're already a Pro Member!</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                To maintain your active status, keep your monthly PCV at or above 100. You can purchase additional products from the shop.
+              </p>
+              <div className="flex gap-3 justify-center mt-4">
+                <Link href="/dashboard">
+                  <Button>Go to My Dashboard</Button>
+                </Link>
+                <Link href="/shop">
+                  <Button variant="outline">Shop Products</Button>
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-5">
+                <p className="font-semibold text-sm mb-1">Ready to upgrade to Pro Member?</p>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Purchase any Pro Registration Package from the shop. Once your order is placed, your account is automatically upgraded to Pro Member status.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  {!productsLoading && proPackages.map((p: any) => (
+                    <Link key={p.id} href={`/product/${p.slug}`}>
+                      <Button className="w-full gap-2">
+                        <ShoppingCart className="h-4 w-4" />
+                        {p.name} — ${Number(p.price).toFixed(2)}
+                      </Button>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+              <Link href="/dashboard">
+                <Button variant="outline" className="w-full gap-2">
+                  <ArrowRight className="h-4 w-4" />
+                  Back to My Dashboard
+                </Button>
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   async function onSubmit(data: ProJoinFormValues) {
     if (!selectedProductId) {

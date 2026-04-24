@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useGetMemberDashboard, useGetMemberAnalytics, useGetMe } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Wallet, Users, ShoppingBag, ArrowUpRight, TrendingUp, MapPin, Star, CheckCircle2, AlertCircle, BarChart3, Link2, Copy, Check, ExternalLink, DollarSign, Sparkles, ShoppingCart } from "lucide-react";
+import { Wallet, Users, ShoppingBag, ArrowUpRight, TrendingUp, MapPin, Star, CheckCircle2, AlertCircle, BarChart3, Link2, Copy, Check, ExternalLink, DollarSign, Sparkles, ShoppingCart, Zap, X } from "lucide-react";
 import { MemberMapCard } from "@/components/dashboard/MemberMapCard";
 import { customFetch } from "@/lib/custom-fetch";
 import { resolveImageSrc } from "@/lib/image";
@@ -19,6 +19,131 @@ import { commissionTypeLabel } from "@/lib/labels";
 
 const BRAND_GOLD = "#C9A84C";
 const BRAND_GREEN = "#2D6A4F";
+
+const UPGRADE_MESSAGES = [
+  { headline: "Upgrade And Get PAID!", sub: "Unlock commissions, team bonuses, and priority payouts." },
+  { headline: "Become A Pro Member Today!", sub: "Take your NFGN business to the next level." },
+  { headline: "Don't Miss Out! Get PAID PAID!", sub: "Pro Members earn on every sale in their downline." },
+  { headline: "UPGRADE! Don't Miss Out!", sub: "Full compensation plan access starts with one package." },
+  { headline: "Unlock Your Full Earning Power!", sub: "20% referral + 12% sales + 22% Power Bonus — all yours." },
+];
+
+function ProUpgradeBanner() {
+  const [msgIndex, setMsgIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+  const [fading, setFading] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    const dismissed = sessionStorage.getItem("pro_upgrade_dismissed");
+    if (dismissed === "1") setVisible(false);
+  }, []);
+
+  useEffect(() => {
+    timerRef.current = setInterval(() => {
+      setFading(true);
+      setTimeout(() => {
+        setMsgIndex(i => (i + 1) % UPGRADE_MESSAGES.length);
+        setFading(false);
+      }, 400);
+    }, 4000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, []);
+
+  if (!visible) return null;
+
+  const msg = UPGRADE_MESSAGES[msgIndex];
+
+  return (
+    <div
+      className="relative rounded-2xl overflow-hidden shadow-2xl"
+      style={{
+        background: "linear-gradient(135deg, #0a0a0a 0%, #1a0f00 50%, #0a0a0a 100%)",
+        border: `2px solid ${BRAND_GOLD}`,
+        boxShadow: `0 0 32px 0 rgba(201,168,76,0.25), 0 4px 24px 0 rgba(0,0,0,0.6)`,
+      }}
+    >
+      {/* Animated glow orbs */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-8 -left-8 w-48 h-48 rounded-full blur-3xl opacity-30" style={{ background: BRAND_GOLD }} />
+        <div className="absolute -bottom-8 -right-8 w-56 h-56 rounded-full blur-3xl opacity-20" style={{ background: BRAND_GREEN }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-32 rounded-full blur-3xl opacity-10" style={{ background: BRAND_GOLD }} />
+      </div>
+
+      {/* Dismiss button */}
+      <button
+        onClick={() => { sessionStorage.setItem("pro_upgrade_dismissed", "1"); setVisible(false); }}
+        className="absolute top-3 right-3 z-20 text-white/40 hover:text-white/80 transition-colors"
+        aria-label="Dismiss"
+      >
+        <X className="h-4 w-4" />
+      </button>
+
+      <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 p-6 md:p-8">
+
+        {/* Left: Icon pulse */}
+        <div className="flex-shrink-0 hidden sm:flex">
+          <div
+            className="h-16 w-16 rounded-full flex items-center justify-center animate-pulse"
+            style={{ background: `radial-gradient(circle, ${BRAND_GOLD}55, ${BRAND_GOLD}22)`, border: `2px solid ${BRAND_GOLD}` }}
+          >
+            <Zap className="h-8 w-8" style={{ color: BRAND_GOLD }} />
+          </div>
+        </div>
+
+        {/* Center: Rotating message */}
+        <div className="flex-1 text-center md:text-left">
+          <div
+            className="transition-opacity duration-400"
+            style={{ opacity: fading ? 0 : 1 }}
+          >
+            <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: BRAND_GOLD }}>
+              ⚡ Pro Member Upgrade
+            </p>
+            <h2 className="text-2xl md:text-3xl font-serif font-black text-white leading-tight mb-1">
+              {msg.headline}
+            </h2>
+            <p className="text-sm text-white/60">{msg.sub}</p>
+          </div>
+
+          {/* Perks row */}
+          <div className="flex flex-wrap gap-x-5 gap-y-1 mt-3 justify-center md:justify-start">
+            {[
+              "20% Referral Commission",
+              "12% Sales Commission",
+              "22% Power Bonus",
+              "Team Volume Bonuses",
+            ].map(perk => (
+              <span key={perk} className="flex items-center gap-1.5 text-xs font-medium text-white/70">
+                <Star className="h-3 w-3 fill-current flex-shrink-0" style={{ color: BRAND_GOLD }} />
+                {perk}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Right: CTA */}
+        <div className="flex-shrink-0 flex flex-col items-center gap-2">
+          <Link href="/dashboard/registration">
+            <Button
+              size="lg"
+              className="font-black text-base px-8 py-6 rounded-xl shadow-lg transition-all hover:scale-105 hover:shadow-2xl"
+              style={{ background: BRAND_GOLD, color: "#0a0a0a", boxShadow: `0 4px 24px rgba(201,168,76,0.5)` }}
+            >
+              <Zap className="mr-2 h-5 w-5" />
+              UPGRADE NOW
+            </Button>
+          </Link>
+          <p className="text-[10px] text-white/40 text-center">One package. Instant upgrade.</p>
+        </div>
+
+      </div>
+
+      {/* Bottom pulse bar */}
+      <div className="h-0.5 w-full" style={{ background: `linear-gradient(to right, transparent, ${BRAND_GOLD}, transparent)` }} />
+    </div>
+  );
+}
 
 type StatCardColor = "gold" | "green-dark" | "green-light" | "default";
 
@@ -853,6 +978,9 @@ export function Dashboard() {
           <p className="text-muted-foreground">Let's make some money together. Here's your business at a glance.</p>
         </div>
       </div>
+
+      {/* Pro Upgrade Banner — non-Pro members only */}
+      {me && !me.isProMember && <ProUpgradeBanner />}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

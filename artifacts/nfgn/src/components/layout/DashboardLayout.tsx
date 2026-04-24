@@ -24,7 +24,13 @@ const navItems: NavItem[] = [
   { name: "Overview",           href: "/dashboard",                   icon: LayoutDashboard },
   { name: "Profile Management", href: "/dashboard/profile",           icon: UserCircle },
   { name: "Genealogy",          href: "/dashboard/genealogy",         icon: Users },
-  { name: "Registration",       href: "/dashboard/registration",      icon: UserPlus },
+  {
+    name: "Registration", icon: UserPlus, group: "registration",
+    children: [
+      { name: "Registration Hub",          href: "/dashboard/registration" },
+      { name: "Register A New Pro Member", href: "/dashboard/register-new-pro" },
+    ],
+  },
   { name: "User Earnings",      href: "/dashboard/earnings",          icon: TrendingUp },
   { name: "Orders",             href: "/dashboard/orders",            icon: ShoppingBag },
   { name: "E-Wallet",           href: "/dashboard/wallet",            icon: Wallet },
@@ -70,6 +76,7 @@ const navItems: NavItem[] = [
 function isGroupOpen(group: string, location: string): boolean {
   if (group === "comp-plan") return location.startsWith("/dashboard/comp-plan");
   if (group === "training") return location.startsWith("/dashboard/tools/training");
+  if (group === "registration") return location.startsWith("/dashboard/registration") || location.startsWith("/dashboard/register-new-pro");
   return false;
 }
 

@@ -102,11 +102,17 @@ export function AffiliateStorefront() {
             Join through my personal link to get started.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center flex-wrap">
             <Link href={joinUrl}>
               <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 px-8">
                 <UserPlus className="h-5 w-5 mr-2" />
-                Join My Team
+                Join My Team (Free)
+              </Button>
+            </Link>
+            <Link href={`/join/pro?ref=${username}`}>
+              <Button size="lg" className="px-8 font-bold" style={{ background: "#C9A84C", color: "#0a0a0a" }}>
+                <Star className="h-5 w-5 mr-2 fill-current" />
+                Register as Pro Member
               </Button>
             </Link>
             <Link href={`/shop?ref=${username}`}>

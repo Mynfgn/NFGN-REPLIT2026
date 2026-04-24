@@ -325,12 +325,12 @@ export function RegistrationPage() {
               <Star className="h-5 w-5 text-primary fill-primary" />
               Pro Registration Products
             </h2>
-            <a href={`/join/pro?ref=${me?.referralCode ?? ""}`} target="_blank" rel="noopener noreferrer">
+            <Link href="/dashboard/register-new-pro">
               <Button className="gap-2">
                 <UserPlus className="h-4 w-4" />
                 Register a New Pro Member
               </Button>
-            </a>
+            </Link>
           </div>
           <p className="text-sm text-muted-foreground mb-5">
             Share the <strong>Pro Member Registration Form</strong> with your prospects — it includes package selection, 

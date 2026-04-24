@@ -34,6 +34,8 @@ import { GenealogyPage } from "@/pages/dashboard/Genealogy";
 import { MessagesPage } from "@/pages/dashboard/Messages";
 import { RegistrationPage } from "@/pages/dashboard/Registration";
 import { RegisterNewProMemberPage } from "@/pages/dashboard/RegisterNewProMember";
+import { MemberOutreachPage } from "@/pages/dashboard/MemberOutreach";
+import { VisionGoalsPage } from "@/pages/dashboard/VisionGoals";
 import { TransferFundsPage } from "@/pages/dashboard/TransferFunds";
 import { PayoutsPage } from "@/pages/dashboard/Payouts";
 import { EarningsPage } from "@/pages/dashboard/Earnings";
@@ -181,6 +183,16 @@ function Router() {
       <Route path="/dashboard/register-new-pro">
         <RequireAuth>
           <DashboardLayout><RegisterNewProMemberPage /></DashboardLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/dashboard/member-outreach">
+        <RequireAuth>
+          <DashboardLayout><MemberOutreachPage /></DashboardLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/dashboard/tools/vision-goals">
+        <RequireAuth>
+          <DashboardLayout><VisionGoalsPage /></DashboardLayout>
         </RequireAuth>
       </Route>
       <Route path="/dashboard/transfer">

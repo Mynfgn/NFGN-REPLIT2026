@@ -17,6 +17,7 @@ import storageRouter from "./storage";
 import bppRouter from "./bpp";
 import reportsRouter from "./reports";
 import notificationsRouter from "./notifications";
+import visionGoalsRouter from "./vision_goals";
 
 const router: IRouter = Router();
 
@@ -38,5 +39,6 @@ router.use(storageRouter);
 router.use(bppRouter);
 router.use(reportsRouter);
 router.use(notificationsRouter);
+router.use(visionGoalsRouter);
 
 export default router;

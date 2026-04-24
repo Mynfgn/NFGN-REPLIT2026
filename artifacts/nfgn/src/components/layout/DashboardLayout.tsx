@@ -27,8 +27,9 @@ const navItems: NavItem[] = [
   {
     name: "Registration", icon: UserPlus, group: "registration",
     children: [
-      { name: "Registration Hub",          href: "/dashboard/registration" },
-      { name: "Register A New Pro Member", href: "/dashboard/register-new-pro" },
+      { name: "Registration Hub",            href: "/dashboard/registration" },
+      { name: "Register A New Pro Member",   href: "/dashboard/register-new-pro" },
+      { name: "New Member Registration List", href: "/dashboard/member-outreach" },
     ],
   },
   { name: "User Earnings",      href: "/dashboard/earnings",          icon: TrendingUp },
@@ -41,7 +42,13 @@ const navItems: NavItem[] = [
   { name: "Bill Payer Program", href: "/dashboard/bpp",               icon: Home },
   { name: "Bookings",           href: "/dashboard/bookings",          icon: Calendar },
   { name: "Mailbox",            href: "/dashboard/mailbox",           icon: Inbox },
-  { name: "Tools",              href: "/dashboard/tools",             icon: Wrench, exact: true },
+  {
+    name: "Tools", icon: Wrench, group: "tools",
+    children: [
+      { name: "Tools Overview",              href: "/dashboard/tools" },
+      { name: "Vision Goals & Dreams Sheet", href: "/dashboard/tools/vision-goals" },
+    ],
+  },
   {
     name: "Comp Plan",
     icon: DollarSign,
@@ -76,7 +83,8 @@ const navItems: NavItem[] = [
 function isGroupOpen(group: string, location: string): boolean {
   if (group === "comp-plan") return location.startsWith("/dashboard/comp-plan");
   if (group === "training") return location.startsWith("/dashboard/tools/training");
-  if (group === "registration") return location.startsWith("/dashboard/registration") || location.startsWith("/dashboard/register-new-pro");
+  if (group === "registration") return location.startsWith("/dashboard/registration") || location.startsWith("/dashboard/register-new-pro") || location.startsWith("/dashboard/member-outreach");
+  if (group === "tools") return location.startsWith("/dashboard/tools");
   return false;
 }
 

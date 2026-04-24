@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useGetGenealogyTree, useGetGenealogyStats } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Star, X, Loader2 } from "lucide-react";
@@ -314,7 +314,9 @@ function NodeEl({
 /* ── Main Uni-Level tree canvas ───────────────────────────────── */
 function UniLevelTree({ root }: { root: TreeNode }) {
   const [selected, setSelected] = useState<Pos | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [zoom, setZoom] = useState(1);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const didFit = useRef(false);
 
   const measured = measure(root);
   const positioned = layout(measured, 0, 0);
@@ -325,59 +327,102 @@ function UniLevelTree({ root }: { root: TreeNode }) {
   const svgW = Math.max(measured.w, 320);
   const svgH = (depth + 1) * LEVEL_H + 24;
 
+  /* Auto-fit to container width on first render */
+  useEffect(() => {
+    if (didFit.current) return;
+    const el = wrapRef.current;
+    if (!el) return;
+    const containerW = el.clientWidth;
+    if (containerW > 0 && svgW > containerW) {
+      setZoom(Math.max(0.3, containerW / svgW));
+    }
+    didFit.current = true;
+  }, [svgW]);
+
+  const scaledW = Math.ceil(svgW * zoom);
+  const scaledH = Math.ceil(svgH * zoom);
+
+  const zoomIn  = () => setZoom(z => Math.min(2,   parseFloat((z + 0.1).toFixed(1))));
+  const zoomOut = () => setZoom(z => Math.max(0.3, parseFloat((z - 0.1).toFixed(1))));
+  const zoomFit = () => {
+    const el = wrapRef.current;
+    const containerW = el ? el.clientWidth : svgW;
+    setZoom(containerW > 0 && svgW > containerW ? Math.max(0.3, containerW / svgW) : 1);
+    setSelected(null);
+  };
+
   return (
-    <div
-      ref={containerRef}
-      className="overflow-auto relative"
-      style={{ minHeight: 240 }}
-      onClick={e => { if (e.target === containerRef.current) setSelected(null); }}
-    >
-      {/* Legend */}
-      <div className="flex items-center gap-6 mb-4 px-1">
+    <div>
+      {/* Toolbar */}
+      <div className="flex items-center gap-3 mb-3 px-1 flex-wrap">
         <div className="flex items-center gap-2 text-sm">
-          <div className="h-5 w-5 rounded-full bg-blue-500" />
-          <span className="text-muted-foreground">Member</span>
+          <div className="h-4 w-4 rounded-full bg-blue-500" />
+          <span className="text-muted-foreground text-xs">Member</span>
         </div>
         <div className="flex items-center gap-2 text-sm">
-          <div className="h-5 w-5 rounded-full bg-orange-500" />
-          <span className="text-muted-foreground">Pro Member</span>
+          <div className="h-4 w-4 rounded-full bg-orange-500" />
+          <span className="text-muted-foreground text-xs">Pro Member</span>
         </div>
-        <span className="text-xs text-muted-foreground ml-auto">Click or hover a node for details</span>
+        <div className="flex items-center gap-1.5 ml-auto">
+          <span className="text-xs text-muted-foreground mr-1">{Math.round(zoom * 100)}%</span>
+          <button
+            onClick={zoomOut}
+            className="h-7 w-7 rounded border border-border flex items-center justify-center text-base font-bold hover:bg-muted transition-colors"
+            title="Zoom out"
+          >−</button>
+          <button
+            onClick={zoomIn}
+            className="h-7 w-7 rounded border border-border flex items-center justify-center text-base font-bold hover:bg-muted transition-colors"
+            title="Zoom in"
+          >+</button>
+          <button
+            onClick={zoomFit}
+            className="h-7 px-2 rounded border border-border text-xs font-medium hover:bg-muted transition-colors"
+            title="Fit to screen"
+          >Fit</button>
+        </div>
+        <span className="text-xs text-muted-foreground hidden sm:block">Scroll to navigate · click nodes for details</span>
       </div>
 
-      {/* Relative container for SVG + popups */}
-      <div className="relative" style={{ width: svgW, minWidth: "100%" }}>
-        <svg
-          width={svgW}
-          height={svgH}
-          style={{ display: "block", overflow: "visible" }}
-        >
-          {/* Connector lines */}
-          {edges.map((e, i) => (
-            <path
-              key={i}
-              d={edgePath(e)}
-              fill="none"
-              stroke="#d1d5db"
-              strokeWidth="1.5"
-              strokeLinecap="round"
+      {/* Scrollable viewport */}
+      <div ref={wrapRef} className="overflow-auto border border-border rounded-lg bg-muted/20" style={{ maxHeight: 520 }}>
+        {/* Inner div sized to scaled SVG so scroll area is correct */}
+        <div className="relative" style={{ width: scaledW, height: scaledH, minWidth: "100%" }}>
+          <svg
+            width={scaledW}
+            height={scaledH}
+            style={{ display: "block" }}
+          >
+            <g transform={`scale(${zoom})`}>
+              {edges.map((e, i) => (
+                <path
+                  key={i}
+                  d={edgePath(e)}
+                  fill="none"
+                  stroke="#d1d5db"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              ))}
+              {nodes.map(pos => (
+                <NodeEl
+                  key={pos.node.userId}
+                  pos={pos}
+                  selected={selected?.node.userId === pos.node.userId}
+                  onSelect={setSelected}
+                />
+              ))}
+            </g>
+          </svg>
+          {/* Popup overlay — position scaled to match zoom */}
+          {selected && (
+            <MemberPopup
+              pos={{ ...selected, x: selected.x * zoom, y: selected.y * zoom }}
+              onClose={() => setSelected(null)}
+              svgW={scaledW}
             />
-          ))}
-          {/* Nodes */}
-          {nodes.map(pos => (
-            <NodeEl
-              key={pos.node.userId}
-              pos={pos}
-              selected={selected?.node.userId === pos.node.userId}
-              onSelect={setSelected}
-            />
-          ))}
-        </svg>
-
-        {/* Popup overlay */}
-        {selected && (
-          <MemberPopup pos={selected} onClose={() => setSelected(null)} svgW={svgW} />
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

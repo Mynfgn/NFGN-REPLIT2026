@@ -49,13 +49,21 @@ router.get("/orders", requireAuth, async (req, res): Promise<void> => {
   const userId = req.query.userId ? parseInt(String(req.query.userId)) : undefined;
 
   const paymentStatus = req.query.paymentStatus as string | undefined;
+  const paymentMethod = req.query.paymentMethod as string | undefined;
   const isAdmin = ["super_admin", "admin", "store_admin"].includes(currentUser.role);
   const targetUserId = isAdmin ? userId : currentUser.id;
+
+  const paymentMethods = paymentMethod ? paymentMethod.split(",").map(s => s.trim()).filter(Boolean) : undefined;
 
   const whereClause = and(
     targetUserId ? eq(ordersTable.userId, targetUserId) : undefined,
     status ? eq(ordersTable.status, status) : undefined,
     paymentStatus ? eq(ordersTable.paymentStatus, paymentStatus) : undefined,
+    paymentMethods && paymentMethods.length === 1
+      ? eq(ordersTable.paymentMethod, paymentMethods[0])
+      : paymentMethods && paymentMethods.length > 1
+      ? sql`${ordersTable.paymentMethod} IN (${sql.join(paymentMethods.map(m => sql`${m}`), sql`, `)})`
+      : undefined,
   );
 
   const orders = await db.select({

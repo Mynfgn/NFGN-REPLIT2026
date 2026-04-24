@@ -66,6 +66,7 @@ import { AdminBPPPage } from "@/pages/admin/BPP";
 import { AdminPromoCodesPage } from "@/pages/admin/PromoCodes";
 import { AdminMessagesPage } from "@/pages/admin/AdminMessages";
 import { OrdersAwaitingApprovalPage } from "@/pages/admin/OrdersAwaitingApproval";
+import { OrdersForApprovalPage } from "@/pages/admin/OrdersForApproval";
 import { AdminProfilePage } from "@/pages/admin/AdminProfile";
 
 // Stubs for pages still being built
@@ -252,6 +253,11 @@ function Router() {
       <Route path="/admin/orders/awaiting">
         <RequireAuth requireAdmin>
           <AdminLayout><OrdersAwaitingApprovalPage /></AdminLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/admin/orders/approval">
+        <RequireAuth requireAdmin>
+          <AdminLayout><OrdersForApprovalPage /></AdminLayout>
         </RequireAuth>
       </Route>
       <Route path="/admin/commissions">

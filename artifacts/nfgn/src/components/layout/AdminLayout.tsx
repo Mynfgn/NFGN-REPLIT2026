@@ -66,6 +66,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       exact: true,
       children: [
         { name: "Awaiting Approval", href: "/admin/orders/awaiting", icon: Clock },
+        { name: "Orders For Approval", href: "/admin/orders/approval", icon: ShieldCheck },
       ],
     },
     { name: "Categories", href: "/admin/categories", icon: FolderTree },

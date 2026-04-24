@@ -1,8 +1,9 @@
 import { Router, type IRouter } from "express";
-import { db, usersTable, walletsTable, genealogyNodesTable, notificationsTable, professionalsTable } from "@workspace/db";
+import { db, usersTable, walletsTable, genealogyNodesTable, notificationsTable, professionalsTable, ordersTable, orderItemsTable, productsTable, appSettingsTable } from "@workspace/db";
 import { eq, count } from "drizzle-orm";
 import { hashPassword, verifyPassword, generateToken, generateReferralCode, requireAuth } from "../lib/auth";
 import { LoginBody, RegisterBody } from "@workspace/api-zod";
+import { processCommissions, type OrderItemForCommission } from "../lib/commissions";
 
 const router: IRouter = Router();
 
@@ -201,6 +202,169 @@ router.post("/auth/register", async (req, res): Promise<void> => {
 
   const token = generateToken(newUser.id, newUser.role);
   res.status(201).json({ token, user: formatUser(newUser) });
+});
+
+router.post("/auth/register-pro", async (req, res): Promise<void> => {
+  const { email, password, firstName, lastName, phone, referralCode, selectedProductId, paymentMethod, shippingAddress } = req.body;
+
+  if (!email || !password || !firstName || !lastName || !referralCode || !selectedProductId || !paymentMethod || !shippingAddress) {
+    res.status(400).json({ error: "All fields are required including sponsor referral code, selected package, payment method, and shipping address." });
+    return;
+  }
+  if (password.length < 8) {
+    res.status(400).json({ error: "Password must be at least 8 characters." });
+    return;
+  }
+
+  const organizationName: string | undefined = req.body.organizationName ?? undefined;
+  const isBookAProProvider: boolean = req.body.isBookAProProvider === true || req.body.isBookAProProvider === "true";
+  const bookAProCategory: string | undefined = req.body.bookAProCategory ?? undefined;
+  const bookAProSubServices: string[] = Array.isArray(req.body.bookAProSubServices) ? req.body.bookAProSubServices : [];
+  const bookAProBio: string | undefined = req.body.bookAProBio ?? undefined;
+
+  const [existing] = await db.select().from(usersTable).where(eq(usersTable.email, email.toLowerCase()));
+  if (existing) {
+    res.status(400).json({ error: "An account with this email already exists." });
+    return;
+  }
+
+  let sponsorId: number | undefined;
+  if (referralCode) {
+    const [sponsor] = await db.select().from(usersTable).where(eq(usersTable.referralCode, referralCode));
+    if (!sponsor) {
+      res.status(400).json({ error: "Sponsor referral code not found. Please check with your sponsor." });
+      return;
+    }
+    sponsorId = sponsor.id;
+  }
+
+  const [product] = await db.select().from(productsTable).where(eq(productsTable.id, parseInt(selectedProductId)));
+  if (!product || !product.isProPackage) {
+    res.status(400).json({ error: "Selected product is not a valid Pro Registration Package." });
+    return;
+  }
+
+  const passwordHash = await hashPassword(password);
+  const userReferralCode = generateReferralCode(firstName, lastName);
+
+  const [newUser] = await db.insert(usersTable).values({
+    email: email.toLowerCase(),
+    passwordHash,
+    firstName,
+    lastName,
+    phone: phone ?? undefined,
+    role: "customer",
+    referralCode: userReferralCode,
+    sponsorId: sponsorId ?? undefined,
+    isProMember: false,
+    status: "active",
+    country: "United States",
+    organizationName: organizationName ?? null,
+    isBookAProProvider,
+    bookAProCategory: isBookAProProvider && bookAProCategory ? bookAProCategory : null,
+    bookAProSubServices: isBookAProProvider && bookAProSubServices.length > 0 ? bookAProSubServices : [],
+    bookAProBio: isBookAProProvider && bookAProBio ? bookAProBio : null,
+  }).returning();
+
+  await db.insert(walletsTable).values({ userId: newUser.id });
+
+  if (isBookAProProvider && bookAProCategory) {
+    try {
+      await db.insert(professionalsTable).values({
+        userId: newUser.id,
+        name: `${firstName} ${lastName}`,
+        bio: bookAProBio ?? `${bookAProCategory} professional on NFGN Book-A-Pro.`,
+        specialty: bookAProCategory,
+        hourlyRate: "0",
+        services: bookAProSubServices,
+        isAvailable: true,
+      });
+    } catch { /* Non-blocking */ }
+  }
+
+  if (sponsorId) {
+    const [parentNode] = await db.select().from(genealogyNodesTable).where(eq(genealogyNodesTable.userId, sponsorId));
+    if (parentNode) {
+      await db.insert(genealogyNodesTable).values({
+        userId: newUser.id,
+        parentId: parentNode.id,
+        generation: parentNode.generation + 1,
+        path: `${parentNode.path}/${parentNode.id}`,
+      });
+    }
+  } else {
+    await db.insert(genealogyNodesTable).values({ userId: newUser.id, parentId: undefined, generation: 1, path: "" });
+  }
+
+  if (sponsorId) {
+    try {
+      const uplineIds = await getUplineIds(sponsorId, 9);
+      const joinName = `${firstName} ${lastName}`;
+      if (uplineIds.length > 0) {
+        await db.insert(notificationsTable).values(
+          uplineIds.map(uid => ({
+            userId: uid, type: "join",
+            message: `🎉 ${joinName} joined your NFGN community as a new Pro Member!`,
+            relatedUserId: newUser.id, isRead: false,
+          }))
+        );
+      }
+    } catch { /* Non-blocking */ }
+  }
+
+  // Create the pro package order directly
+  const [settings] = await db.select().from(appSettingsTable).limit(1);
+  const taxRate = parseFloat(settings?.taxRate ?? "8.5") / 100;
+  const shippingRate = parseFloat(settings?.shippingRate ?? "9.99");
+  const freeShippingThreshold = parseFloat(settings?.freeShippingThreshold ?? "75");
+  const productPrice = parseFloat(product.price);
+  const tax = productPrice * taxRate;
+  const shipping = productPrice >= freeShippingThreshold ? 0 : shippingRate;
+  const total = productPrice + tax + shipping;
+  const orderNumber = `NFGN-PRO-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+  const [order] = await db.insert(ordersTable).values({
+    orderNumber,
+    userId: newUser.id,
+    status: "pending",
+    paymentMethod,
+    paymentStatus: paymentMethod === "cod" ? "pending" : "demo_paid",
+    subtotal: String(productPrice),
+    tax: String(tax),
+    shipping: String(shipping),
+    discount: "0",
+    total: String(total),
+    shippingAddress,
+    notes: "Pro Member Registration Order",
+  }).returning();
+
+  await db.insert(orderItemsTable).values({
+    orderId: order.id,
+    productId: product.id,
+    productName: product.name,
+    productImage: product.image ?? undefined,
+    price: product.price,
+    quantity: 1,
+    total: String(productPrice),
+    cvTotal: product.cv ?? 0,
+  });
+
+  await db.update(usersTable).set({
+    isProMember: true,
+    role: "pro_member",
+    proMemberSince: new Date(),
+  }).where(eq(usersTable.id, newUser.id));
+
+  const commissionItems: OrderItemForCommission[] = [{
+    price: product.price,
+    quantity: 1,
+    commissionRate: product.commissionRate ?? "10",
+  }];
+  await processCommissions(order.id, orderNumber, total, newUser.id, true, commissionItems);
+
+  const [updatedUser] = await db.select().from(usersTable).where(eq(usersTable.id, newUser.id));
+  const token = generateToken(updatedUser.id, updatedUser.role);
+  res.status(201).json({ token, user: formatUser(updatedUser), orderNumber });
 });
 
 router.post("/auth/change-password", requireAuth, async (req, res): Promise<void> => {

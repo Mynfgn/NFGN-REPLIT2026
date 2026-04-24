@@ -291,16 +291,24 @@ export function RegistrationPage() {
         </Card>
       </div>
 
-      {/* Pro Member Packages */}
+      {/* Pro Registration Products */}
       {proPackages.length > 0 && (
         <div>
-          <h2 className="text-xl font-serif font-bold mb-4 flex items-center gap-2">
-            <Star className="h-5 w-5 text-primary fill-primary" />
-            Pro Member Registration Products
-          </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <h2 className="text-xl font-serif font-bold flex items-center gap-2">
+              <Star className="h-5 w-5 text-primary fill-primary" />
+              Pro Registration Products
+            </h2>
+            <a href={`/join/pro?ref=${me?.referralCode ?? ""}`} target="_blank" rel="noopener noreferrer">
+              <Button className="gap-2">
+                <UserPlus className="h-4 w-4" />
+                Register a New Pro Member
+              </Button>
+            </a>
+          </div>
           <p className="text-sm text-muted-foreground mb-5">
-            To activate as a Pro Member, your referral must purchase one of these packages through your link. 
-            Once purchased, they'll be automatically upgraded and you'll earn your Level Commission bonus.
+            Share the <strong>Pro Member Registration Form</strong> with your prospects — it includes package selection, 
+            account creation, and payment all in one step. Your referral code is pre-filled automatically.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {proPackages.map((p: any) => (
@@ -324,9 +332,9 @@ export function RegistrationPage() {
                       <span className="text-xs text-muted-foreground ml-1">{p.cv} CV</span>
                     </div>
                     <Button size="sm" asChild>
-                      <Link href={`/shop`}>
-                        Shop Now
-                      </Link>
+                      <a href={`/join/pro?ref=${me?.referralCode ?? ""}`} target="_blank" rel="noopener noreferrer">
+                        Register Now
+                      </a>
                     </Button>
                   </div>
                 </CardContent>

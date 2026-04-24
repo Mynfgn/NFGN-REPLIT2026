@@ -17,6 +17,7 @@ import { Home } from "@/pages/public/Home";
 import { Shop } from "@/pages/public/Shop";
 import { ProductDetail } from "@/pages/public/ProductDetail";
 import { Join } from "@/pages/public/Join";
+import { ProJoin } from "@/pages/public/ProJoin";
 import { BookAPro } from "@/pages/public/BookAPro";
 import { About } from "@/pages/public/About";
 import { Contact } from "@/pages/public/Contact";
@@ -109,6 +110,9 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/register">
         <PublicLayout><Join /></PublicLayout>
+      </Route>
+      <Route path="/join/pro">
+        <PublicLayout><ProJoin /></PublicLayout>
       </Route>
 
       {/* Public routes */}

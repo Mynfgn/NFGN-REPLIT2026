@@ -144,6 +144,13 @@ export function Join() {
         <p className="text-gray-400 max-w-xl mx-auto text-lg">
           Join thousands of wellness entrepreneurs building health and wealth with NFGN.
         </p>
+        <div className="mt-6 inline-flex items-center gap-3 bg-primary/20 border border-primary/40 rounded-xl px-5 py-3 text-sm">
+          <Star className="h-4 w-4 text-primary fill-primary flex-shrink-0" />
+          <span className="text-gray-300">Want to join as a Pro Member right away?</span>
+          <Link href={refCode ? `/join/pro?ref=${refCode}` : "/join/pro"} className="text-primary font-bold hover:underline whitespace-nowrap">
+            Pro Member Registration →
+          </Link>
+        </div>
       </section>
 
       <div className="container mx-auto px-4 py-16">

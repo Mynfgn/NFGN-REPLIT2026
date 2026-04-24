@@ -3,9 +3,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useLogin } from "@workspace/api-client-react";
 import { useAuth } from "@/hooks/use-auth";
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   Form,
   FormControl,
@@ -28,11 +27,8 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function Login() {
-  const [, setLocation] = useLocation();
   const { login } = useAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  
   const loginMutation = useLogin();
 
   const form = useForm<LoginFormValues>({
@@ -46,25 +42,24 @@ export function Login() {
   function onSubmit(data: LoginFormValues) {
     loginMutation.mutate({ data }, {
       onSuccess: (response) => {
-        // Store token first
         login(response.token);
-        // Immediately seed the /api/auth/me cache with the user from the
-        // login response so RequireAuth never sees stale data from a prior
-        // session and never wrongly redirects an admin to /dashboard.
-        queryClient.setQueryData(["/api/auth/me"], response.user);
 
         toast({
           title: "Welcome back!",
           description: "You have successfully logged in.",
         });
-        
-        // Route based on role
+
+        // Hard redirect so the entire React tree and query cache reset
+        // from scratch. This is the only way to guarantee admins always
+        // land on /admin and members always land on /dashboard — a soft
+        // client-side navigate (setLocation) races with stale React Query
+        // cache and intermittently sends admins to /dashboard.
         if (response.user.role === 'super_admin' || response.user.role === 'admin') {
-          setLocation("/admin");
+          window.location.href = "/admin";
         } else if (response.user.role === 'customer') {
-          setLocation("/");
+          window.location.href = "/";
         } else {
-          setLocation("/dashboard");
+          window.location.href = "/dashboard";
         }
       },
       onError: (error: any) => {

@@ -18,7 +18,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   CheckCircle, Star, Loader2, UserCircle2, Briefcase,
   CreditCard, Truck, Smartphone, DollarSign, Package,
-  ShoppingCart, ArrowRight,
+  ShoppingCart, ArrowRight, LogIn, UserPlus, HelpCircle,
 } from "lucide-react";
 import { BAP_CATEGORIES } from "@/lib/bapCategories";
 import { resolveImageSrc } from "@/lib/image";
@@ -60,6 +60,8 @@ export function ProJoin() {
 
   const searchParams = new URLSearchParams(window.location.search);
   const refCode = searchParams.get("ref") ?? "";
+
+  const [isMember, setIsMember] = useState<null | boolean>(null);
 
   const [sponsorInfo, setSponsorInfo] = useState<SponsorInfo>(null);
   const [sponsorLoading, setSponsorLoading] = useState(false);
@@ -172,6 +174,137 @@ export function ProJoin() {
               </Link>
             </div>
           )}
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Gate screen: already a member? → sign in ── */
+  if (isMember === true) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="max-w-md w-full space-y-6">
+          <div className="text-center space-y-3">
+            <div
+              className="h-20 w-20 rounded-full mx-auto flex items-center justify-center"
+              style={{ background: "linear-gradient(135deg, #0a0a0a 0%, #1a0f00 100%)", border: "2px solid #C9A84C" }}
+            >
+              <LogIn className="h-9 w-9" style={{ color: "#C9A84C" }} />
+            </div>
+            <h1 className="text-3xl font-serif font-bold">Welcome Back!</h1>
+            <p className="text-muted-foreground">
+              Since you're already an NFGN member, sign in to your account and upgrade to Pro Member from your dashboard.
+            </p>
+          </div>
+
+          <div className="rounded-xl border bg-muted/30 p-5 space-y-3 text-sm text-muted-foreground">
+            <p className="font-semibold text-foreground">How to upgrade as an existing member:</p>
+            <ol className="list-decimal list-inside space-y-1.5 leading-relaxed">
+              <li>Sign in to your NFGN account below</li>
+              <li>Go to <strong>Dashboard → Registration</strong></li>
+              <li>Select a Pro Registration Package and check out</li>
+              <li>Your account upgrades to Pro Member instantly</li>
+            </ol>
+          </div>
+
+          <div className="space-y-3">
+            <Link href={refCode ? `/login?ref=${refCode}` : "/login"}>
+              <Button className="w-full gap-2 h-12 text-base font-semibold">
+                <LogIn className="h-5 w-5" /> Sign In to My Account
+              </Button>
+            </Link>
+            <Button
+              variant="ghost"
+              className="w-full text-sm text-muted-foreground"
+              onClick={() => setIsMember(null)}
+            >
+              ← Back
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Gate screen: question ── */
+  if (isMember === null) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        {/* Sponsor banner */}
+        {sponsorInfo && (
+          <div className="bg-primary/10 border-b border-primary/20 py-3 px-4 text-center">
+            <div className="flex items-center justify-center gap-2 text-sm">
+              <UserCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+              <span className="font-semibold text-foreground">{sponsorInfo.name}</span>
+              <span className="text-muted-foreground">·</span>
+              <Badge variant="outline" className="text-xs border-primary/50 text-primary bg-primary/5">{sponsorInfo.label}</Badge>
+              <span className="text-muted-foreground hidden sm:inline">is your sponsor — welcome to the family!</span>
+            </div>
+          </div>
+        )}
+
+        {/* Dark hero strip */}
+        <div className="py-10 px-4 text-center" style={{ background: "linear-gradient(135deg, #0a0a0a 0%, #1a0f00 60%, #0a0a0a 100%)" }}>
+          <Badge className="mb-3 text-xs font-bold tracking-widest uppercase bg-primary text-primary-foreground">
+            <Star className="h-3 w-3 mr-1 fill-current" /> Pro Member Registration
+          </Badge>
+          <h1 className="text-4xl md:text-5xl font-serif font-bold text-white mb-2">Join as a Pro Member</h1>
+          <p className="text-gray-400 max-w-md mx-auto text-sm">
+            Unlock commissions, team bonuses, and the full NFGN compensation plan.
+          </p>
+        </div>
+
+        {/* Question card */}
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="max-w-lg w-full space-y-8">
+            <div className="text-center space-y-2">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <HelpCircle className="h-6 w-6 text-primary" />
+              </div>
+              <h2 className="text-2xl md:text-3xl font-serif font-bold">Already An NFGN Member?</h2>
+              <p className="text-muted-foreground text-sm">
+                This helps us get you to the right place.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              {/* YES */}
+              <button
+                onClick={() => setIsMember(true)}
+                className="group relative rounded-2xl border-2 border-border hover:border-primary/60 bg-card p-6 text-center transition-all hover:shadow-lg hover:shadow-primary/10 focus:outline-none focus:ring-2 focus:ring-primary/50"
+              >
+                <div
+                  className="h-14 w-14 rounded-full mx-auto mb-4 flex items-center justify-center transition-colors group-hover:border-primary"
+                  style={{ border: "2px solid #C9A84C22", background: "linear-gradient(135deg, #C9A84C22, #C9A84C11)" }}
+                >
+                  <LogIn className="h-7 w-7 text-primary group-hover:scale-110 transition-transform" />
+                </div>
+                <p className="text-xl font-black mb-1" style={{ color: "#C9A84C" }}>YES</p>
+                <p className="text-xs text-muted-foreground leading-snug">I already have an NFGN account</p>
+              </button>
+
+              {/* NO */}
+              <button
+                onClick={() => setIsMember(false)}
+                className="group relative rounded-2xl border-2 border-border hover:border-primary/60 bg-card p-6 text-center transition-all hover:shadow-lg hover:shadow-primary/10 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                style={{ background: "linear-gradient(135deg, #0a0a0a 0%, #111 100%)" }}
+              >
+                <div
+                  className="h-14 w-14 rounded-full mx-auto mb-4 flex items-center justify-center transition-colors"
+                  style={{ border: "2px solid #C9A84C44", background: "linear-gradient(135deg, #C9A84C33, #C9A84C11)" }}
+                >
+                  <UserPlus className="h-7 w-7 text-primary group-hover:scale-110 transition-transform" />
+                </div>
+                <p className="text-xl font-black text-white mb-1">NO</p>
+                <p className="text-xs text-gray-400 leading-snug">I'm new — create my account</p>
+              </button>
+            </div>
+
+            <p className="text-center text-xs text-muted-foreground">
+              Already have an account?{" "}
+              <Link href="/login" className="text-primary hover:underline font-medium">Sign in here →</Link>
+            </p>
+          </div>
         </div>
       </div>
     );

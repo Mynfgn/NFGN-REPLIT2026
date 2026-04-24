@@ -123,7 +123,7 @@ function formatRules(rules: typeof commissionRulesTable.$inferSelect | null) {
     // CLB settings
     clbEnabled: rules?.clbEnabled ?? true,
     clbAmount: parseFloat(rules?.clbAmount ?? "100"),
-    clbTrigger: rules?.clbTrigger ?? 7,
+    clbTrigger: rules?.clbTrigger ?? 9,
     clbWindowDays: rules?.clbWindowDays ?? 90,
     // UPM threshold — minimum PCV for a Pro Member to be "active" toward CLB/MCB/BPP
     qualifyingCv: rules?.qualifyingCv ?? 150,
@@ -155,7 +155,7 @@ router.put("/commission-rules", requireAdmin, async (req, res): Promise<void> =>
     // CLB
     clbEnabled: clbEnabled ?? existing?.clbEnabled ?? true,
     clbAmount: String(clbAmount ?? existing?.clbAmount ?? 100),
-    clbTrigger: clbTrigger ?? existing?.clbTrigger ?? 7,
+    clbTrigger: clbTrigger ?? existing?.clbTrigger ?? 9,
     clbWindowDays: clbWindowDays ?? existing?.clbWindowDays ?? 90,
     // UPM qualifying threshold
     qualifyingCv: qualifyingCv ?? existing?.qualifyingCv ?? 150,

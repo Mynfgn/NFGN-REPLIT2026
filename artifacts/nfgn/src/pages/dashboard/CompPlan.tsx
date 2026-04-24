@@ -144,7 +144,7 @@ function OverviewSection() {
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-orange-900 space-y-1">
-            <p><strong>CLB:</strong> $100 one-time when 7 qualified L1 Pro Members join</p>
+            <p><strong>CLB:</strong> $100 one-time when 9 qualified L1 Pro Members join</p>
             <p><strong>MCB:</strong> $200 recurring every 7 new L2 Pro Members</p>
             <p><strong>Who earns:</strong> Pro Members who meet qualification thresholds</p>
           </CardContent>
@@ -486,7 +486,7 @@ function PSBSection() {
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-lg bg-white border border-amber-200 p-2.5">
                 <p className="font-bold text-amber-700">Trigger</p>
-                <p>7 qualified L1 Pro Members</p>
+                <p>9 qualified L1 Pro Members</p>
               </div>
               <div className="rounded-lg bg-white border border-amber-200 p-2.5">
                 <p className="font-bold text-amber-700">Window</p>
@@ -576,7 +576,7 @@ function PSBSection() {
         <CardContent>
           <div className="space-y-2 text-xs">
             {[
-              { stage: "7 qualified L1 Pro Members join", bonus: "CLB unlocked — $100 one-time", color: GOLD },
+              { stage: "9 qualified L1 Pro Members join", bonus: "CLB unlocked — $100 one-time", color: GOLD },
               { stage: "First 7 L2 Pro Members join", bonus: "MCB Cycle 1 — $200", color: "#f59e0b" },
               { stage: "Next 7 L2 Pro Members (14 total)", bonus: "MCB Cycle 2 — $200", color: "#f59e0b" },
               { stage: "Next 7 L2 Pro Members (21 total)", bonus: "MCB Cycle 3 — $200", color: "#f59e0b" },

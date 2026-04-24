@@ -296,7 +296,7 @@ router.get("/dashboard/analytics", requireAuth, async (req, res): Promise<void> 
   const mcbEnabled = rules?.powerBonusEnabled ?? true;
 
   // CLB (Core Leadership Bonus) settings — one-time L1 bonus within 90-day window
-  const clbTrigger     = rules?.clbTrigger ?? 7;
+  const clbTrigger     = rules?.clbTrigger ?? 9;
   const clbAmount      = parseFloat(rules?.clbAmount ?? "100");
   const clbEnabled     = rules?.clbEnabled ?? true;
   const clbWindowDays  = rules?.clbWindowDays ?? 90;

@@ -117,7 +117,7 @@ export function ProMemberBonusesPage() {
                 <strong className="text-foreground">Think of it this way:</strong> Registering a{" "}
                 <strong className="text-foreground">Pro Member</strong> is like selling someone a{" "}
                 <strong className="text-foreground">franchise store</strong> — they are now a business partner opening their 
-                own store in another region or city. The CLB rewards you for opening your first 7 qualified franchise stores. 
+                own store in another region or city. The CLB rewards you for opening your first 9 qualified franchise stores. 
                 The MCB rewards you continuously every time your franchise partners' stores collectively hit 7 new registrations on Level 2.
               </p>
             </div>
@@ -165,7 +165,7 @@ export function ProMemberBonusesPage() {
             <Badge className="bg-blue-600 text-white text-xs">ONE-TIME</Badge>
           </CardTitle>
           <div className="flex flex-wrap gap-1 mt-1">
-            {["Core 7 Bonus (C7B)", "Super Team Bonus (STB)", "Generation 1 Bonus (G1B)", "Gen 1 Bonus"].map(alias => (
+            {["Core 9 Bonus (C9B)", "Super Team Bonus (STB)", "Generation 1 Bonus (G1B)", "Gen 1 Bonus"].map(alias => (
               <Badge key={alias} variant="outline" className="text-xs text-blue-700 border-blue-200 bg-blue-50">{alias}</Badge>
             ))}
           </div>
@@ -174,12 +174,12 @@ export function ProMemberBonusesPage() {
           <div className="rounded-lg bg-blue-50 border border-blue-200 p-4 space-y-2">
             <p className="font-semibold text-blue-900 flex items-center gap-2">
               <Users className="h-4 w-4 text-blue-600" />
-              Trigger: First 7 qualified Level 1 Pro Members — within your first 90 days as a Pro Member
+              Trigger: First 9 qualified Level 1 Pro Members — within your first 90 days as a Pro Member
             </p>
             <p className="text-sm text-blue-700 leading-relaxed">
-              The CLB is paid <strong>exactly once</strong>. It is awarded when you have 7 <strong>qualified</strong> Level 1 
+              The CLB is paid <strong>exactly once</strong>. It is awarded when you have 9 <strong>qualified</strong> Level 1 
               Pro Members (each with ≥ 150 PCV) within the first 90 days of your own Pro Member activation date.{" "}
-              <strong>Unqualified Pro Members (UPM) do not count.</strong> If you do not reach 7 qualified Level 1 
+              <strong>Unqualified Pro Members (UPM) do not count.</strong> If you do not reach 9 qualified Level 1 
               members within that 90-day window, the CLB opportunity is forfeited.{" "}
               <strong>There is no second chance and no recurring payout for CLB.</strong>
             </p>
@@ -187,21 +187,21 @@ export function ProMemberBonusesPage() {
           <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900 space-y-1">
             <p className="font-medium text-amber-800">Important — One-Time Only</p>
             <p className="leading-relaxed">
-              CLB is NOT a recurring bonus. It fires once when 7 qualified Level 1 Pro Members are reached and never again. 
-              Once you have received your CLB, focus on building your Core Leadership Group (7 qualified Level 1 Pro Members) 
+              CLB is NOT a recurring bonus. It fires once when 9 qualified Level 1 Pro Members are reached and never again. 
+              Once you have received your CLB, focus on building your Core Leadership Group (9 qualified Level 1 Pro Members) 
               to qualify for the recurring MCB.
             </p>
           </div>
           <div className="rounded-lg bg-white border p-3 text-sm text-muted-foreground space-y-1">
             <p className="font-medium text-foreground">Store Analogy</p>
             <p className="text-xs leading-relaxed">
-              The CLB is your grand opening bonus. When you open your first 7 fully operational franchise partner stores 
+              The CLB is your grand opening bonus. When you open your first 9 fully operational franchise partner stores 
               (qualified Level 1 Pro Members with ≥ 150 PCV) within your first 90 days, NFGN rewards you with a one-time 
               cash bonus for establishing your Core Leadership Group. After that, the recurring MCB takes over.
             </p>
           </div>
           <p className="text-xs text-muted-foreground italic">
-            Qualification: Must be a Pro Member. Must have 7 qualified Level 1 Pro Members (each ≥ 150 PCV cumulative) 
+            Qualification: Must be a Pro Member. Must have 9 qualified Level 1 Pro Members (each ≥ 150 PCV cumulative) 
             within 90 days of your Pro Member activation date. UPMs do not count.
           </p>
         </CardContent>
@@ -240,9 +240,9 @@ export function ProMemberBonusesPage() {
             <p className="leading-relaxed">
               The <strong>Qualifying Upline Sponsor</strong> is the Pro Member who sits two levels above the 
               buyer in the NFGN genealogy tree — i.e., the sponsor of the buyer's direct sponsor. To qualify 
-              for MCB, this upline Pro Member must have at least <strong>7 qualified Level 1 Pro Members</strong>{" "}
+              for MCB, this upline Pro Member must have at least <strong>9 qualified Level 1 Pro Members</strong>{" "}
               (each with ≥ 150 PCV) as their Core Leadership Group.{" "}
-              <strong>UPMs do not count toward this requirement.</strong> If they do not have 7 qualified Level 1 
+              <strong>UPMs do not count toward this requirement.</strong> If they do not have 9 qualified Level 1 
               Pro Members, the MCB is not awarded even if the Level 2 PMRP count reaches the trigger.
             </p>
           </div>
@@ -264,7 +264,7 @@ export function ProMemberBonusesPage() {
             </p>
           </div>
           <p className="text-xs text-muted-foreground italic">
-            Qualification: Must be a Pro Member (Qualifying Upline Sponsor) with at least 7 qualified Level 1 
+            Qualification: Must be a Pro Member (Qualifying Upline Sponsor) with at least 9 qualified Level 1 
             Pro Members (each ≥ 150 PCV — UPMs do not count). MCB is issued once per qualifying increment of 7 Level 2 purchases.
           </p>
         </CardContent>
@@ -299,7 +299,7 @@ export function ProMemberBonusesPage() {
               <Gift className="h-10 w-10 text-muted-foreground mx-auto" />
               <p className="text-muted-foreground">No Pro Member Bonuses earned yet.</p>
               <p className="text-sm text-muted-foreground">
-                Bonuses are awarded at 7 qualified Level 1 (CLB) and every 7 Level 2 Pro Package sales (MCB).
+                Bonuses are awarded at 9 qualified Level 1 (CLB) and every 7 Level 2 Pro Package sales (MCB).
               </p>
             </div>
           ) : (

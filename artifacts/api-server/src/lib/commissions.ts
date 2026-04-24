@@ -88,7 +88,7 @@ async function loadRules(): Promise<CompensationRules> {
     powerBonusTrigger: rules?.powerBonusTrigger ?? 7,
     clbEnabled: rules?.clbEnabled ?? true,
     clbAmount: parseFloat(rules?.clbAmount ?? "100"),
-    clbTrigger: rules?.clbTrigger ?? 7,
+    clbTrigger: rules?.clbTrigger ?? 9,
     clbWindowDays: rules?.clbWindowDays ?? 90,
     qualifyingCv: rules?.qualifyingCv ?? 150,
   };

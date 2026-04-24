@@ -254,7 +254,7 @@ function PowerSquadBonusTracker({ bonus }: { bonus: any }) {
     try { return sessionStorage.getItem("clb_congrats_shown") === "1"; } catch { return false; }
   });
 
-  const clbTrigger: number        = bonus?.clbTrigger ?? 7;
+  const clbTrigger: number        = bonus?.clbTrigger ?? 9;
   const clbAmount: number         = bonus?.clbAmount ?? 100;
   const clbEnabled: boolean       = bonus?.clbEnabled ?? true;
   const clbEarned: number         = bonus?.clbEarned ?? 0;
@@ -271,7 +271,7 @@ function PowerSquadBonusTracker({ bonus }: { bonus: any }) {
   const toNextMcb: number         = bonus?.toNextMcb ?? mcbTrigger;
 
   // MCB is only unlocked when QUALIFIED L1 requirement is fully met (UPM don't count)
-  const mcbQualified: boolean = qualifiedL1 >= mcbTrigger;
+  const mcbQualified: boolean = qualifiedL1 >= clbTrigger;
 
   useEffect(() => {
     if (!congratsShown && clbEarned > 0) {
@@ -292,7 +292,7 @@ function PowerSquadBonusTracker({ bonus }: { bonus: any }) {
   const l2BarFill = mcbQualified
     ? (l2Progress === 0 && level2Commissions > 0 ? mcbTrigger : l2Progress)
     : 0;
-  const l1NeedForMcb = Math.max(0, mcbTrigger - qualifiedL1);
+  const l1NeedForMcb = Math.max(0, clbTrigger - qualifiedL1);
 
   return (
     <>

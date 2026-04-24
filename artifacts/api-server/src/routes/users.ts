@@ -100,6 +100,7 @@ router.patch("/users/:id", requireAuth, async (req, res): Promise<void> => {
     gender, dateOfBirth,
     bankName, bankAccountNumber, bankRoutingNumber, bankAccountType,
     payoutMethod, payoutPaypalEmail, payoutCashAppHandle,
+    referralCode,
   } = req.body;
   const currentUser = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
 
@@ -115,6 +116,7 @@ router.patch("/users/:id", requireAuth, async (req, res): Promise<void> => {
   if (avatar !== undefined) updateData.avatar = avatar;
   if (role && ["super_admin", "admin"].includes(currentUser.role)) updateData.role = role;
   if (status && ["super_admin", "admin"].includes(currentUser.role)) updateData.status = status;
+  if (referralCode && ["super_admin", "admin"].includes(currentUser.role)) updateData.referralCode = referralCode;
 
   if (gender !== undefined) updateData.gender = gender;
   if (dateOfBirth !== undefined) updateData.dateOfBirth = dateOfBirth;

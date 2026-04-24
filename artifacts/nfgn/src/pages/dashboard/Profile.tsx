@@ -12,7 +12,7 @@ import {
   AlertCircle, CheckCircle2, Star, Calendar, Phone, Mail,
   Building2, CreditCard, Wallet, Users, Award, ChevronRight,
   Eye, EyeOff, Sparkles, ArrowRight, Crown, Zap, TrendingUp, Lock, Camera,
-  Briefcase,
+  Briefcase, QrCode, ExternalLink, Smartphone,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -569,6 +569,92 @@ export function ProfilePage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Personal Contact Card QR Code */}
+      {(() => {
+        const fullName = `${u?.firstName ?? ""} ${u?.lastName ?? ""}`.trim();
+        const email = u?.email ?? "";
+        const phone = u?.phone ?? "";
+        const refCode = u?.referralCode ?? "";
+        const refLink = `${window.location.origin}/join?ref=${refCode}`;
+        const vcard = [
+          "BEGIN:VCARD",
+          "VERSION:3.0",
+          `FN:${fullName}`,
+          `N:${u?.lastName ?? ""};${u?.firstName ?? ""};;;`,
+          phone ? `TEL;TYPE=CELL:${phone}` : "",
+          email ? `EMAIL:${email}` : "",
+          "ORG:New Face Global Network",
+          u?.isProMember ? "TITLE:NFGN Pro Member" : "TITLE:NFGN Member",
+          refCode ? `URL:${refLink}` : "",
+          refCode ? `NOTE:NFGN Sponsor Code\\: ${refCode}` : "",
+          "END:VCARD",
+        ].filter(Boolean).join("\n");
+        const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(vcard)}&color=0a0a0a&bgcolor=ffffff`;
+        const qrFull = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(vcard)}`;
+        return (
+          <Card className="border-2 border-primary/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <QrCode className="h-4 w-4 text-primary" />
+                Personal Contact Card QR Code
+              </CardTitle>
+              <CardDescription>Share this QR code and customers can save your contact info instantly</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col sm:flex-row items-center gap-6">
+                <div className="border rounded-xl p-4 bg-white shadow-sm flex-shrink-0">
+                  <img src={qrSrc} alt="Contact Card QR Code" width={180} height={180} className="rounded" />
+                </div>
+                <div className="flex-1 space-y-3">
+                  <div>
+                    <p className="font-semibold text-sm mb-1">What's encoded in this QR code?</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      This QR code is a digital business card (vCard). When someone scans it, their phone will automatically offer to save your contact information — including your name, email, phone number, and your NFGN referral link.
+                    </p>
+                  </div>
+                  <div className="space-y-1.5">
+                    {[
+                      { icon: UserCircle, label: "Name", value: fullName || "—" },
+                      { icon: Mail, label: "Email", value: email || "—" },
+                      { icon: Phone, label: "Phone", value: phone || "Not set — add in Personal Info below" },
+                      { icon: Smartphone, label: "Referral Link", value: refCode ? refLink : "—" },
+                    ].map(({ icon: Icon, label, value }) => (
+                      <div key={label} className="flex items-start gap-2 text-xs">
+                        <Icon className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                        <span className="text-muted-foreground font-medium w-20 flex-shrink-0">{label}:</span>
+                        <span className={`truncate ${value.includes("Not set") ? "text-amber-600" : ""}`}>{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {!phone && (
+                    <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-700 flex items-center gap-2">
+                      <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                      Add your phone number below to include it in this QR code.
+                    </div>
+                  )}
+                  <div className="flex gap-2 flex-wrap">
+                    <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => window.open(qrFull, "_blank")}>
+                      <ExternalLink className="h-3.5 w-3.5" /> Download Full Size
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 text-xs"
+                      onClick={() => navigator.share ? navigator.share({ title: `${fullName} — NFGN Contact`, url: refLink }) : navigator.clipboard.writeText(refLink)}
+                    >
+                      <Smartphone className="h-3.5 w-3.5" /> Share Contact Link
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Print this QR code on your business card, flyers, or name badge. Update your profile info to regenerate automatically.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* Personal Information */}
       <Card>

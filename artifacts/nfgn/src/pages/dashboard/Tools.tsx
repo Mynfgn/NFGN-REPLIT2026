@@ -92,6 +92,65 @@ function TemplateCard({ title, icon: Icon, content, color }: { title: string; ic
   );
 }
 
+function ProductQRCard({ p, productLink, qrUrl, qrDownload, refCode }: {
+  p: { name: string; slug: string; price: string; cv: number };
+  productLink: string;
+  qrUrl: string;
+  qrDownload: string;
+  refCode: string;
+}) {
+  const [showQR, setShowQR] = useState(false);
+  return (
+    <Card>
+      <CardContent className="pt-5 flex flex-col gap-3">
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <Package className="h-6 w-6 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-sm">{p.name}</p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-xs text-muted-foreground">{p.price}</span>
+              <Badge variant="outline" className="text-xs">{p.cv} CV</Badge>
+            </div>
+            <p className="text-xs font-mono text-muted-foreground truncate mt-1">{productLink}</p>
+          </div>
+          <div className="flex gap-1.5 flex-shrink-0 flex-wrap justify-end">
+            <CopyBtn text={productLink} />
+            <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={() => setShowQR(s => !s)}>
+              <QrCode className="h-3.5 w-3.5" />
+              {showQR ? "Hide QR" : "QR Code"}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => window.open(productLink, "_blank")}>
+              <ExternalLink className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+
+        {showQR && (
+          <div className="border-t pt-4 flex flex-col sm:flex-row items-center gap-6">
+            <div className="border rounded-xl p-3 bg-white shadow-sm flex-shrink-0">
+              <img src={qrUrl} alt={`QR code for ${p.name}`} width={160} height={160} className="rounded" />
+            </div>
+            <div className="flex-1 space-y-2 text-center sm:text-left">
+              <p className="font-semibold text-sm">{p.name} — Product QR Code</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                When scanned, this QR code takes customers directly to the shop with your referral code <code className="font-mono bg-muted px-1 rounded">{refCode}</code> pre-attached. Perfect for flyers, business cards, in-person demos, or social posts.
+              </p>
+              <div className="flex gap-2 flex-wrap justify-center sm:justify-start">
+                <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={() => window.open(qrDownload, "_blank")}>
+                  <ExternalLink className="h-3 w-3" /> Download Full Size
+                </Button>
+                <CopyBtn text={productLink} />
+              </div>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export function ToolsPage() {
   const { data: user } = useGetMe();
   const refCode = user?.referralCode ?? "";
@@ -253,33 +312,21 @@ export function ToolsPage() {
         </TabsContent>
 
         <TabsContent value="products" className="space-y-4">
-          <p className="text-sm text-muted-foreground">Share individual product links with your referral code pre-attached. Anyone who clicks and purchases earns you a commission.</p>
+          <p className="text-sm text-muted-foreground">Share individual product links or QR codes with your referral code pre-attached. Anyone who clicks or scans and purchases earns you a commission.</p>
           {PRODUCTS.map((p) => {
-            const productLink = `${BASE_URL}/shop?ref=${refCode}`;
+            const productLink = `${BASE_URL}/shop?ref=${refCode}&product=${p.slug}`;
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(productLink)}&color=0a0a0a&bgcolor=ffffff`;
+            const qrDownload = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(productLink)}`;
             return (
-              <Card key={p.slug}>
-                <CardContent className="pt-5 flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Package className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm">{p.name}</p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-xs text-muted-foreground">{p.price}</span>
-                      <Badge variant="outline" className="text-xs">{p.cv} CV</Badge>
-                    </div>
-                    <p className="text-xs font-mono text-muted-foreground truncate mt-1">{productLink}</p>
-                  </div>
-                  <div className="flex gap-2 flex-shrink-0">
-                    <CopyBtn text={productLink} />
-                    <Button variant="ghost" size="sm" onClick={() => window.open(productLink, "_blank")}>
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <ProductQRCard key={p.slug} p={p} productLink={productLink} qrUrl={qrUrl} qrDownload={qrDownload} refCode={refCode} />
             );
           })}
+          <Card className="bg-muted/30 border-dashed">
+            <CardContent className="pt-4 pb-4 text-center text-sm text-muted-foreground">
+              <Package className="h-5 w-5 mx-auto mb-2 text-muted-foreground" />
+              More products are available in your storefront. These are the most commonly promoted items.
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* ── COMP PLAN TAB ── */}

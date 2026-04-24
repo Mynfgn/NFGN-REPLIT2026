@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, RefreshCw, Package, DollarSign, BarChart2, Layers, Upload, X, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, Package, DollarSign, BarChart2, Layers, Upload, X, Loader2, QrCode, ExternalLink, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 
 function getImageSrc(image: string | null | undefined): string | null {
@@ -81,6 +81,9 @@ export function AdminProductsPage() {
 
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const [qrProduct, setQrProduct] = useState<Product | null>(null);
+  const [qrCopied, setQrCopied] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { uploadFile, isUploading } = useUpload({
@@ -359,6 +362,9 @@ export function AdminProductsPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" title="View QR Code" onClick={() => { setQrProduct(p); setQrCopied(false); }}>
+                            <QrCode className="h-3.5 w-3.5" />
+                          </Button>
                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(p)}>
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
@@ -628,6 +634,58 @@ export function AdminProductsPage() {
               {saving ? "Saving..." : editProduct ? "Save Changes" : "Create Product"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* QR Code Dialog */}
+      <Dialog open={!!qrProduct} onOpenChange={open => !open && setQrProduct(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <QrCode className="h-5 w-5 text-primary" />
+              Product QR Code
+            </DialogTitle>
+          </DialogHeader>
+          {qrProduct && (() => {
+            const shopUrl = `${window.location.origin}/shop?product=${qrProduct.slug}`;
+            const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(shopUrl)}&color=0a0a0a&bgcolor=ffffff`;
+            const qrFull = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(shopUrl)}`;
+            return (
+              <div className="space-y-4 text-center">
+                <div>
+                  <p className="font-semibold">{qrProduct.name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">${qrProduct.price.toFixed(2)} · {qrProduct.cv ?? 0} CV</p>
+                </div>
+                <div className="flex justify-center">
+                  <div className="border rounded-xl p-4 bg-white inline-block shadow-sm">
+                    <img src={qrSrc} alt={`QR for ${qrProduct.name}`} width={220} height={220} className="rounded" />
+                  </div>
+                </div>
+                <div className="rounded-lg bg-muted px-3 py-2 text-xs font-mono text-muted-foreground text-left break-all">{shopUrl}</div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Scanning this QR code opens the shop page for this product. Members can use their own referral link version from their Tools page.
+                </p>
+                <div className="flex gap-2 justify-center flex-wrap">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 text-xs"
+                    onClick={() => {
+                      navigator.clipboard.writeText(shopUrl);
+                      setQrCopied(true);
+                      setTimeout(() => setQrCopied(false), 2000);
+                    }}
+                  >
+                    {qrCopied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
+                    {qrCopied ? "Copied!" : "Copy Link"}
+                  </Button>
+                  <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => window.open(qrFull, "_blank")}>
+                    <ExternalLink className="h-3.5 w-3.5" /> Download Full Size
+                  </Button>
+                </div>
+              </div>
+            );
+          })()}
         </DialogContent>
       </Dialog>
 

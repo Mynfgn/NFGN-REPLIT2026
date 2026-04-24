@@ -1,7 +1,8 @@
 import { useGetDashboardSummary } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DollarSign, ShoppingCart, Users, UserCheck, TrendingUp, BarChart3 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DollarSign, ShoppingCart, Users, UserCheck, TrendingUp, BarChart3, LayoutDashboard } from "lucide-react";
 import { roleLabel } from "@/lib/labels";
 import { MemberMapCard } from "@/components/dashboard/MemberMapCard";
 
@@ -28,6 +29,12 @@ export function AdminDashboard() {
           <h1 className="text-3xl font-serif font-bold text-primary">System Overview</h1>
           <p className="text-muted-foreground">Key performance metrics and platform health.</p>
         </div>
+        <a href="/dashboard">
+          <Button variant="outline" className="gap-2 border-primary/40 text-primary hover:bg-primary/10">
+            <LayoutDashboard className="h-4 w-4" />
+            My Member Dashboard
+          </Button>
+        </a>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

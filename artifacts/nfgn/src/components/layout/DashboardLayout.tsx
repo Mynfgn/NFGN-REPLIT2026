@@ -8,7 +8,7 @@ import {
   Award, Banknote, Calendar, Inbox, UserCircle,
   BarChart3, LogOut, Menu, X, UserPlus, ArrowRightLeft,
   TrendingUp, Wrench, Home, Star, BookOpen, DollarSign,
-  ChevronDown, ChevronRight,
+  ChevronDown, ChevronRight, ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { roleLabel } from "@/lib/labels";
@@ -238,6 +238,15 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           <span className="ml-4 font-serif font-bold text-primary flex-1">Member Dashboard</span>
           <NotificationBell />
         </header>
+        {user && ["super_admin", "admin", "store_admin"].includes(user.role) && (
+          <div className="bg-[#0a0a0a] text-white px-4 md:px-6 py-2 flex items-center gap-3 text-sm">
+            <ShieldCheck className="h-4 w-4 text-primary flex-shrink-0" />
+            <span className="text-white/70">You are viewing your <span className="text-primary font-semibold">Member Dashboard</span> as an admin.</span>
+            <a href="/admin" className="ml-auto flex-shrink-0 text-primary hover:text-primary/80 font-medium flex items-center gap-1.5 transition-colors">
+              ← Back to Admin Panel
+            </a>
+          </div>
+        )}
         <div className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto">
           {children}
         </div>

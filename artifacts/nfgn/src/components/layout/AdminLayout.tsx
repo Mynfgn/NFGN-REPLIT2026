@@ -216,7 +216,11 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           })}
         </nav>
 
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-white/10 space-y-1">
+          <a href="/dashboard" className="flex items-center gap-3 w-full rounded-md px-3 py-2.5 text-sm font-medium text-primary hover:bg-primary/20 transition-colors border border-primary/30">
+            <Star className="h-4 w-4 flex-shrink-0" />
+            My Member Dashboard
+          </a>
           <Button 
             variant="ghost" 
             className="w-full justify-start text-white/70 hover:text-white hover:bg-white/10" 

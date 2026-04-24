@@ -2,6 +2,7 @@ import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useGetMe, useLogout } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   LayoutDashboard, ShoppingBag, Wallet, Users,
   Award, Banknote, Calendar, Inbox, UserCircle,
@@ -77,6 +78,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const { data: user } = useGetMe();
   const logoutMutation = useLogout();
   const { logout } = useAuth();
+  const queryClient = useQueryClient();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
@@ -94,6 +96,8 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {
       onSuccess: () => {
+        queryClient.removeQueries({ queryKey: ["/api/auth/me"] });
+        queryClient.clear();
         logout();
         window.location.href = "/login";
       },

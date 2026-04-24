@@ -5,6 +5,7 @@ import { useLogin } from "@workspace/api-client-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Form,
   FormControl,
@@ -30,6 +31,7 @@ export function Login() {
   const [, setLocation] = useLocation();
   const { login } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   const loginMutation = useLogin();
 
@@ -44,7 +46,13 @@ export function Login() {
   function onSubmit(data: LoginFormValues) {
     loginMutation.mutate({ data }, {
       onSuccess: (response) => {
+        // Store token first
         login(response.token);
+        // Immediately seed the /api/auth/me cache with the user from the
+        // login response so RequireAuth never sees stale data from a prior
+        // session and never wrongly redirects an admin to /dashboard.
+        queryClient.setQueryData(["/api/auth/me"], response.user);
+
         toast({
           title: "Welcome back!",
           description: "You have successfully logged in.",

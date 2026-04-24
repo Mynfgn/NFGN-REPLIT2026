@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useGetMe, useLogout } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { 
   LayoutDashboard, Users, ShoppingBag, FolderTree, 
   Award, Banknote, Calendar, Settings,
@@ -33,6 +34,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   const { data: user } = useGetMe();
   const logoutMutation = useLogout();
   const { logout } = useAuth();
+  const queryClient = useQueryClient();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const isOrdersSection = location.startsWith("/admin/orders");
@@ -45,6 +47,8 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {
       onSuccess: () => {
+        queryClient.removeQueries({ queryKey: ["/api/auth/me"] });
+        queryClient.clear();
         logout();
         window.location.href = "/login";
       }

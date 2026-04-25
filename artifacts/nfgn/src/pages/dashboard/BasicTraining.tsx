@@ -736,6 +736,53 @@ export function BasicTrainingPage() {
                   </div>
                 </div>
 
+                {/* Zone of Duplication */}
+                <div className="rounded-2xl border border-[#C9A84C]/30 bg-[#0a0a0a] text-white p-5 space-y-4">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest font-bold mb-0.5" style={{ color: GOLD }}>Where BPP GCV Comes From</p>
+                    <h4 className="text-base font-serif font-bold">The Zone of Duplication</h4>
+                    <p className="text-white/50 text-xs">Levels 2 · 3 · 4 · 5</p>
+                  </div>
+                  <p className="text-xs text-white/75 leading-relaxed">
+                    Your BPP Group Volume does <strong className="text-white">not</strong> come from Level 1. It comes from{" "}
+                    <strong className="text-white">Levels 2, 3, 4, and 5</strong> — your <strong className="text-white">Zone of
+                    Duplication</strong>. Inside this zone lives your <strong className="text-white">Wealth Builders Community</strong>,
+                    the heart of your group's money circulation. Level 2 always pays the most — it carries a 50% commission match
+                    over Level 1 (e.g., L1 = 12% → L2 = 24%).
+                  </p>
+                  <div className="rounded-lg bg-white/5 border border-white/10 p-3 space-y-2">
+                    <p className="text-[10px] uppercase tracking-widest font-bold" style={{ color: GOLD }}>The Purpose</p>
+                    <p className="text-xs text-white/70 leading-relaxed">
+                      Encourage sponsors to place new customers under their Core Leadership Group (Gen 1). This creates excitement
+                      and confidence in your Level 1 leaders — and flows directly into your Zone, generating the GCV needed for BPP qualification.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[10px] uppercase tracking-widest font-bold" style={{ color: GOLD }}>Three Guiding Principles — Joe Marcelino</p>
+                    {[
+                      "Help Yourself By Helping Another.",
+                      "If you want to be successful at building your leadership, you must first be successful at building leaders.",
+                      "Communities don't build people. People build communities.",
+                    ].map((q, i) => (
+                      <div key={i} className="flex gap-2 items-start">
+                        <span className="h-5 w-5 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-black mt-0.5"
+                          style={{ background: "rgba(201,168,76,0.2)", color: GOLD, border: "1px solid rgba(201,168,76,0.4)" }}>
+                          {i + 1}
+                        </span>
+                        <p className="text-xs italic text-white/75 leading-relaxed">"{q}"</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="rounded-lg bg-white/5 border border-white/10 p-3">
+                    <p className="text-[10px] uppercase tracking-widest font-bold mb-1" style={{ color: GOLD }}>Build Your Wealth Builders Community</p>
+                    <p className="text-xs text-white/70 leading-relaxed">
+                      Focus on your Core Leadership Group — then help each of them build theirs. More Core Leadership Groups at each level
+                      means greater Group Volume, faster BPP maximization, and fuller access to the{" "}
+                      <strong className="text-white">2 Down By Infinity Multi-Point Payment Grid</strong>.
+                    </p>
+                  </div>
+                </div>
+
                 <Card className="border-teal-200 bg-teal-50">
                   <CardContent className="pt-5 space-y-3">
                     <p className="text-sm font-semibold text-teal-900 flex items-center gap-2"><Shield className="h-4 w-4" /> BPP Strategy Tips</p>

@@ -643,6 +643,47 @@ export function CommissionsPage() {
                     </div>
                   ))}
                 </div>
+                {/* Zone of Duplication */}
+                <div className="rounded-2xl border border-primary/20 bg-[#0a0a0a] text-white p-5 space-y-4">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest font-bold mb-0.5 text-primary">Where BPP GCV Comes From</p>
+                    <h4 className="text-base font-serif font-bold">The Zone of Duplication</h4>
+                    <p className="text-white/50 text-xs">Levels 2 · 3 · 4 · 5 — the heart of your group's money circulation</p>
+                  </div>
+                  <p className="text-sm text-white/75 leading-relaxed">
+                    The GCV that counts toward your BPP bonuses does <strong className="text-white">not</strong> come from Level 1.
+                    It comes from <strong className="text-white">Levels 2, 3, 4, and 5</strong> — your{" "}
+                    <strong className="text-white">Zone of Duplication</strong>, where your{" "}
+                    <strong className="text-white">Wealth Builders Community</strong> lives. Level 2 always pays the most: it carries a
+                    50% commission match over Level 1 (e.g., L1 = 12% → L2 = 24%).
+                  </p>
+                  <div className="rounded-lg bg-white/5 border border-white/10 p-3 space-y-1">
+                    <p className="text-[10px] uppercase tracking-widest font-bold text-primary">The Purpose</p>
+                    <p className="text-xs text-white/70 leading-relaxed">
+                      Encourage sponsors to place new customers under their Core Leadership Group (Gen 1) to create excitement and
+                      build confidence — that activity flows into your Zone and generates the GCV that qualifies you for BPP bonuses.
+                      Focus on building your Core Leadership Group, and help each of them build theirs. More leadership groups at each
+                      level = more Group Volume = faster BPP maximization and fuller access to the{" "}
+                      <strong className="text-white">2 Down By Infinity Multi-Point Payment Grid</strong>.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[10px] uppercase tracking-widest font-bold text-primary">Three Guiding Principles — Joe Marcelino</p>
+                    {[
+                      "Help Yourself By Helping Another.",
+                      "If you want to be successful at building your leadership, you must first be successful at building leaders.",
+                      "Communities don't build people. People build communities.",
+                    ].map((q, i) => (
+                      <div key={i} className="flex gap-2 items-start">
+                        <span className="h-5 w-5 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-black mt-0.5 bg-primary/20 text-primary border border-primary/40">
+                          {i + 1}
+                        </span>
+                        <p className="text-xs italic text-white/75 leading-relaxed">"{q}"</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900 leading-relaxed">
                   <strong className="text-amber-800">Important:</strong> GVBs are classified as <em>Money Circulation Bonuses</em> — 
                   they are drawn from the group's collective volume activity, not fixed commission rates on individual transactions. 

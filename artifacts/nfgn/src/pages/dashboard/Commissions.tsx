@@ -1,4 +1,4 @@
-import { useListCommissions, useGetCommissionRules } from "@workspace/api-client-react";
+import { useListCommissions, useGetCommissionRules, useGetMe } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -35,6 +35,8 @@ function CommissionRow({ c }: { c: any }) {
 export function CommissionsPage() {
   const { data, isLoading } = useListCommissions({ page: 1, limit: 100 });
   const { data: rules } = useGetCommissionRules();
+  const { data: me } = useGetMe();
+  const isProMember = me?.role === "pro_member";
 
   const commissions: any[] = data?.commissions ?? [];
 
@@ -643,6 +645,25 @@ export function CommissionsPage() {
                     </div>
                   ))}
                 </div>
+                {/* ATTN: Zone GCV Rule (Pro Members only) */}
+                {isProMember && (
+                  <div className="rounded-xl border-2 border-amber-400 bg-amber-50 p-4">
+                    <div className="flex gap-3 items-start">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-extrabold tracking-widest bg-amber-400 text-black uppercase flex-shrink-0 mt-0.5">
+                        ATTN
+                      </span>
+                      <div className="space-y-1">
+                        <p className="font-bold text-amber-900 text-sm">BPP GCV Qualification Rule — Pro Members</p>
+                        <p className="text-sm text-amber-800 leading-relaxed">
+                          Your BPP Group Commissionable Volume (GCV) is calculated <strong>only from Levels 2, 3, 4, and 5</strong> — your Zone of Duplication.{" "}
+                          <strong>Level 1 (your direct referrals) does NOT count</strong> toward BPP qualification, nor do Levels 6–9.
+                          Only the Zone GCV from Levels 2–5 is used to determine your monthly Group Volume Bonus eligibility.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Zone of Duplication */}
                 <div className="rounded-2xl border border-primary/20 bg-[#0a0a0a] text-white p-5 space-y-4">
                   <div>

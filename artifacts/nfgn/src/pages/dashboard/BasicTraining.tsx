@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useGetMe } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -108,6 +109,9 @@ const SECTIONS = [
 
 export function BasicTrainingPage() {
   const [loc] = useLocation();
+  const { data: me } = useGetMe();
+  const isProMember = me?.role === "pro_member";
+
   const initialSection = (() => {
     if (typeof window === "undefined") return "getting-started";
     const s = new URLSearchParams(window.location.search).get("s");
@@ -735,6 +739,25 @@ export function BasicTrainingPage() {
                     </Step>
                   </div>
                 </div>
+
+                {/* ATTN: Zone GCV Rule (Pro Members only) */}
+                {isProMember && (
+                  <div className="rounded-xl border-2 border-amber-400 bg-amber-50 p-4">
+                    <div className="flex gap-3 items-start">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-extrabold tracking-widest bg-amber-400 text-black uppercase flex-shrink-0 mt-0.5">
+                        ATTN
+                      </span>
+                      <div className="space-y-1">
+                        <p className="font-bold text-amber-900 text-sm">BPP GCV Qualification Rule — Pro Members</p>
+                        <p className="text-sm text-amber-800 leading-relaxed">
+                          Only <strong>Levels 2, 3, 4, and 5</strong> count toward your BPP Group Commissionable Volume.{" "}
+                          Your <strong>Level 1 (direct referrals) does NOT count</strong>, and neither do Levels 6–9.
+                          The system automatically calculates your qualifying Zone GCV from Levels 2–5 only.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Zone of Duplication */}
                 <div className="rounded-2xl border border-[#C9A84C]/30 bg-[#0a0a0a] text-white p-5 space-y-4">

@@ -161,6 +161,30 @@ async function getDownlineIds(userId: number, maxDepth = 9): Promise<number[]> {
 }
 
 /**
+ * BPP Zone IDs — Levels 2, 3, 4, and 5 ONLY.
+ * Level 1 (direct referrals) and Levels 6-9 do NOT count toward BPP GCV.
+ * This is the "Zone of Duplication" that drives Group Volume Bonus qualification.
+ */
+async function getBppZoneIds(userId: number): Promise<number[]> {
+  // Get Level 1 direct children
+  const level1 = await db
+    .select({ id: usersTable.id })
+    .from(usersTable)
+    .where(eq(usersTable.sponsorId, userId));
+
+  const allIds: number[] = [];
+
+  // Traverse from each L1 member up to 4 levels deep → gives Levels 2, 3, 4, 5 relative to userId
+  for (const l1Member of level1) {
+    const zoneIds = await getDownlineIds(l1Member.id, 4);
+    allIds.push(...zoneIds);
+  }
+
+  // Deduplicate (edge case: shared downline paths)
+  return [...new Set(allIds)];
+}
+
+/**
  * Calculate BPP qualification for a single member for a given month.
  * Returns qualification records to insert (one per qualifying fund).
  */
@@ -196,15 +220,16 @@ async function calculateMemberBppQualification(
   const [memberRecord] = await db.select({ pvAdjustment: usersTable.pvAdjustment }).from(usersTable).where(eq(usersTable.id, memberId));
   personalVolume += memberRecord?.pvAdjustment ?? 0;
 
-  // ── Group Volume (GV) ────────────────────────────────────────────────────────
-  const downlineIds = await getDownlineIds(memberId);
+  // ── BPP Zone GV (Levels 2-5 ONLY — Zone of Duplication) ────────────────────
+  // Level 1 and Levels 6-9 do NOT count toward BPP GCV qualification.
+  const zoneIds = await getBppZoneIds(memberId);
   let groupVolume = 0;
-  if (downlineIds.length > 0) {
+  if (zoneIds.length > 0) {
     const communityOrders = await db
       .select({ id: ordersTable.id })
       .from(ordersTable)
       .where(and(
-        inArray(ordersTable.userId, downlineIds),
+        inArray(ordersTable.userId, zoneIds),
         gte(ordersTable.createdAt, monthStart),
       ));
 
@@ -215,12 +240,12 @@ async function calculateMemberBppQualification(
         .where(inArray(orderItemsTable.orderId, communityOrders.map(o => o.id)));
       groupVolume = parseFloat(gvSum ?? "0");
     }
-    // Include manual GV adjustments from downline members
-    const downlineAdjustments = await db
+    // Include manual GV adjustments from zone members only
+    const zoneAdjustments = await db
       .select({ gvAdjustment: usersTable.gvAdjustment })
       .from(usersTable)
-      .where(inArray(usersTable.id, downlineIds));
-    groupVolume += downlineAdjustments.reduce((s, u) => s + (u.gvAdjustment ?? 0), 0);
+      .where(inArray(usersTable.id, zoneIds));
+    groupVolume += zoneAdjustments.reduce((s, u) => s + (u.gvAdjustment ?? 0), 0);
   }
 
   const results = [];
@@ -690,21 +715,37 @@ router.get("/bpp/dashboard", requireAuth, async (req, res): Promise<void> => {
   // Include manual PV adjustment
   personalVolume += currentUser.pvAdjustment ?? 0;
 
-  // ── Current month GV ───────────────────────────────────────────────────────
-  const downlineIds = await getDownlineIds(userId);
-  let groupVolume = 0;
-  if (downlineIds.length > 0) {
+  // ── Current month Total GV (all levels — informational only) ──────────────
+  const allDownlineIds = await getDownlineIds(userId);
+  let totalGroupVolume = 0;
+  if (allDownlineIds.length > 0) {
+    const allOrders = await db.select({ id: ordersTable.id }).from(ordersTable)
+      .where(and(inArray(ordersTable.userId, allDownlineIds), gte(ordersTable.createdAt, monthStart)));
+    if (allOrders.length > 0) {
+      const [{ gvSum }] = await db.select({ gvSum: sum(orderItemsTable.cvTotal) }).from(orderItemsTable)
+        .where(inArray(orderItemsTable.orderId, allOrders.map(o => o.id)));
+      totalGroupVolume = parseFloat(gvSum ?? "0");
+    }
+    const allAdjRows = await db.select({ gvAdjustment: usersTable.gvAdjustment }).from(usersTable)
+      .where(inArray(usersTable.id, allDownlineIds));
+    totalGroupVolume += allAdjRows.reduce((s, u) => s + (u.gvAdjustment ?? 0), 0);
+  }
+
+  // ── BPP Zone GV (Levels 2-5 ONLY — used for BPP qualification) ────────────
+  // Level 1 and Levels 6-9 do NOT count toward BPP GCV.
+  const zoneIds = await getBppZoneIds(userId);
+  let groupVolume = 0; // This is the BPP-qualifying zone GCV
+  if (zoneIds.length > 0) {
     const communityOrders = await db.select({ id: ordersTable.id }).from(ordersTable)
-      .where(and(inArray(ordersTable.userId, downlineIds), gte(ordersTable.createdAt, monthStart)));
+      .where(and(inArray(ordersTable.userId, zoneIds), gte(ordersTable.createdAt, monthStart)));
     if (communityOrders.length > 0) {
       const [{ gvSum }] = await db.select({ gvSum: sum(orderItemsTable.cvTotal) }).from(orderItemsTable)
         .where(inArray(orderItemsTable.orderId, communityOrders.map(o => o.id)));
       groupVolume = parseFloat(gvSum ?? "0");
     }
-    // Include manual GV adjustments from downline members
-    const downlineAdjRows = await db.select({ gvAdjustment: usersTable.gvAdjustment }).from(usersTable)
-      .where(inArray(usersTable.id, downlineIds));
-    groupVolume += downlineAdjRows.reduce((s, u) => s + (u.gvAdjustment ?? 0), 0);
+    const zoneAdjRows = await db.select({ gvAdjustment: usersTable.gvAdjustment }).from(usersTable)
+      .where(inArray(usersTable.id, zoneIds));
+    groupVolume += zoneAdjRows.reduce((s, u) => s + (u.gvAdjustment ?? 0), 0);
   }
 
   // ── This month's qualification status per fund ─────────────────────────────
@@ -801,7 +842,9 @@ router.get("/bpp/dashboard", requireAuth, async (req, res): Promise<void> => {
     currentMonth: month,
     currentYear: year,
     personalVolume,
-    groupVolume,
+    groupVolume,          // BPP-qualifying GCV: Levels 2-5 only (Zone of Duplication)
+    zoneGroupVolume: groupVolume,   // Explicit alias for frontend clarity
+    totalGroupVolume,     // Full GCV all levels — informational only, does NOT affect BPP
     pvAdjustment: currentUser.pvAdjustment ?? 0,
     gvAdjustment: currentUser.gvAdjustment ?? 0,
     funds: fundCards,

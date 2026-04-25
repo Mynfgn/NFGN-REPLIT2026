@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useGetMe } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -650,6 +651,9 @@ function PSBSection() {
 
 // ── BILL PAYER PROGRAM ───────────────────────────────────────────────────────
 function BPPSection() {
+  const { data: me } = useGetMe();
+  const isProMember = me?.role === "pro_member";
+
   const funds = [
     {
       name: "Phone / Internet Fund",
@@ -721,6 +725,25 @@ function BPPSection() {
           </div>
         </div>
       </div>
+
+      {/* ── ATTN: Zone GCV Rule (Pro Members only) ──────────────── */}
+      {isProMember && (
+        <div className="rounded-xl border-2 border-amber-400 bg-amber-50 p-4">
+          <div className="flex gap-3 items-start">
+            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-extrabold tracking-widest bg-amber-400 text-black uppercase flex-shrink-0 mt-0.5">
+              ATTN
+            </span>
+            <div className="space-y-1">
+              <p className="font-bold text-amber-900 text-sm">BPP GCV Qualification Rule — Pro Members</p>
+              <p className="text-sm text-amber-800 leading-relaxed">
+                Your BPP Group Commissionable Volume (GCV) is calculated <strong>only from Levels 2, 3, 4, and 5</strong> — your Zone of Duplication.{" "}
+                Volume from your <strong>Level 1 (direct referrals)</strong> does <strong>NOT</strong> count toward BPP qualification.
+                Neither does volume from Levels 6 through 9. Only Zone GCV (Levels 2–5) determines your BPP fund eligibility.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Zone of Duplication ─────────────────────────────────── */}
       <div className="rounded-2xl border border-[#C9A84C]/30 bg-[#0a0a0a] text-white p-6 space-y-5">

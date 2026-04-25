@@ -1100,6 +1100,9 @@ export function Dashboard() {
       {/* Power Squad Bonus Tracker — CLB + MCB combined */}
       <PowerSquadBonusTracker bonus={analytics?.powerSquadBonus} />
 
+      {/* Community World Map */}
+      <MemberMapCard title="Your Community Map" />
+
       {/* Referral Tools */}
       {data?.referralLink && (
         <div className="space-y-2">
@@ -1110,9 +1113,6 @@ export function Dashboard() {
           <AffiliateLinkCard referralLink={data.referralLink} referralCode={(data as any)?.referralCode ?? ""} />
         </div>
       )}
-
-      {/* Community World Map */}
-      <MemberMapCard title="Your Community Map" />
 
       {/* Featured Product — below Community Map */}
       <FeaturedProductCard referralCode={(data as any)?.referralCode ?? ""} />

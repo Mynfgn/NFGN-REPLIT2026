@@ -205,6 +205,163 @@ function FundCard({ fund }: { fund: FundCard }) {
   );
 }
 
+// ── BPP Progression Box ───────────────────────────────────────────────────────
+function BPPProgressionBox({ data }: { data: BppDashboard }) {
+  const activeFunds = data.funds.filter(f => f.status !== "inactive");
+
+  const colorMap: Record<string, { bg: string; text: string; border: string; bar: string; lightBg: string }> = {
+    blue:    { bg: "bg-blue-50",   text: "text-blue-700",   border: "border-blue-200",   bar: "bg-blue-500",   lightBg: "bg-blue-50" },
+    amber:   { bg: "bg-amber-50",  text: "text-amber-700",  border: "border-amber-200",  bar: "bg-amber-500",  lightBg: "bg-amber-50" },
+    green:   { bg: "bg-green-50",  text: "text-green-700",  border: "border-green-200",  bar: "bg-green-500",  lightBg: "bg-green-50" },
+    red:     { bg: "bg-red-50",    text: "text-red-700",    border: "border-red-200",    bar: "bg-red-500",    lightBg: "bg-red-50" },
+    purple:  { bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200", bar: "bg-purple-500", lightBg: "bg-purple-50" },
+    primary: { bg: "bg-primary/5", text: "text-primary",    border: "border-primary/20", bar: "bg-primary",    lightBg: "bg-primary/5" },
+  };
+
+  return (
+    <Card className="border-2 border-primary/25 overflow-hidden">
+      {/* Accent bar */}
+      <div className="h-1 w-full" style={{ background: "linear-gradient(to right, #3b82f6, #C9A84C, #2D6A4F)" }} />
+
+      <CardHeader className="pb-3">
+        <CardTitle className="font-serif text-base flex items-center gap-2">
+          <TrendingUp className="h-4 w-4 text-primary" />
+          BPP Bonus Progression
+        </CardTitle>
+        <p className="text-xs text-muted-foreground">
+          How much more Personal Commissionable Volume (PCV) and Group Commissionable Volume (GCV) you need toward each BPP bonus this month.
+        </p>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+
+        {/* Current totals banner */}
+        <div className="grid grid-cols-2 gap-3 rounded-lg bg-muted/40 border p-3">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-blue-600">{data.personalVolume.toLocaleString()}</div>
+            <div className="text-xs text-muted-foreground font-medium">Your PCV This Month</div>
+            <div className="text-[10px] text-muted-foreground">Personal Commissionable Volume</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-purple-600">{data.groupVolume.toLocaleString()}</div>
+            <div className="text-xs text-muted-foreground font-medium">Your GCV This Month</div>
+            <div className="text-[10px] text-muted-foreground">Group Commissionable Volume</div>
+          </div>
+        </div>
+
+        {/* Per-fund progress rows */}
+        <div className="space-y-3">
+          {activeFunds.map(fund => {
+            const Icon = FUND_ICONS[fund.slug] ?? Star;
+            const color = FUND_COLORS[fund.slug] ?? "primary";
+            const c = colorMap[color];
+
+            const pvNeeded = Math.max(0, fund.pvRequirement - data.personalVolume);
+            const gvNeeded = Math.max(0, fund.gvRequirement - data.groupVolume);
+            const pvPct = Math.min(100, (data.personalVolume / Math.max(fund.pvRequirement, 1)) * 100);
+            const gvPct = Math.min(100, (data.groupVolume / Math.max(fund.gvRequirement, 1)) * 100);
+            const qualified = fund.meetsGv && fund.meetsPv;
+            const paidOut = fund.paidThisMonth;
+
+            return (
+              <div
+                key={fund.id}
+                className={`rounded-xl border p-3 space-y-2.5 transition-colors ${
+                  paidOut
+                    ? "bg-emerald-50 border-emerald-200"
+                    : qualified
+                    ? "bg-green-50/60 border-green-200"
+                    : "bg-background border-border"
+                }`}
+              >
+                {/* Fund header */}
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <div className={`p-1.5 rounded-lg ${c.bg} ${c.border} border`}>
+                      <Icon className={`h-3.5 w-3.5 ${c.text}`} />
+                    </div>
+                    <div>
+                      <span className="font-semibold text-sm">{fund.name}</span>
+                      <span className={`ml-2 text-xs font-medium ${c.text}`}>up to ${fund.maxCap.toLocaleString()}/mo</span>
+                    </div>
+                  </div>
+                  {paidOut ? (
+                    <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
+                      <CheckCircle2 className="h-3.5 w-3.5" /> Paid ${fund.paidAmount.toFixed(2)}
+                    </span>
+                  ) : qualified ? (
+                    <span className="text-xs font-bold text-green-600 flex items-center gap-1">
+                      <CheckCircle2 className="h-3.5 w-3.5" /> Qualified ✓
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Clock className="h-3 w-3" /> In Progress
+                    </span>
+                  )}
+                </div>
+
+                {/* PCV row */}
+                <div className="space-y-1">
+                  <div className="flex justify-between items-center text-xs flex-wrap gap-1">
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      <Users className="h-3 w-3" /> Personal Volume (PCV)
+                    </span>
+                    {fund.meetsPv ? (
+                      <span className="text-green-600 font-semibold">
+                        ✓ {data.personalVolume.toLocaleString()} / {fund.pvRequirement.toLocaleString()} — Met
+                      </span>
+                    ) : (
+                      <span className="text-amber-700 font-semibold">
+                        {data.personalVolume.toLocaleString()} / {fund.pvRequirement.toLocaleString()} —{" "}
+                        <strong>{pvNeeded.toLocaleString()} more needed</strong>
+                      </span>
+                    )}
+                  </div>
+                  <div className="relative h-2 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${fund.meetsPv ? "bg-green-500" : c.bar}`}
+                      style={{ width: `${pvPct}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* GCV row */}
+                <div className="space-y-1">
+                  <div className="flex justify-between items-center text-xs flex-wrap gap-1">
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      <TrendingUp className="h-3 w-3" /> Group Volume (GCV)
+                    </span>
+                    {fund.meetsGv ? (
+                      <span className="text-green-600 font-semibold">
+                        ✓ {data.groupVolume.toLocaleString()} / {fund.gvRequirement.toLocaleString()} — Met
+                      </span>
+                    ) : (
+                      <span className="text-amber-700 font-semibold">
+                        {data.groupVolume.toLocaleString()} / {fund.gvRequirement.toLocaleString()} —{" "}
+                        <strong>{gvNeeded.toLocaleString()} more needed</strong>
+                      </span>
+                    )}
+                  </div>
+                  <div className="relative h-2 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${fund.meetsGv ? "bg-green-500" : c.bar}`}
+                      style={{ width: `${gvPct}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <p className="text-xs text-muted-foreground">
+          PCV and GCV volumes reset each calendar month. Qualifications are reviewed at month end and bonuses are deposited to your NFGN wallet.
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
 export function BPPDashboardPage() {
   const [data, setData] = useState<BppDashboard | null>(null);
@@ -349,6 +506,9 @@ export function BPPDashboardPage() {
           </Card>
         ))}
       </div>
+
+      {/* BPP Progression Box */}
+      <BPPProgressionBox data={data} />
 
       <Tabs defaultValue="funds">
         <TabsList>

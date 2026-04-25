@@ -71,7 +71,7 @@ export function About() {
                 </p>
                 <p>
                   Today, NFGN stands as a pioneer in the intersection of naturopathic living and 
-                  network marketing, empowering thousands of members to take control of both their 
+                  the Home Based Business industry, empowering thousands of members to take control of both their 
                   bodies and their financial futures.
                 </p>
               </div>
@@ -149,7 +149,7 @@ export function About() {
               <p>
                 His most celebrated achievement is the invention and development of the 
                 <strong className="text-foreground"> NFGN "2 Down By Infinity" Compensation Plan</strong> — a revolutionary 
-                approach to network marketing that Joe conceived, engineered, and solely developed. 
+                approach to Home Based Business that Joe conceived, engineered, and solely developed. 
                 This plan forms the backbone of NFGN's financial opportunity and has transformed the 
                 livelihoods of members across the globe.
               </p>

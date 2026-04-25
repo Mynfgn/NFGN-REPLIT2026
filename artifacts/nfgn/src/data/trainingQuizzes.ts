@@ -696,7 +696,7 @@ export const additionalTrainingQuiz: QuizQuestion[] = [
   },
   {
     question: "What is the most effective response to 'Is this an MLM?'",
-    options: ["Deny that NFGN involves any network structure", "Acknowledge the concern, explain that NFGN leads with products people actually want, and clarify that the business side is optional", "Avoid the question and talk about product benefits instead", "Tell them all network marketing is bad"],
+    options: ["Deny that NFGN involves any network structure", "Acknowledge the concern, explain that NFGN leads with products people actually want, and clarify that the business side is optional", "Avoid the question and talk about product benefits instead", "Tell them all Home Based Businesses are bad"],
     correct: 1,
     explanation: "Acknowledge the concern honestly, distinguish NFGN as product-first, and clarify that most customers are simply here for the wellness products. Don't deny the structure — transparency builds trust.",
   },

@@ -513,7 +513,7 @@ export function BPPDashboardPage() {
                 </p>
 
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  This insight makes the BPP one of the most inclusive programs in network marketing. It is designed not just for the
+                  This insight makes the BPP one of the most inclusive programs in the Home Based Business industry. It is designed not just for the
                   top sellers, but for{" "}
                   <strong className="text-foreground">anyone who contributes meaningfully to the growth of the network</strong> — even
                   those who cannot work at times due to unforeseen or unexpected circumstances but still need a steady, reliable

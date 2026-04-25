@@ -100,7 +100,7 @@ function Tab72h() {
           <h3 className="font-serif font-bold text-lg text-red-800">The First 72 Hours Are Critical</h3>
         </div>
         <p className="text-sm text-red-700 leading-relaxed">
-          Studies in network marketing show that <strong>new members who receive personal contact within 72 hours are 4x more likely to remain active</strong> after 90 days.
+          Studies in the Home Based Business industry show that <strong>new members who receive personal contact within 72 hours are 4x more likely to remain active</strong> after 90 days.
           This is your window to set the tone, build trust, and create lasting excitement. Don't let it pass.
         </p>
       </div>
@@ -324,7 +324,7 @@ function Tab30d() {
             <div>
               <p className="font-bold text-sm mb-1">The Truth About 30 Days</p>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Most people in network marketing quit before Day 30. The ones who make it to Day 30 with a real sponsor, real product experience, and at least one commission are statistically far more likely to still be active at 6 months, 12 months, and beyond.
+                Most people in Home Based Businesses quit before Day 30. The ones who make it to Day 30 with a real sponsor, real product experience, and at least one commission are statistically far more likely to still be active at 6 months, 12 months, and beyond.
                 <strong className="text-foreground"> Your consistency in these 30 days is the most valuable gift you can give your new member.</strong>
               </p>
             </div>

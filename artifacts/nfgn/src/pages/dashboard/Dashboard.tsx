@@ -398,6 +398,19 @@ function PowerSquadBonusTracker({ bonus }: { bonus: any }) {
   // MCB is only unlocked when QUALIFIED L1 requirement is fully met (UPM don't count)
   const mcbQualified: boolean = qualifiedL1 >= clbTrigger;
 
+  // PowerSquadBonusCard aliases (merged below)
+  const bonusTrigger = mcbTrigger;
+  const bonusAmount  = mcbAmount;
+  const bonusEnabled: boolean     = bonus?.bonusEnabled ?? true;
+  const level1ProMembers: number  = bonus?.level1ProMembers ?? 0;
+  const level1Required            = clbTrigger;
+  const level1Qualified           = mcbQualified;
+  const level1Needed              = Math.max(0, clbTrigger - level1ProMembers);
+  const bonusesEarned             = mcbEarned;
+  const toNextBonus               = toNextMcb;
+  const l1Percent = Math.min(100, Math.round((level1ProMembers / Math.max(level1Required, 1)) * 100));
+  const l2Percent = Math.min(100, Math.round(((level2Commissions % bonusTrigger || (level2Commissions > 0 && level2Commissions % bonusTrigger === 0 ? bonusTrigger : 0)) / bonusTrigger) * 100));
+
   useEffect(() => {
     if (!congratsShown && clbEarned > 0) {
       setShowCongrats(true);
@@ -574,6 +587,93 @@ function PowerSquadBonusTracker({ bonus }: { bonus: any }) {
               )}
             </p>
           </div>
+
+          {/* ── Merged: Power Squad Bonus summary ── */}
+          {bonusEnabled && (
+            <>
+              <hr className="border-border" />
+
+              <p className="text-xs text-muted-foreground -mb-1">
+                Earn <strong className="text-foreground">${bonusAmount}</strong> for every {bonusTrigger} Level 2 Pro Package purchases — requires {bonusTrigger} personally sponsored Level 1 Pro Members to qualify.
+              </p>
+
+              {/* Stats row */}
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="p-2 bg-muted rounded-lg">
+                  <div className={`text-lg font-bold ${level1Qualified ? "text-green-600" : "text-primary"}`}>
+                    {level1ProMembers} / {level1Required}
+                  </div>
+                  <div className="text-xs text-muted-foreground">Level 1 Pro Members</div>
+                </div>
+                <div className="p-2 bg-muted rounded-lg">
+                  <div className="text-lg font-bold text-amber-600">{level2Commissions}</div>
+                  <div className="text-xs text-muted-foreground">Level 2 Pro Packages</div>
+                </div>
+                <div className="p-2 bg-muted rounded-lg">
+                  <div className="text-lg font-bold text-purple-600">{bonusesEarned}</div>
+                  <div className="text-xs text-muted-foreground">Bonuses Earned</div>
+                </div>
+              </div>
+
+              {/* Level 1 qualification progress */}
+              <div>
+                <div className="flex justify-between text-xs mb-1.5">
+                  <span className="text-muted-foreground">Level 1 qualification ({level1Required} Pro Members required)</span>
+                  <span className={`font-semibold ${level1Qualified ? "text-green-600" : "text-amber-600"}`}>
+                    {level1ProMembers} / {level1Required}
+                  </span>
+                </div>
+                <Progress value={l1Percent} className="h-2" />
+              </div>
+
+              {/* Level 2 progress (only when qualified) */}
+              {level1Qualified && (
+                <div>
+                  <div className="flex justify-between text-xs mb-1.5">
+                    <span className="text-muted-foreground">Level 2 Pro Packages toward next bonus</span>
+                    <span className="font-semibold">{level2Commissions % bonusTrigger || (level2Commissions > 0 && level2Commissions % bonusTrigger === 0 ? bonusTrigger : 0)} / {bonusTrigger}</span>
+                  </div>
+                  <Progress value={l2Percent} className="h-2" />
+                </div>
+              )}
+
+              {/* Status message */}
+              {!level1Qualified ? (
+                <div className="p-3 rounded-lg border bg-amber-50 border-amber-200 text-amber-800 text-sm">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <strong>
+                        {level1Needed === 1
+                          ? "1 more Level 1 Pro Member needed to qualify"
+                          : `${level1Needed} more Level 1 Pro Members needed to qualify`}
+                      </strong>
+                      <div className="text-xs mt-0.5">
+                        Personally sponsor {level1Required} Pro Members to unlock the Power Squad Bonus.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : toNextBonus === 0 ? (
+                <div className="p-3 rounded-lg border bg-green-50 border-green-200 text-green-800 text-sm flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+                  <span><strong>Power Squad Bonus earned!</strong> Bonus #{bonusesEarned} of ${bonusAmount} has been credited to your wallet.</span>
+                </div>
+              ) : (
+                <div className="p-3 rounded-lg border bg-green-50 border-green-200 text-green-800 text-sm">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <strong>Qualified! {toNextBonus} more Level 2 Pro Package {toNextBonus === 1 ? "sale" : "sales"} until your next ${bonusAmount} bonus.</strong>
+                      {bonusesEarned > 0 && (
+                        <div className="text-xs mt-0.5">You've earned {bonusesEarned} Power Squad {bonusesEarned === 1 ? "Bonus" : "Bonuses"} so far.</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
 
         </CardContent>
       </Card>
@@ -1116,9 +1216,6 @@ export function Dashboard() {
 
       {/* Featured Product — below Community Map */}
       <FeaturedProductCard referralCode={(data as any)?.referralCode ?? ""} />
-
-      {/* Power Squad Bonus summary */}
-      <PowerSquadBonusCard bonus={analytics?.powerSquadBonus} />
 
       {/* Monthly Sales Chart + Earnings Line Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

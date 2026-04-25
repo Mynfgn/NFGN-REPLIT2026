@@ -7,6 +7,7 @@ type TreeNode = {
   id: number;
   userId: number;
   name: string;
+  username?: string;
   email: string;
   role: string;
   isProMember: boolean;
@@ -150,6 +151,12 @@ function MemberPopup({ pos, onClose, svgW }: { pos: Pos; onClose: () => void; sv
             <span className="text-muted-foreground">Last Name</span>
             <span className="font-medium">{lastName || "—"}</span>
           </div>
+          {n.username && (
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Username</span>
+              <span className="font-medium text-primary">@{n.username}</span>
+            </div>
+          )}
           <div className="flex justify-between">
             <span className="text-muted-foreground">Signed Up</span>
             <span className="font-medium">{new Date(n.joinedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</span>

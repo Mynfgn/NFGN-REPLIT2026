@@ -63,6 +63,7 @@ async function buildTree(userId: number, depth: number = 9, currentDepth: number
     id: node?.id ?? userId,
     userId: user.id,
     name: `${user.firstName} ${user.lastName}`,
+    username: user.referralCode ?? "",
     email: user.email,
     avatar: user.avatar ?? null,
     role: user.role,

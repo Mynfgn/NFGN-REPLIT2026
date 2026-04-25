@@ -399,10 +399,9 @@ function PowerSquadBonusTracker({ bonus }: { bonus: any }) {
   const mcbQualified: boolean = qualifiedL1 >= clbTrigger;
 
   // PowerSquadBonusCard aliases (merged below)
-  const bonusTrigger = mcbTrigger;
-  const bonusAmount  = mcbAmount;
+  const bonusTrigger              = mcbTrigger;
+  const bonusAmount               = mcbAmount;
   const bonusEnabled: boolean     = bonus?.bonusEnabled ?? true;
-  const level1ProMembers: number  = bonus?.level1ProMembers ?? 0;
   const level1Required            = clbTrigger;
   const level1Qualified           = mcbQualified;
   const level1Needed              = Math.max(0, clbTrigger - level1ProMembers);

@@ -209,9 +209,10 @@ function OverviewSection() {
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-pink-900 space-y-1">
-            <p><strong>5 Group Volume Bonuses</strong> — one for each major monthly living expense.</p>
-            <p><strong>Who earns:</strong> Qualified Pro Members (150+ PV/month) whose team reaches each GV threshold.</p>
-            <p><strong>Payout:</strong> End-of-month directly to your NFGN E-Wallet.</p>
+            <p><strong>5 Group Volume Bonus Funds</strong> — Phone/Internet ($185), Medical ($350), Utilities ($450), Car ($600), Rent/Mortgage ($1,500).</p>
+            <p><strong>GV thresholds:</strong> 8,000 / 10,000 / 12,000 / 15,000 / 18,000 GV respectively.</p>
+            <p><strong>Who earns:</strong> Qualified Pro Members maintaining 150+ PV/month whose team GV meets each fund's threshold.</p>
+            <p><strong>Payout:</strong> End-of-month directly to your NFGN E-Wallet. Up to $3,085/month if all 5 funds are unlocked.</p>
           </CardContent>
         </Card>
       </div>
@@ -649,71 +650,122 @@ function PSBSection() {
 
 // ── BILL PAYER PROGRAM ───────────────────────────────────────────────────────
 function BPPSection() {
-  const bonuses = [
-    { name: "Grocery Bonus", desc: "Help cover monthly grocery costs for your family", gv: "~$1,500 GV", pv: "150 PV" },
-    { name: "Utilities Bonus", desc: "Cover monthly utility bills — electric, gas, water", gv: "~$3,000 GV", pv: "150 PV" },
-    { name: "Car Note Bonus", desc: "Cover monthly vehicle payment expenses", gv: "~$5,000 GV", pv: "150 PV" },
-    { name: "Mortgage Bonus", desc: "Help offset housing costs — rent or mortgage", gv: "~$8,000 GV", pv: "150 PV" },
-    { name: "Dream Life Bonus", desc: "The ultimate BPP tier for top team builders", gv: "~$15,000 GV", pv: "150 PV" },
+  const funds = [
+    {
+      name: "Phone / Internet Fund",
+      desc: "Helps qualifying Pro Members offset their monthly phone and internet bill.",
+      gv: "8,000 GV",
+      pv: "150 PV",
+      cap: "Up to $185/mo",
+      color: "#8B5CF6",
+    },
+    {
+      name: "Medical Fund",
+      desc: "Helps qualifying Pro Members offset medical and health-related expenses.",
+      gv: "10,000 GV",
+      pv: "150 PV",
+      cap: "Up to $350/mo",
+      color: "#EC4899",
+    },
+    {
+      name: "Utilities Fund",
+      desc: "Helps qualifying Pro Members offset monthly utility bills — electric, gas, water.",
+      gv: "12,000 GV",
+      pv: "150 PV",
+      cap: "Up to $450/mo",
+      color: "#10B981",
+    },
+    {
+      name: "Car Fund",
+      desc: "Helps qualifying Pro Members offset their monthly vehicle payment.",
+      gv: "15,000 GV",
+      pv: "150 PV",
+      cap: "Up to $600/mo",
+      color: "#F59E0B",
+    },
+    {
+      name: "Rent / Mortgage Fund",
+      desc: "Helps qualifying Pro Members offset their monthly rent or mortgage payment.",
+      gv: "18,000 GV",
+      pv: "150 PV",
+      cap: "Up to $1,500/mo",
+      color: "#3B82F6",
+    },
   ];
+
   return (
     <div className="space-y-5">
-      <div className="rounded-xl p-5 text-white" style={{ background: `linear-gradient(135deg, #831843, #be185d)` }}>
+      {/* Hero header */}
+      <div className="rounded-xl p-5 text-white" style={{ background: `linear-gradient(135deg, #1a0a2e, #2d1b69)` }}>
         <div className="flex items-center gap-3 mb-3">
           <div className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center">
             <Home className="h-5 w-5 text-white" />
           </div>
           <div>
             <h2 className="font-serif font-bold text-xl">Bill Payer Program (BPP)</h2>
-            <p className="text-white/70 text-xs">5 Group Volume Bonuses designed to cover your real-life monthly expenses</p>
+            <p className="text-white/70 text-xs">5 Group Volume Bonus Funds — each designed to cover a real monthly expense</p>
           </div>
         </div>
         <div className="grid grid-cols-3 gap-3 mt-4">
           <div className="rounded-lg bg-white/10 p-3 text-center">
             <p className="text-2xl font-black">5</p>
-            <p className="text-white/70 text-[10px] uppercase tracking-wide mt-0.5">Bonus Tiers</p>
+            <p className="text-white/70 text-[10px] uppercase tracking-wide mt-0.5">Bonus Funds</p>
           </div>
           <div className="rounded-lg bg-white/10 p-3 text-center">
             <p className="text-2xl font-black">150</p>
             <p className="text-white/70 text-[10px] uppercase tracking-wide mt-0.5">PV Required</p>
           </div>
           <div className="rounded-lg bg-white/10 p-3 text-center">
-            <p className="text-2xl font-black">GV</p>
-            <p className="text-white/70 text-[10px] uppercase tracking-wide mt-0.5">Group Volume</p>
+            <p className="text-2xl font-black text-[#C9A84C]">$3,085</p>
+            <p className="text-white/70 text-[10px] uppercase tracking-wide mt-0.5">Max Monthly (all 5)</p>
           </div>
         </div>
       </div>
 
+      {/* Fund list */}
       <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm">The 5 Group Volume Bonuses</CardTitle></CardHeader>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">The 5 BPP Funds</CardTitle>
+        </CardHeader>
         <CardContent className="space-y-3">
-          {bonuses.map((b, i) => (
-            <div key={b.name} className="rounded-xl border p-4">
+          {funds.map((f, i) => (
+            <div key={f.name} className="rounded-xl border p-4">
               <div className="flex items-start justify-between gap-3 mb-2">
                 <div className="flex items-center gap-2">
-                  <span className="h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{ background: "#be185d" }}>{i + 1}</span>
-                  <p className="font-semibold text-sm text-foreground">{b.name}</p>
+                  <span
+                    className="h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                    style={{ background: f.color }}
+                  >
+                    {i + 1}
+                  </span>
+                  <p className="font-semibold text-sm text-foreground">{f.name}</p>
                 </div>
-                <Badge variant="outline" className="text-xs flex-shrink-0">{b.gv}</Badge>
+                <div className="flex flex-col items-end gap-1">
+                  <Badge className="text-xs text-white" style={{ background: f.color }}>{f.cap}</Badge>
+                  <Badge variant="outline" className="text-xs">{f.gv}</Badge>
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground mb-2">{b.desc}</p>
-              <p className="text-xs text-muted-foreground">Personal Volume required: <strong className="text-foreground">{b.pv}/month</strong></p>
+              <p className="text-xs text-muted-foreground mb-1">{f.desc}</p>
+              <p className="text-xs text-muted-foreground">Personal Volume required: <strong className="text-foreground">{f.pv}/month</strong></p>
             </div>
           ))}
         </CardContent>
       </Card>
 
+      {/* Qualification Requirements */}
       <Card>
         <CardHeader className="pb-2"><CardTitle className="text-sm">Qualification Requirements</CardTitle></CardHeader>
         <CardContent className="space-y-3">
-          <Bullet>You must be an active <strong>Pro Member</strong> to qualify for any BPP tier.</Bullet>
+          <Bullet>You must be an active <strong>Pro Member</strong> to qualify for any BPP fund.</Bullet>
           <Bullet>You must maintain a minimum of <strong>150 PV</strong> per month through your own product and service purchases.</Bullet>
-          <Bullet>Your team must reach the Group Volume (GV) threshold for each bonus tier.</Bullet>
-          <Bullet>Note: Your Pro Member Registration Package PV <strong>activates eligibility</strong> but may not fully satisfy the 150 PV requirement on its own — additional purchases may be needed.</Bullet>
+          <Bullet>Your team's Group Volume (GV) must reach each fund's threshold to unlock that fund's bonus.</Bullet>
+          <Bullet>You may qualify for multiple funds in the same month — each fund is evaluated independently.</Bullet>
+          <Bullet>Your Pro Member Registration Package <strong>activates eligibility</strong> but may not fully satisfy the 150 PV requirement on its own — additional product purchases may be needed.</Bullet>
           <Bullet>Bonuses are reviewed and paid at end of each calendar month directly to your NFGN E-Wallet.</Bullet>
         </CardContent>
       </Card>
 
+      {/* PV clarification */}
       <Card className="border-amber-200 bg-amber-50/40">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm text-amber-800 flex items-center gap-2">
@@ -722,7 +774,7 @@ function BPPSection() {
         </CardHeader>
         <CardContent className="text-xs text-amber-900 space-y-2">
           <p>Purchasing a Pro Member Registration Package upgrades you to Pro Member status and makes you <strong>eligible</strong> to earn BPP bonuses.</p>
-          <p>However, if your registration package provides less than 150 PV, you still need additional product purchases to reach the monthly PV requirement.</p>
+          <p>However, if your registration package provides less than 150 PV, you still need additional product purchases to reach the monthly PV requirement for each fund.</p>
           <div className="rounded-lg bg-white border border-amber-200 p-3 space-y-1">
             <p className="font-semibold text-amber-800">Example</p>
             <p>You purchase a 50 PV Pro Package → You become a Pro Member ✓</p>
@@ -731,9 +783,10 @@ function BPPSection() {
         </CardContent>
       </Card>
 
+      {/* Story */}
       <InfoBox color="blue">
         <p className="font-semibold">The Story Behind BPP</p>
-        <p>The Bill Payer Program was created by Mr. Marcelino to help qualifying Pro Members offset real monthly living expenses — groceries, utilities, car payments, and more. It is one of the most unique features of the NFGN compensation structure.</p>
+        <p>The Bill Payer Program was born from a real experience Mr. Marcelino witnessed in Houston in 2014 — a dedicated leader who was simultaneously hit with a utility shutoff, a repossession, and an eviction. He created the BPP so that qualifying Pro Members who are building their teams would never have to face that kind of hardship alone. Each fund is named after a real monthly expense because that is exactly what it is designed to cover.</p>
       </InfoBox>
     </div>
   );

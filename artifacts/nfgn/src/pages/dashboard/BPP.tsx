@@ -471,12 +471,60 @@ export function BPPDashboardPage() {
                 you will be upgraded to Pro Member status — but you will still need an additional 100 PV in products or services to meet 
                 the 150 PV Personal Volume requirement.
               </p>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                <strong className="text-foreground">The story behind BPP:</strong> This program was born from the heart of Mr. Marcelino himself,
-                who understood the daily financial hardships that many families face. His vision was simple but powerful — take a portion
-                of the company's revenue and direct it toward qualifying Pro Members who are building teams and creating impact.
-                The Bill Payer Program is one of the most unique and exciting features of the NFGN compensation structure.
-              </p>
+              {/* The Origin Story */}
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-3">
+                <p className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <Star className="h-4 w-4 text-primary fill-primary flex-shrink-0" />
+                  The Story Behind the Bill Payer Program
+                </p>
+
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  The origin of the BPP begins in <strong className="text-foreground">Houston, Texas</strong>, many years ago — during the
+                  earliest stages of what we now call New Face Global Network. In the <strong className="text-foreground">summer of 2014</strong>,
+                  Mr. Marcelino flew from New Orleans to Houston to deliver a presentation. He traveled alongside members of his Core
+                  Leadership Group, and during that trip they decided to visit one of his top leaders — a close friend who happened to
+                  also be a single mother.
+                </p>
+
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  When they arrived, the woman was overjoyed and surprised to see them. She welcomed them warmly into her home. But as
+                  Mr. Marcelino went to sit down on the couch, something happened that no one expected —{" "}
+                  <strong className="text-foreground">her lights and gas were shut off right then and there.</strong> The woman was
+                  deeply embarrassed and heartbroken. The very next day brought more devastation: her car was repossessed. And
+                  approximately a month later, she was evicted from her home.
+                </p>
+
+                {/* Pull quote */}
+                <div className="rounded-lg border-l-4 border-primary bg-white/70 px-4 py-3">
+                  <p className="text-sm text-foreground italic leading-relaxed">
+                    "This is when Mr. Marcelino did what he does best — he began to pray and asked GOD for guidance and a solution
+                    that could fix this woman's problems and prevent this from ever happening again to someone in his network."
+                  </p>
+                </div>
+
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  It was in that moment of prayer and reflection that the concept of the modern{" "}
+                  <strong className="text-foreground">NFGN Bill Payer Program</strong> and{" "}
+                  <strong className="text-foreground">Builder's Pay</strong> was born. GOD showed Mr. Marcelino a truth that would
+                  shape the entire compensation philosophy of NFGN:{" "}
+                  <em className="text-foreground">not everyone is gifted at selling products</em> — but many people are deeply loyal
+                  to the company and possess excellent management, networking, influence, and communication skills. Some are
+                  outstanding information specialists or connectors who work behind the scenes to hold the network together.
+                </p>
+
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  This insight makes the BPP one of the most inclusive programs in network marketing. It is designed not just for the
+                  top sellers, but for{" "}
+                  <strong className="text-foreground">anyone who contributes meaningfully to the growth of the network</strong> — even
+                  those who cannot work at times due to unforeseen or unexpected circumstances but still need a steady, reliable
+                  income to cover their essential monthly expenses.
+                </p>
+
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  The Bill Payer Program stands as one of the most unique and compassionate features of the NFGN compensation
+                  structure — a living reminder that this company was built not just for profit, but for <strong className="text-foreground">people</strong>.
+                </p>
+              </div>
               <p className="text-xs text-muted-foreground italic">
                 Funds are paid monthly, are non-transferable, and cannot be reassigned or gifted to another member.
                 {data.payoutDelayMessage && <span> {data.payoutDelayMessage}</span>}

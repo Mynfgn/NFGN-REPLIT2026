@@ -909,20 +909,24 @@ function AffiliateLinkCard({ referralLink, referralCode: codeFromData }: { refer
 
         {/* ── Share Your Digital QR Card ── */}
         {(() => {
-          const fullName = `${(me as any)?.firstName ?? ""} ${(me as any)?.lastName ?? ""}`.trim();
-          const email = (me as any)?.email ?? "";
-          const phone = (me as any)?.phone ?? "";
-          const refLink = affiliateUrl;
+          const firstName = me?.firstName ?? "";
+          const lastName = me?.lastName ?? "";
+          const fullName = `${firstName} ${lastName}`.trim();
+          const email = me?.email ?? "";
+          const phone = me?.phone ?? "";
+          const refLink = referralCode
+            ? `${window.location.origin}/join?ref=${referralCode}`
+            : "";
           const vcard = [
             "BEGIN:VCARD",
             "VERSION:3.0",
             `FN:${fullName}`,
-            `N:${(me as any)?.lastName ?? ""};${(me as any)?.firstName ?? ""};;;`,
+            `N:${lastName};${firstName};;;`,
             phone ? `TEL;TYPE=CELL:${phone}` : "",
             email ? `EMAIL:${email}` : "",
             "ORG:New Face Global Network",
-            (me as any)?.isProMember ? "TITLE:NFGN Pro Member" : "TITLE:NFGN Member",
-            referralCode ? `URL:${refLink}` : "",
+            me?.isProMember ? "TITLE:NFGN Pro Member" : "TITLE:NFGN Member",
+            refLink ? `URL:${refLink}` : "",
             referralCode ? `NOTE:NFGN Sponsor Code\\: ${referralCode}` : "",
             "END:VCARD",
           ].filter(Boolean).join("\n");
@@ -936,19 +940,19 @@ function AffiliateLinkCard({ referralLink, referralCode: codeFromData }: { refer
               </div>
               <div className="flex flex-col sm:flex-row items-center gap-5">
                 <div className="border rounded-xl p-3 bg-white shadow-sm flex-shrink-0">
-                  <img src={qrSrc} alt="Digital QR Card" width={150} height={150} className="rounded block" />
+                  <img src={qrSrc} alt="Digital QR Card" width={180} height={180} className="rounded block" />
                 </div>
                 <div className="flex-1 space-y-2 text-center sm:text-left">
                   <p className="text-xs text-muted-foreground leading-relaxed">
                     When someone scans this QR code their phone will offer to save your contact info instantly — name, email, phone, and your NFGN referral link. Print it on business cards, flyers, or your name badge.
                   </p>
                   <div className="space-y-1">
-                    {[
-                      { icon: UserCircle, label: "Name", value: fullName || "—" },
-                      { icon: Mail,       label: "Email", value: email || "—" },
-                      { icon: Phone,      label: "Phone", value: phone || "Not set — add in Profile" },
-                      { icon: Smartphone, label: "Referral", value: referralCode ? refLink : "—" },
-                    ].map(({ icon: Icon, label, value }) => (
+                    {([
+                      { icon: UserCircle, label: "Name",     value: fullName || "—" },
+                      { icon: Mail,       label: "Email",    value: email || "—" },
+                      { icon: Phone,      label: "Phone",    value: phone || "Not set — add in Profile" },
+                      { icon: Smartphone, label: "Referral", value: refLink || "—" },
+                    ] as const).map(({ icon: Icon, label, value }) => (
                       <div key={label} className="flex items-start gap-2 text-xs">
                         <Icon className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
                         <span className="text-muted-foreground font-medium w-16 flex-shrink-0">{label}:</span>
@@ -970,10 +974,13 @@ function AffiliateLinkCard({ referralLink, referralCode: codeFromData }: { refer
                       variant="outline"
                       size="sm"
                       className="gap-1.5 text-xs"
-                      onClick={() => navigator.share
-                        ? navigator.share({ title: `${fullName} — NFGN Contact`, url: refLink })
-                        : navigator.clipboard.writeText(refLink)
-                      }
+                      onClick={() => {
+                        if (navigator.share && refLink) {
+                          navigator.share({ title: `${fullName} — NFGN Contact`, url: refLink });
+                        } else if (refLink) {
+                          navigator.clipboard.writeText(refLink);
+                        }
+                      }}
                     >
                       <Smartphone className="h-3.5 w-3.5" /> Share Contact Link
                     </Button>

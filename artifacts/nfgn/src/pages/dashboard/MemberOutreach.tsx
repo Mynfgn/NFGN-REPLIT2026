@@ -127,7 +127,7 @@ function Tab72h() {
           </CardHeader>
           <CardContent className="space-y-3">
             <CheckItem text="Schedule their 15-minute Onboarding Call" sub="Video or phone call. This call is where you learn their 'why', explain the basics, and get them excited about their first 7 days." />
-            <CheckItem text="Send the Getting Started Training link" sub="Dashboard → Basic Training → Getting Started. Encourage them to watch it before your onboarding call." />
+            <CheckItem text="Send the Getting Started Training link" sub="Dashboard → NFGN Basic Training → Getting Started. Encourage them to watch it before your onboarding call." />
             <CheckItem text="Make sure their profile is set up" sub="Help them add a photo, set up their referral code, and understand their affiliate link." />
           </CardContent>
         </Card>
@@ -245,7 +245,7 @@ function Tab14d() {
       </Section>
 
       <Section title="Training & Mindset" icon={BookOpen} color="text-purple-600">
-        <CheckItem text="Encourage $3,500/Month Plan training" sub="Dashboard → Basic Training → $3,500/Month Plan. This shows a realistic roadmap to meaningful income." />
+        <CheckItem text="Encourage $3,500/Month Plan training" sub="Dashboard → NFGN Basic Training → $3,500/Month Plan. This shows a realistic roadmap to meaningful income." />
         <CheckItem text="Share a personal message about the power of consistency" sub="The difference between people who make money and people who don't is rarely talent. It's consistent daily action." />
         <CheckItem text="Ask them to listen to one success/personal development podcast this week" sub="Mindset is the foundation of everything. Recommend: 'Go-Giver', 'How to Win Friends', or any Jim Rohn content." />
       </Section>

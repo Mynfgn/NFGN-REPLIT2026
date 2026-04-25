@@ -63,7 +63,7 @@ const navItems: NavItem[] = [
     ],
   },
   {
-    name: "Basic Training",
+    name: "NFGN Basic Training",
     icon: BookOpen,
     group: "training",
     children: [
@@ -75,6 +75,7 @@ const navItems: NavItem[] = [
       { name: "IGNITE Training",    href: "/dashboard/tools/training?s=ignite" },
       { name: "Earn Big Bonuses",   href: "/dashboard/tools/training?s=big-bonuses" },
       { name: "Additional Training", href: "/dashboard/tools/training?s=additional" },
+      { name: "Add App to Phone",   href: "/dashboard/tools/training?s=app-setup" },
     ],
   },
   { name: "Reports", href: "/dashboard/reports", icon: BarChart3 },

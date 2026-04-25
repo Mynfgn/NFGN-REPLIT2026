@@ -105,6 +105,7 @@ const SECTIONS = [
   { id: "ignite",           label: "IGNITE Training",        icon: Flame },
   { id: "big-bonuses",      label: "Earn Big Bonuses",       icon: Award },
   { id: "additional",       label: "Additional Training",    icon: Lightbulb },
+  { id: "app-setup",        label: "Add App to Phone",       icon: Phone },
 ];
 
 export function BasicTrainingPage() {
@@ -142,7 +143,7 @@ export function BasicTrainingPage() {
             <BookOpen className="h-5 w-5" style={{ color: GOLD }} />
           </div>
           <div>
-            <h1 className="text-2xl font-serif font-bold">Basic Training</h1>
+            <h1 className="text-2xl font-serif font-bold">NFGN Basic Training</h1>
             <p className="text-white/60 text-sm">Your complete guide to building a thriving NFGN business</p>
           </div>
         </div>
@@ -1186,6 +1187,172 @@ export function BasicTrainingPage() {
                   title="Additional Training — Proficiency Quiz"
                   questions={additionalTrainingQuiz}
                 />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* ── ADD APP TO PHONE ──────────────────────────────────────── */}
+          {activeSection === "app-setup" && (
+            <Card>
+              <CardContent className="pt-6 space-y-6">
+                <SectionHeader
+                  icon={Phone}
+                  title="Add NFGN to Your Phone"
+                  subtitle="Install the platform on your home screen — no app store required"
+                  color={GREEN}
+                />
+
+                {/* What it is */}
+                <div className="rounded-xl bg-[#0a0a0a] text-white p-5 space-y-3">
+                  <p className="text-sm font-semibold" style={{ color: GOLD }}>What This Is</p>
+                  <p className="text-sm text-white/75 leading-relaxed">
+                    The NFGN platform is a <strong className="text-white">web app</strong> — which means it works on any phone
+                    through your browser, without needing to download anything from an app store. You can install it directly
+                    to your home screen so it opens like a regular app, full-screen, with one tap. It works on both iPhones and Android phones.
+                  </p>
+                </div>
+
+                {/* iPhone Instructions */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-lg bg-slate-900 flex items-center justify-center flex-shrink-0">
+                      <span className="text-white text-sm font-bold"></span>
+                    </div>
+                    <h3 className="font-serif font-bold text-base">iPhone Instructions (Safari)</h3>
+                  </div>
+                  <div className="rounded-xl border border-slate-200 divide-y divide-slate-100 overflow-hidden">
+                    {[
+                      {
+                        step: 1,
+                        title: "Open Safari",
+                        detail: "This only works in Safari — not Chrome or other browsers on iPhone. If you're using a different browser, switch to Safari first.",
+                      },
+                      {
+                        step: 2,
+                        title: "Go to the NFGN website",
+                        detail: "Type your NFGN web address into the Safari address bar and open it. Once it's fully loaded, move to the next step.",
+                      },
+                      {
+                        step: 3,
+                        title: "Tap the Share button",
+                        detail: "At the bottom center of Safari, you'll see a box with an arrow pointing up — that's the Share button. Tap it.",
+                      },
+                      {
+                        step: 4,
+                        title: 'Scroll down and tap "Add to Home Screen"',
+                        detail: 'In the Share menu that slides up, scroll down until you see "Add to Home Screen." Tap it.',
+                      },
+                      {
+                        step: 5,
+                        title: 'Name it and tap "Add"',
+                        detail: 'You\'ll see a screen asking you to name the shortcut. You can name it "NFGN" or leave it as-is. Then tap "Add" in the top right corner.',
+                      },
+                      {
+                        step: 6,
+                        title: "Done — find the icon on your home screen",
+                        detail: "The NFGN icon will now appear on your iPhone home screen. Tap it anytime to open the platform full-screen, just like an app.",
+                      },
+                    ].map(s => (
+                      <div key={s.step} className="flex gap-4 p-4 bg-white items-start">
+                        <span className="h-7 w-7 rounded-full flex-shrink-0 flex items-center justify-center text-sm font-black text-white mt-0.5"
+                          style={{ background: "#0a0a0a" }}>
+                          {s.step}
+                        </span>
+                        <div>
+                          <p className="text-sm font-semibold">{s.title}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{s.detail}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Android Instructions */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "#3ddc84" }}>
+                      <span className="text-white text-sm font-bold">A</span>
+                    </div>
+                    <h3 className="font-serif font-bold text-base">Android Instructions (Chrome)</h3>
+                  </div>
+                  <div className="rounded-xl border border-slate-200 divide-y divide-slate-100 overflow-hidden">
+                    {[
+                      {
+                        step: 1,
+                        title: "Open Chrome",
+                        detail: "On Android, use Google Chrome for the best experience. Open the Chrome browser on your phone.",
+                      },
+                      {
+                        step: 2,
+                        title: "Go to the NFGN website",
+                        detail: "Type your NFGN web address into Chrome's address bar and open it. Wait for the page to fully load.",
+                      },
+                      {
+                        step: 3,
+                        title: "Tap the three dots (⋮)",
+                        detail: "In the top right corner of Chrome, tap the three vertical dots to open the browser menu.",
+                      },
+                      {
+                        step: 4,
+                        title: '"Add to Home screen" or "Install App"',
+                        detail: 'In the menu, look for "Add to Home screen" or "Install App." Tap it. Some Android phones may show a banner at the bottom of the screen automatically — you can tap that too.',
+                      },
+                      {
+                        step: 5,
+                        title: "Confirm and install",
+                        detail: 'A prompt will appear asking you to confirm. Tap "Add" or "Install." The app icon will be placed on your home screen.',
+                      },
+                      {
+                        step: 6,
+                        title: "Done — tap the icon to open",
+                        detail: "Find the NFGN icon on your Android home screen and tap it. It will open full-screen just like a native app.",
+                      },
+                    ].map(s => (
+                      <div key={s.step} className="flex gap-4 p-4 bg-white items-start">
+                        <span className="h-7 w-7 rounded-full flex-shrink-0 flex items-center justify-center text-sm font-black text-white mt-0.5"
+                          style={{ background: "#3ddc84" }}>
+                          {s.step}
+                        </span>
+                        <div>
+                          <p className="text-sm font-semibold">{s.title}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{s.detail}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tips */}
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-5 space-y-3">
+                  <p className="text-sm font-bold flex items-center gap-2">
+                    <Star className="h-4 w-4 text-primary fill-primary flex-shrink-0" />
+                    Pro Tips
+                  </p>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    {[
+                      "Share these same steps with every new member you enroll — the easier it is to access the platform, the more consistently they'll use it.",
+                      "Once you have a permanent domain name set up, share that link instead of the temporary development link so the icon on their phone stays current.",
+                      "The platform works fully offline-friendly — once opened, most pages stay usable even with a slow connection.",
+                      "Android users may also see a banner that says 'Add NFGN to Home Screen' appear automatically at the bottom of Chrome — that's a one-tap install.",
+                    ].map((tip, i) => (
+                      <li key={i} className="flex gap-2 items-start">
+                        <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                        {tip}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Share reminder */}
+                <div className="rounded-xl bg-[#0a0a0a] text-white p-5 space-y-2">
+                  <p className="text-sm font-semibold" style={{ color: GOLD }}>Teach This to Your Team</p>
+                  <p className="text-sm text-white/70 leading-relaxed">
+                    A member who has the platform on their phone is a member who stays engaged. Make it a habit to walk every new
+                    enrollment through this setup during your welcome call — it takes less than two minutes and dramatically
+                    increases how often they log in and take action.
+                  </p>
+                </div>
+
               </CardContent>
             </Card>
           )}

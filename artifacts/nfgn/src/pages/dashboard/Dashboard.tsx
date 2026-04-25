@@ -1094,10 +1094,13 @@ export function Dashboard() {
         <StatCard title="Members" value={String(data?.retailCustomers ?? 0)} sub="Active buyers" icon={ShoppingBag} />
       </div>
 
+      {/* Volume This Month — above Power Squad tracker */}
+      <CVCard pv={pv} gv={gv} required={required} />
+
       {/* Power Squad Bonus Tracker — CLB + MCB combined */}
       <PowerSquadBonusTracker bonus={analytics?.powerSquadBonus} />
 
-      {/* Referral Tools — below Power Squad tracker */}
+      {/* Referral Tools */}
       {data?.referralLink && (
         <div className="space-y-2">
           <h2 className="text-lg font-serif font-bold text-foreground flex items-center gap-2">
@@ -1108,17 +1111,14 @@ export function Dashboard() {
         </div>
       )}
 
-      {/* Featured Product */}
-      <FeaturedProductCard referralCode={(data as any)?.referralCode ?? ""} />
-
       {/* Community World Map */}
       <MemberMapCard title="Your Community Map" />
 
-      {/* PV/GV Volume + Power Squad Bonus */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <CVCard pv={pv} gv={gv} required={required} />
-        <PowerSquadBonusCard bonus={analytics?.powerSquadBonus} />
-      </div>
+      {/* Featured Product — below Community Map */}
+      <FeaturedProductCard referralCode={(data as any)?.referralCode ?? ""} />
+
+      {/* Power Squad Bonus summary */}
+      <PowerSquadBonusCard bonus={analytics?.powerSquadBonus} />
 
       {/* Monthly Sales Chart + Earnings Line Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

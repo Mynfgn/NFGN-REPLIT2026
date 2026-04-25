@@ -78,6 +78,58 @@ function InfoBox({ children, color = "amber" }: { children: React.ReactNode; col
 function OverviewSection() {
   return (
     <div className="space-y-6">
+
+      {/* ── 2 Down By Infinity — Hero Card ───────────────────────── */}
+      <div className="rounded-2xl p-6 text-white space-y-4" style={{ background: `linear-gradient(135deg, #1a1100, #0a0a0a)`, border: `1px solid ${GOLD}30` }}>
+        <div className="flex items-start gap-3">
+          <div className="h-10 w-10 rounded-xl flex-shrink-0 flex items-center justify-center" style={{ background: `${GOLD}25`, border: `1px solid ${GOLD}50` }}>
+            <Award className="h-5 w-5" style={{ color: GOLD }} />
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-widest font-bold mb-0.5" style={{ color: GOLD }}>Official Name of Our Compensation Plan</p>
+            <h2 className="text-xl font-serif font-bold leading-tight">"2 Down By Infinity" Pay Structure</h2>
+            <p className="text-white/50 text-xs mt-0.5">Also known as: <span className="text-white/70 italic">2 Down By Infinity Multi-Point Payment Grid</span></p>
+          </div>
+        </div>
+
+        <p className="text-sm text-white/75 leading-relaxed">
+          Invented, designed, and solely developed by <strong className="text-white">Joe Marcelino</strong>, the "2 Down By Infinity" Pay Structure
+          was intentionally built for the <strong className="text-white">average person, the inexperienced person, and the underprivileged person</strong>.
+          Mr. Marcelino's vision was clear: create a compensation system where anyone — regardless of background, sales experience, or financial
+          starting point — could genuinely succeed.
+        </p>
+
+        <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+          <p className="text-xs font-bold uppercase tracking-widest" style={{ color: GOLD }}>Why Is It Called "2 Down By Infinity"?</p>
+          <p className="text-sm text-white/75 leading-relaxed">
+            The name comes from the plan's key design principle: there is a <strong className="text-white">primary focus on the second level (Generation 2)</strong>.
+            This is not an accident — it is a deliberate strategy to help your <strong className="text-white">Generation 1 members start earning commissions
+            as quickly as possible</strong>.
+          </p>
+          <p className="text-sm text-white/75 leading-relaxed">
+            In the standard model, most commissions go to the person at the top. In the 2 Down By Infinity structure, the emphasis is
+            placed two levels down — so when your Level 2 grows, the payout flows <em>back up</em> to help your Level 1 members get paid.
+            This creates a system where your team's growth directly benefits the people closest to you, getting everyone into income
+            as fast as possible.
+          </p>
+          <div className="flex items-start gap-2 pt-1">
+            <ArrowRight className="h-4 w-4 flex-shrink-0 mt-0.5" style={{ color: GOLD }} />
+            <p className="text-xs text-white/60 leading-relaxed">
+              "By Infinity" refers to the unlimited depth of the plan — commissions can travel down through generations indefinitely as
+              your organization grows, with no artificial ceiling on how deep your earning potential can reach.
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-lg border-l-4 px-4 py-3" style={{ borderColor: GOLD, background: `${GOLD}10` }}>
+          <p className="text-sm italic text-white/80 leading-relaxed">
+            "Our goal is to help people start making money as soon as possible — that is the entire reason this pay structure was built."
+          </p>
+          <p className="text-xs text-white/40 mt-1">— The NFGN Philosophy</p>
+        </div>
+      </div>
+
+      {/* ── Five Income Streams ───────────────────────────────────── */}
       <div className="rounded-2xl p-6 text-white" style={{ background: `linear-gradient(135deg, ${BLACK}, #1a1a1a)` }}>
         <h2 className="text-2xl font-serif font-bold mb-1">Five Income Streams</h2>
         <p className="text-white/70 text-sm mb-5">NFGN members can earn through five distinct income streams — three commission types and two bonus programs.</p>

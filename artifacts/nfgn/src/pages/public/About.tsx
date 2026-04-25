@@ -166,12 +166,46 @@ export function About() {
               Our Compensation Plan
             </Badge>
             <h2 className="text-3xl md:text-4xl font-serif font-bold">
-              The "2 Down By Infinity" Plan
+              The "2 Down By Infinity" Pay Structure
             </h2>
+            <p className="text-xs text-gray-500 mt-2 italic">Also known as: 2 Down By Infinity Multi-Point Payment Grid</p>
             <p className="text-gray-400 mt-4 max-w-2xl mx-auto">
-              Invented, designed, and solely developed by Joe Marcelino — a multi-point payment grid 
-              built to reward effort at every level, from your very first referral to your deepest generation.
+              Invented, designed, and solely developed by Joe Marcelino — built specifically for the
+              average, the inexperienced, and the underprivileged person who deserves a real shot at success.
             </p>
+          </div>
+
+          {/* Why it's called "2 Down" */}
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 mb-10 space-y-4">
+            <p className="text-xs font-bold uppercase tracking-widest text-center" style={{ color: BRAND_GOLD }}>The Story Behind the Name</p>
+            <p className="text-gray-300 text-sm leading-relaxed text-center max-w-3xl mx-auto">
+              The plan is called <strong className="text-white">"2 Down By Infinity"</strong> because of its key design principle:
+              a <strong className="text-white">primary focus on Generation 2 (Level 2)</strong> — not Level 1. This is intentional.
+              By concentrating earnings activity at the second level, the plan is specifically engineered to help
+              <strong className="text-white"> Generation 1 (Level 1) members start earning commissions as fast as possible</strong>.
+            </p>
+            <div className="grid md:grid-cols-2 gap-4 pt-2">
+              <div className="rounded-xl bg-white/5 border border-white/10 p-4 space-y-2">
+                <p className="text-xs font-bold text-primary uppercase tracking-widest">2 Down</p>
+                <p className="text-sm text-gray-300 leading-relaxed">
+                  When your Level 2 grows and generates activity, the payout flows back up — directly benefiting your Level 1.
+                  No one gets left behind waiting to earn. The person closest to you starts making money faster because of what happens two levels below them.
+                </p>
+              </div>
+              <div className="rounded-xl bg-white/5 border border-white/10 p-4 space-y-2">
+                <p className="text-xs font-bold text-primary uppercase tracking-widest">By Infinity</p>
+                <p className="text-sm text-gray-300 leading-relaxed">
+                  There is no ceiling on depth. Commissions can travel through generations indefinitely — the deeper your organization grows,
+                  the more payment points activate across your grid, creating unlimited compounding potential.
+                </p>
+              </div>
+            </div>
+            <div className="rounded-lg border-l-4 border-primary px-4 py-3 bg-white/5 mt-2">
+              <p className="text-sm italic text-gray-300 leading-relaxed">
+                "Our goal is to help people start making money as soon as possible — that is the entire reason this pay structure was built."
+              </p>
+              <p className="text-xs text-gray-500 mt-1">— The NFGN Philosophy</p>
+            </div>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 mb-12">

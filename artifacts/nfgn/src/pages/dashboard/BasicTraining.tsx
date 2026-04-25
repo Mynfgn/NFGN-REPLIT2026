@@ -285,7 +285,23 @@ export function BasicTrainingPage() {
               <CardContent className="pt-6 space-y-6">
                 <SectionHeader icon={DollarSign} title="The NFGN Compensation Plan" subtitle="6 ways to earn — understand every stream" />
 
-                <p className="text-sm text-muted-foreground">NFGN pays you six distinct ways. Each layer is designed to reward both retail activity and team building. The more streams you activate, the more your income multiplies.</p>
+                {/* Plan name callout */}
+                <div className="rounded-xl border border-primary/25 bg-primary/5 p-4 space-y-2">
+                  <p className="text-xs font-bold uppercase tracking-widest text-primary">Our Official Pay Structure</p>
+                  <p className="text-base font-serif font-bold text-foreground">"2 Down By Infinity" Pay Structure</p>
+                  <p className="text-xs text-muted-foreground italic">Also known as: 2 Down By Infinity Multi-Point Payment Grid</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed pt-1">
+                    This plan was invented and solely developed by <strong className="text-foreground">Joe Marcelino</strong> with one
+                    purpose: to give the <strong className="text-foreground">average, inexperienced, and underprivileged person</strong> a
+                    realistic path to success. The name "2 Down By Infinity" reflects the plan's core strategy — a primary focus on
+                    <strong className="text-foreground"> Generation 2 (Level 2)</strong>, specifically designed to help
+                    <strong className="text-foreground"> Generation 1 members start earning commissions as fast as possible</strong>.
+                    When Level 2 grows, the payout flows back up to benefit Level 1 — and the "By Infinity" means there is no ceiling on
+                    how deep the commissions can reach as your organization expands.
+                  </p>
+                </div>
+
+                <p className="text-sm text-muted-foreground">NFGN pays you through five distinct income streams. Each layer is designed to reward both retail activity and team building. The more streams you activate, the more your income multiplies.</p>
 
                 {/* CV / PCV / GCV Glossary */}
                 <div className="rounded-xl border border-[#C9A84C]/40 bg-[#C9A84C]/5 p-5 space-y-4">

@@ -383,7 +383,7 @@ function PowerSquadBonusTracker({ bonus }: { bonus: any }) {
   const clbAmount: number         = bonus?.clbAmount ?? 100;
   const clbEnabled: boolean       = bonus?.clbEnabled ?? true;
   const clbEarned: number         = bonus?.clbEarned ?? 0;
-  const mcbTrigger: number        = bonus?.mcbTrigger ?? 7;
+  const mcbTrigger: number        = bonus?.mcbTrigger ?? 9;
   const mcbAmount: number         = bonus?.mcbAmount ?? 200;
   const mcbEnabled: boolean       = bonus?.mcbEnabled ?? true;
   const mcbEarned: number         = bonus?.mcbEarned ?? 0;

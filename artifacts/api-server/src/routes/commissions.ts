@@ -119,7 +119,7 @@ function formatRules(rules: typeof commissionRulesTable.$inferSelect | null) {
     // MCB settings
     powerBonusEnabled: rules?.powerBonusEnabled ?? true,
     powerBonusAmount: parseFloat(rules?.powerBonusAmount ?? "200"),
-    powerBonusTrigger: rules?.powerBonusTrigger ?? 7,
+    powerBonusTrigger: rules?.powerBonusTrigger ?? 9,
     // CLB settings
     clbEnabled: rules?.clbEnabled ?? true,
     clbAmount: parseFloat(rules?.clbAmount ?? "100"),
@@ -150,7 +150,7 @@ router.put("/commission-rules", requireAdmin, async (req, res): Promise<void> =>
     referralRateMode: referralRateMode ?? existing?.referralRateMode ?? "global",
     // MCB
     powerBonusAmount: String(powerBonusAmount ?? existing?.powerBonusAmount ?? 200),
-    powerBonusTrigger: powerBonusTrigger ?? existing?.powerBonusTrigger ?? 7,
+    powerBonusTrigger: powerBonusTrigger ?? existing?.powerBonusTrigger ?? 9,
     powerBonusEnabled: powerBonusEnabled ?? existing?.powerBonusEnabled ?? true,
     // CLB
     clbEnabled: clbEnabled ?? existing?.clbEnabled ?? true,

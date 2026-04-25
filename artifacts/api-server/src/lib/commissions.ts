@@ -85,7 +85,7 @@ async function loadRules(): Promise<CompensationRules> {
     salesLevels: (rules?.salesLevels as LevelRate[] | null) ?? DEFAULT_SALES_LEVELS,
     powerBonusEnabled: rules?.powerBonusEnabled ?? true,
     powerBonusAmount: parseFloat(rules?.powerBonusAmount ?? "200"),
-    powerBonusTrigger: rules?.powerBonusTrigger ?? 7,
+    powerBonusTrigger: rules?.powerBonusTrigger ?? 9,
     clbEnabled: rules?.clbEnabled ?? true,
     clbAmount: parseFloat(rules?.clbAmount ?? "100"),
     clbTrigger: rules?.clbTrigger ?? 9,

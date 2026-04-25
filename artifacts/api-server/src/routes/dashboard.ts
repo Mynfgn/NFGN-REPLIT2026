@@ -291,7 +291,7 @@ router.get("/dashboard/analytics", requireAuth, async (req, res): Promise<void> 
   const [rules] = await db.select().from(commissionRulesTable).limit(1);
 
   // MCB (Money Circulation Bonus) settings — recurring L2 bonus
-  const mcbTrigger = rules?.powerBonusTrigger ?? 7;
+  const mcbTrigger = rules?.powerBonusTrigger ?? 9;
   const mcbAmount  = parseFloat(rules?.powerBonusAmount ?? "200");
   const mcbEnabled = rules?.powerBonusEnabled ?? true;
 

@@ -722,6 +722,96 @@ function BPPSection() {
         </div>
       </div>
 
+      {/* ── Zone of Duplication ─────────────────────────────────── */}
+      <div className="rounded-2xl border border-[#C9A84C]/30 bg-[#0a0a0a] text-white p-6 space-y-5">
+        <div>
+          <p className="text-[10px] uppercase tracking-widest font-bold mb-1" style={{ color: GOLD }}>How BPP GCV Works</p>
+          <h3 className="text-lg font-serif font-bold">The Zone of Duplication</h3>
+          <p className="text-white/60 text-xs mt-0.5">Levels 2 · 3 · 4 · 5 — where your BPP volume is generated</p>
+        </div>
+
+        <p className="text-sm text-white/75 leading-relaxed">
+          The GCV that counts toward your BPP bonuses does <strong className="text-white">not</strong> come from Level 1.
+          It comes from <strong className="text-white">Levels 2, 3, 4, and 5</strong> — an area of your organization known
+          as your <strong className="text-white">Zone of Duplication</strong>. This is where your{" "}
+          <strong className="text-white">Wealth Builders Community</strong> lives, and it is the heart of your group's
+          money circulation.
+        </p>
+
+        {/* Level 2 highlight */}
+        <div className="rounded-xl bg-white/5 border border-[#C9A84C]/30 p-4 space-y-2">
+          <p className="text-xs font-bold uppercase tracking-widest" style={{ color: GOLD }}>Level 2 Always Pays the Most</p>
+          <p className="text-sm text-white/75 leading-relaxed">
+            Level 2 is the most powerful level in your entire organization. It generally carries a{" "}
+            <strong className="text-white">50% commission match</strong> of your Level 1 percentage — meaning if your
+            Level 1 commission rate is <strong className="text-white">12%</strong>, your Level 2 rate is{" "}
+            <strong className="text-white">24%</strong>. No other level pays more.
+          </p>
+          <div className="grid grid-cols-2 gap-3 pt-1">
+            <div className="rounded-lg bg-white/10 p-3 text-center">
+              <p className="text-xs text-white/50 uppercase tracking-widest mb-1">Level 1</p>
+              <p className="text-2xl font-black" style={{ color: GOLD }}>12%</p>
+              <p className="text-[10px] text-white/40">Base rate</p>
+            </div>
+            <div className="rounded-lg p-3 text-center" style={{ background: `${GOLD}20`, border: `1px solid ${GOLD}50` }}>
+              <p className="text-xs text-white/50 uppercase tracking-widest mb-1">Level 2</p>
+              <p className="text-2xl font-black" style={{ color: GOLD }}>24%</p>
+              <p className="text-[10px] text-white/40">50% match — always highest</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Purpose */}
+        <div className="space-y-2">
+          <p className="text-xs font-bold uppercase tracking-widest" style={{ color: GOLD }}>The Purpose</p>
+          <p className="text-sm text-white/75 leading-relaxed">
+            This structure was intentionally designed to encourage upline sponsors to{" "}
+            <strong className="text-white">place new members and customers under their Core Leadership Group</strong>{" "}
+            (Generation 1). When a new customer is placed on someone in your Level 1 who needs financial help, it creates
+            excitement and builds confidence — and that activity flows directly into your Zone of Duplication, generating
+            GCV that qualifies you for BPP bonuses.
+          </p>
+          <p className="text-sm text-white/75 leading-relaxed">
+            This simple wealth-building concept — when combined with good training, powerful words of wisdom and affirmation,
+            a clear understanding of your <em className="text-white">Why</em> and vision, and putting the work behind the
+            faith — will always produce a positive, efficient, and productive culture.
+          </p>
+        </div>
+
+        {/* Three quotes */}
+        <div className="space-y-3">
+          <p className="text-xs font-bold uppercase tracking-widest" style={{ color: GOLD }}>Three Guiding Principles — Joe Marcelino</p>
+          {[
+            "Help Yourself By Helping Another.",
+            "If you want to be successful at building your leadership, you must first be successful at building leaders.",
+            "Communities don't build people. People build communities.",
+          ].map((quote, i) => (
+            <div key={i} className="flex gap-3 items-start">
+              <span
+                className="h-6 w-6 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-black mt-0.5"
+                style={{ background: `${GOLD}25`, color: GOLD, border: `1px solid ${GOLD}50` }}
+              >
+                {i + 1}
+              </span>
+              <p className="text-sm italic text-white/80 leading-relaxed">"{quote}"</p>
+            </div>
+          ))}
+        </div>
+
+        {/* How to build */}
+        <div className="rounded-xl bg-white/5 border border-white/10 p-4 space-y-2">
+          <p className="text-xs font-bold uppercase tracking-widest" style={{ color: GOLD }}>Building Your Wealth Builders Community</p>
+          <p className="text-sm text-white/75 leading-relaxed">
+            To maximize your BPP, take focused time to build your{" "}
+            <strong className="text-white">Core Leadership Group</strong> — and then help each of those leaders build
+            their own Core Leadership Groups. The more Core Leadership Groups you have at each level, the greater your
+            group volume. The greater your group volume, the faster you arrive at maximizing the Bill Payer Program
+            and unlocking the full benefits of the{" "}
+            <strong className="text-white">2 Down By Infinity Multi-Point Payment Grid</strong>.
+          </p>
+        </div>
+      </div>
+
       {/* Fund list */}
       <Card>
         <CardHeader className="pb-2">

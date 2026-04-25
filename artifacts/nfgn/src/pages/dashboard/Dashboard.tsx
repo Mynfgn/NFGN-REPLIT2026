@@ -1193,16 +1193,13 @@ export function Dashboard() {
         <StatCard title="Members" value={String(data?.retailCustomers ?? 0)} sub="Active buyers" icon={ShoppingBag} />
       </div>
 
-      {/* Volume This Month — above Power Squad tracker */}
+      {/* Volume This Month */}
       <CVCard pv={pv} gv={gv} required={required} />
-
-      {/* Power Squad Bonus Tracker — CLB + MCB combined */}
-      <PowerSquadBonusTracker bonus={analytics?.powerSquadBonus} />
 
       {/* Community World Map */}
       <MemberMapCard title="Your Community Map" />
 
-      {/* Referral Tools */}
+      {/* Referral Tools — includes Share Your Digital QR Card */}
       {data?.referralLink && (
         <div className="space-y-2">
           <h2 className="text-lg font-serif font-bold text-foreground flex items-center gap-2">
@@ -1213,7 +1210,10 @@ export function Dashboard() {
         </div>
       )}
 
-      {/* Featured Product — below Community Map */}
+      {/* Power Squad Bonus Tracker — below QR card, above Featured Product */}
+      <PowerSquadBonusTracker bonus={analytics?.powerSquadBonus} />
+
+      {/* Featured Product */}
       <FeaturedProductCard referralCode={(data as any)?.referralCode ?? ""} />
 
       {/* Monthly Sales Chart + Earnings Line Chart */}

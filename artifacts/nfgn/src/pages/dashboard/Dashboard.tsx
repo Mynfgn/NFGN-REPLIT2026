@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Wallet, Users, ShoppingBag, ArrowUpRight, TrendingUp, MapPin, Star, CheckCircle2, AlertCircle, BarChart3, Link2, Copy, Check, ExternalLink, DollarSign, Sparkles, ShoppingCart, Zap, X } from "lucide-react";
+import { Wallet, Users, ShoppingBag, ArrowUpRight, TrendingUp, MapPin, Star, CheckCircle2, AlertCircle, BarChart3, Link2, Copy, Check, ExternalLink, DollarSign, Sparkles, ShoppingCart, Zap, X, QrCode, Phone, Mail, UserCircle, Smartphone } from "lucide-react";
 import { MemberMapCard } from "@/components/dashboard/MemberMapCard";
 import { customFetch } from "@/lib/custom-fetch";
 import { resolveImageSrc } from "@/lib/image";
@@ -764,6 +764,7 @@ function SalesByStateChart({ data }: { data: any[] }) {
 function AffiliateLinkCard({ referralLink, referralCode: codeFromData }: { referralLink: string; referralCode?: string }) {
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
+  const { data: me } = useGetMe();
 
   const affiliateUrl = (() => {
     try {
@@ -906,6 +907,83 @@ function AffiliateLinkCard({ referralLink, referralCode: codeFromData }: { refer
           </div>
         </div>
 
+        {/* ── Share Your Digital QR Card ── */}
+        {(() => {
+          const fullName = `${(me as any)?.firstName ?? ""} ${(me as any)?.lastName ?? ""}`.trim();
+          const email = (me as any)?.email ?? "";
+          const phone = (me as any)?.phone ?? "";
+          const refLink = affiliateUrl;
+          const vcard = [
+            "BEGIN:VCARD",
+            "VERSION:3.0",
+            `FN:${fullName}`,
+            `N:${(me as any)?.lastName ?? ""};${(me as any)?.firstName ?? ""};;;`,
+            phone ? `TEL;TYPE=CELL:${phone}` : "",
+            email ? `EMAIL:${email}` : "",
+            "ORG:New Face Global Network",
+            (me as any)?.isProMember ? "TITLE:NFGN Pro Member" : "TITLE:NFGN Member",
+            referralCode ? `URL:${refLink}` : "",
+            referralCode ? `NOTE:NFGN Sponsor Code\\: ${referralCode}` : "",
+            "END:VCARD",
+          ].filter(Boolean).join("\n");
+          const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(vcard)}&color=0a0a0a&bgcolor=ffffff`;
+          const qrFull = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(vcard)}`;
+          return (
+            <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <QrCode className="h-4 w-4 text-primary flex-shrink-0" />
+                <p className="text-xs font-bold text-primary uppercase tracking-wider">Share Your Digital QR Card</p>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center gap-5">
+                <div className="border rounded-xl p-3 bg-white shadow-sm flex-shrink-0">
+                  <img src={qrSrc} alt="Digital QR Card" width={150} height={150} className="rounded block" />
+                </div>
+                <div className="flex-1 space-y-2 text-center sm:text-left">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    When someone scans this QR code their phone will offer to save your contact info instantly — name, email, phone, and your NFGN referral link. Print it on business cards, flyers, or your name badge.
+                  </p>
+                  <div className="space-y-1">
+                    {[
+                      { icon: UserCircle, label: "Name", value: fullName || "—" },
+                      { icon: Mail,       label: "Email", value: email || "—" },
+                      { icon: Phone,      label: "Phone", value: phone || "Not set — add in Profile" },
+                      { icon: Smartphone, label: "Referral", value: referralCode ? refLink : "—" },
+                    ].map(({ icon: Icon, label, value }) => (
+                      <div key={label} className="flex items-start gap-2 text-xs">
+                        <Icon className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                        <span className="text-muted-foreground font-medium w-16 flex-shrink-0">{label}:</span>
+                        <span className={`truncate ${value.includes("Not set") ? "text-amber-600" : ""}`}>{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {!phone && (
+                    <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-700 flex items-center gap-2">
+                      <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                      Add your phone number in Profile to include it in this QR code.
+                    </div>
+                  )}
+                  <div className="flex gap-2 flex-wrap justify-center sm:justify-start pt-1">
+                    <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => window.open(qrFull, "_blank")}>
+                      <ExternalLink className="h-3.5 w-3.5" /> Download Full Size
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 text-xs"
+                      onClick={() => navigator.share
+                        ? navigator.share({ title: `${fullName} — NFGN Contact`, url: refLink })
+                        : navigator.clipboard.writeText(refLink)
+                      }
+                    >
+                      <Smartphone className="h-3.5 w-3.5" /> Share Contact Link
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
         <div className="grid grid-cols-3 gap-3 pt-1">
           {[
             { label: "Share on social media", sub: "Post your link on Facebook, Instagram & more" },
@@ -1009,7 +1087,10 @@ export function Dashboard() {
         <StatCard title="Members" value={String(data?.retailCustomers ?? 0)} sub="Active buyers" icon={ShoppingBag} />
       </div>
 
-      {/* Referral Tools — placed above trackers */}
+      {/* Power Squad Bonus Tracker — CLB + MCB combined */}
+      <PowerSquadBonusTracker bonus={analytics?.powerSquadBonus} />
+
+      {/* Referral Tools — below Power Squad tracker */}
       {data?.referralLink && (
         <div className="space-y-2">
           <h2 className="text-lg font-serif font-bold text-foreground flex items-center gap-2">
@@ -1019,9 +1100,6 @@ export function Dashboard() {
           <AffiliateLinkCard referralLink={data.referralLink} referralCode={(data as any)?.referralCode ?? ""} />
         </div>
       )}
-
-      {/* Power Squad Bonus Tracker — CLB + MCB combined */}
-      <PowerSquadBonusTracker bonus={analytics?.powerSquadBonus} />
 
       {/* Featured Product */}
       <FeaturedProductCard referralCode={(data as any)?.referralCode ?? ""} />

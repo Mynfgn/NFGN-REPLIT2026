@@ -48,6 +48,16 @@ export function AffiliateStorefront() {
   const username = params.username ?? "";
   const { data, isLoading, error } = useGetReplicatedPage(username);
   const { data: prosData } = useListProfessionals();
+  const [copied, setCopied] = useState(false);
+
+  const pageUrl = typeof window !== "undefined" ? window.location.href : `https://nfgn.app/store/${username}`;
+
+  function copyLink() {
+    navigator.clipboard.writeText(pageUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
+  }
 
   if (isLoading) {
     return (
@@ -66,15 +76,6 @@ export function AffiliateStorefront() {
   const joinUrl = `/join?ref=${username}`;
   const displayName = `${consultant.firstName} ${consultant.lastName}`;
   const professionals = prosData?.slice(0, 4) ?? [];
-
-  const pageUrl = typeof window !== "undefined" ? window.location.href : `https://nfgn.app/store/${username}`;
-  const [copied, setCopied] = useState(false);
-  function copyLink() {
-    navigator.clipboard.writeText(pageUrl).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    });
-  }
 
   return (
     <div className="min-h-screen bg-background">

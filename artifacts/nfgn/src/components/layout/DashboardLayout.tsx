@@ -47,6 +47,7 @@ const navItems: NavItem[] = [
     children: [
       { name: "Tools Overview",              href: "/dashboard/tools" },
       { name: "Vision Goals & Dreams Sheet", href: "/dashboard/tools/vision-goals" },
+      { name: "Get the App",                 href: "/dashboard/tools/get-the-app" },
     ],
   },
   {

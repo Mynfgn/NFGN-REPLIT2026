@@ -41,6 +41,7 @@ import { PayoutsPage } from "@/pages/dashboard/Payouts";
 import { EarningsPage } from "@/pages/dashboard/Earnings";
 import { ProfilePage } from "@/pages/dashboard/Profile";
 import { ToolsPage } from "@/pages/dashboard/Tools";
+import { GetTheAppPage } from "@/pages/dashboard/GetTheApp";
 import { MemberReportsPage } from "@/pages/dashboard/Reports";
 import { BasicTrainingPage } from "@/pages/dashboard/BasicTraining";
 import { MailboxPage } from "@/pages/dashboard/Mailbox";
@@ -193,6 +194,11 @@ function Router() {
       <Route path="/dashboard/tools/vision-goals">
         <RequireAuth>
           <DashboardLayout><VisionGoalsPage /></DashboardLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/dashboard/tools/get-the-app">
+        <RequireAuth>
+          <DashboardLayout><GetTheAppPage /></DashboardLayout>
         </RequireAuth>
       </Route>
       <Route path="/dashboard/transfer">

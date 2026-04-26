@@ -1,12 +1,15 @@
+import { useState } from "react";
 import { useParams, Link } from "wouter";
 import { useGetReplicatedPage, useListProfessionals } from "@workspace/api-client-react";
 import { resolveImageSrc } from "@/lib/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { QRCodeSVG } from "qrcode.react";
 import {
   Star, ShoppingBag, Users, Leaf, Award, Phone, Mail,
   CheckCircle2, ArrowRight, UserPlus, Sparkles, Calendar,
+  Smartphone, Copy, Check,
 } from "lucide-react";
 
 const BRAND_GOLD = "#C9A84C";
@@ -63,6 +66,15 @@ export function AffiliateStorefront() {
   const joinUrl = `/join?ref=${username}`;
   const displayName = `${consultant.firstName} ${consultant.lastName}`;
   const professionals = prosData?.slice(0, 4) ?? [];
+
+  const pageUrl = typeof window !== "undefined" ? window.location.href : `https://nfgn.app/store/${username}`;
+  const [copied, setCopied] = useState(false);
+  function copyLink() {
+    navigator.clipboard.writeText(pageUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -282,6 +294,93 @@ export function AffiliateStorefront() {
                 </div>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── GET THE APP ── */}
+      <section className="py-16 bg-muted/20">
+        <div className="max-w-5xl mx-auto px-4">
+          <div className="rounded-2xl overflow-hidden border shadow-sm">
+            <div className="grid md:grid-cols-2">
+
+              {/* Left — QR code */}
+              <div
+                className="flex flex-col items-center justify-center p-10 text-white"
+                style={{ background: `linear-gradient(135deg, ${BRAND_BLACK}, #1a1a2e)` }}
+              >
+                <div className="flex items-center gap-2 mb-6">
+                  <Smartphone className="h-5 w-5" style={{ color: BRAND_GOLD }} />
+                  <span className="font-serif font-bold text-lg" style={{ color: BRAND_GOLD }}>
+                    Get the NFGN App
+                  </span>
+                </div>
+                <div className="p-4 rounded-2xl bg-white shadow-lg">
+                  <QRCodeSVG
+                    value={pageUrl}
+                    size={160}
+                    bgColor="#ffffff"
+                    fgColor="#0a0a0a"
+                    level="H"
+                  />
+                </div>
+                <p className="text-white/60 text-xs text-center mt-4 max-w-[180px] leading-relaxed">
+                  Scan with any phone camera to open this page on your device
+                </p>
+              </div>
+
+              {/* Right — install steps */}
+              <div className="p-8 flex flex-col justify-center bg-white space-y-5">
+                <div>
+                  <h3 className="text-xl font-serif font-bold mb-1">Install on Your Phone</h3>
+                  <p className="text-sm text-muted-foreground">
+                    No app store needed — it installs directly to your home screen in seconds.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  {[
+                    { phone: "iPhone", steps: "Scan the QR code → Safari opens → tap Share → \"Add to Home Screen\"" },
+                    { phone: "Android", steps: "Scan the QR code → Chrome opens → tap ⋮ menu → \"Add to Home screen\"" },
+                  ].map(item => (
+                    <div key={item.phone} className="flex gap-3 p-3 rounded-lg bg-muted/30 border">
+                      <div
+                        className="h-7 w-7 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white mt-0.5"
+                        style={{ background: BRAND_GOLD }}
+                      >
+                        {item.phone[0]}
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold">{item.phone}</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{item.steps}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Copy link */}
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1.5 font-medium">Or share the link directly</p>
+                  <div className="flex items-center gap-2 rounded-lg border bg-muted/20 px-3 py-2">
+                    <span className="text-xs font-mono text-muted-foreground flex-1 truncate">{pageUrl}</span>
+                    <button
+                      onClick={copyLink}
+                      className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold text-white transition-colors"
+                      style={{ background: copied ? BRAND_GREEN : BRAND_GOLD }}
+                    >
+                      {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                      {copied ? "Copied!" : "Copy"}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                  <CheckCircle2 className="h-4 w-4 flex-shrink-0 mt-0.5" style={{ color: BRAND_GREEN }} />
+                  Free · No app store account required · Works on any iPhone or Android
+                </div>
+              </div>
+
+            </div>
           </div>
         </div>
       </section>

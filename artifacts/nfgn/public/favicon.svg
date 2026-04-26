@@ -1,16 +1,102 @@
 <svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-  <rect width="512" height="512" fill="#0a0a0a"/>
-  <rect x="22" y="22" width="468" height="468" fill="none" stroke="#C9A84C" stroke-width="1.5" opacity="0.35"/>
-  <line x1="64" y1="64" x2="448" y2="64" stroke="#C9A84C" stroke-width="1" opacity="0.2"/>
-  <line x1="64" y1="448" x2="448" y2="448" stroke="#C9A84C" stroke-width="1" opacity="0.2"/>
-  <rect x="118" y="118" width="56" height="276" fill="#C9A84C"/>
-  <rect x="338" y="118" width="56" height="276" fill="#C9A84C"/>
-  <polygon points="118,118 174,118 394,394 338,394" fill="#C9A84C"/>
-  <polygon points="130,118 154,118 374,394 350,394" fill="#e8c96b" opacity="0.25"/>
-  <rect x="118" y="118" width="22" height="276" fill="#e8c96b" opacity="0.2"/>
-  <rect x="366" y="118" width="28" height="276" fill="#e8c96b" opacity="0.2"/>
-  <circle cx="46" cy="46" r="2.5" fill="#C9A84C" opacity="0.5"/>
-  <circle cx="466" cy="46" r="2.5" fill="#C9A84C" opacity="0.5"/>
-  <circle cx="46" cy="466" r="2.5" fill="#C9A84C" opacity="0.5"/>
-  <circle cx="466" cy="466" r="2.5" fill="#C9A84C" opacity="0.5"/>
+  <defs>
+    <linearGradient id="goldH" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#c49a30"/>
+      <stop offset="40%"  stop-color="#f0d060"/>
+      <stop offset="70%"  stop-color="#C9A84C"/>
+      <stop offset="100%" stop-color="#a07828"/>
+    </linearGradient>
+    <linearGradient id="goldV" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#e8c860"/>
+      <stop offset="50%"  stop-color="#C9A84C"/>
+      <stop offset="100%" stop-color="#9a7020"/>
+    </linearGradient>
+    <radialGradient id="nGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#f4de78" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#C9A84C" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" fill="#080808"/>
+
+  <!-- Outer border -->
+  <rect x="16" y="16" width="480" height="480" fill="none" stroke="#C9A84C" stroke-width="3"/>
+
+  <!-- Thin inner frame -->
+  <rect x="28" y="28" width="456" height="456" fill="none" stroke="#C9A84C" stroke-width="1" opacity="0.4"/>
+
+  <!-- ═══ EDGE LINES between corners ═══ -->
+  <!-- Top -->
+  <line x1="112" y1="22" x2="256" y2="22" stroke="#C9A84C" stroke-width="2" opacity="0.7"/>
+  <line x1="256" y1="22" x2="400" y2="22" stroke="#C9A84C" stroke-width="2" opacity="0.7"/>
+  <!-- Bottom -->
+  <line x1="112" y1="490" x2="256" y2="490" stroke="#C9A84C" stroke-width="2" opacity="0.7"/>
+  <line x1="256" y1="490" x2="400" y2="490" stroke="#C9A84C" stroke-width="2" opacity="0.7"/>
+  <!-- Left -->
+  <line x1="22" y1="112" x2="22" y2="256" stroke="#C9A84C" stroke-width="2" opacity="0.7"/>
+  <line x1="22" y1="256" x2="22" y2="400" stroke="#C9A84C" stroke-width="2" opacity="0.7"/>
+  <!-- Right -->
+  <line x1="490" y1="112" x2="490" y2="256" stroke="#C9A84C" stroke-width="2" opacity="0.7"/>
+  <line x1="490" y1="256" x2="490" y2="400" stroke="#C9A84C" stroke-width="2" opacity="0.7"/>
+
+  <!-- ◆ Centre edge diamonds -->
+  <polygon points="256,16 262,22 256,28 250,22" fill="#C9A84C"/>
+  <polygon points="256,484 262,490 256,496 250,490" fill="#C9A84C"/>
+  <polygon points="16,256 22,262 28,256 22,250" fill="#C9A84C"/>
+  <polygon points="484,256 490,262 496,256 490,250" fill="#C9A84C"/>
+
+  <!-- ═══ GREEK KEY CORNERS (square spiral, stroke-based) ═══ -->
+  <!-- Each corner: outer L then step inward then inner step -->
+  <!-- SW=9, stroke-linecap=square for that crisp meander feel -->
+
+  <!-- TOP-LEFT: spiral CW inward from corner -->
+  <polyline points="16,106 16,16 106,16 106,76 46,76 46,46 76,46 76,66"
+    fill="none" stroke="#C9A84C" stroke-width="9" stroke-linecap="square" stroke-linejoin="miter"/>
+
+  <!-- TOP-RIGHT: mirror -->
+  <polyline points="406,16 496,16 496,106 436,106 436,46 466,46 466,66"
+    fill="none" stroke="#C9A84C" stroke-width="9" stroke-linecap="square" stroke-linejoin="miter"/>
+
+  <!-- BOTTOM-LEFT: flip vertically -->
+  <polyline points="16,406 16,496 106,496 106,436 46,436 46,466 66,466"
+    fill="none" stroke="#C9A84C" stroke-width="9" stroke-linecap="square" stroke-linejoin="miter"/>
+
+  <!-- BOTTOM-RIGHT: flip both -->
+  <polyline points="406,496 496,496 496,406 436,406 436,466 466,466 466,446"
+    fill="none" stroke="#C9A84C" stroke-width="9" stroke-linecap="square" stroke-linejoin="miter"/>
+
+  <!-- ═══ GOTHIC BLACKLETTER N ═══ -->
+  <!-- Left stem: tall hexagon with pointed top & bottom diamond serifs -->
+  <!-- Serif diamonds at top and bottom of each stem -->
+
+  <!-- Left stem body + pointed serifs -->
+  <polygon points="143,100 170,124 170,388 143,412 116,388 116,124"
+    fill="url(#goldV)"/>
+
+  <!-- Right stem body + pointed serifs -->
+  <polygon points="369,100 396,124 396,388 369,412 342,388 342,124"
+    fill="url(#goldV)"/>
+
+  <!-- Diagonal bar: from top-left to bottom-right -->
+  <polygon points="116,124 170,124 396,388 342,388"
+    fill="url(#goldH)"/>
+
+  <!-- Glow overlay on N -->
+  <ellipse cx="256" cy="256" rx="140" ry="160" fill="url(#nGlow)"/>
+
+  <!-- ═══ CLASSICAL ORNAMENTAL LINES above & below N ═══ -->
+  <!-- Triple line rule above -->
+  <line x1="90" y1="80" x2="422" y2="80" stroke="#C9A84C" stroke-width="1.5" opacity="0.8"/>
+  <line x1="100" y1="86" x2="412" y2="86" stroke="#C9A84C" stroke-width="0.8" opacity="0.4"/>
+  <!-- Triple line rule below -->
+  <line x1="90" y1="432" x2="422" y2="432" stroke="#C9A84C" stroke-width="1.5" opacity="0.8"/>
+  <line x1="100" y1="426" x2="412" y2="426" stroke="#C9A84C" stroke-width="0.8" opacity="0.4"/>
+
+  <!-- Small diamond flourish at ends of rules -->
+  <polygon points="84,80 90,86 84,92 78,86" fill="#C9A84C" opacity="0.9"/>
+  <polygon points="428,80 434,86 428,92 422,86" fill="#C9A84C" opacity="0.9"/>
+  <polygon points="84,432 90,438 84,444 78,438" fill="#C9A84C" opacity="0.9"/>
+  <polygon points="428,432 434,438 428,444 422,438" fill="#C9A84C" opacity="0.9"/>
+
 </svg>

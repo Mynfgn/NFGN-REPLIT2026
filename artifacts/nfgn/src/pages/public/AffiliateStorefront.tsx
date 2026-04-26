@@ -307,16 +307,16 @@ export function AffiliateStorefront() {
 
               {/* Left — QR code */}
               <div
-                className="flex flex-col items-center justify-center p-10 text-white"
+                className="w-full flex flex-col items-center justify-center text-center py-10 px-6 text-white"
                 style={{ background: `linear-gradient(135deg, ${BRAND_BLACK}, #1a1a2e)` }}
               >
-                <div className="flex items-center gap-2 mb-6">
-                  <Smartphone className="h-5 w-5" style={{ color: BRAND_GOLD }} />
+                <div className="flex items-center justify-center gap-2 mb-6">
+                  <Smartphone className="h-5 w-5 flex-shrink-0" style={{ color: BRAND_GOLD }} />
                   <span className="font-serif font-bold text-lg" style={{ color: BRAND_GOLD }}>
                     Get the NFGN App
                   </span>
                 </div>
-                <div className="p-4 rounded-2xl bg-white shadow-lg">
+                <div className="p-4 rounded-2xl bg-white shadow-lg inline-block">
                   <QRCodeSVG
                     value={pageUrl}
                     size={160}
@@ -325,7 +325,7 @@ export function AffiliateStorefront() {
                     level="H"
                   />
                 </div>
-                <p className="text-white/60 text-xs text-center mt-4 max-w-[180px] leading-relaxed">
+                <p className="text-white/60 text-xs text-center mt-4 max-w-[200px] leading-relaxed mx-auto">
                   Scan with any phone camera to open this page on your device
                 </p>
               </div>

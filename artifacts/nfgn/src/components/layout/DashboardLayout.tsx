@@ -14,80 +14,179 @@ import { Button } from "@/components/ui/button";
 import { roleLabel } from "@/lib/labels";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
 
+const GOLD = "#C9A84C";
+const DARK = "#0a0a0a";
+
 type NavChild = { name: string; href: string };
 
 type NavItem =
   | { name: string; href: string; icon: any; exact?: boolean; group?: never; children?: never }
   | { name: string; href?: never; icon: any; group: string; children: NavChild[]; exact?: never };
 
-const navItems: NavItem[] = [
-  { name: "Overview",           href: "/dashboard",                   icon: LayoutDashboard },
-  { name: "Profile Management", href: "/dashboard/profile",           icon: UserCircle },
-  { name: "Genealogy",          href: "/dashboard/genealogy",         icon: Users },
+const NAV_SECTIONS: { label?: string; items: NavItem[] }[] = [
   {
-    name: "Registration", icon: UserPlus, group: "registration",
-    children: [
-      { name: "Registration Hub",            href: "/dashboard/registration" },
-      { name: "Register A New Pro Member",   href: "/dashboard/register-new-pro" },
-      { name: "New Member Registration List", href: "/dashboard/member-outreach" },
-    ],
-  },
-  { name: "User Earnings",      href: "/dashboard/earnings",          icon: TrendingUp },
-  { name: "Orders",             href: "/dashboard/orders",            icon: ShoppingBag },
-  { name: "E-Wallet",           href: "/dashboard/wallet",            icon: Wallet },
-  { name: "Transfer Funds",     href: "/dashboard/transfer",          icon: ArrowRightLeft },
-  { name: "Payouts",            href: "/dashboard/payouts",           icon: Banknote },
-  { name: "Commissions",        href: "/dashboard/commissions",       icon: Award },
-  { name: "Pro Member Bonus",   href: "/dashboard/pro-member-bonuses", icon: Star },
-  { name: "Bill Payer Program", href: "/dashboard/bpp",               icon: Home },
-  { name: "Bookings",           href: "/dashboard/bookings",          icon: Calendar },
-  { name: "Mailbox",            href: "/dashboard/mailbox",           icon: Inbox },
-  {
-    name: "Tools", icon: Wrench, group: "tools",
-    children: [
-      { name: "Tools Overview",              href: "/dashboard/tools" },
-      { name: "Vision Goals & Dreams Sheet", href: "/dashboard/tools/vision-goals" },
-      { name: "Get the App",                 href: "/dashboard/tools/get-the-app" },
+    items: [
+      { name: "Overview",           href: "/dashboard",                   icon: LayoutDashboard, exact: true },
+      { name: "Profile Management", href: "/dashboard/profile",           icon: UserCircle },
+      { name: "Genealogy",          href: "/dashboard/genealogy",         icon: Users },
     ],
   },
   {
-    name: "Comp Plan",
-    icon: DollarSign,
-    group: "comp-plan",
-    children: [
-      { name: "Overview",                href: "/dashboard/comp-plan?s=overview" },
-      { name: "Referral Commission",     href: "/dashboard/comp-plan?s=rc" },
-      { name: "Product Sales Comm.",     href: "/dashboard/comp-plan?s=psc" },
-      { name: "Multi-Level Retail",      href: "/dashboard/comp-plan?s=pmrc" },
-      { name: "Power Squad Bonuses",     href: "/dashboard/comp-plan?s=psb" },
-      { name: "Bill Payer Program",      href: "/dashboard/comp-plan?s=bpp" },
+    label: "Business",
+    items: [
+      {
+        name: "Registration", icon: UserPlus, group: "registration",
+        children: [
+          { name: "Registration Hub",             href: "/dashboard/registration" },
+          { name: "Register A New Pro Member",    href: "/dashboard/register-new-pro" },
+          { name: "New Member Registration List", href: "/dashboard/member-outreach" },
+        ],
+      },
+      { name: "User Earnings",      href: "/dashboard/earnings",           icon: TrendingUp },
+      { name: "Orders",             href: "/dashboard/orders",             icon: ShoppingBag },
+      { name: "E-Wallet",           href: "/dashboard/wallet",             icon: Wallet },
+      { name: "Transfer Funds",     href: "/dashboard/transfer",           icon: ArrowRightLeft },
+      { name: "Payouts",            href: "/dashboard/payouts",            icon: Banknote },
+      { name: "Commissions",        href: "/dashboard/commissions",        icon: Award },
+      { name: "Pro Member Bonus",   href: "/dashboard/pro-member-bonuses", icon: Star },
+      { name: "Bill Payer Program", href: "/dashboard/bpp",                icon: Home },
+      { name: "Bookings",           href: "/dashboard/bookings",           icon: Calendar },
+      { name: "Mailbox",            href: "/dashboard/mailbox",            icon: Inbox },
     ],
   },
   {
-    name: "NFGN Basic Training",
-    icon: BookOpen,
-    group: "training",
-    children: [
-      { name: "Getting Started",    href: "/dashboard/tools/training?s=getting-started" },
-      { name: "Comp Plan",          href: "/dashboard/tools/training?s=comp-plan" },
-      { name: "$3,500/Month Plan",  href: "/dashboard/tools/training?s=2500-plan" },
-      { name: "Bill Payer Program", href: "/dashboard/tools/training?s=bpp" },
-      { name: "90-Day Plan",        href: "/dashboard/tools/training?s=90-day" },
-      { name: "IGNITE Training",    href: "/dashboard/tools/training?s=ignite" },
-      { name: "Earn Big Bonuses",   href: "/dashboard/tools/training?s=big-bonuses" },
-      { name: "Additional Training", href: "/dashboard/tools/training?s=additional" },
-      { name: "Add App to Phone",   href: "/dashboard/tools/training?s=app-setup" },
+    label: "Resources",
+    items: [
+      {
+        name: "Tools", icon: Wrench, group: "tools",
+        children: [
+          { name: "Tools Overview",              href: "/dashboard/tools" },
+          { name: "Vision Goals & Dreams Sheet", href: "/dashboard/tools/vision-goals" },
+          { name: "Get the App",                 href: "/dashboard/tools/get-the-app" },
+        ],
+      },
+      {
+        name: "Comp Plan",
+        icon: DollarSign,
+        group: "comp-plan",
+        children: [
+          { name: "Overview",               href: "/dashboard/comp-plan?s=overview" },
+          { name: "Referral Commission",    href: "/dashboard/comp-plan?s=rc" },
+          { name: "Product Sales Comm.",    href: "/dashboard/comp-plan?s=psc" },
+          { name: "Multi-Level Retail",     href: "/dashboard/comp-plan?s=pmrc" },
+          { name: "Power Squad Bonuses",    href: "/dashboard/comp-plan?s=psb" },
+          { name: "Bill Payer Program",     href: "/dashboard/comp-plan?s=bpp" },
+        ],
+      },
+      {
+        name: "NFGN Basic Training",
+        icon: BookOpen,
+        group: "training",
+        children: [
+          { name: "Getting Started",     href: "/dashboard/tools/training?s=getting-started" },
+          { name: "Comp Plan",           href: "/dashboard/tools/training?s=comp-plan" },
+          { name: "$3,500/Month Plan",   href: "/dashboard/tools/training?s=2500-plan" },
+          { name: "Bill Payer Program",  href: "/dashboard/tools/training?s=bpp" },
+          { name: "90-Day Plan",         href: "/dashboard/tools/training?s=90-day" },
+          { name: "IGNITE Training",     href: "/dashboard/tools/training?s=ignite" },
+          { name: "Earn Big Bonuses",    href: "/dashboard/tools/training?s=big-bonuses" },
+          { name: "Additional Training", href: "/dashboard/tools/training?s=additional" },
+          { name: "Add App to Phone",    href: "/dashboard/tools/training?s=app-setup" },
+        ],
+      },
+      { name: "Reports", href: "/dashboard/reports", icon: BarChart3 },
     ],
   },
-  { name: "Reports", href: "/dashboard/reports", icon: BarChart3 },
 ];
 
+const navItems: NavItem[] = NAV_SECTIONS.flatMap(s => s.items);
+
 function isGroupOpen(group: string, location: string): boolean {
-  if (group === "comp-plan") return location.startsWith("/dashboard/comp-plan");
-  if (group === "training") return location.startsWith("/dashboard/tools/training");
+  if (group === "comp-plan")    return location.startsWith("/dashboard/comp-plan");
+  if (group === "training")     return location.startsWith("/dashboard/tools/training");
   if (group === "registration") return location.startsWith("/dashboard/registration") || location.startsWith("/dashboard/register-new-pro") || location.startsWith("/dashboard/member-outreach");
-  if (group === "tools") return location.startsWith("/dashboard/tools");
+  if (group === "tools")        return location.startsWith("/dashboard/tools");
   return false;
+}
+
+function SidebarSectionLabel({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-2 px-3 pt-5 pb-1">
+      <span className="text-[9px] font-black uppercase tracking-[0.2em]" style={{ color: `${GOLD}70` }}>{label}</span>
+      <span className="flex-1 h-px" style={{ background: `linear-gradient(to right, ${GOLD}30, transparent)` }} />
+    </div>
+  );
+}
+
+function NavGroupItem({
+  item, location, openGroups, toggleGroup, navigate, closeSidebar,
+}: {
+  item: Extract<NavItem, { group: string }>;
+  location: string;
+  openGroups: Record<string, boolean>;
+  toggleGroup: (g: string) => void;
+  navigate: (href: string) => void;
+  closeSidebar: () => void;
+}) {
+  const open = openGroups[item.group] ?? false;
+  const anyChildActive = item.children.some(c => location.startsWith(c.href.split("?")[0]));
+
+  return (
+    <div>
+      <button
+        onClick={() => toggleGroup(item.group)}
+        className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all duration-150 group relative"
+        style={{
+          color: anyChildActive ? GOLD : "rgba(255,255,255,0.55)",
+          background: anyChildActive ? `${GOLD}12` : "transparent",
+          borderLeft: anyChildActive ? `2px solid ${GOLD}` : "2px solid transparent",
+        }}
+      >
+        <item.icon className="h-4 w-4 flex-shrink-0" style={{ color: anyChildActive ? GOLD : "rgba(255,255,255,0.4)" }} />
+        <span className="flex-1 text-left">{item.name}</span>
+        {open
+          ? <ChevronDown className="h-3.5 w-3.5 opacity-50" />
+          : <ChevronRight className="h-3.5 w-3.5 opacity-30" />
+        }
+      </button>
+
+      {open && (
+        <div className="ml-4 mt-0.5 border-l pl-3 space-y-0.5" style={{ borderColor: `${GOLD}25` }}>
+          {item.children.map(child => {
+            const childPath = child.href.split("?")[0];
+            const childSearch = child.href.includes("?") ? child.href.split("?")[1] : "";
+            const childParam = childSearch ? new URLSearchParams(childSearch).get("s") : "";
+            const isChildActive =
+              location === childPath &&
+              (childParam
+                ? (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("s") === childParam)
+                : true);
+            return (
+              <button
+                key={child.name}
+                onClick={() => {
+                  navigate(child.href);
+                  window.dispatchEvent(new CustomEvent("nfgn:nav", { detail: { href: child.href } }));
+                  closeSidebar();
+                }}
+                className="w-full flex items-center gap-2.5 px-2 py-1.5 text-xs font-medium transition-all text-left"
+                style={{
+                  color: isChildActive ? GOLD : "rgba(255,255,255,0.45)",
+                  background: isChildActive ? `${GOLD}15` : "transparent",
+                }}
+              >
+                <span
+                  className="h-1.5 w-1.5 rounded-full flex-shrink-0 transition-all"
+                  style={{ background: isChildActive ? GOLD : "rgba(255,255,255,0.25)" }}
+                />
+                {child.name}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function DashboardLayout({ children }: { children: ReactNode }) {
@@ -121,155 +220,226 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
     });
   };
 
+  const initials = `${user?.firstName?.charAt(0) ?? ""}${user?.lastName?.charAt(0) ?? ""}`;
+
   return (
-    <div className="min-h-screen flex bg-muted/30">
+    <div className="min-h-screen flex" style={{ background: "#f4f3f0" }}>
       {sidebarOpen && (
-        <div className="fixed inset-0 z-40 bg-black/80 md:hidden" onClick={() => setSidebarOpen(false)} />
+        <div
+          className="fixed inset-0 z-40 md:hidden"
+          style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)" }}
+          onClick={() => setSidebarOpen(false)}
+        />
       )}
 
-      <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform duration-200 ease-in-out flex flex-col
-        md:translate-x-0 md:static md:block
-        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-      `}>
-        <div className="h-16 flex items-center px-6 border-b">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="font-serif text-2xl font-bold tracking-tighter text-primary">NFGN</span>
+      {/* ── SIDEBAR ── */}
+      <aside
+        className={`
+          fixed inset-y-0 left-0 z-50 w-64 flex flex-col
+          transform transition-transform duration-300 ease-in-out
+          md:translate-x-0 md:static md:block
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+        `}
+        style={{
+          background: "linear-gradient(180deg, #111111 0%, #0a0a0a 100%)",
+          borderRight: `1px solid rgba(201,168,76,0.15)`,
+        }}
+      >
+        {/* Logo row */}
+        <div
+          className="h-16 flex items-center px-5 flex-shrink-0"
+          style={{ borderBottom: `1px solid rgba(201,168,76,0.15)` }}
+        >
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="flex flex-col leading-none">
+              <span
+                className="font-serif text-2xl font-black tracking-tighter transition-colors"
+                style={{ color: GOLD }}
+              >
+                NFGN
+              </span>
+              <span className="text-[8px] font-bold tracking-[0.25em] uppercase" style={{ color: `${GOLD}60` }}>
+                Global Network
+              </span>
+            </div>
           </Link>
+
           <div className="ml-auto flex items-center gap-1">
-            <span className="hidden md:flex"><NotificationBell align="left" /></span>
-            <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSidebarOpen(false)}>
-              <X className="h-5 w-5" />
+            <div className="hidden md:flex" style={{ color: "rgba(255,255,255,0.7)" }}>
+              <NotificationBell align="left" />
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden text-white/60 hover:text-white hover:bg-white/10"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <X className="h-4 w-4" />
             </Button>
           </div>
         </div>
 
-        <div className="p-4 border-b">
+        {/* User profile */}
+        <div className="px-4 py-4 flex-shrink-0" style={{ borderBottom: `1px solid rgba(201,168,76,0.1)` }}>
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-              {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
+            {/* Avatar with gold ring */}
+            <div className="relative flex-shrink-0">
+              <div
+                className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-black"
+                style={{
+                  background: `linear-gradient(135deg, ${GOLD}40, ${GOLD}20)`,
+                  border: `2px solid ${GOLD}`,
+                  color: GOLD,
+                  boxShadow: `0 0 12px ${GOLD}40`,
+                }}
+              >
+                {initials || "?"}
+              </div>
+              <span
+                className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2"
+                style={{ background: "#22c55e", borderColor: DARK }}
+              />
             </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-medium leading-none">{user?.firstName} {user?.lastName}</span>
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm font-semibold text-white/90 truncate leading-none">
+                {user?.firstName} {user?.lastName}
+              </span>
               {(user as any)?.proMemberStatus === "pending_approval" ? (
-                <span className="text-xs font-semibold mt-1" style={{ color: "#C9A84C" }}>⏳ Pro Member — Awaiting Approval</span>
+                <span className="text-[10px] font-bold mt-1 flex items-center gap-1" style={{ color: GOLD }}>
+                  <span>⏳</span> Awaiting Approval
+                </span>
               ) : (
-                <span className="text-xs text-muted-foreground mt-1">{user?.role ? roleLabel(user.role) : ""}</span>
+                <span className="text-[11px] mt-1 font-medium" style={{ color: `${GOLD}80` }}>
+                  {user?.role ? roleLabel(user.role) : ""}
+                </span>
               )}
             </div>
           </div>
         </div>
 
-        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
-          {navItems.map(item => {
-            if (item.group) {
-              const open = openGroups[item.group] ?? false;
-              const anyChildActive = item.children.some(c => location.startsWith(c.href.split("?")[0]));
-              return (
-                <div key={item.group}>
-                  <button
-                    onClick={() => toggleGroup(item.group)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors
-                      ${anyChildActive
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                      }`}
-                  >
-                    <item.icon className="h-4 w-4 flex-shrink-0" />
-                    <span className="flex-1 text-left">{item.name}</span>
-                    {open
-                      ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-                      : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-                    }
-                  </button>
+        {/* Nav */}
+        <nav className="flex-1 overflow-y-auto py-2 space-y-0.5 sidebar-scroll">
+          {NAV_SECTIONS.map((section, si) => (
+            <div key={si}>
+              {section.label && <SidebarSectionLabel label={section.label} />}
+              {section.items.map(item => {
+                if (item.group) {
+                  return (
+                    <NavGroupItem
+                      key={item.group}
+                      item={item as Extract<NavItem, { group: string }>}
+                      location={location}
+                      openGroups={openGroups}
+                      toggleGroup={toggleGroup}
+                      navigate={navigate}
+                      closeSidebar={() => setSidebarOpen(false)}
+                    />
+                  );
+                }
 
-                  {open && (
-                    <div className="ml-3 mt-0.5 border-l border-border pl-3 space-y-0.5">
-                      {item.children.map(child => {
-                        const childPath = child.href.split("?")[0];
-                        const childSearch = child.href.includes("?") ? child.href.split("?")[1] : "";
-                        const childParam = childSearch ? new URLSearchParams(childSearch).get("s") : "";
-                        const isChildActive =
-                          location === childPath &&
-                          (childParam
-                            ? (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("s") === childParam)
-                            : true);
-                        return (
-                          <button
-                            key={child.name}
-                            onClick={() => {
-                              navigate(child.href);
-                              window.dispatchEvent(new CustomEvent("nfgn:nav", { detail: { href: child.href } }));
-                            }}
-                            className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-medium transition-colors text-left
-                              ${isChildActive
-                                ? "bg-primary/10 text-primary"
-                                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                              }`}
-                          >
-                            <span className="h-1.5 w-1.5 rounded-full bg-current flex-shrink-0" />
-                            {child.name}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            }
+                const isActive = item.exact
+                  ? location === item.href
+                  : location === item.href || location.startsWith(`${item.href}/`);
 
-            const isActive = item.exact
-              ? location === item.href
-              : location === item.href || location.startsWith(`${item.href}/`);
-
-            return (
-              <Link key={item.name} href={item.href!}>
-                <span
-                  className={`flex items-center gap-3 rounded-md text-sm font-medium transition-colors px-3 py-2.5
-                    ${isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }`}
-                >
-                  <item.icon className="h-4 w-4 flex-shrink-0" />
-                  {item.name}
-                </span>
-              </Link>
-            );
-          })}
+                return (
+                  <Link key={item.name} href={item.href!}>
+                    <span
+                      onClick={() => setSidebarOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all duration-150 cursor-pointer"
+                      style={{
+                        color: isActive ? GOLD : "rgba(255,255,255,0.55)",
+                        background: isActive ? `${GOLD}12` : "transparent",
+                        borderLeft: isActive ? `2px solid ${GOLD}` : "2px solid transparent",
+                      }}
+                    >
+                      <item.icon
+                        className="h-4 w-4 flex-shrink-0 transition-colors"
+                        style={{ color: isActive ? GOLD : "rgba(255,255,255,0.35)" }}
+                      />
+                      {item.name}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
-        <div className="p-4 border-t">
-          <Button
-            variant="ghost"
-            className="w-full justify-start text-muted-foreground hover:text-destructive"
+        {/* Logout */}
+        <div className="flex-shrink-0 px-3 py-4" style={{ borderTop: `1px solid rgba(201,168,76,0.12)` }}>
+          <button
             onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded transition-all duration-150 group"
+            style={{ color: "rgba(255,255,255,0.4)" }}
+            onMouseEnter={e => (e.currentTarget.style.color = "#f87171")}
+            onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}
           >
-            <LogOut className="mr-3 h-4 w-4" />
-            Logout
-          </Button>
+            <LogOut className="h-4 w-4 flex-shrink-0" />
+            Sign Out
+          </button>
         </div>
       </aside>
 
+      {/* ── MAIN CONTENT ── */}
       <main className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 flex items-center px-4 md:px-6 border-b bg-card md:hidden">
-          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>
+        {/* Mobile top bar */}
+        <header
+          className="h-16 flex items-center px-4 md:hidden flex-shrink-0"
+          style={{
+            background: DARK,
+            borderBottom: `1px solid rgba(201,168,76,0.2)`,
+          }}
+        >
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="flex items-center justify-center h-9 w-9 rounded transition-colors"
+            style={{ color: "rgba(255,255,255,0.6)" }}
+          >
             <Menu className="h-5 w-5" />
-          </Button>
-          <span className="ml-4 font-serif font-bold text-primary flex-1">Member Dashboard</span>
-          <NotificationBell />
+          </button>
+          <span className="ml-4 font-serif font-bold flex-1" style={{ color: GOLD }}>
+            NFGN
+          </span>
+          <div style={{ color: "rgba(255,255,255,0.7)" }}>
+            <NotificationBell />
+          </div>
         </header>
+
+        {/* Admin banner */}
         {user && ["super_admin", "admin", "store_admin"].includes(user.role) && (
-          <div className="bg-[#0a0a0a] text-white px-4 md:px-6 py-2 flex items-center gap-3 text-sm">
-            <ShieldCheck className="h-4 w-4 text-primary flex-shrink-0" />
-            <span className="text-white/70">You are viewing your <span className="text-primary font-semibold">Member Dashboard</span> as an admin.</span>
-            <a href="/admin" className="ml-auto flex-shrink-0 text-primary hover:text-primary/80 font-medium flex items-center gap-1.5 transition-colors">
-              ← Back to Admin Panel
+          <div
+            className="px-5 py-2.5 flex items-center gap-3 text-sm flex-shrink-0"
+            style={{
+              background: "linear-gradient(90deg, #0a0a0a, #1a0f00, #0a0a0a)",
+              borderBottom: `1px solid ${GOLD}30`,
+            }}
+          >
+            <ShieldCheck className="h-4 w-4 flex-shrink-0" style={{ color: GOLD }} />
+            <span style={{ color: "rgba(255,255,255,0.6)" }}>
+              Viewing your{" "}
+              <span className="font-semibold" style={{ color: GOLD }}>
+                Member Dashboard
+              </span>{" "}
+              as admin
+            </span>
+            <a
+              href="/admin"
+              className="ml-auto flex-shrink-0 flex items-center gap-1.5 font-semibold text-sm transition-colors"
+              style={{ color: GOLD }}
+            >
+              ← Admin Panel
             </a>
           </div>
         )}
-        <div className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto">
-          {children}
+
+        {/* Page content */}
+        <div
+          className="flex-1 overflow-auto"
+          style={{ background: "linear-gradient(160deg, #f7f6f3 0%, #f1f0ec 100%)" }}
+        >
+          <div className="p-4 md:p-6 lg:p-8">
+            {children}
+          </div>
         </div>
       </main>
     </div>

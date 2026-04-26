@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "ThLpw-C-p0MEK0l4tCicI"
+uri = "file://artifacts/nfgn/public/icons/icon-512.png"
+type = "image"
+title = "NFGN App Icon (512×512)"

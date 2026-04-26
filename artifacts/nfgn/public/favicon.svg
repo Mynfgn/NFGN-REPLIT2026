@@ -1,3 +1,16 @@
-<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="180" height="180" rx="36" fill="#FF3C00"/>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" fill="#0a0a0a"/>
+  <rect x="22" y="22" width="468" height="468" fill="none" stroke="#C9A84C" stroke-width="1.5" opacity="0.35"/>
+  <line x1="64" y1="64" x2="448" y2="64" stroke="#C9A84C" stroke-width="1" opacity="0.2"/>
+  <line x1="64" y1="448" x2="448" y2="448" stroke="#C9A84C" stroke-width="1" opacity="0.2"/>
+  <rect x="118" y="118" width="56" height="276" fill="#C9A84C"/>
+  <rect x="338" y="118" width="56" height="276" fill="#C9A84C"/>
+  <polygon points="118,118 174,118 394,394 338,394" fill="#C9A84C"/>
+  <polygon points="130,118 154,118 374,394 350,394" fill="#e8c96b" opacity="0.25"/>
+  <rect x="118" y="118" width="22" height="276" fill="#e8c96b" opacity="0.2"/>
+  <rect x="366" y="118" width="28" height="276" fill="#e8c96b" opacity="0.2"/>
+  <circle cx="46" cy="46" r="2.5" fill="#C9A84C" opacity="0.5"/>
+  <circle cx="466" cy="46" r="2.5" fill="#C9A84C" opacity="0.5"/>
+  <circle cx="46" cy="466" r="2.5" fill="#C9A84C" opacity="0.5"/>
+  <circle cx="466" cy="466" r="2.5" fill="#C9A84C" opacity="0.5"/>
 </svg>

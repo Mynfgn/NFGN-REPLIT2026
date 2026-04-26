@@ -9,8 +9,20 @@ export function roleLabel(role: string): string {
     case "store_admin":   return "Store Admin";
     case "pro_member":    return "Pro Member";
     case "affiliate":     return "Affiliate";
-    case "customer":      return "Member";      // Customers are always displayed as "Member"
+    case "customer":
+    case "member":        return "Member";
     default:              return role.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+  }
+}
+
+/** Human-readable label for memberTier values */
+export function tierLabel(tier: string): string {
+  switch (tier) {
+    case "retail_member":             return "Retail Member";
+    case "referring_retail_member":   return "Referring Retail Member";
+    case "unqualified_pro_member":    return "Unqualified Pro Member";
+    case "pro_member":                return "Pro Member";
+    default:                          return tier.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
   }
 }
 

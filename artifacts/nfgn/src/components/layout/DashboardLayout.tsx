@@ -8,80 +8,89 @@ import {
   Award, Banknote, Calendar, Inbox, UserCircle,
   BarChart3, LogOut, Menu, X, UserPlus, ArrowRightLeft,
   TrendingUp, Wrench, Home, Star, BookOpen, DollarSign,
-  ChevronDown, ChevronRight, ShieldCheck,
+  ChevronDown, ChevronRight, ShieldCheck, Link2, Sparkles,
+  CreditCard, Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { roleLabel } from "@/lib/labels";
+import { roleLabel, tierLabel } from "@/lib/labels";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
 
 const GOLD = "#C9A84C";
 const DARK = "#0a0a0a";
 
-type NavChild = { name: string; href: string };
+// ── Tier system ────────────────────────────────────────────────────────────────
+export type MemberTier = "retail_member" | "referring_retail_member" | "unqualified_pro_member" | "pro_member";
+const TIER_ORDER: MemberTier[] = ["retail_member", "referring_retail_member", "unqualified_pro_member", "pro_member"];
 
+export function getEffectiveTier(user: any): MemberTier {
+  if (!user) return "retail_member";
+  if (["super_admin", "admin", "store_admin", "pro_member"].includes(user.role)) return "pro_member";
+  return (user.memberTier ?? "retail_member") as MemberTier;
+}
+
+export function tierAtLeast(userTier: MemberTier, minTier: MemberTier): boolean {
+  return TIER_ORDER.indexOf(userTier) >= TIER_ORDER.indexOf(minTier);
+}
+
+// ── Nav types ─────────────────────────────────────────────────────────────────
+type NavChild = { name: string; href: string; minTier?: MemberTier };
 type NavItem =
-  | { name: string; href: string; icon: any; exact?: boolean; group?: never; children?: never }
-  | { name: string; href?: never; icon: any; group: string; children: NavChild[]; exact?: never };
+  | { name: string; href: string; icon: any; exact?: boolean; minTier?: MemberTier; group?: never; children?: never; badge?: string }
+  | { name: string; href?: never; icon: any; group: string; children: NavChild[]; minTier?: MemberTier; exact?: never; badge?: string };
 
-const NAV_SECTIONS: { label?: string; items: NavItem[] }[] = [
+// ── Nav sections ──────────────────────────────────────────────────────────────
+const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[] = [
   {
     items: [
-      { name: "Overview",           href: "/dashboard",                   icon: LayoutDashboard, exact: true },
-      { name: "Profile Management", href: "/dashboard/profile",           icon: UserCircle },
-      { name: "Genealogy",          href: "/dashboard/genealogy",         icon: Users },
+      { name: "Overview",           href: "/dashboard",              icon: LayoutDashboard, exact: true },
+      { name: "Profile Management", href: "/dashboard/profile",      icon: UserCircle },
+    ],
+  },
+  {
+    label: "My Account",
+    items: [
+      { name: "Orders",             href: "/dashboard/orders",       icon: ShoppingBag },
+      { name: "Bookings",           href: "/dashboard/bookings",     icon: Calendar },
+      { name: "My Referral Link",   href: "/dashboard/referral",     icon: Link2 },
+      { name: "Get the App",        href: "/dashboard/tools/get-the-app", icon: Home },
+    ],
+  },
+  {
+    label: "Dollar Credit ($-Credit)",
+    minTier: "referring_retail_member",
+    items: [
+      { name: "My $-Credit Wallet",  href: "/dashboard/wallet",     icon: CreditCard, minTier: "referring_retail_member" },
     ],
   },
   {
     label: "Business",
+    minTier: "unqualified_pro_member",
     items: [
+      { name: "Genealogy",          href: "/dashboard/genealogy",    icon: Users, minTier: "unqualified_pro_member" },
+      { name: "User Earnings",      href: "/dashboard/earnings",     icon: TrendingUp, minTier: "unqualified_pro_member" },
+      { name: "Commissions",        href: "/dashboard/commissions",  icon: Award, minTier: "unqualified_pro_member" },
       {
-        name: "Registration", icon: UserPlus, group: "registration",
+        name: "Registration", icon: UserPlus, group: "registration", minTier: "pro_member",
         children: [
           { name: "Registration Hub",             href: "/dashboard/registration" },
           { name: "Register A New Pro Member",    href: "/dashboard/register-new-pro" },
           { name: "New Member Registration List", href: "/dashboard/member-outreach" },
         ],
       },
-      { name: "User Earnings",      href: "/dashboard/earnings",           icon: TrendingUp },
-      { name: "Orders",             href: "/dashboard/orders",             icon: ShoppingBag },
-      { name: "E-Wallet",           href: "/dashboard/wallet",             icon: Wallet },
-      { name: "Transfer Funds",     href: "/dashboard/transfer",           icon: ArrowRightLeft },
-      { name: "Payouts",            href: "/dashboard/payouts",            icon: Banknote },
-      { name: "Commissions",        href: "/dashboard/commissions",        icon: Award },
-      { name: "Pro Member Bonus",   href: "/dashboard/pro-member-bonuses", icon: Star },
-      { name: "Bill Payer Program", href: "/dashboard/bpp",                icon: Home },
-      { name: "Bookings",           href: "/dashboard/bookings",           icon: Calendar },
-      { name: "Mailbox",            href: "/dashboard/mailbox",            icon: Inbox },
+      { name: "E-Wallet",           href: "/dashboard/wallet",       icon: Wallet, minTier: "pro_member" },
+      { name: "Transfer Funds",     href: "/dashboard/transfer",     icon: ArrowRightLeft, minTier: "pro_member" },
+      { name: "Payouts",            href: "/dashboard/payouts",      icon: Banknote, minTier: "pro_member" },
+      { name: "Pro Member Bonus",   href: "/dashboard/pro-member-bonuses", icon: Star, minTier: "pro_member" },
+      { name: "Bill Payer Program", href: "/dashboard/bpp",          icon: Home, minTier: "pro_member" },
+      { name: "Mailbox",            href: "/dashboard/mailbox",      icon: Inbox, minTier: "pro_member" },
     ],
   },
   {
     label: "Resources",
     items: [
       {
-        name: "Tools", icon: Wrench, group: "tools",
-        children: [
-          { name: "Tools Overview",              href: "/dashboard/tools" },
-          { name: "Vision Goals & Dreams Sheet", href: "/dashboard/tools/vision-goals" },
-          { name: "Get the App",                 href: "/dashboard/tools/get-the-app" },
-        ],
-      },
-      {
-        name: "Comp Plan",
-        icon: DollarSign,
-        group: "comp-plan",
-        children: [
-          { name: "Overview",               href: "/dashboard/comp-plan?s=overview" },
-          { name: "Referral Commission",    href: "/dashboard/comp-plan?s=rc" },
-          { name: "Product Sales Comm.",    href: "/dashboard/comp-plan?s=psc" },
-          { name: "Multi-Level Retail",     href: "/dashboard/comp-plan?s=pmrc" },
-          { name: "Power Squad Bonuses",    href: "/dashboard/comp-plan?s=psb" },
-          { name: "Bill Payer Program",     href: "/dashboard/comp-plan?s=bpp" },
-        ],
-      },
-      {
         name: "NFGN Basic Training",
-        icon: BookOpen,
-        group: "training",
+        icon: BookOpen, group: "training", minTier: "unqualified_pro_member",
         children: [
           { name: "Getting Started",     href: "/dashboard/tools/training?s=getting-started" },
           { name: "Comp Plan",           href: "/dashboard/tools/training?s=comp-plan" },
@@ -94,13 +103,32 @@ const NAV_SECTIONS: { label?: string; items: NavItem[] }[] = [
           { name: "Add App to Phone",    href: "/dashboard/tools/training?s=app-setup" },
         ],
       },
-      { name: "Reports", href: "/dashboard/reports", icon: BarChart3 },
+      {
+        name: "Comp Plan",
+        icon: DollarSign, group: "comp-plan", minTier: "pro_member",
+        children: [
+          { name: "Overview",               href: "/dashboard/comp-plan?s=overview" },
+          { name: "Referral Commission",    href: "/dashboard/comp-plan?s=rc" },
+          { name: "Product Sales Comm.",    href: "/dashboard/comp-plan?s=psc" },
+          { name: "Multi-Level Retail",     href: "/dashboard/comp-plan?s=pmrc" },
+          { name: "Power Squad Bonuses",    href: "/dashboard/comp-plan?s=psb" },
+          { name: "Bill Payer Program",     href: "/dashboard/comp-plan?s=bpp" },
+        ],
+      },
+      {
+        name: "Tools",
+        icon: Wrench, group: "tools", minTier: "pro_member",
+        children: [
+          { name: "Tools Overview",              href: "/dashboard/tools" },
+          { name: "Vision Goals & Dreams Sheet", href: "/dashboard/tools/vision-goals" },
+        ],
+      },
+      { name: "Reports", href: "/dashboard/reports", icon: BarChart3, minTier: "pro_member" },
     ],
   },
 ];
 
-const navItems: NavItem[] = NAV_SECTIONS.flatMap(s => s.items);
-
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function isGroupOpen(group: string, location: string): boolean {
   if (group === "comp-plan")    return location.startsWith("/dashboard/comp-plan");
   if (group === "training")     return location.startsWith("/dashboard/tools/training");
@@ -109,6 +137,7 @@ function isGroupOpen(group: string, location: string): boolean {
   return false;
 }
 
+// ── Sub-components ────────────────────────────────────────────────────────────
 function SidebarSectionLabel({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-2 px-3 pt-5 pb-1">
@@ -189,6 +218,30 @@ function NavGroupItem({
   );
 }
 
+/** Upgrade nudge shown at the bottom of the sidebar for non-pro members */
+function UpgradeNudge({ tier }: { tier: MemberTier }) {
+  if (tier === "pro_member") return null;
+  return (
+    <div
+      className="mx-3 mb-3 rounded-xl p-3 cursor-pointer"
+      style={{
+        background: `linear-gradient(135deg, ${GOLD}20, ${GOLD}08)`,
+        border: `1px solid ${GOLD}40`,
+      }}
+      onClick={() => window.location.href = "/pro-join"}
+    >
+      <div className="flex items-center gap-2 mb-1">
+        <Zap className="h-3.5 w-3.5 flex-shrink-0" style={{ color: GOLD }} />
+        <span className="text-xs font-bold" style={{ color: GOLD }}>Upgrade to Pro Member</span>
+      </div>
+      <p className="text-[10px] leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
+        Unlock commissions, bonuses, the full Business Suite, and the ability to cash out your $-Credit.
+      </p>
+    </div>
+  );
+}
+
+// ── Main layout ───────────────────────────────────────────────────────────────
 export function DashboardLayout({ children }: { children: ReactNode }) {
   const [location, navigate] = useLocation();
   const { data: user } = useGetMe();
@@ -197,9 +250,12 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const effectiveTier = getEffectiveTier(user);
+
+  const allNavItems = NAV_SECTIONS.flatMap(s => s.items);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};
-    navItems.forEach(item => {
+    allNavItems.forEach(item => {
       if (item.group) init[item.group] = isGroupOpen(item.group, location);
     });
     return init;
@@ -221,6 +277,24 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   };
 
   const initials = `${user?.firstName?.charAt(0) ?? ""}${user?.lastName?.charAt(0) ?? ""}`;
+
+  // Filter section/item visibility by tier
+  const visibleSections = NAV_SECTIONS
+    .filter(section => !section.minTier || tierAtLeast(effectiveTier, section.minTier))
+    .map(section => ({
+      ...section,
+      items: section.items.filter(item => !item.minTier || tierAtLeast(effectiveTier, item.minTier)),
+    }))
+    .filter(section => section.items.length > 0);
+
+  // Display label for member tier
+  const displayLabel = (() => {
+    if (!user) return "";
+    if ((user as any).proMemberStatus === "pending_approval") return null;
+    if (["super_admin", "admin", "store_admin"].includes(user.role)) return roleLabel(user.role);
+    if (user.role === "pro_member") return "Pro Member";
+    return tierLabel((user as any).memberTier ?? "retail_member");
+  })();
 
   return (
     <div className="min-h-screen flex" style={{ background: "#f4f3f0" }}>
@@ -282,7 +356,6 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         {/* User profile */}
         <div className="px-4 py-4 flex-shrink-0" style={{ borderBottom: `1px solid rgba(201,168,76,0.1)` }}>
           <div className="flex items-center gap-3">
-            {/* Avatar with gold ring */}
             <div className="relative flex-shrink-0">
               <div
                 className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-black"
@@ -310,7 +383,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
                 </span>
               ) : (
                 <span className="text-[11px] mt-1 font-medium" style={{ color: `${GOLD}80` }}>
-                  {user?.role ? roleLabel(user.role) : ""}
+                  {displayLabel}
                 </span>
               )}
             </div>
@@ -319,7 +392,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto py-2 space-y-0.5 sidebar-scroll">
-          {NAV_SECTIONS.map((section, si) => (
+          {visibleSections.map((section, si) => (
             <div key={si}>
               {section.label && <SidebarSectionLabel label={section.label} />}
               {section.items.map(item => {
@@ -357,6 +430,11 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
                         style={{ color: isActive ? GOLD : "rgba(255,255,255,0.35)" }}
                       />
                       {item.name}
+                      {item.badge && (
+                        <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: GOLD, color: "#000" }}>
+                          {item.badge}
+                        </span>
+                      )}
                     </span>
                   </Link>
                 );
@@ -364,6 +442,9 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             </div>
           ))}
         </nav>
+
+        {/* Upgrade nudge for non-PM */}
+        <UpgradeNudge tier={effectiveTier} />
 
         {/* Logout */}
         <div className="flex-shrink-0 px-3 py-4" style={{ borderTop: `1px solid rgba(201,168,76,0.12)` }}>

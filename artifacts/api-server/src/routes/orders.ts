@@ -1,8 +1,86 @@
 import { Router, type IRouter } from "express";
-import { db, ordersTable, orderItemsTable, cartItemsTable, productsTable, usersTable, appSettingsTable, promoCodesTable } from "@workspace/db";
+import { db, ordersTable, orderItemsTable, cartItemsTable, productsTable, usersTable, appSettingsTable, promoCodesTable, dollarCreditsTable } from "@workspace/db";
 import { eq, and, desc, count, sql, inArray } from "drizzle-orm";
 import { requireAuth, requireAdmin } from "../lib/auth";
 import { processCommissions, type OrderItemForCommission } from "../lib/commissions";
+
+/**
+ * Handle referral-based rewards when a member places an order:
+ * 1. Auto-promote sponsor tier (RM → RRM → UPM) based on referred members who have placed orders
+ * 2. Award $-Credits to sponsor (10% of eligible line totals) if tier is RRM or higher
+ */
+async function handleReferralRewards(
+  orderId: number,
+  orderNumber: string,
+  buyerId: number,
+  sponsorId: number,
+  items: { cart: typeof cartItemsTable.$inferSelect; product: typeof productsTable.$inferSelect | null }[],
+) {
+  const [sponsor] = await db.select().from(usersTable).where(eq(usersTable.id, sponsorId));
+  if (!sponsor) return;
+
+  // Only applies to member-tier sponsors (not pro_member/admin roles — they use the commission engine)
+  const isMemberSponsor = !["pro_member", "super_admin", "admin", "store_admin"].includes(sponsor.role);
+  if (!isMemberSponsor) return;
+
+  // Count distinct referred members (excluding admin/pro roles) who have at least one non-refunded order
+  const referredBuyerRows = await db
+    .selectDistinct({ userId: ordersTable.userId })
+    .from(ordersTable)
+    .innerJoin(usersTable, eq(ordersTable.userId, usersTable.id))
+    .where(
+      and(
+        eq(usersTable.sponsorId, sponsorId),
+        sql`${usersTable.role} NOT IN ('pro_member', 'super_admin', 'admin', 'store_admin')`,
+        sql`${ordersTable.status} != 'refunded'`,
+      ),
+    );
+  const referredBuyerCount = referredBuyerRows.length;
+
+  // Tier promotion logic
+  const currentTier = sponsor.memberTier ?? "retail_member";
+  let newTier = currentTier;
+
+  if (currentTier === "retail_member" && referredBuyerCount >= 1) {
+    newTier = "referring_retail_member";
+  } else if (currentTier === "referring_retail_member" && referredBuyerCount >= 9) {
+    newTier = "unqualified_pro_member";
+  }
+
+  if (newTier !== currentTier) {
+    await db.update(usersTable).set({ memberTier: newTier }).where(eq(usersTable.id, sponsorId));
+  }
+
+  // Award $-Credits for eligible products if sponsor is RRM or UPM tier
+  const earnsCredits = ["referring_retail_member", "unqualified_pro_member"].includes(newTier);
+  if (!earnsCredits) return;
+
+  let creditAmount = 0;
+  for (const { cart, product } of items) {
+    if (!product || !product.dollarCreditEligible) continue;
+    const lineTotal = parseFloat(product.price) * cart.quantity;
+    creditAmount += lineTotal * 0.1; // 10% of eligible line total
+  }
+
+  if (creditAmount > 0) {
+    const earnedAt = new Date();
+    const availableAt = new Date(earnedAt.getTime() + 7 * 24 * 60 * 60 * 1000);   // +7 days hold
+    const expiresAt = new Date(availableAt.getTime() + 30 * 24 * 60 * 60 * 1000); // +30 days window
+
+    await db.insert(dollarCreditsTable).values({
+      userId: sponsorId,
+      amount: creditAmount.toFixed(2),
+      remainingAmount: creditAmount.toFixed(2),
+      status: "pending",
+      earnedAt,
+      availableAt,
+      expiresAt,
+      sourceOrderId: orderId,
+      referredUserId: buyerId,
+      notes: `Earned from referred member purchase — Order ${orderNumber}`,
+    });
+  }
+}
 
 const router: IRouter = Router();
 
@@ -204,6 +282,11 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
   // Pro package orders: commissions are deferred until admin approval
   if (!containsProPackage) {
     await processCommissions(order.id, orderNumber, total, currentUser.id, false, commissionItems);
+  }
+
+  // Tier promotion + $-Credit award for referral sponsor (member-tier sponsors only)
+  if (!containsProPackage && currentUser.sponsorId) {
+    await handleReferralRewards(order.id, orderNumber, currentUser.id, currentUser.sponsorId, cartItems);
   }
 
   const items = await db.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, order.id));

@@ -45,6 +45,8 @@ interface Product {
   status: string;
   commissionRate: number;
   cv: number;
+  dollarCreditEligible: boolean;
+  refundPolicy: string;
   createdAt: string;
 }
 
@@ -63,6 +65,8 @@ const EMPTY_FORM = {
   cv: "0",
   ingredients: "",
   benefits: "",
+  dollarCreditEligible: false,
+  refundPolicy: "",        // empty = not yet selected (required)
 };
 
 function slugify(str: string) {
@@ -141,6 +145,8 @@ export function AdminProductsPage() {
       cv: String(p.cv ?? 0),
       ingredients: "",
       benefits: "",
+      dollarCreditEligible: p.dollarCreditEligible ?? false,
+      refundPolicy: p.refundPolicy ?? "no_refund",
     });
     setDialogOpen(true);
   };
@@ -156,6 +162,10 @@ export function AdminProductsPage() {
   const handleSave = async () => {
     if (!form.name || !form.slug || !form.description || !form.price) {
       toast.error("Name, slug, description, and price are required.");
+      return;
+    }
+    if (!form.refundPolicy) {
+      toast.error("Please select a Refund Policy for this product. This is required.");
       return;
     }
     setSaving(true);
@@ -175,6 +185,8 @@ export function AdminProductsPage() {
         cv: parseInt(form.cv) || 0,
         ingredients: form.ingredients || null,
         benefits: form.benefits || null,
+        dollarCreditEligible: form.dollarCreditEligible,
+        refundPolicy: form.refundPolicy,
       };
 
       const res = editProduct
@@ -350,9 +362,17 @@ export function AdminProductsPage() {
                         <span className="text-xs text-muted-foreground">{p.categoryName ?? "—"}</span>
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-1">
+                        <div className="flex flex-wrap gap-1">
                           {p.featured && <Badge className="text-xs px-1.5 py-0">Featured</Badge>}
                           {p.isProPackage && <Badge variant="secondary" className="text-xs px-1.5 py-0">Pro Pkg</Badge>}
+                          {p.dollarCreditEligible && (
+                            <Badge className="text-xs px-1.5 py-0" style={{ background: "#C9A84C", color: "#000" }}>$-Credit</Badge>
+                          )}
+                          {p.refundPolicy === "7_day_return" ? (
+                            <Badge variant="outline" className="text-xs px-1.5 py-0 text-green-700 border-green-300">7-Day</Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-xs px-1.5 py-0 text-red-600 border-red-200">No Refund</Badge>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -625,6 +645,86 @@ export function AdminProductsPage() {
                   <p className="text-xs text-muted-foreground">Purchasing this upgrades the buyer to Pro Member and triggers Level Commissions.</p>
                 </div>
               </div>
+            </div>
+
+            {/* Dollar Credit Program */}
+            <div className="rounded-lg p-4 border-2 space-y-3" style={{ borderColor: "#C9A84C40", background: "#C9A84C08" }}>
+              <div>
+                <p className="text-sm font-bold" style={{ color: "#C9A84C" }}>Dollar Credit ($-Credit) Program</p>
+                <p className="text-xs text-muted-foreground">Does this product qualify for the Dollar Credit referral reward program?</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={form.dollarCreditEligible}
+                  onCheckedChange={v => setForm(f => ({ ...f, dollarCreditEligible: v }))}
+                  id="dollarCreditEligible"
+                />
+                <div>
+                  <Label htmlFor="dollarCreditEligible" className="cursor-pointer font-medium">
+                    This product is eligible for the $-Credit program
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    When enabled, Referring Retail Members will earn Dollar Credit when this product is purchased through their referral link.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Refund Policy — REQUIRED */}
+            <div className="rounded-lg p-4 border-2 space-y-3 border-destructive/30 bg-destructive/5">
+              <div>
+                <p className="text-sm font-bold text-destructive">Refund Policy <span className="text-destructive">*</span> (Required)</p>
+                <p className="text-xs text-muted-foreground">
+                  Select the refund policy for this product. This is displayed to customers at checkout and on the product page. Both options are final — no exceptions.
+                </p>
+              </div>
+              <div className="space-y-3">
+                <label
+                  className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                    form.refundPolicy === "no_refund" ? "border-red-500 bg-red-50" : "border-border bg-background hover:bg-muted/40"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="refundPolicy"
+                    value="no_refund"
+                    checked={form.refundPolicy === "no_refund"}
+                    onChange={() => setForm(f => ({ ...f, refundPolicy: "no_refund" }))}
+                    className="mt-0.5 flex-shrink-0"
+                  />
+                  <div>
+                    <p className="text-sm font-bold text-red-700">No Refund Policy</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                      All sales are final. At checkout, customers will see and must agree to:<br />
+                      <em className="text-foreground">"I understand and agree that this is a nonrefundable product. No exceptions."</em>
+                    </p>
+                  </div>
+                </label>
+                <label
+                  className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                    form.refundPolicy === "7_day_return" ? "border-green-500 bg-green-50" : "border-border bg-background hover:bg-muted/40"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="refundPolicy"
+                    value="7_day_return"
+                    checked={form.refundPolicy === "7_day_return"}
+                    onChange={() => setForm(f => ({ ...f, refundPolicy: "7_day_return" }))}
+                    className="mt-0.5 flex-shrink-0"
+                  />
+                  <div>
+                    <p className="text-sm font-bold text-green-700">7-Day Return Policy</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                      Returns accepted within 7 days, unopened/unused in original packaging. At checkout, customers will see and must agree to:<br />
+                      <em className="text-foreground">"I understand and agree that I only have seven days to return this product unopened or unused. No exceptions."</em>
+                    </p>
+                  </div>
+                </label>
+              </div>
+              {!form.refundPolicy && (
+                <p className="text-xs text-destructive font-medium">⚠ You must select a refund policy before saving this product.</p>
+              )}
             </div>
           </div>
 

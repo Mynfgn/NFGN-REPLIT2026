@@ -18,6 +18,7 @@ import bppRouter from "./bpp";
 import reportsRouter from "./reports";
 import notificationsRouter from "./notifications";
 import visionGoalsRouter from "./vision_goals";
+import dollarCreditsRouter from "./dollar_credits";
 
 const router: IRouter = Router();
 
@@ -40,5 +41,6 @@ router.use(bppRouter);
 router.use(reportsRouter);
 router.use(notificationsRouter);
 router.use(visionGoalsRouter);
+router.use(dollarCreditsRouter);
 
 export default router;

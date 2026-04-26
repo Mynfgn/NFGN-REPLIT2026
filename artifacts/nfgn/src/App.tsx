@@ -65,6 +65,8 @@ import AdminSettingsPage from "@/pages/admin/AdminSettings";
 import { CompensationSettingsPage } from "@/pages/admin/CompensationSettings";
 import { ReferralCommissionsPage } from "@/pages/admin/ReferralCommissions";
 import { AffiliateStorefront } from "@/pages/public/AffiliateStorefront";
+import { PoliciesPage } from "@/pages/public/Policies";
+import { ReferralLinkPage } from "@/pages/dashboard/ReferralLink";
 import { BookingsPage } from "@/pages/dashboard/Bookings";
 import { BPPDashboardPage } from "@/pages/dashboard/BPP";
 import { AdminBPPPage } from "@/pages/admin/BPP";
@@ -144,6 +146,9 @@ function Router() {
       <Route path="/rep/:username">
         <AffiliateStorefront />
       </Route>
+      <Route path="/policies">
+        <PoliciesPage />
+      </Route>
 
       {/* Dashboard routes */}
       <Route path="/dashboard">
@@ -154,6 +159,11 @@ function Router() {
       <Route path="/dashboard/orders">
         <RequireAuth>
           <DashboardLayout><OrdersPage /></DashboardLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/dashboard/referral">
+        <RequireAuth>
+          <DashboardLayout><ReferralLinkPage /></DashboardLayout>
         </RequireAuth>
       </Route>
       <Route path="/dashboard/wallet">

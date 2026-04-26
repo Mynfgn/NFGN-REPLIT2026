@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Wallet, Users, ShoppingBag, ArrowUpRight, TrendingUp, MapPin, Star, CheckCircle2, AlertCircle, BarChart3, Link2, Copy, Check, ExternalLink, DollarSign, Sparkles, ShoppingCart, Zap, X, QrCode, Phone, Mail, UserCircle, Smartphone } from "lucide-react";
+import { Wallet, Users, ShoppingBag, ArrowUpRight, TrendingUp, MapPin, Star, CheckCircle2, AlertCircle, BarChart3, Link2, Copy, Check, ExternalLink, DollarSign, Sparkles, ShoppingCart, Zap, X, QrCode, Phone, Mail, UserCircle, Smartphone, CreditCard, Gift, Clock } from "lucide-react";
 import { MemberMapCard } from "@/components/dashboard/MemberMapCard";
 import { customFetch } from "@/lib/custom-fetch";
 import { resolveImageSrc } from "@/lib/image";
 import { Link } from "wouter";
+import { getEffectiveTier, tierAtLeast } from "@/components/layout/DashboardLayout";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, Legend,
@@ -141,6 +142,170 @@ function ProUpgradeBanner() {
 
       {/* Bottom pulse bar */}
       <div className="h-0.5 w-full" style={{ background: `linear-gradient(to right, transparent, ${BRAND_GOLD}, transparent)` }} />
+    </div>
+  );
+}
+
+// ── Retail Member Welcome Card ────────────────────────────────────────────────
+function RetailMemberWelcomeCard({ firstName }: { firstName?: string }) {
+  return (
+    <div
+      className="rounded-2xl overflow-hidden relative"
+      style={{
+        background: "linear-gradient(135deg, #0a0a0a 0%, #1a0f00 50%, #0a0a0a 100%)",
+        border: `2px solid ${BRAND_GOLD}60`,
+      }}
+    >
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-8 -right-8 w-56 h-56 rounded-full blur-3xl opacity-20" style={{ background: BRAND_GOLD }} />
+        <div className="absolute -bottom-8 -left-8 w-40 h-40 rounded-full blur-3xl opacity-10" style={{ background: BRAND_GREEN }} />
+      </div>
+      <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-4 p-6">
+        <div
+          className="h-14 w-14 rounded-full flex items-center justify-center flex-shrink-0"
+          style={{ background: `${BRAND_GOLD}25`, border: `2px solid ${BRAND_GOLD}` }}
+        >
+          <Gift className="h-7 w-7" style={{ color: BRAND_GOLD }} />
+        </div>
+        <div className="flex-1">
+          <p className="text-xs font-bold uppercase tracking-widest" style={{ color: BRAND_GOLD }}>
+            Retail Member
+          </p>
+          <h2 className="text-xl font-serif font-black text-white mt-0.5">
+            Thank You{firstName ? `, ${firstName}` : ""}! We Appreciate Your Business &amp; Support!
+          </h2>
+          <p className="text-white/55 text-sm mt-1 leading-relaxed">
+            Enjoy exclusive member discounts, specials, and promo codes. Share your referral link with friends — when someone makes their first purchase, you automatically become a <strong className="text-white/80">Referring Retail Member</strong> and start earning <strong className="text-white/80">Dollar Credit ($-Credit)</strong> on every qualifying referral purchase.
+          </p>
+        </div>
+        <Link href="/dashboard/referral" className="flex-shrink-0">
+          <Button
+            size="sm"
+            className="font-bold whitespace-nowrap gap-2"
+            style={{ background: BRAND_GOLD, color: "#000" }}
+          >
+            <Link2 className="h-3.5 w-3.5" />
+            My Referral Link
+          </Button>
+        </Link>
+      </div>
+      <div className="h-px" style={{ background: `linear-gradient(to right, transparent, ${BRAND_GOLD}40, transparent)` }} />
+    </div>
+  );
+}
+
+// ── Dollar Credit Summary Widget (RRM / UPM) ──────────────────────────────────
+function DollarCreditWidget() {
+  const [summary, setSummary] = useState<{
+    available: number;
+    pending: number;
+    ytdTotal: number;
+    cashoutEligible: boolean;
+    referredRetailCount: number;
+    cashoutThreshold: number;
+    nextExpiryDate: string | null;
+  } | null>(null);
+  const [flashing, setFlashing] = useState(true);
+
+  useEffect(() => {
+    customFetch("/api/wallet/dollar-credits/summary")
+      .then(r => r.ok ? r.json() : null)
+      .then(d => d && setSummary(d))
+      .catch(() => {});
+    const t = setInterval(() => setFlashing(f => !f), 1200);
+    return () => clearInterval(t);
+  }, []);
+
+  const nextExpiry = summary?.nextExpiryDate
+    ? new Date(summary.nextExpiryDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    : null;
+
+  return (
+    <div
+      className="rounded-2xl overflow-hidden"
+      style={{
+        background: "linear-gradient(135deg, #0a0a0a 0%, #1a0f00 50%, #0a0a0a 100%)",
+        border: `2px solid ${BRAND_GOLD}`,
+        boxShadow: `0 0 24px 0 rgba(201,168,76,0.2)`,
+      }}
+    >
+      {/* Flashing upgrade message */}
+      <div
+        className="px-4 py-2.5 flex items-center gap-2 transition-opacity duration-500"
+        style={{
+          background: `linear-gradient(90deg, ${BRAND_GOLD}30, ${BRAND_GOLD}15, ${BRAND_GOLD}30)`,
+          opacity: flashing ? 1 : 0.4,
+        }}
+      >
+        <Zap className="h-4 w-4 flex-shrink-0" style={{ color: BRAND_GOLD }} />
+        <span className="text-sm font-black" style={{ color: BRAND_GOLD }}>
+          Upgrade And Turn This Credit Into Cash!
+        </span>
+        <span className="ml-auto text-xs text-white/50 hidden sm:block">
+          Don't pass up any more money!
+        </span>
+      </div>
+
+      <div className="p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <CreditCard className="h-5 w-5" style={{ color: BRAND_GOLD }} />
+          <h3 className="font-serif font-bold text-white text-base">My Dollar Credit ($-Credit) Wallet</h3>
+        </div>
+
+        {/* Stats row */}
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          {[
+            { label: "Available Now", value: summary ? `$${summary.available.toFixed(2)}` : "—", color: "#22c55e", bold: true },
+            { label: "Pending (Hold)", value: summary ? `$${summary.pending.toFixed(2)}` : "—", color: "rgba(255,255,255,0.5)", bold: false },
+            { label: "Earned This Year", value: summary ? `$${summary.ytdTotal.toFixed(2)}` : "—", color: BRAND_GOLD, bold: true },
+          ].map(({ label, value, color, bold }) => (
+            <div key={label} className="rounded-xl p-3 text-center" style={{ background: "rgba(255,255,255,0.06)" }}>
+              <p className="text-xs text-white/50 mb-0.5">{label}</p>
+              <p className={`text-lg ${bold ? "font-black" : "font-semibold"}`} style={{ color }}>{value}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Expiry & Info */}
+        <div className="space-y-2">
+          {nextExpiry && (
+            <div className="flex items-center gap-2 text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
+              <Clock className="h-3.5 w-3.5 flex-shrink-0 text-yellow-400" />
+              Oldest available credit expires <strong className="text-yellow-300 ml-1">{nextExpiry}</strong>
+            </div>
+          )}
+          <div className="flex items-center gap-2 text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
+            <Users className="h-3.5 w-3.5 flex-shrink-0" />
+            Cash-out progress:{" "}
+            <strong className="text-white/80 ml-1">
+              {summary?.referredRetailCount ?? 0} / {summary?.cashoutThreshold ?? 9} Retail Members referred
+            </strong>
+            {summary?.cashoutEligible && (
+              <Badge className="ml-2 text-[10px] font-bold" style={{ background: "#22c55e", color: "#000" }}>Eligible!</Badge>
+            )}
+          </div>
+        </div>
+
+        {/* CTA row */}
+        <div className="flex flex-col sm:flex-row gap-2 mt-4 pt-4" style={{ borderTop: "1px solid rgba(201,168,76,0.2)" }}>
+          <Link href="/dashboard/wallet" className="flex-1">
+            <Button variant="outline" size="sm" className="w-full gap-1.5 text-xs font-bold border-white/20 text-white hover:bg-white/10">
+              <CreditCard className="h-3.5 w-3.5" />
+              View Full $-Credit History
+            </Button>
+          </Link>
+          <Link href="/pro-join" className="flex-1">
+            <Button size="sm" className="w-full gap-1.5 text-xs font-black" style={{ background: BRAND_GOLD, color: "#000" }}>
+              <Zap className="h-3.5 w-3.5" />
+              Upgrade — Cash Out Your Earnings
+            </Button>
+          </Link>
+        </div>
+        <p className="text-xs text-white/30 text-center mt-2">
+          Year-to-date total earned: <strong className="text-white/50">${summary?.ytdTotal.toFixed(2) ?? "0.00"}</strong> in $-Credit.
+          Don't pass up any more money — Upgrade and cash out your future earnings.
+        </p>
+      </div>
     </div>
   );
 }
@@ -1137,6 +1302,8 @@ export function Dashboard() {
   const { data: analytics, isLoading: analyticsLoading } = useGetMemberAnalytics();
   const { data: me } = useGetMe();
 
+  const effectiveTier = getEffectiveTier(me);
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -1162,6 +1329,12 @@ export function Dashboard() {
           <p className="text-muted-foreground">Let's make some money together. Here's your business at a glance.</p>
         </div>
       </div>
+
+      {/* Retail Member — personalized welcome */}
+      {effectiveTier === "retail_member" && <RetailMemberWelcomeCard firstName={me?.firstName} />}
+
+      {/* RRM / UPM — Dollar Credit summary widget */}
+      {(effectiveTier === "referring_retail_member" || effectiveTier === "unqualified_pro_member") && <DollarCreditWidget />}
 
       {/* Awaiting Approval notice — pending Pro Members */}
       {me && !me.isProMember && (me as any).proMemberStatus === "pending_approval" && (

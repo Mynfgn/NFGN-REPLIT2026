@@ -46,6 +46,11 @@ export const usersTable = pgTable("users", {
   bookAProCategory: text("book_a_pro_category"),
   bookAProSubServices: json("book_a_pro_sub_services").$type<string[]>().default([]),
   bookAProBio: text("book_a_pro_bio"),
+
+  // Member tier within the "member/customer" role
+  // 'retail_member' → 'referring_retail_member' → 'unqualified_pro_member'
+  // Pro Members use role='pro_member' instead
+  memberTier: text("member_tier").notNull().default("retail_member"),
 });
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({ id: true, createdAt: true, updatedAt: true });

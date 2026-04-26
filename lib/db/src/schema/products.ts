@@ -20,6 +20,12 @@ export const productsTable = pgTable("products", {
   cv: integer("cv").notNull().default(0),
   ingredients: text("ingredients"),
   benefits: text("benefits"),
+
+  // Dollar Credit program eligibility (admin sets per product)
+  dollarCreditEligible: boolean("dollar_credit_eligible").notNull().default(false),
+  // Refund policy: 'no_refund' or '7_day_return' (mandatory, admin sets per product)
+  refundPolicy: text("refund_policy").notNull().default("no_refund"),
+
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

@@ -2,6 +2,8 @@ import { Router, type IRouter } from "express";
 import { db, appSettingsTable, promoCodesTable, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { requireAdmin } from "../lib/auth";
+import path from "path";
+import fs from "fs";
 
 const router: IRouter = Router();
 
@@ -21,6 +23,7 @@ function formatSettings(s: typeof appSettingsTable.$inferSelect) {
     registrationPackageId: s.registrationPackageId ?? null,
     homePageBanner: s.homePageBanner ?? null,
     homePageBannerSubtitle: s.homePageBannerSubtitle ?? null,
+    appIconUrl: s.appIconUrl ?? null,
     demoMode: s.demoMode,
   };
 }
@@ -52,6 +55,7 @@ router.put("/settings", requireAdmin, async (req, res): Promise<void> => {
     registrationPackageId: req.body.registrationPackageId ?? existing?.registrationPackageId,
     homePageBanner: req.body.homePageBanner ?? existing?.homePageBanner,
     homePageBannerSubtitle: req.body.homePageBannerSubtitle ?? existing?.homePageBannerSubtitle,
+    appIconUrl: req.body.appIconUrl !== undefined ? (req.body.appIconUrl || null) : existing?.appIconUrl,
     demoMode: req.body.demoMode ?? existing?.demoMode,
   };
 
@@ -169,6 +173,47 @@ router.delete("/promos/:id", requireAdmin, async (req, res): Promise<void> => {
   if (!existing) { res.status(404).json({ error: "Promo code not found" }); return; }
   await db.delete(promoCodesTable).where(eq(promoCodesTable.id, id));
   res.json({ success: true });
+});
+
+/**
+ * GET /api/app-icon/:size
+ *
+ * Serves the current app icon as a PNG.
+ * If a custom icon URL is stored in settings, redirects to it.
+ * Otherwise, serves the built-in default icon from disk.
+ *
+ * :size can be 180, 192, or 512. Defaults to 512.
+ */
+router.get("/app-icon/:size", async (req, res): Promise<void> => {
+  const size = parseInt(req.params.size as string) || 512;
+
+  try {
+    const [settings] = await db.select({ appIconUrl: appSettingsTable.appIconUrl }).from(appSettingsTable).limit(1);
+
+    if (settings?.appIconUrl) {
+      res.redirect(302, settings.appIconUrl);
+      return;
+    }
+  } catch (_) {}
+
+  const ASSETS_DIR = path.resolve(__dirname, "../assets/icons");
+  let iconFile: string;
+  if (size <= 180) {
+    iconFile = path.join(ASSETS_DIR, "icon-180.png");
+  } else if (size <= 192) {
+    iconFile = path.join(ASSETS_DIR, "icon-192.png");
+  } else {
+    iconFile = path.join(ASSETS_DIR, "icon-512.png");
+  }
+
+  if (!fs.existsSync(iconFile)) {
+    res.status(404).json({ error: "Icon not found" });
+    return;
+  }
+
+  res.setHeader("Content-Type", "image/png");
+  res.setHeader("Cache-Control", "public, max-age=3600");
+  fs.createReadStream(iconFile).pipe(res);
 });
 
 export default router;

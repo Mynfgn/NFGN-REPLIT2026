@@ -18,6 +18,7 @@ export const appSettingsTable = pgTable("app_settings", {
   registrationPackageId: integer("registration_package_id"),
   homePageBanner: text("home_page_banner"),
   homePageBannerSubtitle: text("home_page_banner_subtitle"),
+  appIconUrl: text("app_icon_url"),
   demoMode: boolean("demo_mode").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),

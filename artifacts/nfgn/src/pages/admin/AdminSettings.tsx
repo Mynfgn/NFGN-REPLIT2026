@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { useGetSettings, useUpdateSettings } from "@workspace/api-client-react";
 import { customFetch } from "@/lib/custom-fetch";
@@ -25,6 +25,9 @@ import {
   Shield,
   ToggleLeft,
   ToggleRight,
+  Smartphone,
+  Upload,
+  RotateCcw,
 } from "lucide-react";
 
 /* ── Section wrapper ────────────────────────────────────────────── */
@@ -76,6 +79,10 @@ export default function AdminSettingsPage() {
   const qc = useQueryClient();
   const [justSaved, setJustSaved] = useState(false);
   const [commissionRules, setCommissionRules] = useState<LiveCommissionRules | null>(null);
+
+  const [iconUploading, setIconUploading] = useState(false);
+  const [iconPreview, setIconPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: settings, isLoading } = useGetSettings();
 
@@ -135,7 +142,72 @@ export default function AdminSettingsPage() {
       demoMode: settings.demoMode ?? false,
       paymentMethods: (settings.paymentMethods as string[]) ?? ["authorize_net", "cash_app", "paypal", "cod"],
     });
+    if ((settings as any).appIconUrl) {
+      setIconPreview((settings as any).appIconUrl);
+    }
   }, [settings]);
+
+  async function handleIconUpload(file: File) {
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Invalid file", description: "Please select a PNG or JPG image.", variant: "destructive" });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Please choose an image under 5 MB.", variant: "destructive" });
+      return;
+    }
+
+    setIconUploading(true);
+    try {
+      const urlRes = await customFetch("/api/storage/uploads/request-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }),
+      });
+      if (!urlRes.ok) throw new Error("Could not get upload URL");
+      const { uploadURL, objectPath } = await urlRes.json();
+
+      const uploadRes = await fetch(uploadURL, {
+        method: "PUT",
+        body: file,
+        headers: { "Content-Type": file.type },
+      });
+      if (!uploadRes.ok) throw new Error("Upload failed");
+
+      const servingUrl = `/api/storage/objects${objectPath.replace(/^\/objects/, "")}`;
+
+      const saveRes = await customFetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ appIconUrl: servingUrl }),
+      });
+      if (!saveRes.ok) throw new Error("Could not save icon setting");
+
+      setIconPreview(servingUrl);
+      qc.invalidateQueries({ queryKey: ["getSettings"] });
+      toast({ title: "App icon updated!", description: "The new icon will appear on all new installs." });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err?.message ?? "Please try again.", variant: "destructive" });
+    } finally {
+      setIconUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  async function handleResetIcon() {
+    try {
+      await customFetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ appIconUrl: "" }),
+      });
+      setIconPreview(null);
+      qc.invalidateQueries({ queryKey: ["getSettings"] });
+      toast({ title: "Icon reset", description: "The default NFGN icon is now active." });
+    } catch {
+      toast({ title: "Reset failed", description: "Please try again.", variant: "destructive" });
+    }
+  }
 
   function set(field: keyof typeof form, value: string | boolean | string[]) {
     setForm(f => ({ ...f, [field]: value }));
@@ -247,7 +319,78 @@ export default function AdminSettingsPage() {
         </div>
       </Section>
 
-      {/* ── 2. Homepage Banner ── */}
+      {/* ── 2. App Icon ── */}
+      <Section title="App Icon" icon={Smartphone}>
+        <p className="text-sm text-muted-foreground -mt-2">
+          This icon appears on members' home screens when they install the app via the QR code. Upload a square PNG or JPG (at least 512×512 px recommended).
+        </p>
+
+        <div className="flex items-start gap-6">
+          {/* Current icon preview */}
+          <div className="flex-shrink-0">
+            <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Current Icon</p>
+            <div className="w-24 h-24 rounded-2xl border-2 border-border overflow-hidden bg-[#0a0a0a] shadow-md flex items-center justify-center">
+              <img
+                key={iconPreview ?? "default"}
+                src={iconPreview ?? `/api/app-icon/192?t=${Date.now()}`}
+                alt="App icon"
+                className="w-full h-full object-cover"
+                onError={e => { (e.target as HTMLImageElement).src = "/icons/icon-192.png"; }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground mt-1 text-center">192×192 preview</p>
+          </div>
+
+          {/* Upload controls */}
+          <div className="flex-1 space-y-3">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/jpg,image/webp"
+              className="hidden"
+              onChange={e => { const f = e.target.files?.[0]; if (f) handleIconUpload(f); }}
+            />
+
+            <Button
+              type="button"
+              variant="outline"
+              className="gap-2 w-full sm:w-auto"
+              disabled={iconUploading}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {iconUploading
+                ? <><Loader2 className="h-4 w-4 animate-spin" /> Uploading…</>
+                : <><Upload className="h-4 w-4" /> Upload New Icon</>
+              }
+            </Button>
+
+            {iconPreview && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="gap-2 text-muted-foreground hover:text-destructive"
+                onClick={handleResetIcon}
+                disabled={iconUploading}
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                Reset to Default NFGN Icon
+              </Button>
+            )}
+
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800 space-y-1">
+              <p className="font-semibold">After uploading a new icon:</p>
+              <ul className="list-disc list-inside space-y-0.5 text-amber-700">
+                <li>New installs via QR code will use the updated icon immediately.</li>
+                <li>Members who already have the app must uninstall and reinstall to see the new icon.</li>
+                <li>Square images work best — the icon is displayed as a rounded square on most devices.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      {/* ── 3. Homepage Banner ── */}
       <Section title="Homepage Banner" icon={Megaphone}>
         <Field label="Banner Headline" hint="Large headline text shown at the top of the homepage.">
           <Input value={form.homePageBanner} onChange={e => set("homePageBanner", e.target.value)} placeholder="Elevate Your Wellness Journey" className="mt-1" />

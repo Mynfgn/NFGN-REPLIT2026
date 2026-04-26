@@ -300,53 +300,55 @@ export function AffiliateStorefront() {
       </section>
 
       {/* ── GET THE APP ── */}
-      <section className="py-16 bg-muted/20">
+      <section className="py-12 bg-muted/20 overflow-hidden">
         <div className="max-w-5xl mx-auto px-4">
           <div className="rounded-2xl overflow-hidden border shadow-sm">
-            <div className="grid md:grid-cols-2">
 
-              {/* Left — QR code */}
+            {/* Mobile: stacked — QR on top, steps below. Desktop: side by side */}
+            <div className="flex flex-col md:grid md:grid-cols-2">
+
+              {/* QR code panel */}
               <div
-                className="w-full flex flex-col items-center justify-center text-center py-10 px-6 text-white"
+                className="flex flex-col items-center justify-center text-center py-10 px-8 text-white"
                 style={{ background: `linear-gradient(135deg, ${BRAND_BLACK}, #1a1a2e)` }}
               >
-                <div className="flex items-center justify-center gap-2 mb-6">
+                <div className="flex items-center justify-center gap-2 mb-5">
                   <Smartphone className="h-5 w-5 flex-shrink-0" style={{ color: BRAND_GOLD }} />
                   <span className="font-serif font-bold text-lg" style={{ color: BRAND_GOLD }}>
                     Get the NFGN App
                   </span>
                 </div>
-                <div className="p-4 rounded-2xl bg-white shadow-lg inline-block">
+                <div className="p-4 rounded-2xl bg-white shadow-lg">
                   <QRCodeSVG
                     value={pageUrl}
-                    size={160}
+                    size={150}
                     bgColor="#ffffff"
                     fgColor="#0a0a0a"
                     level="H"
                   />
                 </div>
-                <p className="text-white/60 text-xs text-center mt-4 max-w-[200px] leading-relaxed mx-auto">
-                  Scan with any phone camera to open this page on your device
+                <p className="text-white/60 text-xs mt-4 leading-relaxed">
+                  Scan with any phone camera
                 </p>
               </div>
 
-              {/* Right — install steps */}
-              <div className="p-8 flex flex-col justify-center bg-white space-y-5">
+              {/* Install steps panel */}
+              <div className="p-6 md:p-8 flex flex-col justify-center bg-white space-y-5">
                 <div>
                   <h3 className="text-xl font-serif font-bold mb-1">Install on Your Phone</h3>
                   <p className="text-sm text-muted-foreground">
-                    No app store needed — it installs directly to your home screen in seconds.
+                    No app store needed — installs directly to your home screen.
                   </p>
                 </div>
 
                 <div className="space-y-3">
                   {[
-                    { phone: "iPhone", steps: "Scan the QR code → Safari opens → tap Share → \"Add to Home Screen\"" },
-                    { phone: "Android", steps: "Scan the QR code → Chrome opens → tap ⋮ menu → \"Add to Home screen\"" },
+                    { phone: "iPhone", steps: "Scan → Safari opens → tap Share → \"Add to Home Screen\"" },
+                    { phone: "Android", steps: "Scan → Chrome opens → tap ⋮ menu → \"Add to Home screen\"" },
                   ].map(item => (
                     <div key={item.phone} className="flex gap-3 p-3 rounded-lg bg-muted/30 border">
                       <div
-                        className="h-7 w-7 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white mt-0.5"
+                        className="h-7 w-7 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white"
                         style={{ background: BRAND_GOLD }}
                       >
                         {item.phone[0]}
@@ -362,8 +364,8 @@ export function AffiliateStorefront() {
                 {/* Copy link */}
                 <div>
                   <p className="text-xs text-muted-foreground mb-1.5 font-medium">Or share the link directly</p>
-                  <div className="flex items-center gap-2 rounded-lg border bg-muted/20 px-3 py-2">
-                    <span className="text-xs font-mono text-muted-foreground flex-1 truncate">{pageUrl}</span>
+                  <div className="flex items-center gap-2 rounded-lg border bg-muted/20 px-3 py-2 min-w-0">
+                    <span className="text-xs font-mono text-muted-foreground flex-1 truncate min-w-0">{pageUrl}</span>
                     <button
                       onClick={copyLink}
                       className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold text-white transition-colors"

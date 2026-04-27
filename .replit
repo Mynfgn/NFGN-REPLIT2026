@@ -62,3 +62,4 @@ channel = "stable-25_05"
 
 [userenv.shared]
 SQUARE_APPLICATION_ID = "sq0idp-_c-b9AfjWMQgE8lQxqMZpQ"
+PAYPAL_CLIENT_ID = "AdPaPnkODIv2EITxjogWSrhNZDm1kdMc3q0zjet3iMuFmznLgZDL_CpiJcyrCCPjMTjWIN4f81tqF7_Y"

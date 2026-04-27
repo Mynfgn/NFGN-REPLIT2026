@@ -150,8 +150,8 @@ export function PublicLayout({ children }: { children: ReactNode }) {
           <div>
             <h4 className="font-bold mb-4 uppercase tracking-wider text-sm text-primary">Legal</h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
-              <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/policies" className="hover:text-white transition-colors">Terms of Service</Link></li>
+              <li><Link href="/policies" className="hover:text-white transition-colors">Privacy Policy</Link></li>
             </ul>
           </div>
         </div>

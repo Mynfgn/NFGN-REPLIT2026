@@ -149,6 +149,9 @@ function Router() {
       <Route path="/policies">
         <PoliciesPage />
       </Route>
+      <Route path="/terms">
+        <PoliciesPage />
+      </Route>
 
       {/* Dashboard routes */}
       <Route path="/dashboard">

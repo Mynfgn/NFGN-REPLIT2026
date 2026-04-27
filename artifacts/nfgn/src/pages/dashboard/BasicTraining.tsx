@@ -8,7 +8,8 @@ import {
   BookOpen, Target, DollarSign, Zap, TrendingUp, Award,
   Users, Star, ChevronDown, ChevronRight, CheckCircle2,
   Flame, Home, Clock, Lightbulb, MessageCircle, Leaf,
-  BarChart3, Shield, Phone, Heart, GraduationCap,
+  BarChart3, Shield, Phone, Heart, GraduationCap, FileText,
+  CreditCard, RefreshCw, AlertTriangle, ShieldCheck,
 } from "lucide-react";
 import { TrainingQuiz } from "@/components/training/TrainingQuiz";
 import {
@@ -107,6 +108,7 @@ const SECTIONS = [
   { id: "big-bonuses",      label: "Earn Big Bonuses",       icon: Award },
   { id: "additional",       label: "Additional Training",    icon: Lightbulb },
   { id: "app-setup",        label: "Add App to Phone",       icon: Phone },
+  { id: "policies",         label: "Policies & Terms",       icon: FileText },
 ];
 
 export function BasicTrainingPage() {
@@ -1525,6 +1527,191 @@ export function BasicTrainingPage() {
                     A member who has the platform on their phone is a member who stays engaged. Make it a habit to walk every new
                     enrollment through this setup during your welcome call — it takes less than two minutes and dramatically
                     increases how often they log in and take action.
+                  </p>
+                </div>
+
+              </CardContent>
+            </Card>
+          )}
+
+          {/* ── POLICIES & TERMS ─────────────────────────────── */}
+          {activeSection === "policies" && (
+            <Card>
+              <CardContent className="pt-6 space-y-8">
+                <SectionHeader icon={FileText} title="NFGN Policies & Terms" subtitle="Know the rules — protect yourself and your team" />
+
+                <p className="text-sm text-muted-foreground -mt-2 leading-relaxed">
+                  Every Pro Member is expected to understand these policies. Knowing them protects your commissions, your members, and your reputation. When a customer or recruit asks a question about refunds, credits, or payouts — you should already know the answer.
+                </p>
+
+                {/* ── Membership Tiers ── */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-0.5 w-5 rounded" style={{ background: GOLD }} />
+                    <h3 className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: GOLD }}>Membership Tiers</h3>
+                  </div>
+                  <div className="rounded-xl overflow-hidden border divide-y">
+                    {[
+                      { tier: "Retail Member (RM)", color: "#6b7280", desc: "Entry-level customers. Access to the store, referral link, and Book-A-Pro. No commissions." },
+                      { tier: "Referring Retail Member (RRM)", color: GOLD, desc: "Automatically upgraded when their first referral signs up. Earns Dollar Credit ($-Credit) on qualifying purchases — not cash." },
+                      { tier: "Unqualified Pro Member (UPM)", color: "#a78bfa", desc: "Earns commissions on Levels 1 & 2 only. Must reach 150 PCV to qualify for full Pro Membership." },
+                      { tier: "Pro Member (PM)", color: GREEN, desc: "Full Business Suite. All 9 commission levels, CLB, MCB, BPP participation. Requires active PRP and 150 PCV rolling 30-day." },
+                    ].map(({ tier, color, desc }) => (
+                      <div key={tier} className="flex items-start gap-3 p-4 bg-card" style={{ borderLeft: `3px solid ${color}` }}>
+                        <div className="flex-1">
+                          <p className="text-sm font-bold mb-0.5" style={{ color }}>{tier}</p>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="rounded-xl p-4" style={{ background: `${GOLD}10`, border: `1px solid ${GOLD}30` }}>
+                    <p className="text-xs font-bold" style={{ color: GOLD }}>Fastest Path to Full Pro Membership:</p>
+                    <p className="text-xs text-muted-foreground mt-1">Purchase an NFGN Pro Member Registration Package (PRP). It already includes the required 150 PCV — one step, fully unlocked.</p>
+                  </div>
+                </div>
+
+                {/* ── Dollar Credit ── */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-0.5 w-5 rounded" style={{ background: GREEN }} />
+                    <h3 className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: GREEN }}>Dollar Credit ($-Credit) Policy</h3>
+                    <Badge className="text-[10px] font-bold" style={{ background: GOLD, color: "#000" }}>RRM+</Badge>
+                  </div>
+                  <div className="rounded-xl border divide-y overflow-hidden">
+                    {[
+                      { label: "What it is", desc: "Store credit earned by Referring Retail Members on qualifying referral purchases. It is NOT cash and cannot be withdrawn unless the member upgrades to Pro Member or meets the cash-out threshold." },
+                      { label: "7-Day Hold", desc: "$-Credit is placed in 'pending' status for 7 days from the referral purchase date. This aligns with the refund window on eligible products." },
+                      { label: "30-Day Use Window", desc: "Once the 7-day hold clears, members have 30 days to use their $-Credit before it expires." },
+                      { label: "Total Expiry", desc: "$-Credit expires 37 days from the original purchase date (7-day hold + 30-day use window). Expired credit is permanently forfeited — no exceptions." },
+                      { label: "Refund Impact", desc: "If the purchase that generated $-Credit is refunded, the $-Credit is immediately revoked. If already spent, the member's balance goes negative and must be resolved on the next purchase." },
+                    ].map(({ label, desc }) => (
+                      <div key={label} className="p-3 bg-card space-y-0.5">
+                        <p className="text-xs font-bold text-foreground">{label}</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ── Cash-Out Policy ── */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-0.5 w-5 rounded" style={{ background: GOLD }} />
+                    <h3 className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: GOLD }}>$-Credit Cash-Out Policy</h3>
+                    <Badge className="text-[10px] font-bold" style={{ background: GOLD, color: "#000" }}>RRM+</Badge>
+                  </div>
+                  <div className="rounded-xl border p-4 space-y-2 bg-card">
+                    <p className="text-xs text-muted-foreground leading-relaxed">Referring Retail Members can unlock cash-out ability by meeting this threshold:</p>
+                    <ul className="space-y-1.5">
+                      {[
+                        "Refer a minimum of 9 Retail Members (not Pro Members) using your referral link.",
+                        "Once the threshold is met, request a cash-out of your available $-Credit through the dashboard.",
+                        "Cash-out requests are processed within 3–5 business days.",
+                        "Paid via the payout method on file (bank transfer, PayPal, or CashApp).",
+                        "NFGN reserves the right to verify referrals before approving cash-out requests.",
+                      ].map(item => (
+                        <li key={item} className="flex items-start gap-2 text-xs text-muted-foreground">
+                          <span className="mt-1.5 h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ background: GOLD }} />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="rounded-xl p-4" style={{ background: `${GREEN}10`, border: `1px solid ${GREEN}30` }}>
+                    <p className="text-xs font-bold" style={{ color: GREEN }}>Pro Tip:</p>
+                    <p className="text-xs text-muted-foreground mt-1">The fastest way to turn ALL future referral earnings into direct cash with no expiration is to upgrade to Pro Member. No 37-day clock, no $-Credit — real cash commissions across all 9 levels.</p>
+                  </div>
+                </div>
+
+                {/* ── Refund Policy ── */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-0.5 w-5 rounded" style={{ background: "#ef4444" }} />
+                    <h3 className="text-xs font-extrabold uppercase tracking-[0.2em] text-red-600">Refund & Return Policy</h3>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <div className="rounded-xl border p-4 space-y-2" style={{ borderLeftColor: "#ef4444", borderLeftWidth: 3 }}>
+                      <p className="text-sm font-bold text-red-600">No Refund Policy</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">Consumable, personal care, and digital products. All sales are final. No exceptions. Customers confirm at checkout: <em>"I understand and agree that this is a nonrefundable product."</em></p>
+                    </div>
+                    <div className="rounded-xl border p-4 space-y-2" style={{ borderLeftColor: GREEN, borderLeftWidth: 3 }}>
+                      <p className="text-sm font-bold" style={{ color: GREEN }}>7-Day Return Policy</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">Selected products only. Must be <strong>unopened and unused</strong> in original packaging within 7 days. Customer pays return shipping unless product is defective.</p>
+                    </div>
+                  </div>
+                  <div className="rounded-xl border p-4 space-y-1 bg-card">
+                    <p className="text-xs font-bold text-foreground">Return Process</p>
+                    <ul className="space-y-1.5 mt-1">
+                      {[
+                        "Contact NFGN support within the 7-day window with your order number and reason.",
+                        "Approved returns are refunded to the original payment method within 5–7 business days.",
+                        "Pro Member Registration Packages and digital training products are non-refundable once activated.",
+                      ].map(item => (
+                        <li key={item} className="flex items-start gap-2 text-xs text-muted-foreground">
+                          <span className="mt-1.5 h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ background: GREEN }} />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* ── Comp Plan Summary ── */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-0.5 w-5 rounded" style={{ background: "#3b82f6" }} />
+                    <h3 className="text-xs font-extrabold uppercase tracking-[0.2em] text-blue-600">Compensation Plan Summary</h3>
+                    <Badge className="text-[10px] font-bold bg-blue-600 text-white">Pro Member</Badge>
+                  </div>
+                  <div className="rounded-xl border divide-y overflow-hidden">
+                    {[
+                      { name: "Referral Commission (RC)", tier: "RRM+", desc: "Earned when a referred member makes a purchase. Paid as $-Credit to RRMs; as real cash to Pro Members." },
+                      { name: "Product Sales Commission (PSC)", tier: "UPM+", desc: "Earned on product sales in your downline. Levels 1–2 for UPMs; all 9 levels for full Pro Members." },
+                      { name: "Pro Registration Commission (PMRC)", tier: "UPM+", desc: "Earned when someone in your downline purchases a Pro Registration Package." },
+                      { name: "Power Squad Bonuses (CLB + MCB)", tier: "PM Only", desc: "Core Leadership Bonus ($100 one-time) and Money Circulation Bonus ($200 recurring). Pro Members only." },
+                      { name: "Bill Payer Program (BPP)", tier: "PM Only", desc: "Up to $3,085/month toward real bills. Phone, Medical, Utilities, Car, Rent/Mortgage. Pro Members only." },
+                    ].map(({ name, tier, desc }) => (
+                      <div key={name} className="p-3 flex gap-3 bg-card">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                            <p className="text-xs font-bold text-foreground">{name}</p>
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: GOLD, color: "#000" }}>{tier}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ── General Terms ── */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-0.5 w-5 rounded" style={{ background: "#94a3b8" }} />
+                    <h3 className="text-xs font-extrabold uppercase tracking-[0.2em] text-slate-500">General Terms Every Member Must Know</h3>
+                  </div>
+                  <div className="rounded-xl border p-4 bg-card">
+                    <ul className="space-y-2">
+                      {[
+                        "All members must be at least 18 years of age to participate in the compensation program.",
+                        "NFGN reserves the right to modify, suspend, or terminate any membership for violation of these terms.",
+                        "Income representations are not guarantees of earnings. Actual results depend on individual effort.",
+                        "$-Credit and commissions are calculated in USD. International members are responsible for currency conversion fees.",
+                        "NFGN is not responsible for delays caused by third-party payment processors.",
+                        "These policies are subject to change. Members will be notified via their registered email address.",
+                        "By participating in the NFGN program, you agree to be bound by all policies in their entirety.",
+                      ].map(item => (
+                        <li key={item} className="flex items-start gap-2 text-xs text-muted-foreground">
+                          <span className="mt-1.5 h-1.5 w-1.5 rounded-full flex-shrink-0 bg-slate-400" />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    For the full Policies & Terms document, visit the{" "}
+                    <a href="/policies" className="font-semibold underline" style={{ color: GOLD }}>NFGN Policies & Terms page</a>.
                   </p>
                 </div>
 

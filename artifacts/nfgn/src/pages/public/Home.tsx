@@ -40,7 +40,7 @@ function HeroSection() {
           <span style={{ color: "rgba(255,255,255,0.85)" }}>A Movement.</span>
         </h1>
 
-        <p className="text-lg md:text-xl mb-12 max-w-2xl leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>
+        <p className="text-lg md:text-xl mb-18 max-w-2xl leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>
           New Face Global Network unites naturopathic wellness, professional booking, business opportunity, and sports — powered by the industry's most innovative money circulation system.
         </p>
 

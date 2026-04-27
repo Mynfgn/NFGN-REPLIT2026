@@ -19,6 +19,7 @@ import reportsRouter from "./reports";
 import notificationsRouter from "./notifications";
 import visionGoalsRouter from "./vision_goals";
 import dollarCreditsRouter from "./dollar_credits";
+import paymentsRouter from "./payments";
 
 const router: IRouter = Router();
 
@@ -42,5 +43,6 @@ router.use(reportsRouter);
 router.use(notificationsRouter);
 router.use(visionGoalsRouter);
 router.use(dollarCreditsRouter);
+router.use(paymentsRouter);
 
 export default router;

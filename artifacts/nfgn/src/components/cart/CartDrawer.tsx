@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   useGetCart,
   useUpdateCartItem,
@@ -49,7 +49,7 @@ import { customFetch } from "@/lib/custom-fetch";
 import { resolveImageSrc } from "@/lib/image";
 
 /* ── Types ─────────────────────────────────────────────────────── */
-type PaymentMethod = "authorize_net" | "cash_app" | "paypal" | "cod";
+type PaymentMethod = "square" | "cash_app" | "paypal" | "cod";
 
 type ShippingForm = {
   fullName: string;
@@ -58,13 +58,6 @@ type ShippingForm = {
   city: string;
   state: string;
   zip: string;
-};
-
-type CardForm = {
-  nameOnCard: string;
-  cardNumber: string;
-  expiry: string;
-  cvv: string;
 };
 
 type RegForm = {
@@ -85,9 +78,9 @@ const PAYMENT_METHODS: {
   icon: React.ReactNode;
 }[] = [
   {
-    id: "authorize_net",
+    id: "square",
     label: "Credit / Debit Card",
-    sub: "Powered by Authorize.net — Secure & Encrypted",
+    sub: "Powered by Square — Secure & Encrypted",
     color: "bg-blue-50",
     border: "border-blue-400",
     icon: <CreditCard className="h-6 w-6 text-blue-600" />,
@@ -379,7 +372,7 @@ export function CartDrawer() {
 
   /* "cart" | "checkout" | "confirm" */
   const [view, setView] = useState<"cart" | "checkout" | "confirm">("cart");
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("authorize_net");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("square");
   const [promoCode, setPromoCode] = useState("");
   const [promoValidating, setPromoValidating] = useState(false);
   const [promoApplied, setPromoApplied] = useState<{ discountType: string; discountValue: number; code: string } | null>(null);
@@ -389,10 +382,13 @@ export function CartDrawer() {
   const [shipping, setShipping] = useState<ShippingForm>({
     fullName: "", phone: "", address: "", city: "", state: "", zip: "",
   });
-  const [card, setCard] = useState<CardForm>({
-    nameOnCard: "", cardNumber: "", expiry: "", cvv: "",
-  });
   const [lastOrder, setLastOrder] = useState<any>(null);
+  const [squareCard, setSquareCard] = useState<any>(null);
+  const [squarePayments, setSquarePayments] = useState<any>(null);
+  const [squareReady, setSquareReady] = useState(false);
+  const [squareError, setSquareError] = useState<string | null>(null);
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const cardContainerRef = useRef<HTMLDivElement>(null);
 
   const { data: cart, isLoading: cartLoading } = useGetCart({
     query: { enabled: isAuthenticated && cartOpen } as any,
@@ -466,13 +462,58 @@ export function CartDrawer() {
     removeItem.mutate({ itemId });
   }
 
+  /* ── Square Web Payments SDK init ─────────────────────────────── */
+  const initSquare = useCallback(async () => {
+    if (squareCard) return;
+    try {
+      if (!(window as any).Square) {
+        const script = document.createElement("script");
+        script.src = "https://web.squarecdn.com/v1/square.js";
+        script.async = true;
+        await new Promise<void>((resolve, reject) => {
+          script.onload = () => resolve();
+          script.onerror = () => reject(new Error("Failed to load Square SDK"));
+          document.head.appendChild(script);
+        });
+      }
+      const configRes = await customFetch("/api/payments/square/config");
+      const config = await configRes.json();
+      const payments = (window as any).Square.payments(config.applicationId, config.locationId);
+      setSquarePayments(payments);
+      const card = await payments.card({ style: {
+        input: { fontSize: "14px", color: "#1a1a1a" },
+        ".input-container": { borderRadius: "8px", borderColor: "#e2e8f0" },
+        ".input-container.is-focus": { borderColor: "#C9A84C" },
+      }});
+      await card.attach("#square-card-container");
+      setSquareCard(card);
+      setSquareReady(true);
+      setSquareError(null);
+    } catch (err: any) {
+      setSquareError("Could not load payment form. Please refresh and try again.");
+    }
+  }, [squareCard]);
+
+  useEffect(() => {
+    if (view === "checkout" && paymentMethod === "square" && cardContainerRef.current && !squareCard) {
+      initSquare();
+    }
+    return () => {
+      if (view !== "checkout" && squareCard) {
+        squareCard.destroy?.();
+        setSquareCard(null);
+        setSquareReady(false);
+      }
+    };
+  }, [view, paymentMethod]);
+
   function shippingValid() {
     return shipping.fullName.trim() && shipping.address.trim() && shipping.city.trim() && shipping.state.trim() && shipping.zip.trim();
   }
 
   function cardValid() {
-    if (paymentMethod !== "authorize_net") return true;
-    return card.nameOnCard.trim() && card.cardNumber.replace(/\s/g, "").length === 16 && card.expiry.length === 5 && card.cvv.length >= 3;
+    if (paymentMethod !== "square") return true;
+    return squareReady;
   }
 
   async function applyPromoCode() {
@@ -507,16 +548,50 @@ export function CartDrawer() {
     setPromoError(null);
   }
 
-  function placeOrder() {
+  async function placeOrder() {
     if (!shippingValid()) {
       toast({ title: "Missing information", description: "Please fill in your shipping address.", variant: "destructive" });
       return;
     }
-    if (!cardValid()) {
-      toast({ title: "Missing card details", description: "Please complete your card information.", variant: "destructive" });
+    const addr = `${shipping.fullName}, ${shipping.address}, ${shipping.city}, ${shipping.state} ${shipping.zip}${shipping.phone ? " | " + shipping.phone : ""}`;
+
+    if (paymentMethod === "square") {
+      if (!squareCard || !squareReady) {
+        toast({ title: "Payment form not ready", description: "Please wait for the card form to load.", variant: "destructive" });
+        return;
+      }
+      setPaymentProcessing(true);
+      try {
+        const result = await squareCard.tokenize();
+        if (result.status !== "OK") {
+          const msg = result.errors?.[0]?.message ?? "Card details are invalid. Please check and try again.";
+          toast({ title: "Card error", description: msg, variant: "destructive" });
+          setPaymentProcessing(false);
+          return;
+        }
+        const payRes = await customFetch("/api/payments/square/process", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sourceId: result.token,
+            amount: discountedTotal,
+            note: `NFGN Order — ${shipping.fullName}`,
+          }),
+        });
+        const payData = await payRes.json();
+        if (!payRes.ok) {
+          toast({ title: "Payment declined", description: payData.error ?? "Please try a different card.", variant: "destructive" });
+          setPaymentProcessing(false);
+          return;
+        }
+        createOrder.mutate({ data: { paymentMethod: "square", shippingAddress: addr, promoCode: promoApplied?.code || promoCode || undefined, squarePaymentId: payData.paymentId } } as any);
+      } catch (err: any) {
+        toast({ title: "Payment error", description: err?.message ?? "Something went wrong. Please try again.", variant: "destructive" });
+        setPaymentProcessing(false);
+      }
       return;
     }
-    const addr = `${shipping.fullName}, ${shipping.address}, ${shipping.city}, ${shipping.state} ${shipping.zip}${shipping.phone ? " | " + shipping.phone : ""}`;
+
     createOrder.mutate({ data: { paymentMethod, shippingAddress: addr, promoCode: promoApplied?.code || promoCode || undefined } } as any);
   }
 
@@ -761,44 +836,30 @@ export function CartDrawer() {
 
               {/* ── STEP 4: Payment Details (per method) ── */}
 
-              {/* Authorize.net */}
-              {paymentMethod === "authorize_net" && (
+              {/* Square Card */}
+              {paymentMethod === "square" && (
                 <section className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-4">
                   <div className="flex items-start gap-2">
                     <Shield className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="font-semibold text-sm text-blue-900">Secure Card Payment via Authorize.net</p>
+                      <p className="font-semibold text-sm text-blue-900">Secure Card Payment — Powered by Square</p>
                       <p className="text-xs text-blue-700 mt-0.5">
-                        NFGN uses Authorize.net — the industry-leading payment gateway — to securely process all credit and debit card transactions. Your card data is encrypted end-to-end and never stored on our servers.
+                        Your card details are entered directly into Square's secure, encrypted payment form. Card data never touches NFGN's servers — it's fully PCI-DSS compliant.
                       </p>
                     </div>
                   </div>
                   <hr className="border-blue-200" />
-                  <div>
-                    <Label className="text-xs">Name on Card *</Label>
-                    <Input placeholder="Jane Smith" value={card.nameOnCard} onChange={e => setCard(c => ({ ...c, nameOnCard: e.target.value }))} className="mt-1 bg-white" />
-                  </div>
-                  <div>
-                    <Label className="text-xs">Card Number *</Label>
-                    <Input placeholder="1234 5678 9012 3456" value={card.cardNumber} onChange={e => setCard(c => ({ ...c, cardNumber: fmtCard(e.target.value) }))} className="mt-1 bg-white font-mono tracking-widest" maxLength={19} />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label className="text-xs">Expiry (MM/YY) *</Label>
-                      <Input placeholder="08/28" value={card.expiry} onChange={e => setCard(c => ({ ...c, expiry: fmtExpiry(e.target.value) }))} className="mt-1 bg-white font-mono" maxLength={5} />
+                  {squareError ? (
+                    <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-xs text-red-700">{squareError}</div>
+                  ) : !squareReady ? (
+                    <div className="flex items-center gap-2 text-xs text-blue-700 py-2">
+                      <Loader2 className="h-4 w-4 animate-spin" /> Loading secure payment form…
                     </div>
-                    <div>
-                      <Label className="text-xs">CVV *</Label>
-                      <Input placeholder="•••" value={card.cvv} onChange={e => setCard(c => ({ ...c, cvv: e.target.value.replace(/\D/g, "").slice(0, 4) }))} className="mt-1 bg-white font-mono" maxLength={4} type="password" />
-                    </div>
-                  </div>
-                  <div className="bg-white rounded-lg p-3 border border-blue-200 space-y-1">
-                    <p className="text-xs font-semibold text-blue-800 flex items-center gap-1"><Info className="h-3 w-3" /> How to connect your card:</p>
-                    <p className="text-xs text-blue-700">1. Enter your card number, expiration date, and CVV exactly as they appear on your card.</p>
-                    <p className="text-xs text-blue-700">2. Your bank may send a one-time verification code — have your phone ready.</p>
-                    <p className="text-xs text-blue-700">3. All transactions are processed via Authorize.net's secure payment gateway (PCI-DSS compliant).</p>
-                    <p className="text-xs text-blue-700">4. NFGN Merchant ID: <strong>available upon request from admin</strong>.</p>
-                  </div>
+                  ) : null}
+                  <div ref={cardContainerRef} id="square-card-container" className="min-h-[90px]" />
+                  <p className="text-[10px] text-blue-600 flex items-center gap-1">
+                    <Shield className="h-3 w-3" /> Visa · Mastercard · Amex · Discover · CashApp Pay all accepted
+                  </p>
                 </section>
               )}
 
@@ -984,9 +1045,9 @@ export function CartDrawer() {
             </div>
 
             <div className="border-t px-5 py-4 bg-background flex-shrink-0">
-              <Button className="w-full gap-2" size="lg" onClick={placeOrder} disabled={createOrder.isPending || !isAuthenticated}>
-                {createOrder.isPending
-                  ? <><Loader2 className="h-4 w-4 animate-spin" /> Placing Order…</>
+              <Button className="w-full gap-2" size="lg" onClick={placeOrder} disabled={createOrder.isPending || paymentProcessing || !isAuthenticated}>
+                {createOrder.isPending || paymentProcessing
+                  ? <><Loader2 className="h-4 w-4 animate-spin" /> {paymentProcessing ? "Processing Payment…" : "Placing Order…"}</>
                   : <>Place Order · ${discountedTotal.toFixed(2)} <ArrowRight className="h-4 w-4" /></>
                 }
               </Button>

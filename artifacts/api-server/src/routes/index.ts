@@ -20,6 +20,7 @@ import notificationsRouter from "./notifications";
 import visionGoalsRouter from "./vision_goals";
 import dollarCreditsRouter from "./dollar_credits";
 import paymentsRouter from "./payments";
+import paypalRouter from "./paypal";
 
 const router: IRouter = Router();
 
@@ -44,5 +45,6 @@ router.use(notificationsRouter);
 router.use(visionGoalsRouter);
 router.use(dollarCreditsRouter);
 router.use(paymentsRouter);
+router.use(paypalRouter);
 
 export default router;

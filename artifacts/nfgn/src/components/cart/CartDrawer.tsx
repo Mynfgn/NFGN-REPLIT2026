@@ -394,6 +394,10 @@ export function CartDrawer() {
   const [cashAppPayReady, setCashAppPayReady] = useState(false);
   const cashAppContainerRef = useRef<HTMLDivElement>(null);
   const discountedTotalRef = useRef<number>(0);
+  const [paypalSection, setPaypalSection] = useState<"button" | "manual">("button");
+  const [paypalLoading, setPaypalLoading] = useState(false);
+  const [paypalError, setPaypalError] = useState<string | null>(null);
+  const paypalButtonsRef = useRef<any>(null);
 
   const { data: cart, isLoading: cartLoading } = useGetCart({
     query: { enabled: isAuthenticated && cartOpen } as any,
@@ -602,6 +606,99 @@ export function CartDrawer() {
       }
     };
   }, [view, paymentMethod, cashAppSection]);
+
+  /* ── PayPal SDK init ───────────────────────────────────────────── */
+  useEffect(() => {
+    if (view !== "checkout" || paymentMethod !== "paypal" || paypalSection !== "button") return;
+    if (paypalButtonsRef.current) return;
+
+    setPaypalLoading(true);
+    setPaypalError(null);
+
+    const scriptId = "paypal-sdk-script";
+    const load = async () => {
+      try {
+        const configRes = await customFetch("/api/payments/paypal/config");
+        const { clientId } = await configRes.json();
+
+        if (!document.getElementById(scriptId)) {
+          await new Promise<void>((resolve, reject) => {
+            const s = document.createElement("script");
+            s.id = scriptId;
+            s.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture`;
+            s.onload = () => resolve();
+            s.onerror = () => reject(new Error("Failed to load PayPal SDK"));
+            document.head.appendChild(s);
+          });
+        }
+
+        const pp = (window as any).paypal;
+        if (!pp) throw new Error("PayPal SDK not available");
+
+        const buttons = pp.Buttons({
+          style: { layout: "vertical", color: "blue", shape: "rect", label: "pay" },
+          createOrder: async () => {
+            if (!shippingValid()) {
+              toast({ title: "Missing information", description: "Please fill in your shipping address first.", variant: "destructive" });
+              throw new Error("Missing shipping info");
+            }
+            const res = await customFetch("/api/payments/paypal/create-order", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ amount: discountedTotalRef.current }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error ?? "Could not create PayPal order");
+            return data.id;
+          },
+          onApprove: async (data: any) => {
+            setPaymentProcessing(true);
+            const res = await customFetch("/api/payments/paypal/capture-order", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ orderId: data.orderID }),
+            });
+            const result = await res.json();
+            if (!res.ok) {
+              toast({ title: "Payment failed", description: result.error ?? "Please try again.", variant: "destructive" });
+              setPaymentProcessing(false);
+              return;
+            }
+            const addr = `${shipping.fullName}, ${shipping.address}, ${shipping.city}, ${shipping.state} ${shipping.zip}${shipping.phone ? " | " + shipping.phone : ""}`;
+            createOrder.mutate({ data: { paymentMethod: "paypal", shippingAddress: addr, promoCode: promoApplied?.code || promoCode || undefined, squarePaymentId: result.captureId } } as any);
+          },
+          onError: (err: any) => {
+            setPaypalError("PayPal encountered an error. Please try again or use a different payment method.");
+            console.error("PayPal error", err);
+          },
+          onCancel: () => {
+            toast({ title: "Payment cancelled", description: "Your PayPal payment was cancelled. You can try again anytime." });
+          },
+        });
+
+        if (buttons.isEligible()) {
+          await buttons.render("#paypal-button-container");
+          paypalButtonsRef.current = buttons;
+        } else {
+          setPaypalError("PayPal is not available in your region. Please use a different payment method.");
+        }
+      } catch (err: any) {
+        setPaypalError("Could not load PayPal. Please try again or use a different payment method.");
+        console.error("PayPal init error:", err);
+      } finally {
+        setPaypalLoading(false);
+      }
+    };
+
+    load();
+
+    return () => {
+      if (paypalButtonsRef.current) {
+        paypalButtonsRef.current.close?.();
+        paypalButtonsRef.current = null;
+      }
+    };
+  }, [view, paymentMethod, paypalSection]);
 
   function shippingValid() {
     return shipping.fullName.trim() && shipping.address.trim() && shipping.city.trim() && shipping.state.trim() && shipping.zip.trim();
@@ -1039,31 +1136,76 @@ export function CartDrawer() {
 
               {/* PayPal */}
               {paymentMethod === "paypal" && (
-                <section className="bg-sky-50 border border-sky-200 rounded-xl p-4 space-y-3">
+                <section className="bg-sky-50 border border-sky-200 rounded-xl p-4 space-y-4">
+                  {/* Header */}
                   <div className="flex items-center justify-between">
-                    <p className="font-bold text-lg text-sky-800">PayPal Payment</p>
-                    <div className="h-10 w-10 rounded-xl bg-sky-600 flex items-center justify-center">
+                    <p className="font-bold text-sky-800">PayPal Payment</p>
+                    <div className="h-9 w-9 rounded-xl bg-[#003087] flex items-center justify-center">
                       <span className="text-white font-black text-sm">PP</span>
                     </div>
                   </div>
-                  <div className="bg-white rounded-xl border-2 border-sky-400 p-4 text-center">
-                    <p className="text-xs text-sky-600 font-medium uppercase tracking-wider mb-1">NFGN Official PayPal</p>
-                    <p className="text-lg font-bold text-sky-800">newfaceglobalnetwork@gmail.com</p>
-                    <p className="text-xs text-muted-foreground mt-1">Send exactly <strong>${subtotal.toFixed(2)}</strong> to this PayPal account</p>
+
+                  {/* Toggle */}
+                  <div className="flex rounded-xl overflow-hidden border border-sky-300 bg-sky-100">
+                    <button
+                      onClick={() => setPaypalSection("button")}
+                      className={`flex-1 py-2 text-xs font-semibold transition-colors ${paypalSection === "button" ? "bg-[#003087] text-white" : "text-sky-700 hover:bg-sky-200"}`}
+                    >
+                      ⚡ Pay with PayPal
+                    </button>
+                    <button
+                      onClick={() => setPaypalSection("manual")}
+                      className={`flex-1 py-2 text-xs font-semibold transition-colors ${paypalSection === "manual" ? "bg-[#003087] text-white" : "text-sky-700 hover:bg-sky-200"}`}
+                    >
+                      Send Manually
+                    </button>
                   </div>
-                  <div className="bg-white rounded-lg p-3 border border-sky-200 space-y-1.5">
-                    <p className="text-xs font-bold text-sky-800 flex items-center gap-1"><Info className="h-3 w-3" /> How to send via PayPal:</p>
-                    <p className="text-xs text-sky-700">1. Log into <strong>PayPal.com</strong> or open the PayPal app.</p>
-                    <p className="text-xs text-sky-700">2. Click <strong>"Send & Request"</strong>, then <strong>"Send Money"</strong>.</p>
-                    <p className="text-xs text-sky-700">3. Enter <strong>newfaceglobalnetwork@gmail.com</strong> as the recipient.</p>
-                    <p className="text-xs text-sky-700">4. Enter the amount: <strong>${subtotal.toFixed(2)}</strong></p>
-                    <p className="text-xs text-sky-700">5. Choose <strong>"Sending to a friend"</strong> (Friends & Family) to avoid extra fees.</p>
-                    <p className="text-xs text-sky-700">6. Add a note with your name and order description.</p>
-                    <p className="text-xs text-sky-700">7. Click <strong>"Place Order"</strong> below — we confirm within <strong>24 hours</strong>.</p>
-                  </div>
-                  <p className="text-xs text-sky-700 bg-sky-100 rounded p-2">
-                    ⚠️ Only send to <strong>newfaceglobalnetwork@gmail.com</strong>. NFGN will never ask you to send PayPal to a personal email.
-                  </p>
+
+                  {/* Live PayPal button */}
+                  {paypalSection === "button" && (
+                    <div className="space-y-3">
+                      <p className="text-xs text-sky-700 text-center">
+                        Click the button — the PayPal window opens. Log in, approve, and your order confirms <strong>instantly</strong>.
+                      </p>
+                      {paypalLoading && (
+                        <div className="flex items-center justify-center gap-2 text-xs text-sky-700 py-3">
+                          <Loader2 className="h-4 w-4 animate-spin" /> Loading PayPal…
+                        </div>
+                      )}
+                      {paypalError && (
+                        <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-xs text-red-700">{paypalError}</div>
+                      )}
+                      <div id="paypal-button-container" className="min-h-[48px]" />
+                      <p className="text-center text-xs text-sky-500">
+                        Don't want to use PayPal?{" "}
+                        <button onClick={() => setPaypalSection("manual")} className="underline font-medium text-sky-600">Send manually instead</button>
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Manual fallback */}
+                  {paypalSection === "manual" && (
+                    <div className="space-y-3">
+                      <div className="bg-white rounded-xl border-2 border-sky-400 p-4 text-center">
+                        <p className="text-xs text-sky-600 font-medium uppercase tracking-wider mb-1">NFGN Official PayPal</p>
+                        <p className="text-lg font-bold text-sky-800">newfaceglobalnetwork@gmail.com</p>
+                        <p className="text-xs text-muted-foreground mt-1">Send exactly <strong>${discountedTotal.toFixed(2)}</strong> to this PayPal account</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-3 border border-sky-200 space-y-1.5">
+                        <p className="text-xs font-bold text-sky-800 flex items-center gap-1"><Info className="h-3 w-3" /> How to send via PayPal:</p>
+                        <p className="text-xs text-sky-700">1. Log into <strong>PayPal.com</strong> or open the PayPal app.</p>
+                        <p className="text-xs text-sky-700">2. Click <strong>"Send & Request"</strong> → <strong>"Send Money"</strong>.</p>
+                        <p className="text-xs text-sky-700">3. Enter <strong>newfaceglobalnetwork@gmail.com</strong> as the recipient.</p>
+                        <p className="text-xs text-sky-700">4. Amount: <strong>${discountedTotal.toFixed(2)}</strong></p>
+                        <p className="text-xs text-sky-700">5. Choose <strong>"Friends & Family"</strong> to avoid extra fees.</p>
+                        <p className="text-xs text-sky-700">6. Add your name and order info, confirm & send.</p>
+                        <p className="text-xs text-sky-700">7. Click <strong>"Place Order"</strong> below — we confirm within <strong>24 hours</strong>.</p>
+                      </div>
+                      <p className="text-xs text-sky-700 bg-sky-100 rounded p-2">
+                        ⚠️ Only send to <strong>newfaceglobalnetwork@gmail.com</strong>. NFGN will never ask you to send to a personal email.
+                      </p>
+                    </div>
+                  )}
                 </section>
               )}
 
@@ -1193,6 +1335,10 @@ export function CartDrawer() {
               {paymentMethod === "cash_app" && cashAppSection === "button" ? (
                 <p className="text-xs text-center text-green-700 font-medium py-1">
                   Use the <strong>Cash App Pay</strong> button above to complete your order instantly.
+                </p>
+              ) : paymentMethod === "paypal" && paypalSection === "button" ? (
+                <p className="text-xs text-center text-sky-700 font-medium py-1">
+                  Use the <strong>PayPal</strong> button above to complete your order instantly.
                 </p>
               ) : (
                 <Button className="w-full gap-2" size="lg" onClick={placeOrder} disabled={createOrder.isPending || paymentProcessing || !isAuthenticated}>

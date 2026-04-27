@@ -8,7 +8,7 @@ import {
   BookOpen, Target, DollarSign, Zap, TrendingUp, Award,
   Users, Star, ChevronDown, ChevronRight, CheckCircle2,
   Flame, Home, Clock, Lightbulb, MessageCircle, Leaf,
-  BarChart3, Shield, Phone, Heart,
+  BarChart3, Shield, Phone, Heart, GraduationCap,
 } from "lucide-react";
 import { TrainingQuiz } from "@/components/training/TrainingQuiz";
 import {
@@ -98,6 +98,7 @@ function CompRow({ label, value, sub, highlight }: { label: string; value: strin
 
 const SECTIONS = [
   { id: "getting-started",  label: "Getting Started",        icon: BookOpen },
+  { id: "terminology",      label: "Terminology & Glossary", icon: GraduationCap },
   { id: "comp-plan",        label: "Comp Plan",              icon: DollarSign },
   { id: "2500-plan",        label: "$3,500/Month Plan",      icon: Target },
   { id: "bpp",              label: "Bill Payer Program",     icon: Home },
@@ -284,11 +285,185 @@ export function BasicTrainingPage() {
             </Card>
           )}
 
+          {/* ── TERMINOLOGY ─────────────────────────────────── */}
+          {activeSection === "terminology" && (
+            <Card>
+              <CardContent className="pt-6 space-y-8">
+                <SectionHeader icon={GraduationCap} title="NFGN Terminology & Glossary" subtitle="Master every term before you master the income" />
+
+                <p className="text-sm text-muted-foreground -mt-2 leading-relaxed">
+                  Before sharing the opportunity with anyone, make sure you can define every term below without hesitation. The language of NFGN is the language of confidence — and confidence converts.
+                </p>
+
+                {/* ── Six Business Pillars ─────────────────── */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-0.5 w-5 rounded" style={{ background: GOLD }} />
+                    <h3 className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: GOLD }}>The Six Business Pillars</h3>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    {[
+                      { abbr: "Pillar 1", term: "Naturopathic, Mental Health, & Primary Care", def: "Products, services, and Medical Benefit Packages covering naturopathic health, mental wellness, and primary care. The wellness foundation of NFGN." },
+                      { abbr: "Pillar 2", term: "Book-A-Professional", def: "The booking platform connecting members with certified wellness practitioners, coaches, naturopaths, and consultants." },
+                      { abbr: "Pillar 3", term: "Business Opportunities", def: "The commission income arm — powered by the 2 Down By Infinity Multi-Point Payment Grid. Open to all Pro Members." },
+                      { abbr: "Pillar 4", term: "NFGN Sports", def: "The athletic division — funding youth programs, school teams, local leagues, and sports nonprofits through the NFGN money circulation grid." },
+                      { abbr: "Pillar 5", term: "NFGN Products & Services", def: "Handcrafted artisan goods including handmade soaps, candles, lotions, and natural body care products made with love." },
+                      { abbr: "Pillar 6", term: "Special Events, Travel, & Workshops", def: "Exclusive NFGN retreats, live training workshops, travel experiences, and member events designed to educate, connect, and inspire." },
+                    ].map(t => (
+                      <div key={t.term} className="rounded-xl border p-4 space-y-1.5 bg-card">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="font-bold text-sm text-foreground leading-tight">{t.term}</p>
+                          <Badge variant="outline" className="text-[10px] font-bold tracking-widest flex-shrink-0">{t.abbr}</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{t.def}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ── Member Tiers ─────────────────────────── */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-0.5 w-5 rounded" style={{ background: GREEN }} />
+                    <h3 className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: GREEN }}>Member Tiers — Lowest to Highest</h3>
+                  </div>
+                  <div className="rounded-xl overflow-hidden border divide-y">
+                    {[
+                      { abbr: "RM", name: "Retail Member", def: "Entry-level customers with no referral relationship. No commission qualification." },
+                      { abbr: "RRM", name: "Referring Retail Member", def: "A retail member who has referred at least one other customer. Earns basic referral credit but is not commission-qualified." },
+                      { abbr: "RCB", name: "Retail Community Builder", def: "An active retail member building a customer base. Eligible to earn RC (Referral Commission) but not Pro Member income streams." },
+                      { abbr: "PM", name: "Pro Member", def: "The full commission-qualified tier. Requires an active PRP subscription AND 150+ PCV within any rolling 30-day window. Unlocks all five income streams." },
+                      { abbr: "APM", name: "Associate Pro Member", def: "A dynamic status earned automatically when a Pro Member has 9 or more active Level 1 Pro Members. Reverts to Pro Member if that count drops below 9." },
+                    ].map((tier, i) => (
+                      <div key={tier.abbr} className="flex items-start gap-3 p-3 bg-card">
+                        <div className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-black text-white flex-shrink-0 mt-0.5"
+                          style={{ background: i === 4 ? GOLD : i === 3 ? GREEN : "#94a3b8" }}>
+                          {i + 1}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <p className="text-sm font-bold text-foreground">{tier.name}</p>
+                            <Badge variant="outline" className="text-[10px] font-bold">{tier.abbr}</Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{tier.def}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ── Volume Terms ─────────────────────────── */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-0.5 w-5 rounded" style={{ background: GOLD }} />
+                    <h3 className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: GOLD }}>Volume Terms — Know Your Numbers</h3>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    {[
+                      { abbr: "CV", term: "Commissionable Volume", def: "A point value assigned to every NFGN product. Not a dollar amount — it is a score used to calculate all commissions across every program." },
+                      { abbr: "PCV / PV", term: "Personal Commissionable Volume", def: "The CV generated by your own purchases in a rolling 30-day window. 150+ PCV is required to maintain active Pro Member status." },
+                      { abbr: "GCV / GV", term: "Group Commissionable Volume", def: "The total CV from your entire downline organization. Also called Group Volume (GV). Used to qualify for BPP bonus funds." },
+                      { abbr: "Zone GCV", term: "Zone of Duplication Volume", def: "GCV from Levels 2–5 only. This — not Level 1 volume — determines your BPP fund eligibility. Levels 1, 6–9 are excluded." },
+                      { abbr: "Rolling 30-Day", term: "Rolling 30-Day PCV", def: "PCV is NOT calculated by calendar month. It is measured on a rolling 30-day window. If your last 150 CV of personal purchases was more than 30 days ago, your Pro Member status is at risk." },
+                    ].map(t => (
+                      <div key={t.term} className="rounded-xl border p-4 space-y-1.5 bg-card">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="font-bold text-sm text-foreground leading-tight">{t.term}</p>
+                          <Badge variant="outline" className="text-[10px] font-bold tracking-widest flex-shrink-0">{t.abbr}</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{t.def}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ── Income Streams ───────────────────────── */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-0.5 w-5 rounded" style={{ background: "#3b82f6" }} />
+                    <h3 className="text-xs font-extrabold uppercase tracking-[0.2em] text-blue-600">Income Stream Abbreviations</h3>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    {[
+                      { abbr: "RC", term: "Referral Commission", def: "10% on every purchase made by your direct (Level 1) referrals. Earned by all active members — no Pro Member status required." },
+                      { abbr: "PSC", term: "Product Sales Commission", def: "Up to 24% earned across 9 levels of your downline on product purchases. Pro Members only. Level 2 always pays the highest rate (24%)." },
+                      { abbr: "PMRC", term: "Pro Member Retail Commission", def: "Up to 22% earned across 5 levels when someone in your downline purchases a Pro Member Registration Package. Pro Members only." },
+                      { abbr: "CLB", term: "Core Leadership Bonus", def: "A one-time $100 bonus triggered when you personally enroll 9 qualified Level 1 Pro Members (each with 150+ cumulative CV)." },
+                      { abbr: "MCB", term: "Money Circulation Bonus", def: "A recurring $200 bonus paid every time 7 new Level 2 Pro Members join your organization. Unlimited cycles." },
+                      { abbr: "BPP", term: "Bill Payer Program", def: "Five Group Volume Bonus Funds offsetting real monthly expenses. Phone/Internet ($185), Medical ($350), Utilities ($450), Car ($600), Rent/Mortgage ($1,500). Max $3,085/month." },
+                    ].map(t => (
+                      <div key={t.term} className="rounded-xl border p-4 space-y-1.5 bg-card">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="font-bold text-sm text-foreground leading-tight">{t.term}</p>
+                          <Badge variant="outline" className="text-[10px] font-bold tracking-widest flex-shrink-0 text-blue-600 border-blue-300">{t.abbr}</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{t.def}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ── Structure & Platform Terms ───────────── */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-0.5 w-5 rounded" style={{ background: GREEN }} />
+                    <h3 className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: GREEN }}>Organizational & Platform Terms</h3>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    {[
+                      { abbr: "PRP", term: "Pro Member Registration Package", def: "The product purchase that activates Pro Member status. Must remain active and subscription-based. PRPs do not earn Pro Member discounts." },
+                      { abbr: "UPM", term: "Unqualified Pro Member", def: "A Pro Member whose cumulative CV has not yet reached 150. UPMs do not count toward your CLB trigger (amber slots in Power Squad tracker)." },
+                      { abbr: "CLG", term: "Core Leadership Group", def: "Your direct Level 1 team — the people you personally recruited. Your CLG is the foundation of all income streams." },
+                      { abbr: "Zone", term: "Zone of Duplication", def: "Levels 2–5 of your organization. BPP Group Volume is calculated here. The heart of the '2 Down By Infinity' leverage model." },
+                      { term: "Wealth Builders Community", def: "The people within your Zone of Duplication (Levels 2–5). These members drive your BPP qualification and long-term residual income." },
+                      { term: "E-Wallet", def: "The digital wallet inside your back office where commissions, bonuses, and BPP payouts are deposited. Funds can be transferred or paid out per the payout schedule." },
+                      { term: "2 Down By Infinity", def: "The official name of NFGN's proprietary compensation plan invented by Joe Marcelino. '2 Down' = emphasis on Level 2. 'By Infinity' = no depth limit on earning." },
+                      { term: "Referral Link", def: "Your unique personal URL. Anyone who visits NFGN through your link is attributed to you, triggering RC on their purchases." },
+                    ].map(t => (
+                      <div key={t.term} className="rounded-xl border p-4 space-y-1.5 bg-card">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="font-bold text-sm text-foreground leading-tight">{t.term}</p>
+                          {t.abbr && <Badge variant="outline" className="text-[10px] font-bold tracking-widest flex-shrink-0">{t.abbr}</Badge>}
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{t.def}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Quick Reference */}
+                <div className="rounded-2xl border p-5 space-y-4" style={{ background: `rgba(201,168,76,0.05)`, borderColor: `${GOLD}30` }}>
+                  <p className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: GOLD }}>Quick Reference — All Abbreviations</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {[
+                      ["RC", "Referral Commission"], ["PSC", "Product Sales Comm."], ["PMRC", "Pro Member Retail Comm."],
+                      ["CLB", "Core Leadership Bonus"], ["MCB", "Money Circulation Bonus"], ["BPP", "Bill Payer Program"],
+                      ["CV", "Commissionable Volume"], ["PCV / PV", "Personal Comm. Volume"], ["GCV / GV", "Group Comm. Volume"],
+                      ["PRP", "Pro Member Reg. Package"], ["UPM", "Unqualified Pro Member"], ["APM", "Associate Pro Member"],
+                      ["RM", "Retail Member"], ["RRM", "Referring Retail Member"], ["RCB", "Retail Community Builder"],
+                      ["CLG", "Core Leadership Group"], ["PM", "Pro Member"],
+                    ].map(([abbr, full]) => (
+                      <div key={abbr} className="flex items-center gap-2 text-xs">
+                        <span className="font-bold flex-shrink-0" style={{ color: GOLD, minWidth: 56 }}>{abbr}</span>
+                        <span className="text-muted-foreground">{full}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <TrainingQuiz
+                  title="Terminology — Proficiency Quiz"
+                  questions={compPlanQuiz}
+                />
+              </CardContent>
+            </Card>
+          )}
+
           {/* ── COMP PLAN ───────────────────────────────────── */}
           {activeSection === "comp-plan" && (
             <Card>
               <CardContent className="pt-6 space-y-6">
-                <SectionHeader icon={DollarSign} title="The NFGN Compensation Plan" subtitle="6 ways to earn — understand every stream" />
+                <SectionHeader icon={DollarSign} title="The NFGN Compensation Plan" subtitle="Five income streams · Six business pillars · Unlimited depth" />
 
                 {/* Plan name callout */}
                 <div className="rounded-xl border border-primary/25 bg-primary/5 p-4 space-y-2">
@@ -322,7 +497,7 @@ export function BasicTrainingPage() {
                     <div className="rounded-lg bg-white border border-blue-200 p-3 space-y-1">
                       <p className="text-xs font-bold uppercase tracking-widest text-blue-500">PCV <span className="normal-case font-normal text-muted-foreground">(also: PV)</span></p>
                       <p className="text-sm font-semibold text-blue-700">Personal Commissionable Volume</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">PCV is the total CV generated by <strong>your own purchases</strong> in a calendar month. It is also widely referred to as <strong>PV (Personal Volume)</strong>. Maintaining a minimum PCV each month keeps your Pro Member status active and qualifies you for BPP bonuses.</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">PCV is the total CV generated by <strong>your own purchases</strong> within any rolling 30-day window. Also called <strong>PV (Personal Volume)</strong>. Maintaining 150+ PCV in every rolling 30-day window keeps your Pro Member status active and qualifies you for BPP bonuses. This is <strong>not</strong> a calendar-month reset — it rolls continuously.</p>
                     </div>
                     <div className="rounded-lg bg-white border border-green-200 p-3 space-y-1">
                       <p className="text-xs font-bold uppercase tracking-widest text-green-600">GCV <span className="normal-case font-normal text-muted-foreground">(also: GV)</span></p>

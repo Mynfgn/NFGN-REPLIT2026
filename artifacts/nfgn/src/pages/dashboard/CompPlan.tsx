@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   DollarSign, TrendingUp, Users, Star, Award, Home,
-  ChevronRight, CheckCircle2, Info, Zap, ArrowRight,
+  ChevronRight, CheckCircle2, Info, Zap, ArrowRight, BookOpen,
+  Leaf, CalendarDays, Sparkles, Trophy, Shield,
 } from "lucide-react";
 
 const GOLD = "#C9A84C";
@@ -13,12 +14,13 @@ const GREEN = "#2D6A4F";
 const BLACK = "#0a0a0a";
 
 const SECTIONS = [
-  { id: "overview",   label: "Overview",                icon: Zap },
-  { id: "rc",         label: "Referral Commission",     icon: DollarSign },
-  { id: "psc",        label: "Product Sales Comm.",     icon: TrendingUp },
-  { id: "pmrc",       label: "Multi-Level Retail",      icon: Users },
-  { id: "psb",        label: "Power Squad Bonuses",     icon: Star },
-  { id: "bpp",        label: "Bill Payer Program",      icon: Home },
+  { id: "terminology", label: "Terminology & Glossary", icon: BookOpen },
+  { id: "overview",    label: "Overview",               icon: Zap },
+  { id: "rc",          label: "Referral Commission",    icon: DollarSign },
+  { id: "psc",         label: "Product Sales Comm.",    icon: TrendingUp },
+  { id: "pmrc",        label: "Multi-Level Retail",     icon: Users },
+  { id: "psb",         label: "Power Squad Bonuses",    icon: Star },
+  { id: "bpp",         label: "Bill Payer Program",     icon: Home },
 ];
 
 function SectionNav({ active, onChange }: { active: string; onChange: (s: string) => void }) {
@@ -71,6 +73,145 @@ function InfoBox({ children, color = "amber" }: { children: React.ReactNode; col
   return (
     <div className={`rounded-xl border p-4 text-sm space-y-1 ${colors[color]}`}>
       {children}
+    </div>
+  );
+}
+
+// ── TERMINOLOGY ───────────────────────────────────────────────────────────────
+function TermCell({ term, abbr, def }: { term: string; abbr?: string; def: string }) {
+  return (
+    <div className="rounded-xl border p-4 space-y-1.5 bg-card">
+      <div className="flex items-start justify-between gap-2">
+        <p className="font-bold text-sm text-foreground leading-tight">{term}</p>
+        {abbr && <Badge variant="outline" className="text-[10px] font-bold tracking-widest flex-shrink-0">{abbr}</Badge>}
+      </div>
+      <p className="text-xs text-muted-foreground leading-relaxed">{def}</p>
+    </div>
+  );
+}
+
+function TermGroup({ title, color = GOLD, children }: { title: string; color?: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <div className="h-0.5 w-5 rounded" style={{ background: color }} />
+        <h3 className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color }}>{title}</h3>
+      </div>
+      <div className="grid sm:grid-cols-2 gap-3">{children}</div>
+    </div>
+  );
+}
+
+function TerminologySection() {
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="rounded-2xl p-6 text-white" style={{ background: `linear-gradient(135deg, #1a1100, #0a0a0a)`, border: `1px solid ${GOLD}30` }}>
+        <div className="flex items-start gap-3 mb-4">
+          <div className="h-10 w-10 rounded-xl flex-shrink-0 flex items-center justify-center" style={{ background: `${GOLD}25`, border: `1px solid ${GOLD}50` }}>
+            <BookOpen className="h-5 w-5" style={{ color: GOLD }} />
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-widest font-bold mb-0.5" style={{ color: GOLD }}>Master Your Language</p>
+            <h2 className="text-xl font-serif font-bold">NFGN Terminology & Glossary</h2>
+            <p className="text-white/50 text-xs mt-0.5">Every term used in the compensation plan, explained clearly</p>
+          </div>
+        </div>
+        <p className="text-sm text-white/70 leading-relaxed">
+          Understanding the language of NFGN is the first step to mastering the income opportunity. Every term below is used throughout your back office, commission reports, and training materials. Study these until they become second nature.
+        </p>
+      </div>
+
+      {/* ── Six Business Pillars ─────────────────────────────── */}
+      <TermGroup title="The Six Business Pillars">
+        <TermCell term="Naturopathic, Mental Health, & Primary Care" abbr="Pillar 1" def="Products, services, and Medical Benefit Packages covering naturopathic health, mental wellness, and primary care. The core of NFGN's wellness mission." />
+        <TermCell term="Book-A-Professional" abbr="Pillar 2" def="The professional booking platform connecting members with certified wellness practitioners, coaches, naturopaths, and consultants for one-on-one sessions." />
+        <TermCell term="Business Opportunities" abbr="Pillar 3" def="The commission-based income arm of NFGN — powered by the 2 Down By Infinity Multi-Point Payment Grid. Open to all Pro Members." />
+        <TermCell term="NFGN Sports" abbr="Pillar 4" def="The athletic community division — funding youth programs, school teams, local leagues, and sports nonprofits through the NFGN money circulation grid." />
+        <TermCell term="NFGN Products & Services" abbr="Pillar 5" def="Handcrafted artisan goods including handmade soaps, candles, lotions, and other natural body care products made with love and sold through the NFGN platform." />
+        <TermCell term="Special Events, Travel, & Workshops" abbr="Pillar 6" def="Exclusive NFGN retreats, live training workshops, travel experiences, and member events. Designed to educate, connect, and inspire the community." />
+      </TermGroup>
+
+      {/* ── Member Tiers ─────────────────────────────────────── */}
+      <TermGroup title="Member Tiers (Lowest → Highest)" color={GREEN}>
+        <TermCell term="Retail Member" abbr="RM" def="The entry-level tier. Customers who purchase products without a referral or business relationship. No commission qualification." />
+        <TermCell term="Referring Retail Member" abbr="RRM" def="A retail member who has referred at least one other customer to NFGN. Earns basic referral credit but is not commission-qualified." />
+        <TermCell term="Retail Community Builder" abbr="RCB" def="An active retail member building a customer base. Eligible to earn referral commissions (RC) but does not yet hold Pro Member status." />
+        <TermCell term="Associate Pro Member" abbr="APM" def="A dynamic status earned when a Pro Member has 9 or more active Level 1 Pro Members. Automatically promoted when the threshold is met; reverts to Pro Member if the count drops below 9." />
+        <TermCell term="Pro Member" abbr="PM" def="The full commission-qualified tier. Requires an active Pro Member Registration Package (PRP) AND a minimum of 150 PCV in any rolling 30-day window. Unlocks all five income streams." />
+      </TermGroup>
+
+      {/* ── Volume Terms ─────────────────────────────────────── */}
+      <TermGroup title="Volume Terms">
+        <TermCell term="Commissionable Volume" abbr="CV" def="A point value assigned to every NFGN product. CV is the base unit used to calculate all commissions across all programs. It is not a dollar amount — it is a score." />
+        <TermCell term="Personal Commissionable Volume" abbr="PCV / PV" def="The total CV generated by your own purchases within a rolling 30-day window. Also called Personal Volume (PV). Maintaining 150+ PCV keeps Pro Member status active." />
+        <TermCell term="Group Commissionable Volume" abbr="GCV / GV" def="The total CV generated by your entire downline organization — all levels combined. Also called Group Volume (GV). Used to unlock BPP bonus funds." />
+        <TermCell term="Zone GCV" abbr="Zone GV" def="GCV from Levels 2, 3, 4, and 5 only (the Zone of Duplication). This — NOT your Level 1 volume — determines your BPP qualification. Level 1 and Levels 6–9 are excluded from Zone GCV." />
+        <TermCell term="Rolling 30-Day PCV" def="PCV is evaluated on a rolling 30-day basis, not a calendar month. If your last 150 CV of personal purchases was more than 30 days ago, your Pro Member maintenance status is at risk." />
+      </TermGroup>
+
+      {/* ── Income Stream Abbreviations ─────────────────────── */}
+      <TermGroup title="Income Streams & Abbreviations" color="#3b82f6">
+        <TermCell term="Referral Commission" abbr="RC" def="10% earned on every purchase made by your direct (Level 1) referrals. Earned by all active members — no Pro Member status required." />
+        <TermCell term="Product Sales Commission" abbr="PSC" def="Up to 24% earned across 9 levels of your downline on product purchases. Pro Members only. Level 2 always pays the highest rate (24%) — double the Level 1 rate of 12%." />
+        <TermCell term="Pro Member Retail Commission" abbr="PMRC" def="Up to 22% earned across 5 levels when someone in your downline purchases a Pro Member Registration Package. Pro Members only. Separate from PSC." />
+        <TermCell term="Core Leadership Bonus" abbr="CLB" def="A one-time $100 bonus triggered when you personally enroll 9 qualified Level 1 Pro Members (each with 150+ cumulative CV). A fast-start milestone reward." />
+        <TermCell term="Money Circulation Bonus" abbr="MCB" def="A recurring $200 bonus paid every time 7 new Level 2 Pro Members join your organization. Unlimited cycles — no cap on how many times it can fire." />
+        <TermCell term="Bill Payer Program" abbr="BPP" def="Five Group Volume Bonus Funds designed to offset real monthly expenses: Phone/Internet ($185), Medical ($350), Utilities ($450), Car ($600), Rent/Mortgage ($1,500). Max $3,085/month." />
+      </TermGroup>
+
+      {/* ── Organizational Terms ─────────────────────────────── */}
+      <TermGroup title="Organizational Structure" color={GREEN}>
+        <TermCell term="Downline" def="Every member in your network below you — across all levels. Your downline's purchases and enrollments generate your commissions." />
+        <TermCell term="Upline" def="Every member above you in the network — your sponsor, their sponsor, and so on. Your upline earns commissions from your activity." />
+        <TermCell term="Level / Generation" def="Two words for the same thing. Level 1 = people you personally referred. Level 2 = people they referred. Each subsequent layer adds one level." />
+        <TermCell term="Core Leadership Group" abbr="CLG" def="Your direct Level 1 team — the people you personally recruited. Building a strong CLG is the foundation of all income streams." />
+        <TermCell term="Zone of Duplication" def="Levels 2 through 5 of your organization. This is where BPP Group Volume is calculated and where the '2 Down By Infinity' structure creates the most leverage." />
+        <TermCell term="Wealth Builders Community" def="The people within your Zone of Duplication (Levels 2–5). These members are the engine of your BPP qualification and long-term residual income." />
+      </TermGroup>
+
+      {/* ── Plan & Platform Terms ─────────────────────────────── */}
+      <TermGroup title="Plan & Platform Terms">
+        <TermCell term="2 Down By Infinity" def="The official name of NFGN's proprietary compensation plan, invented by Joe Marcelino. The '2 Down' refers to the emphasis on Level 2; 'By Infinity' means there is no depth limit on earning." />
+        <TermCell term="Multi-Point Payment Grid" def="The alternative (expanded) name for the 2 Down By Infinity plan. Reflects that money circulates through multiple points in the network, not just to the top." />
+        <TermCell term="Pro Member Registration Package" abbr="PRP" def="The required product purchase that activates Pro Member status. Must remain active (not lapsed) for commission qualification. PRPs are isProPackage=true and are tracked separately from regular product orders." />
+        <TermCell term="Unqualified Pro Member" abbr="UPM" def="A Pro Member whose cumulative CV has not yet reached 150. UPMs do not count toward your CLB trigger and are shown as amber slots in the Power Squad tracker." />
+        <TermCell term="NFGN E-Wallet" def="The digital wallet inside your back office where commissions, bonuses, and BPP payouts are deposited. Funds can be transferred or paid out per the payout schedule." />
+        <TermCell term="Dollar Credit" def="A credit applied to your account — may be earned through specific promotions or programs. Check your wallet for any dollar credit balances." />
+        <TermCell term="Back Office" def="Your personal member dashboard — the platform you are using right now. Contains your commission reports, genealogy, wallet, training, tools, and team management." />
+        <TermCell term="Referral Link" def="Your unique personal URL tied to your account. Anyone who visits NFGN through your link is attributed to you as a referral, triggering RC on their purchases." />
+      </TermGroup>
+
+      {/* Quick Reference Card */}
+      <div className="rounded-2xl border p-6 space-y-4" style={{ background: `${GOLD}08`, borderColor: `${GOLD}30` }}>
+        <p className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: GOLD }}>Quick Abbreviation Reference</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {[
+            ["RC", "Referral Commission"],
+            ["PSC", "Product Sales Commission"],
+            ["PMRC", "Pro Member Retail Comm."],
+            ["CLB", "Core Leadership Bonus"],
+            ["MCB", "Money Circulation Bonus"],
+            ["BPP", "Bill Payer Program"],
+            ["CV", "Commissionable Volume"],
+            ["PCV / PV", "Personal Comm. Volume"],
+            ["GCV / GV", "Group Comm. Volume"],
+            ["PRP", "Pro Member Reg. Package"],
+            ["UPM", "Unqualified Pro Member"],
+            ["APM", "Associate Pro Member"],
+            ["RM", "Retail Member"],
+            ["RRM", "Referring Retail Member"],
+            ["RCB", "Retail Community Builder"],
+            ["CLG", "Core Leadership Group"],
+            ["PM", "Pro Member"],
+          ].map(([abbr, full]) => (
+            <div key={abbr} className="flex items-center gap-2 text-xs">
+              <span className="font-bold flex-shrink-0" style={{ color: GOLD, minWidth: 56 }}>{abbr}</span>
+              <span className="text-muted-foreground">{full}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -133,7 +274,7 @@ function OverviewSection() {
       {/* ── Five Income Streams ───────────────────────────────────── */}
       <div className="rounded-2xl p-6 text-white" style={{ background: `linear-gradient(135deg, ${BLACK}, #1a1a1a)` }}>
         <h2 className="text-2xl font-serif font-bold mb-1">Five Income Streams</h2>
-        <p className="text-white/70 text-sm mb-5">NFGN members can earn through five distinct income streams — three commission types and two bonus programs.</p>
+        <p className="text-white/70 text-sm mb-5">NFGN members can earn through five distinct income streams — three commission types and two bonus programs — spanning six business pillars.</p>
         <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
           {[
             { label: "Referral Commission", abbr: "RC", color: "#3b82f6" },
@@ -870,7 +1011,7 @@ function BPPSection() {
         <CardHeader className="pb-2"><CardTitle className="text-sm">Qualification Requirements</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <Bullet>You must be an active <strong>Pro Member</strong> to qualify for any BPP fund.</Bullet>
-          <Bullet>You must maintain a minimum of <strong>150 PV</strong> per month through your own product and service purchases.</Bullet>
+          <Bullet>You must maintain a minimum of <strong>150 PCV</strong> within any rolling 30-day window — this is evaluated on a rolling basis, not a calendar month.</Bullet>
           <Bullet>Your team's Group Volume (GV) must reach each fund's threshold to unlock that fund's bonus.</Bullet>
           <Bullet>You may qualify for multiple funds in the same month — each fund is evaluated independently.</Bullet>
           <Bullet>Your Pro Member Registration Package <strong>activates eligibility</strong> but may not fully satisfy the 150 PV requirement on its own — additional product purchases may be needed.</Bullet>
@@ -942,11 +1083,11 @@ export function CompPlanPage() {
           </div>
           <div>
             <h1 className="text-2xl font-serif font-bold">NFGN Compensation Plan</h1>
-            <p className="text-white/60 text-sm">The complete guide to all five income streams</p>
+            <p className="text-white/60 text-sm">Five income streams · Six business pillars · Unlimited depth</p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2 mt-4">
-          {["RC", "PSC", "PMRC", "Power Squad Bonuses", "Bill Payer Program"].map(b => (
+          {["Terminology", "RC", "PSC", "PMRC", "Power Squad Bonuses", "Bill Payer Program"].map(b => (
             <Badge key={b} className="text-xs" style={{ background: `${GOLD}25`, color: GOLD, border: `1px solid ${GOLD}40` }}>{b}</Badge>
           ))}
         </div>
@@ -958,12 +1099,13 @@ export function CompPlanPage() {
         </aside>
 
         <div className="flex-1 min-w-0">
-          {active === "overview" && <OverviewSection />}
-          {active === "rc"       && <RCSection />}
-          {active === "psc"      && <PSCSection />}
-          {active === "pmrc"     && <PMRCSection />}
-          {active === "psb"      && <PSBSection />}
-          {active === "bpp"      && <BPPSection />}
+          {active === "terminology" && <TerminologySection />}
+          {active === "overview"    && <OverviewSection />}
+          {active === "rc"          && <RCSection />}
+          {active === "psc"         && <PSCSection />}
+          {active === "pmrc"        && <PMRCSection />}
+          {active === "psb"         && <PSBSection />}
+          {active === "bpp"         && <BPPSection />}
         </div>
       </div>
     </div>

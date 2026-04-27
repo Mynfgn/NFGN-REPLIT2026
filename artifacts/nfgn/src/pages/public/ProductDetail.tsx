@@ -146,7 +146,7 @@ export function ProductDetail() {
       <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-8">
         <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
         <ChevronRight className="h-3.5 w-3.5" />
-        <Link href="/shop" className="hover:text-foreground transition-colors">The Apothecary</Link>
+        <Link href="/shop" className="hover:text-foreground transition-colors">Our Products</Link>
         <ChevronRight className="h-3.5 w-3.5" />
         <span className="text-foreground font-medium truncate">{product.name}</span>
       </nav>

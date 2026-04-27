@@ -840,7 +840,7 @@ export function CartDrawer() {
                 <p className="font-semibold text-lg">Your cart is empty</p>
                 <p className="text-muted-foreground text-sm">Browse our naturopathic wellness products and add something you love.</p>
                 <Link href="/shop" onClick={() => setCartOpen(false)}>
-                  <Button variant="outline">Browse The Apothecary</Button>
+                  <Button variant="outline">Browse Our Products</Button>
                 </Link>
               </div>
             ) : (

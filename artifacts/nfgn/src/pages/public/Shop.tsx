@@ -49,7 +49,7 @@ export function Shop() {
     <div className="container mx-auto px-4 py-12">
       <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
         <div>
-          <h1 className="text-4xl font-serif font-bold text-foreground mb-2">The Apothecary</h1>
+          <h1 className="text-4xl font-serif font-bold text-foreground mb-2">Our Products</h1>
           <p className="text-muted-foreground max-w-2xl">Premium naturopathic formulations crafted for optimal wellness and vitality.</p>
         </div>
       </div>

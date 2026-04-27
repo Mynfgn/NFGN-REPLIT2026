@@ -520,7 +520,7 @@ export default function AdminSettingsPage() {
       <Section title="Membership & Registration" icon={Package}>
         <Field
           label="Pro Member Registration Package Price ($)"
-          hint="Price of the Pro Member registration package shown in The Apothecary."
+          hint="Price of the Pro Member registration package shown in Our Products."
         >
           <div className="flex items-center gap-1 mt-1">
             <span className="text-muted-foreground text-sm">$</span>

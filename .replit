@@ -57,3 +57,8 @@ externalPort = 5000
 
 [nix]
 channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+SQUARE_APPLICATION_ID = "sq0idp-_c-b9AfjWMQgE8lQxqMZpQ"

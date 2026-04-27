@@ -26,6 +26,10 @@ export const productsTable = pgTable("products", {
   // Refund policy: 'no_refund' or '7_day_return' (mandatory, admin sets per product)
   refundPolicy: text("refund_policy").notNull().default("no_refund"),
 
+  // Pro Member discount program (cannot be enabled on Pro Registration Products)
+  proMemberDiscountEligible: boolean("pro_member_discount_eligible").notNull().default(false),
+  proMemberDiscountPercent: numeric("pro_member_discount_percent", { precision: 5, scale: 2 }).notNull().default("0"),
+
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

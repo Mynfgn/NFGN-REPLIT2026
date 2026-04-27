@@ -18,11 +18,24 @@ export function roleLabel(role: string): string {
 /** Human-readable label for memberTier values */
 export function tierLabel(tier: string): string {
   switch (tier) {
-    case "retail_member":             return "Retail Member";
-    case "referring_retail_member":   return "Referring Retail Member";
-    case "unqualified_pro_member":    return "Unqualified Pro Member";
-    case "pro_member":                return "Pro Member";
-    default:                          return tier.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+    case "retail_member":              return "Retail Member";
+    case "referring_retail_member":    return "Referring Retail Member";
+    case "retail_community_builder":   return "Retail Community Builder";
+    case "associate_pro_member":       return "Associate Pro Member";
+    case "pro_member":                 return "Pro Member";
+    default:                           return tier.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+  }
+}
+
+/** Short abbreviation for member tiers */
+export function tierAbbr(tier: string): string {
+  switch (tier) {
+    case "retail_member":              return "RM";
+    case "referring_retail_member":    return "RRM";
+    case "retail_community_builder":   return "RCB";
+    case "associate_pro_member":       return "APM";
+    case "pro_member":                 return "PM";
+    default:                           return tier.toUpperCase().slice(0, 3);
   }
 }
 

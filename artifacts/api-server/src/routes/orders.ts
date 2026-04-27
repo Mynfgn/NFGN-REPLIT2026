@@ -1,8 +1,65 @@
 import { Router, type IRouter } from "express";
 import { db, ordersTable, orderItemsTable, cartItemsTable, productsTable, usersTable, appSettingsTable, promoCodesTable, dollarCreditsTable } from "@workspace/db";
-import { eq, and, desc, count, sql, inArray } from "drizzle-orm";
+import { eq, and, desc, count, sql, inArray, gte } from "drizzle-orm";
 import { requireAuth, requireAdmin } from "../lib/auth";
 import { processCommissions, type OrderItemForCommission } from "../lib/commissions";
+
+/**
+ * Check and update a sponsor's APM status based on their active Level 1 Pro Members.
+ * Called when a Pro Member is activated or deactivated in a sponsor's direct downline.
+ * APM requires 9+ active Level 1 Pro Member subscriptions; reverts to RCB if below.
+ */
+async function evaluateApmStatus(sponsorId: number) {
+  const [sponsor] = await db.select().from(usersTable).where(eq(usersTable.id, sponsorId));
+  if (!sponsor) return;
+
+  // Only evaluate retail-tier members (not existing Pro Members or admins)
+  const retailTiers = ["retail_member", "referring_retail_member", "retail_community_builder", "associate_pro_member"];
+  if (!retailTiers.includes(sponsor.memberTier ?? "retail_member")) return;
+
+  // Count active Level 1 Pro Members in sponsor's direct downline
+  const [{ activeProCount }] = await db
+    .select({ activeProCount: sql<number>`count(*)` })
+    .from(usersTable)
+    .where(
+      and(
+        eq(usersTable.sponsorId, sponsorId),
+        eq(usersTable.role, "pro_member"),
+        eq(usersTable.proMemberStatus, "active"),
+      ),
+    );
+  const count = Number(activeProCount ?? 0);
+
+  const currentTier = sponsor.memberTier ?? "retail_member";
+
+  if (count >= 9 && currentTier !== "associate_pro_member") {
+    // Promote to APM
+    await db.update(usersTable).set({ memberTier: "associate_pro_member" }).where(eq(usersTable.id, sponsorId));
+  } else if (count < 9 && currentTier === "associate_pro_member") {
+    // Revert APM → RCB (they still have their retail referral history)
+    await db.update(usersTable).set({ memberTier: "retail_community_builder" }).where(eq(usersTable.id, sponsorId));
+  }
+}
+
+/**
+ * Calculate a user's Personal Commission Volume (PCV) in a rolling 30-day window.
+ * Used to verify Pro Member maintenance requirement (150 PCV).
+ */
+async function getRolling30DayPcv(userId: number): Promise<number> {
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const [{ total }] = await db
+    .select({ total: sql<number>`coalesce(sum(${orderItemsTable.cvTotal}), 0)` })
+    .from(orderItemsTable)
+    .innerJoin(ordersTable, eq(orderItemsTable.orderId, ordersTable.id))
+    .where(
+      and(
+        eq(ordersTable.userId, userId),
+        gte(ordersTable.createdAt, thirtyDaysAgo),
+        sql`${ordersTable.status} != 'refunded'`,
+      ),
+    );
+  return Number(total ?? 0);
+}
 
 /**
  * Handle referral-based rewards when a member places an order:
@@ -37,22 +94,23 @@ async function handleReferralRewards(
     );
   const referredBuyerCount = referredBuyerRows.length;
 
-  // Tier promotion logic
+  // Tier promotion logic (Retail ladder: RM → RRM → RCB)
+  // APM promotion is handled separately when a Pro Member is activated in L1
   const currentTier = sponsor.memberTier ?? "retail_member";
   let newTier = currentTier;
 
   if (currentTier === "retail_member" && referredBuyerCount >= 1) {
     newTier = "referring_retail_member";
   } else if (currentTier === "referring_retail_member" && referredBuyerCount >= 9) {
-    newTier = "unqualified_pro_member";
+    newTier = "retail_community_builder";
   }
 
   if (newTier !== currentTier) {
     await db.update(usersTable).set({ memberTier: newTier }).where(eq(usersTable.id, sponsorId));
   }
 
-  // Award $-Credits for eligible products if sponsor is RRM or UPM tier
-  const earnsCredits = ["referring_retail_member", "unqualified_pro_member"].includes(newTier);
+  // Award $-Credits for eligible products if sponsor is RRM, RCB, or APM tier
+  const earnsCredits = ["referring_retail_member", "retail_community_builder", "associate_pro_member"].includes(newTier);
   if (!earnsCredits) return;
 
   let creditAmount = 0;
@@ -358,6 +416,11 @@ router.patch("/orders/:id", requireAdmin, async (req, res): Promise<void> => {
         }));
         const orderTotal = parseFloat(updated.total);
         await processCommissions(updated.id, updated.orderNumber, orderTotal, user.id, true, commissionItems);
+
+        // Evaluate sponsor's APM status — they may now qualify (9+ active L1 Pro Members)
+        if (user.sponsorId) {
+          await evaluateApmStatus(user.sponsorId);
+        }
       }
     }
   }

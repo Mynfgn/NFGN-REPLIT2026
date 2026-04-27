@@ -272,6 +272,24 @@ router.get("/dashboard/analytics", requireAuth, async (req, res): Promise<void> 
     personalVolume = parseInt(pvSum ?? "0");
   }
 
+  // ── Rolling 30-Day PCV (Pro Member maintenance check) ────────────────────
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const rolling30DayOrders = await db.select({ id: ordersTable.id })
+    .from(ordersTable)
+    .where(and(
+      eq(ordersTable.userId, userId),
+      gte(ordersTable.createdAt, thirtyDaysAgo),
+      sql`${ordersTable.status} != 'refunded'`,
+    ));
+
+  let rolling30DayPcv = 0;
+  if (rolling30DayOrders.length > 0) {
+    const [{ pcvSum }] = await db.select({ pcvSum: sum(orderItemsTable.cvTotal) })
+      .from(orderItemsTable)
+      .where(inArray(orderItemsTable.orderId, rolling30DayOrders.map(o => o.id)));
+    rolling30DayPcv = parseInt(pcvSum ?? "0");
+  }
+
   // ── Group Volume (GV) — this month ────────────────────────────────────────
   let groupVolume = 0;
   if (communityIds.length > 0) {
@@ -379,7 +397,8 @@ router.get("/dashboard/analytics", requireAuth, async (req, res): Promise<void> 
     salesByState,
     personalVolume,
     groupVolume,
-    cvMaintenanceRequired: 100,
+    rolling30DayPcv,
+    cvMaintenanceRequired: 150,
     powerSquadBonus: {
       // CLB — Core Leadership Bonus (one-time, L1)
       clbTrigger,

@@ -19,8 +19,8 @@ const GOLD = "#C9A84C";
 const DARK = "#0a0a0a";
 
 // ── Tier system ────────────────────────────────────────────────────────────────
-export type MemberTier = "retail_member" | "referring_retail_member" | "unqualified_pro_member" | "pro_member";
-const TIER_ORDER: MemberTier[] = ["retail_member", "referring_retail_member", "unqualified_pro_member", "pro_member"];
+export type MemberTier = "retail_member" | "referring_retail_member" | "retail_community_builder" | "associate_pro_member" | "pro_member";
+const TIER_ORDER: MemberTier[] = ["retail_member", "referring_retail_member", "retail_community_builder", "associate_pro_member", "pro_member"];
 
 export function getEffectiveTier(user: any): MemberTier {
   if (!user) return "retail_member";
@@ -64,11 +64,11 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
   },
   {
     label: "Business",
-    minTier: "unqualified_pro_member",
+    minTier: "retail_community_builder",
     items: [
-      { name: "Genealogy",          href: "/dashboard/genealogy",    icon: Users, minTier: "unqualified_pro_member" },
-      { name: "User Earnings",      href: "/dashboard/earnings",     icon: TrendingUp, minTier: "unqualified_pro_member" },
-      { name: "Commissions",        href: "/dashboard/commissions",  icon: Award, minTier: "unqualified_pro_member" },
+      { name: "Genealogy",          href: "/dashboard/genealogy",    icon: Users, minTier: "retail_community_builder" },
+      { name: "User Earnings",      href: "/dashboard/earnings",     icon: TrendingUp, minTier: "retail_community_builder" },
+      { name: "Commissions",        href: "/dashboard/commissions",  icon: Award, minTier: "retail_community_builder" },
       {
         name: "Registration", icon: UserPlus, group: "registration", minTier: "pro_member",
         children: [
@@ -90,7 +90,7 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
     items: [
       {
         name: "NFGN Basic Training",
-        icon: BookOpen, group: "training", minTier: "unqualified_pro_member",
+        icon: BookOpen, group: "training", minTier: "retail_community_builder",
         children: [
           { name: "Getting Started",     href: "/dashboard/tools/training?s=getting-started" },
           { name: "Comp Plan",           href: "/dashboard/tools/training?s=comp-plan" },

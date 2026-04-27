@@ -47,6 +47,8 @@ interface Product {
   cv: number;
   dollarCreditEligible: boolean;
   refundPolicy: string;
+  proMemberDiscountEligible: boolean;
+  proMemberDiscountPercent: number;
   createdAt: string;
 }
 
@@ -67,6 +69,8 @@ const EMPTY_FORM = {
   benefits: "",
   dollarCreditEligible: false,
   refundPolicy: "",        // empty = not yet selected (required)
+  proMemberDiscountEligible: false,
+  proMemberDiscountPercent: "0",
 };
 
 function slugify(str: string) {
@@ -147,6 +151,8 @@ export function AdminProductsPage() {
       benefits: "",
       dollarCreditEligible: p.dollarCreditEligible ?? false,
       refundPolicy: p.refundPolicy ?? "no_refund",
+      proMemberDiscountEligible: p.proMemberDiscountEligible ?? false,
+      proMemberDiscountPercent: String(p.proMemberDiscountPercent ?? "0"),
     });
     setDialogOpen(true);
   };
@@ -187,6 +193,8 @@ export function AdminProductsPage() {
         benefits: form.benefits || null,
         dollarCreditEligible: form.dollarCreditEligible,
         refundPolicy: form.refundPolicy,
+        proMemberDiscountEligible: form.isProPackage ? false : form.proMemberDiscountEligible,
+        proMemberDiscountPercent: form.isProPackage ? 0 : parseFloat(form.proMemberDiscountPercent) || 0,
       };
 
       const res = editProduct
@@ -637,12 +645,17 @@ export function AdminProductsPage() {
               <div className="flex items-center gap-3 flex-1">
                 <Switch
                   checked={form.isProPackage}
-                  onCheckedChange={v => setForm(f => ({ ...f, isProPackage: v }))}
+                  onCheckedChange={v => setForm(f => ({
+                    ...f,
+                    isProPackage: v,
+                    proMemberDiscountEligible: v ? false : f.proMemberDiscountEligible,
+                    proMemberDiscountPercent: v ? "0" : f.proMemberDiscountPercent,
+                  }))}
                   id="isProPackage"
                 />
                 <div>
-                  <Label htmlFor="isProPackage" className="cursor-pointer">Pro Package</Label>
-                  <p className="text-xs text-muted-foreground">Purchasing this upgrades the buyer to Pro Member and triggers Level Commissions.</p>
+                  <Label htmlFor="isProPackage" className="cursor-pointer font-semibold">Pro Registration Product (PRP)</Label>
+                  <p className="text-xs text-muted-foreground">Purchasing this upgrades the buyer to Pro Member and triggers Level Commissions. PRPs require 150 CV to qualify as a full Pro Member. <strong className="text-amber-600">PRPs cannot offer Pro Member discounts.</strong></p>
                 </div>
               </div>
             </div>
@@ -668,6 +681,55 @@ export function AdminProductsPage() {
                   </p>
                 </div>
               </div>
+            </div>
+
+            {/* Pro Member Discount Program */}
+            <div className={`rounded-lg p-4 border-2 space-y-3 transition-opacity ${form.isProPackage ? "opacity-40 pointer-events-none" : ""}`} style={{ borderColor: "#2D6A4F40", background: "#2D6A4F08" }}>
+              <div>
+                <p className="text-sm font-bold" style={{ color: "#2D6A4F" }}>Pro Member Discount Program</p>
+                <p className="text-xs text-muted-foreground">
+                  Allow active Pro Members to purchase this product at a discounted price.
+                  {form.isProPackage && <span className="text-amber-600 font-medium"> Disabled — Pro Registration Products cannot have Pro Member discounts.</span>}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={form.proMemberDiscountEligible && !form.isProPackage}
+                  onCheckedChange={v => setForm(f => ({ ...f, proMemberDiscountEligible: v }))}
+                  id="proMemberDiscountEligible"
+                  disabled={form.isProPackage}
+                />
+                <div>
+                  <Label htmlFor="proMemberDiscountEligible" className="cursor-pointer font-medium">
+                    Enable Pro Member discount on this product
+                  </Label>
+                  <p className="text-xs text-muted-foreground">When enabled, active Pro Members see and receive the discounted price at checkout.</p>
+                </div>
+              </div>
+              {form.proMemberDiscountEligible && !form.isProPackage && (
+                <div className="space-y-1.5 pt-1">
+                  <Label>Discount Percentage (%)</Label>
+                  <div className="flex items-center gap-2 max-w-xs">
+                    <Input
+                      type="number"
+                      min="1"
+                      max="50"
+                      step="1"
+                      value={form.proMemberDiscountPercent}
+                      onChange={e => setForm(f => ({ ...f, proMemberDiscountPercent: e.target.value }))}
+                      placeholder="20"
+                      className="w-28"
+                    />
+                    <span className="text-sm text-muted-foreground">% off the selling price</span>
+                    {form.price && parseFloat(form.proMemberDiscountPercent) > 0 && (
+                      <span className="text-sm font-semibold text-green-600 ml-2">
+                        Pro price: ${(parseFloat(form.price) * (1 - parseFloat(form.proMemberDiscountPercent) / 100)).toFixed(2)}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Recommended: 15–30%. CV/PV is always calculated on the full price.</p>
+                </div>
+              )}
             </div>
 
             {/* Refund Policy — REQUIRED */}

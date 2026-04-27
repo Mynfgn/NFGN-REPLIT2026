@@ -363,9 +363,9 @@ function StatCard({ title, value, sub, icon: Icon, accent, color = "default" }: 
   );
 }
 
-function CVCard({ pv, gv, required }: { pv: number; gv: number; required: number }) {
-  const pvPercent = Math.min(100, Math.round((pv / required) * 100));
-  const maintained = pv >= required;
+function CVCard({ pv, gv, required, rolling30DayPcv }: { pv: number; gv: number; required: number; rolling30DayPcv: number }) {
+  const pvPercent = Math.min(100, Math.round((rolling30DayPcv / required) * 100));
+  const maintained = rolling30DayPcv >= required;
 
   return (
     <Card className="border-l-4 border-l-green-500">
@@ -391,16 +391,16 @@ function CVCard({ pv, gv, required }: { pv: number; gv: number; required: number
         </div>
         <div>
           <div className="flex justify-between text-xs mb-1.5">
-            <span className="text-muted-foreground">Monthly maintenance ({required} PCV required)</span>
+            <span className="text-muted-foreground">30-day rolling maintenance ({required} PCV required)</span>
             <span className={maintained ? "text-green-600 font-semibold" : "text-yellow-600 font-semibold"}>
-              {pv} / {required} PCV
+              {rolling30DayPcv} / {required} PCV
             </span>
           </div>
           <Progress value={pvPercent} className="h-2" />
           <p className={`text-xs mt-1.5 flex items-center gap-1 ${maintained ? "text-green-600" : "text-yellow-600"}`}>
             {maintained
               ? <><CheckCircle2 className="h-3 w-3" /> Pro Member status maintained</>
-              : <><AlertCircle className="h-3 w-3" /> Need {required - pv} more PCV to maintain Pro status</>
+              : <><AlertCircle className="h-3 w-3" /> Need {required - rolling30DayPcv} more PCV (rolling 30 days) to maintain Pro status</>
             }
           </p>
         </div>
@@ -1319,7 +1319,8 @@ export function Dashboard() {
   const salesByState = analytics?.salesByState ?? [];
   const pv = analytics?.personalVolume ?? 0;
   const gv = analytics?.groupVolume ?? 0;
-  const required = analytics?.cvMaintenanceRequired ?? 100;
+  const required = analytics?.cvMaintenanceRequired ?? 150;
+  const rolling30DayPcv = analytics?.rolling30DayPcv ?? 0;
 
   return (
     <div className="space-y-6">
@@ -1334,7 +1335,7 @@ export function Dashboard() {
       {effectiveTier === "retail_member" && <RetailMemberWelcomeCard firstName={me?.firstName} />}
 
       {/* RRM / UPM — Dollar Credit summary widget */}
-      {(effectiveTier === "referring_retail_member" || effectiveTier === "unqualified_pro_member") && <DollarCreditWidget />}
+      {(effectiveTier === "referring_retail_member" || effectiveTier === "retail_community_builder" || effectiveTier === "associate_pro_member") && <DollarCreditWidget />}
 
       {/* Awaiting Approval notice — pending Pro Members */}
       {me && !me.isProMember && (me as any).proMemberStatus === "pending_approval" && (
@@ -1367,7 +1368,7 @@ export function Dashboard() {
       </div>
 
       {/* Volume This Month */}
-      <CVCard pv={pv} gv={gv} required={required} />
+      <CVCard pv={pv} gv={gv} required={required} rolling30DayPcv={rolling30DayPcv} />
 
       {/* Community World Map */}
       <MemberMapCard title="Your Community Map" />

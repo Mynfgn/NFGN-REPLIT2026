@@ -695,6 +695,92 @@ export function BasicTrainingPage() {
                   <p className="text-xs text-white/70 leading-relaxed">Most people focus on one or two income streams. Top earners activate all six simultaneously. RC pays you immediately from referral purchases. PSC rewards your direct retail customer sales. PMRC builds deep passive income across up to 5 generations of your team. CLB gives you a fast-start bonus. MCB rewards your leadership. BPP keeps your personal bills covered. Together, they create a compounding, self-sustaining income that grows month after month.</p>
                 </div>
 
+                {/* ── Membership Tiers ──────────────────────── */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-0.5 w-5 rounded" style={{ background: GOLD }} />
+                    <h3 className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: GOLD }}>Membership Tiers</h3>
+                  </div>
+                  <div className="rounded-xl overflow-hidden border divide-y">
+                    {[
+                      { tier: "Retail Member (RM)", color: "#6b7280", desc: "Entry-level customers. Store access, referral link, and Book-A-Pro. No commission qualification." },
+                      { tier: "Referring Retail Member (RRM)", color: GOLD, desc: "Automatically upgraded when their first referral signs up. Earns Dollar Credit ($-Credit) on qualifying purchases — not cash." },
+                      { tier: "Unqualified Pro Member (UPM)", color: "#a78bfa", desc: "Earns commissions on Levels 1 & 2 only. Must reach 150 PCV (rolling 30-day) to qualify for full Pro Membership." },
+                      { tier: "Pro Member (PM)", color: GREEN, desc: "Full Business Suite. All 9 commission levels, CLB, MCB, BPP participation. Requires an active PRP subscription and 150+ PCV in every rolling 30-day window." },
+                    ].map(({ tier, color, desc }) => (
+                      <div key={tier} className="flex items-start gap-3 p-4 bg-card" style={{ borderLeft: `3px solid ${color}` }}>
+                        <div className="flex-1">
+                          <p className="text-sm font-bold mb-0.5" style={{ color }}>{tier}</p>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="rounded-xl p-4 space-y-1" style={{ background: `${GOLD}10`, border: `1px solid ${GOLD}30` }}>
+                    <p className="text-xs font-bold" style={{ color: GOLD }}>Easiest Path to Full Pro Membership:</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Purchase an NFGN <strong>Pro Member Registration Package (PRP)</strong>. It already includes the required 150 PCV — one step, fully unlocked. If you cannot purchase a PRP at this time, you may accumulate 150 PCV through product purchases or reach the Unqualified Pro Member threshold by referring 9 Pro Members.
+                    </p>
+                  </div>
+                </div>
+
+                {/* ── Dollar Credit Policy ──────────────────── */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-0.5 w-5 rounded" style={{ background: GREEN }} />
+                    <h3 className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: GREEN }}>Dollar Credit ($-Credit) Policy</h3>
+                    <Badge className="text-[10px] font-bold" style={{ background: GOLD, color: "#000" }}>RRM+</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Dollar Credit ($-Credit) is store credit earned by Referring Retail Members on qualifying referral purchases. It is <strong>not</strong> cash and cannot be withdrawn unless the member upgrades to Pro Member or meets the cash-out threshold.
+                  </p>
+                  <div className="rounded-xl border divide-y overflow-hidden">
+                    {[
+                      { label: "How It's Earned", desc: "Earned when a referred member makes a qualifying purchase, at the applicable referral commission rate. Only approved products are eligible." },
+                      { label: "7-Day Hold", desc: "$-Credit is placed in 'pending' status for 7 days from the referral purchase date, aligning with the product refund window." },
+                      { label: "30-Day Use Window", desc: "Once the hold clears, members have 30 days to use their $-Credit before it expires permanently — no exceptions." },
+                      { label: "Total Expiry: 37 Days", desc: "7-day hold + 30-day use window = 37 days from the original purchase date. Expired credit is permanently forfeited." },
+                      { label: "Refund Impact", desc: "If the generating purchase is refunded, the $-Credit is immediately revoked. If already spent, the balance goes negative and must be resolved on the next purchase." },
+                    ].map(({ label, desc }) => (
+                      <div key={label} className="p-3 bg-card space-y-0.5">
+                        <p className="text-xs font-bold text-foreground">{label}</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ── $-Credit Cash-Out Policy ──────────────── */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-0.5 w-5 rounded" style={{ background: GOLD }} />
+                    <h3 className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: GOLD }}>$-Credit Cash-Out Policy</h3>
+                    <Badge className="text-[10px] font-bold" style={{ background: GOLD, color: "#000" }}>RRM+</Badge>
+                  </div>
+                  <div className="rounded-xl border p-4 bg-card space-y-2">
+                    <p className="text-xs text-muted-foreground leading-relaxed">Unlock cash-out ability by referring a minimum of <strong>9 Retail Members</strong> using your referral link.</p>
+                    <ul className="space-y-1.5">
+                      {[
+                        "Once the 9-referral threshold is met, request a cash-out through your dashboard.",
+                        "Requests are processed by NFGN administration within 3–5 business days.",
+                        "Paid via the payout method on file (bank transfer, PayPal, or CashApp).",
+                        "NFGN reserves the right to verify referrals before approving cash-out requests.",
+                      ].map(item => (
+                        <li key={item} className="flex items-start gap-2 text-xs text-muted-foreground">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-green-600 flex-shrink-0 mt-0.5" />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="rounded-xl p-4 space-y-1" style={{ background: `${GREEN}10`, border: `1px solid ${GREEN}30` }}>
+                    <p className="text-xs font-bold" style={{ color: GREEN }}>Better Path:</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Upgrade to Pro Member and turn ALL future referral earnings into real cash — no 37-day clock, no $-Credit limitations. Pro Members earn cash commissions across all 9 levels, plus CLB, MCB, BPP, and more.
+                    </p>
+                  </div>
+                </div>
+
                 <TrainingQuiz
                   title="Compensation Plan — Proficiency Quiz"
                   questions={compPlanQuiz}

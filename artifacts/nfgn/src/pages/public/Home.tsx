@@ -44,15 +44,6 @@ function HeroSection() {
           New Face Global Network unites naturopathic wellness, professional booking, business opportunity, and sports — powered by the industry's most innovative money circulation system.
         </p>
 
-        {/* Feature pills */}
-        <div className="flex flex-wrap justify-center gap-2 mb-10">
-          {["Naturopathic, Mental Health & Primary Care", "Book-A-Professional", "Business Opportunity", "NFGN Sports", "NFGN Products & Services", "Special Events, Travel & Workshops"].map((f) => (
-            <span key={f} className="text-xs px-3 py-1 rounded-full font-medium" style={{ background: DARK3, border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)" }}>
-              {f}
-            </span>
-          ))}
-        </div>
-
         <div className="flex flex-col sm:flex-row gap-4 mb-20">
           <Link href="/join" className="inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-bold rounded-sm" style={{ background: GOLD, color: DARK }}>
             Join The Network <ArrowRight className="h-5 w-5" />
@@ -67,7 +58,7 @@ function HeroSection() {
           {[
             { num: "10K+", label: "Active Members" },
             { num: "$2M+", label: "Circulated Annually" },
-            { num: "6", label: "Business Verticals" },
+            { num: "9", label: "Business Pillars" },
           ].map((s, i) => (
             <div key={s.label} className="text-center py-6 px-4" style={{ borderRight: i < 2 ? "1px solid rgba(201,168,76,0.15)" : "none" }}>
               <div className="text-3xl font-serif font-black mb-1" style={{ color: GOLD }}>{s.num}</div>
@@ -85,8 +76,8 @@ function PillarsSection() {
     {
       icon: <Leaf className="h-7 w-7" />,
       number: "01",
-      title: "Naturopathic, Mental Health, & Primary Care",
-      desc: "World-class naturopathic health, mental wellness, and primary care services — including Medical Benefit Packages. Invest in your whole-body health with our curated products and professional care network.",
+      title: "Naturopathic Workshops, Products & Services",
+      desc: "World-class naturopathic health products, workshops, and wellness services — including Medical Benefit Packages. Invest in your whole-body health with our curated offerings.",
       cta: "Shop Collection",
       href: "/shop",
       accent: GOLD,
@@ -103,7 +94,7 @@ function PillarsSection() {
     {
       icon: <TrendingUp className="h-7 w-7" />,
       number: "03",
-      title: "Business Opportunities",
+      title: "Business Opportunity",
       desc: "Join the most innovative compensation network in the industry. Build your business, grow your community, and participate in real money circulation.",
       cta: "Explore Opportunity",
       href: "/join",
@@ -121,7 +112,7 @@ function PillarsSection() {
     {
       icon: <Sparkles className="h-7 w-7" />,
       number: "05",
-      title: "NFGN Products & Services",
+      title: "NFGN Handmade Soaps, Lotions & Candles",
       desc: "Handcrafted with love — our curated line of handmade soaps, candles, lotions, and artisan goods. Natural ingredients, beautiful results, and small-business heart at the core.",
       cta: "Browse Products",
       href: "/shop",
@@ -130,11 +121,38 @@ function PillarsSection() {
     {
       icon: <CalendarDays className="h-7 w-7" />,
       number: "06",
-      title: "Special Events, Travel, & Workshops",
-      desc: "Exclusive NFGN retreats, training workshops, travel experiences, and live events. Connect with the community, sharpen your skills, and create unforgettable experiences.",
+      title: "Special Events",
+      desc: "Exclusive NFGN live events, community gatherings, and pop-ups. Connect face-to-face with the network, celebrate milestones, and grow together in person.",
       cta: "View Events",
       href: "/about",
       accent: GREEN,
+    },
+    {
+      icon: <Globe className="h-7 w-7" />,
+      number: "07",
+      title: "Travel Discounts, Events & More",
+      desc: "Members-only travel deals, group retreats, and exclusive getaways. Save on flights, hotels, and experiences while building lasting connections around the world.",
+      cta: "Explore Travel",
+      href: "/about",
+      accent: GOLD,
+    },
+    {
+      icon: <Zap className="h-7 w-7" />,
+      number: "08",
+      title: "Workshops & Training",
+      desc: "Ongoing education, professional development workshops, and skill-building training sessions designed to elevate every member personally and professionally.",
+      cta: "View Workshops",
+      href: "/about",
+      accent: GREEN,
+    },
+    {
+      icon: <Network className="h-7 w-7" />,
+      number: "09",
+      title: "Money Circulation & Community Building",
+      desc: "The heartbeat of NFGN — our proprietary money circulation system keeps wealth flowing within our community. Build together, earn together, and lift every member higher.",
+      cta: "Join The Network",
+      href: "/join",
+      accent: GOLD,
     },
   ];
 
@@ -143,16 +161,16 @@ function PillarsSection() {
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16">
           <span className="text-xs font-bold tracking-[0.25em] uppercase" style={{ color: GOLD }}>What We Do</span>
-          <h2 className="text-4xl md:text-5xl font-serif font-black text-white mt-3 mb-4">Six Pillars.<br />One Powerful Network.</h2>
+          <h2 className="text-4xl md:text-5xl font-serif font-black text-white mt-3 mb-4">Nine Pillars.<br />One Powerful Network.</h2>
           <p className="text-lg max-w-xl mx-auto" style={{ color: "rgba(255,255,255,0.45)" }}>
             Every arm of NFGN is designed to create value — for your health, your community, your wallet, and your lifestyle.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2">
+        <div className="grid grid-cols-1 md:grid-cols-3">
           {pillars.map((p, i) => (
             <Link key={p.number} href={p.href}>
-              <div className="group relative overflow-hidden p-10 cursor-pointer transition-all duration-300 h-full"
+              <div className="group relative overflow-hidden p-8 cursor-pointer transition-all duration-300 h-full"
                 style={{
                   border: "1px solid rgba(255,255,255,0.06)",
                   background: i % 2 === 0 ? "rgba(255,255,255,0.01)" : "rgba(255,255,255,0.02)",

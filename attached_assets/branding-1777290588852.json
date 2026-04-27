@@ -1,0 +1,94 @@
+{
+  "colorScheme": "light",
+  "fonts": [
+    {
+      "family": "relative-Book",
+      "role": "body"
+    },
+    {
+      "family": "relative-Bold",
+      "role": "heading"
+    }
+  ],
+  "colors": {
+    "primary": "#2B6AFD",
+    "secondary": "#337AB7",
+    "accent": "#202A44",
+    "background": "#FFFFFF",
+    "textPrimary": "#202A44",
+    "link": "#202A44"
+  },
+  "typography": {
+    "fontFamilies": {
+      "primary": "relative-Book",
+      "heading": "relative-Bold"
+    },
+    "fontStacks": {
+      "heading": [
+        "relative-Bold",
+        "sans-serif"
+      ],
+      "body": [
+        "relative-Book",
+        "sans-serif"
+      ],
+      "paragraph": [
+        "relative-Bold",
+        "sans-serif"
+      ]
+    },
+    "fontSizes": {
+      "h1": "60px",
+      "h2": "38px",
+      "body": "16px"
+    }
+  },
+  "spacing": {
+    "baseUnit": 4,
+    "borderRadius": "5px"
+  },
+  "components": {},
+  "images": {
+    "logo": "https://www.authorize.net/conf/anet-2021/settings/wcm/templates/en-us-home-page-template/structure/_jcr_content/root/header/logo.img.jpg/1623941357644.jpg",
+    "favicon": "https://www.authorize.net/content/dam/anet2021/images/evergreen/favicon-64x64.png",
+    "ogImage": null,
+    "logoHref": "File saved at: attached_assets/logoHref.html",
+    "logoAlt": "Authorize.Net"
+  },
+  "__llm_logo_reasoning": {
+    "selectedIndex": 0,
+    "reasoning": "Selected #0 because it is located in the header, links to the homepage, and matches the brand name 'Authorize.Net'. It is the most appropriate representation of the brand.",
+    "confidence": 0.95,
+    "source": "llm"
+  },
+  "personality": {
+    "tone": "professional",
+    "energy": "medium",
+    "targetAudience": "businesses"
+  },
+  "designSystem": {
+    "framework": "custom",
+    "componentLibrary": ""
+  },
+  "confidence": {
+    "buttons": 0,
+    "colors": 0.9,
+    "overall": 0.45
+  },
+  "__llm_metadata": {
+    "logoSelection": {
+      "llmCalled": true,
+      "llmSucceeded": true,
+      "finalSource": "llm",
+      "rawLogoSelection": {
+        "selectedLogoIndex": 0,
+        "selectedLogoReasoning": "Selected #0 because it is located in the header, links to the homepage, and matches the brand name 'Authorize.Net'. It is the most appropriate representation of the brand.",
+        "confidence": 0.95
+      }
+    },
+    "buttonClassification": {
+      "llmCalled": false,
+      "llmSucceeded": false
+    }
+  }
+}

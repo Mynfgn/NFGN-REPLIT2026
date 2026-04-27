@@ -243,60 +243,81 @@ function PaymentGridSection() {
           {/* Right: Grid diagram */}
           <div className="relative">
             <div className="rounded-sm p-8" style={{ background: DARK3, border: "1px solid rgba(201,168,76,0.2)" }}>
-              <div className="text-center mb-6">
+              <div className="text-center mb-4">
                 <span className="text-xs font-bold tracking-widest uppercase" style={{ color: GOLD }}>Your Grid Structure</span>
               </div>
 
-              {/* Root node */}
-              <div className="flex justify-center mb-4">
-                <div className="h-14 w-14 rounded-full flex items-center justify-center font-bold text-sm" style={{ background: GOLD, color: DARK }}>
-                  YOU
-                </div>
-              </div>
+              {/* Radial SVG diagram */}
+              <div className="flex justify-center">
+                <svg viewBox="0 0 340 340" width="100%" style={{ maxWidth: 320 }} aria-label="Grid structure diagram">
+                  {/* Orbital rings */}
+                  <circle cx="170" cy="170" r="75" fill="none" stroke={`${GOLD}18`} strokeWidth="1" strokeDasharray="4 4" />
+                  <circle cx="170" cy="170" r="138" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" strokeDasharray="4 4" />
 
-              {/* Connector */}
-              <div className="flex justify-center mb-2">
-                <div className="w-px h-6" style={{ background: `${GOLD}50` }} />
-              </div>
-
-              {/* Level 1 */}
-              <div className="flex justify-center gap-12 mb-2">
-                {[1, 2].map((n) => (
-                  <div key={n} className="h-11 w-11 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: `${GREEN}40`, border: `1px solid ${GREEN}80`, color: "#6EE7A0" }}>
-                    L1
-                  </div>
-                ))}
-              </div>
-
-              {/* L1 connectors */}
-              <div className="flex justify-center gap-12 mb-2">
-                {[1, 2].map((n) => <div key={n} className="w-px h-5" style={{ background: `${GREEN}50` }} />)}
-              </div>
-
-              {/* Level 2 */}
-              <div className="flex justify-center gap-5 mb-2">
-                {[1, 2, 3, 4].map((n) => (
-                  <div key={n} className="h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.6)" }}>
-                    L2
-                  </div>
-                ))}
-              </div>
-
-              {/* Infinity dots */}
-              <div className="flex justify-center mt-3">
-                <div className="flex items-center gap-2">
-                  {[...Array(8)].map((_, i) => (
-                    <div key={i} className="rounded-full" style={{ width: 4, height: 4, background: `rgba(201,168,76,${0.1 + i * 0.08})`, marginTop: i % 2 === 0 ? 2 : 0 }} />
+                  {/* Spoke lines — YOU to L1 (4 nodes at 0°, 90°, 180°, 270°) */}
+                  {[[170,95],[245,170],[170,245],[95,170]].map(([x,y], i) => (
+                    <line key={`sl1-${i}`} x1="170" y1="170" x2={x} y2={y}
+                      stroke={`${GOLD}35`} strokeWidth="1.5" />
                   ))}
+
+                  {/* Spoke lines — YOU to L2 (6 nodes at 0°,60°,120°,180°,240°,300°) */}
+                  {[0,60,120,180,240,300].map((deg, i) => {
+                    const rad = (deg * Math.PI) / 180;
+                    const x = 170 + 138 * Math.cos(rad);
+                    const y = 170 + 138 * Math.sin(rad);
+                    return <line key={`sl2-${i}`} x1="170" y1="170" x2={x} y2={y}
+                      stroke="rgba(255,255,255,0.08)" strokeWidth="1" />;
+                  })}
+
+                  {/* L1 nodes — 4 at cardinal positions, radius 75 */}
+                  {[[170,95],[245,170],[170,245],[95,170]].map(([x,y], i) => (
+                    <g key={`l1-${i}`}>
+                      <circle cx={x} cy={y} r="22" fill={`${GREEN}35`} stroke={`${GREEN}90`} strokeWidth="1.5" />
+                      <text x={x} y={y+1} textAnchor="middle" dominantBaseline="middle"
+                        fontSize="10" fontWeight="700" fill="#6EE7A0">L1</text>
+                    </g>
+                  ))}
+
+                  {/* L2 nodes — 6 at 60° intervals, radius 138 */}
+                  {[0,60,120,180,240,300].map((deg, i) => {
+                    const rad = (deg * Math.PI) / 180;
+                    const x = 170 + 138 * Math.cos(rad);
+                    const y = 170 + 138 * Math.sin(rad);
+                    return (
+                      <g key={`l2-${i}`}>
+                        <circle cx={x} cy={y} r="18" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.18)" strokeWidth="1.5" />
+                        <text x={x} y={y+1} textAnchor="middle" dominantBaseline="middle"
+                          fontSize="9" fontWeight="600" fill="rgba(255,255,255,0.6)">L2</text>
+                      </g>
+                    );
+                  })}
+
+                  {/* Center — YOU */}
+                  <circle cx="170" cy="170" r="32" fill={GOLD} />
+                  <text x="170" y="171" textAnchor="middle" dominantBaseline="middle"
+                    fontSize="11" fontWeight="800" fill={DARK}>YOU</text>
+                </svg>
+              </div>
+
+              {/* Counts + infinity */}
+              <div className="flex justify-center gap-6 mt-2 mb-3">
+                <div className="text-center">
+                  <div className="text-lg font-serif font-black" style={{ color: "#6EE7A0" }}>4</div>
+                  <div className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Level 1</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lg font-serif font-black" style={{ color: "rgba(255,255,255,0.5)" }}>6</div>
+                  <div className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Level 2</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lg font-serif font-black" style={{ color: `${GOLD}90` }}>∞</div>
+                  <div className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Depth</div>
                 </div>
               </div>
-              <div className="text-center mt-3">
-                <span className="text-xl font-serif font-black" style={{ color: `${GOLD}80` }}>∞</span>
-                <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>Infinite depth, infinite potential</p>
-              </div>
+              <p className="text-center text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Infinite depth, infinite potential</p>
 
               {/* Legend */}
-              <div className="mt-6 pt-5 grid grid-cols-2 gap-3" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+              <div className="mt-5 pt-4 grid grid-cols-2 gap-3" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                 <div className="flex items-center gap-2">
                   <div className="h-3 w-3 rounded-full" style={{ background: GOLD }} />
                   <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>You earn commissions</span>

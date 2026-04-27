@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import {
   ArrowRight, Leaf, Users, TrendingUp, Trophy, Globe, Zap,
   Star, ChevronRight, Play, Shield, Building2, Activity, Network,
-  DollarSign, Heart,
+  DollarSign, Heart, Sparkles, CalendarDays,
 } from "lucide-react";
 
 const GOLD = "#C9A84C";
@@ -46,7 +46,7 @@ function HeroSection() {
 
         {/* Feature pills */}
         <div className="flex flex-wrap justify-center gap-2 mb-10">
-          {["Naturopathic Products", "Book-A-Professional", "Business Opportunity", "NFGN Sports"].map((f) => (
+          {["Naturopathic, Mental Health & Primary Care", "Book-A-Professional", "Business Opportunity", "NFGN Sports", "NFGN Products & Services", "Special Events, Travel & Workshops"].map((f) => (
             <span key={f} className="text-xs px-3 py-1 rounded-full font-medium" style={{ background: DARK3, border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)" }}>
               {f}
             </span>
@@ -67,7 +67,7 @@ function HeroSection() {
           {[
             { num: "10K+", label: "Active Members" },
             { num: "$2M+", label: "Circulated Annually" },
-            { num: "4", label: "Business Verticals" },
+            { num: "6", label: "Business Verticals" },
           ].map((s, i) => (
             <div key={s.label} className="text-center py-6 px-4" style={{ borderRight: i < 2 ? "1px solid rgba(201,168,76,0.15)" : "none" }}>
               <div className="text-3xl font-serif font-black mb-1" style={{ color: GOLD }}>{s.num}</div>
@@ -85,8 +85,8 @@ function PillarsSection() {
     {
       icon: <Leaf className="h-7 w-7" />,
       number: "01",
-      title: "Naturopathic Products & Services",
-      desc: "World-class natural health products, supplements, and wellness services formulated for optimal vitality. Shop our curated collection and invest in your health.",
+      title: "Naturopathic, Mental Health, & Primary Care",
+      desc: "World-class naturopathic health, mental wellness, and primary care services — including Medical Benefit Packages. Invest in your whole-body health with our curated products and professional care network.",
       cta: "Shop Collection",
       href: "/shop",
       accent: GOLD,
@@ -118,6 +118,24 @@ function PillarsSection() {
       href: "/about",
       accent: GREEN,
     },
+    {
+      icon: <Sparkles className="h-7 w-7" />,
+      number: "05",
+      title: "NFGN Products & Services",
+      desc: "Handcrafted with love — our curated line of handmade soaps, candles, lotions, and artisan goods. Natural ingredients, beautiful results, and small-business heart at the core.",
+      cta: "Browse Products",
+      href: "/shop",
+      accent: GOLD,
+    },
+    {
+      icon: <CalendarDays className="h-7 w-7" />,
+      number: "06",
+      title: "Special Events, Travel, & Workshops",
+      desc: "Exclusive NFGN retreats, training workshops, travel experiences, and live events. Connect with the community, sharpen your skills, and create unforgettable experiences.",
+      cta: "View Events",
+      href: "/about",
+      accent: GREEN,
+    },
   ];
 
   return (
@@ -125,9 +143,9 @@ function PillarsSection() {
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16">
           <span className="text-xs font-bold tracking-[0.25em] uppercase" style={{ color: GOLD }}>What We Do</span>
-          <h2 className="text-4xl md:text-5xl font-serif font-black text-white mt-3 mb-4">Four Pillars.<br />One Powerful Network.</h2>
+          <h2 className="text-4xl md:text-5xl font-serif font-black text-white mt-3 mb-4">Six Pillars.<br />One Powerful Network.</h2>
           <p className="text-lg max-w-xl mx-auto" style={{ color: "rgba(255,255,255,0.45)" }}>
-            Every arm of NFGN is designed to create value — for your health, your community, and your wallet.
+            Every arm of NFGN is designed to create value — for your health, your community, your wallet, and your lifestyle.
           </p>
         </div>
 

@@ -1,5 +1,10 @@
 uploads = []
-generated = []
+
+[[generated]]
+id = "v2jUIi6BL54BmIG1TOsp_"
+uri = "file://artifacts/nfgn/public/pro-member-registration-badge.png"
+type = "image"
+title = "NFGN pro member premium badge"
 
 [[outputs]]
 id = "ThLpw-C-p0MEK0l4tCicI"

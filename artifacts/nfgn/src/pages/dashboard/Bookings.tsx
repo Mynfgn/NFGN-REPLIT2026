@@ -187,33 +187,46 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
 
             {!isFullyPaid && (
               <div className="space-y-3">
-                <p className="text-sm font-semibold flex items-center gap-1.5">
-                  <CreditCard className="h-4 w-4 text-primary" />
-                  {successInfo.title} — Next Steps
-                </p>
-
-                {/* Square payment link — direct Pay Now button */}
-                {bookedResult.paymentLink && (
-                  <a
-                    href={bookedResult.paymentLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full rounded-lg py-3 text-sm font-bold text-white transition-colors"
-                    style={{ background: "#C9A84C" }}
-                  >
-                    <CreditCard className="h-4 w-4" />
-                    Pay ${remaining.toFixed(2)} Now — Secure Card Checkout
-                  </a>
+                {/* Card payment — Square checkout link */}
+                {bookedResult.paymentMethod === "card" ? (
+                  bookedResult.paymentLink ? (
+                    <>
+                      <a
+                        href={bookedResult.paymentLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 w-full rounded-lg py-3 text-sm font-bold text-white transition-opacity hover:opacity-90"
+                        style={{ background: "#C9A84C" }}
+                      >
+                        <CreditCard className="h-4 w-4" />
+                        Pay ${remaining.toFixed(2)} Now — Secure Card Checkout
+                      </a>
+                      <p className="text-xs text-muted-foreground text-center">
+                        Opens Square's secure checkout in a new tab. Your booking is saved — complete payment at any time.
+                      </p>
+                    </>
+                  ) : (
+                    <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm space-y-1">
+                      <p className="font-semibold flex items-center gap-1.5"><CreditCard className="h-4 w-4" /> Complete Your Card Payment</p>
+                      <p>Your booking is confirmed. Please contact NFGN directly to complete your card payment of <strong>${remaining.toFixed(2)}</strong>, referencing Booking <strong>#{bookedResult.id}</strong>.</p>
+                    </div>
+                  )
+                ) : (
+                  <>
+                    <p className="text-sm font-semibold flex items-center gap-1.5">
+                      <CreditCard className="h-4 w-4 text-primary" />
+                      {successInfo.title} — Next Steps
+                    </p>
+                    <ol className="space-y-2">
+                      {successInfo.steps.map((step, i) => (
+                        <li key={i} className="flex gap-3 text-sm">
+                          <span className="h-5 w-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
+                          <span className="text-muted-foreground">{step.replace("#", `#${bookedResult.id}`)}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </>
                 )}
-
-                <ol className="space-y-2">
-                  {successInfo.steps.map((step, i) => (
-                    <li key={i} className="flex gap-3 text-sm">
-                      <span className="h-5 w-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
-                      <span className="text-muted-foreground">{step.replace("#", `#${bookedResult.id}`)}</span>
-                    </li>
-                  ))}
-                </ol>
               </div>
             )}
 
@@ -431,7 +444,7 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button onClick={handleSubmit} disabled={createBooking.isPending}>
-            {createBooking.isPending ? "Booking…" : `Confirm & Book`}
+            {createBooking.isPending ? "Processing…" : `Book & Pay →`}
           </Button>
         </DialogFooter>
       </DialogContent>

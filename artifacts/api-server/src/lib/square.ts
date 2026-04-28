@@ -26,6 +26,8 @@ export async function createSquarePaymentLink(opts: {
   };
 
   try {
+    console.log(`[SQUARE] Generating payment link for booking #${opts.bookingId}, amount: $${(opts.amountCents / 100).toFixed(2)}`);
+
     const res = await fetch(`${SQUARE_BASE}/v2/online-checkout/payment-links`, {
       method: "POST",
       headers: {
@@ -43,7 +45,13 @@ export async function createSquarePaymentLink(opts: {
     }
 
     const data = await res.json();
-    return data?.payment_link?.url ?? null;
+    const url = data?.payment_link?.url ?? null;
+    if (url) {
+      console.log(`[SQUARE] Payment link generated: ${url}`);
+    } else {
+      console.warn("[SQUARE] API returned OK but no URL in response:", JSON.stringify(data));
+    }
+    return url;
   } catch (err) {
     console.error("[SQUARE] Payment link request error:", err);
     return null;

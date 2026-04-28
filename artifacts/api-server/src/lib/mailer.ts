@@ -70,9 +70,14 @@ export function bookingConfirmationHtml(opts: {
   amount: number;
   bookingId: number;
   dashboardUrl: string;
-  role: "member" | "provider" | "admin";
+  role: "member" | "provider" | "admin" | "sponsor";
 }): string {
-  const roleLabel = opts.role === "member" ? "Your booking" : opts.role === "provider" ? "New appointment" : "Booking Alert";
+  const roleLabel =
+    opts.role === "member"   ? "Your Booking Confirmation" :
+    opts.role === "provider" ? "New Appointment Request"   :
+    opts.role === "sponsor"  ? "Downline Booking Activity" :
+                               "Booking Alert";
+
   const detail = `
     <div class="detail-box">
       <p><strong>Service:</strong> ${opts.serviceType}</p>
@@ -84,13 +89,15 @@ export function bookingConfirmationHtml(opts: {
       <p><strong>Booking #:</strong> ${opts.bookingId}</p>
     </div>
     <p>You can view details and manage this booking in your back office.</p>
-    <a class="cta" href="${opts.dashboardUrl}">View Booking</a>`;
+    <a class="cta" href="${opts.dashboardUrl}">View in Back Office</a>`;
 
   const intro =
     opts.role === "member"
       ? `<p>Hi ${opts.recipientName}, your appointment has been confirmed! Here are the details:</p>`
       : opts.role === "provider"
       ? `<p>Hi ${opts.recipientName}, you have a new booking request from <strong>${opts.memberName}</strong>. Here are the details:</p>`
+      : opts.role === "sponsor"
+      ? `<p>Hi ${opts.recipientName}, your downline member <strong>${opts.memberName}</strong> has just booked a professional session. Here are the details:</p>`
       : `<p>A new booking has been placed on the platform. Here is a summary:</p>`;
 
   return wrap(intro + detail, roleLabel);

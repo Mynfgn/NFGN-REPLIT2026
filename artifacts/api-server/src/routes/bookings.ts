@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, bookingsTable, professionalsTable, usersTable, messagesTable } from "@workspace/db";
+import { db, bookingsTable, professionalsTable, usersTable, messagesTable, walletsTable, walletTransactionsTable } from "@workspace/db";
 import { eq, and, desc, count, or, inArray } from "drizzle-orm";
 import { requireAuth, requireAdmin } from "../lib/auth";
 import { sendEmail, bookingConfirmationHtml } from "../lib/mailer";
@@ -57,7 +57,36 @@ router.get("/bookings", requireAuth, async (req, res): Promise<void> => {
 router.post("/bookings", requireAuth, async (req, res): Promise<void> => {
   const currentUser = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
   const userId = currentUser.id;
-  const { professionalId, serviceType, scheduledAt, duration, paymentMethod, amount, notes } = req.body;
+  const { professionalId, serviceType, scheduledAt, duration, paymentMethod, walletAmount, amount, notes } = req.body;
+
+  const walletDeduction = parseFloat(String(walletAmount ?? 0));
+
+  // ── Validate and deduct wallet credit if requested ──────────────────────
+  if (walletDeduction > 0) {
+    const [wallet] = await db.select().from(walletsTable).where(eq(walletsTable.userId, userId));
+    if (!wallet) {
+      res.status(400).json({ error: "Wallet not found." });
+      return;
+    }
+    const currentBalance = parseFloat(wallet.balance);
+    if (currentBalance < walletDeduction) {
+      res.status(400).json({ error: `Insufficient wallet balance. Available: $${currentBalance.toFixed(2)}.` });
+      return;
+    }
+    const newBalance = currentBalance - walletDeduction;
+    // Deduct from wallet
+    await db.update(walletsTable)
+      .set({ balance: String(newBalance) })
+      .where(eq(walletsTable.id, wallet.id));
+    // Record the transaction
+    await db.insert(walletTransactionsTable).values({
+      walletId: wallet.id,
+      type: "debit",
+      amount: String(walletDeduction),
+      balance: String(newBalance),
+      description: `E-Wallet applied to Book-A-Pro booking (${serviceType})`,
+    });
+  }
 
   const [booking] = await db.insert(bookingsTable).values({
     userId,
@@ -67,7 +96,7 @@ router.post("/bookings", requireAuth, async (req, res): Promise<void> => {
     duration: duration ?? 60,
     status: "pending",
     paymentMethod,
-    paymentStatus: "pending",
+    paymentStatus: walletDeduction >= parseFloat(String(amount)) ? "paid" : "pending",
     amount: String(amount),
     notes: notes ?? undefined,
   }).returning();
@@ -82,6 +111,9 @@ router.post("/bookings", requireAuth, async (req, res): Promise<void> => {
     const providerName = pro?.name ?? "Unknown Professional";
     const scheduledAtFormatted = new Date(scheduledAt).toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" });
     const bookingAmt = parseFloat(String(amount));
+    const walletNote = walletDeduction > 0
+      ? `\nWallet Credit Applied: $${walletDeduction.toFixed(2)}\nRemaining Due: $${Math.max(0, bookingAmt - walletDeduction).toFixed(2)}`
+      : "";
 
     // ── Find admin users ──
     const admins = await db.select().from(usersTable).where(
@@ -95,8 +127,20 @@ router.post("/bookings", requireAuth, async (req, res): Promise<void> => {
       providerUser = pu ?? null;
     }
 
-    const msgBody = (role: "member" | "provider" | "admin") =>
-      `A Book-A-Pro booking has been placed.\n\nService: ${serviceType}\nProfessional: ${providerName}\nMember: ${memberName}\nDate & Time: ${scheduledAtFormatted}\nDuration: ${duration ?? 60} minutes\nAmount: $${bookingAmt.toFixed(2)}\nBooking #${booking.id}\n\nLog in to your back office to view full details.`;
+    // ── Find member's upline sponsor (if any) ──
+    let sponsorUser: typeof usersTable.$inferSelect | null = null;
+    if (member?.sponsorId) {
+      const [su] = await db.select().from(usersTable).where(eq(usersTable.id, member.sponsorId));
+      sponsorUser = su ?? null;
+    }
+
+    const msgBody = (role: "member" | "provider" | "admin" | "sponsor") => {
+      const base = `A Book-A-Pro booking has been placed.\n\nService: ${serviceType}\nProfessional: ${providerName}\nMember: ${memberName}\nDate & Time: ${scheduledAtFormatted}\nDuration: ${duration ?? 60} minutes\nAmount: $${bookingAmt.toFixed(2)}${walletNote}\nBooking #${booking.id}`;
+      const sponsorNote = role === "sponsor"
+        ? `\n\nThis booking was made by your downline member ${memberName}.`
+        : "\n\nLog in to your back office to view full details.";
+      return base + sponsorNote;
+    };
 
     // ── Insert back-office messages ──
     const messageInserts: (typeof messagesTable.$inferInsert)[] = [];
@@ -117,6 +161,17 @@ router.post("/bookings", requireAuth, async (req, res): Promise<void> => {
         toUserId: providerUser.id,
         subject: `📅 New Booking — ${serviceType} from ${memberName}`,
         body: msgBody("provider"),
+        isBroadcast: false,
+      });
+    }
+
+    // To upline sponsor
+    if (sponsorUser) {
+      messageInserts.push({
+        fromUserId: null,
+        toUserId: sponsorUser.id,
+        subject: `🌟 Downline Activity — ${memberName} booked a session`,
+        body: msgBody("sponsor"),
         isBroadcast: false,
       });
     }
@@ -152,6 +207,14 @@ router.post("/bookings", requireAuth, async (req, res): Promise<void> => {
         to: providerUser.email,
         subject: `New Booking — ${serviceType} from ${memberName}`,
         html: bookingConfirmationHtml({ recipientName: providerName, memberName, providerName, serviceType, scheduledAt: scheduledAtFormatted, duration: duration ?? 60, amount: bookingAmt, bookingId: booking.id, dashboardUrl, role: "provider" }),
+      }));
+    }
+
+    if (sponsorUser?.email) {
+      emailJobs.push(sendEmail({
+        to: sponsorUser.email,
+        subject: `[NFGN] Your Downline Member ${memberName} Booked a Session`,
+        html: bookingConfirmationHtml({ recipientName: `${sponsorUser.firstName} ${sponsorUser.lastName}`, memberName, providerName, serviceType, scheduledAt: scheduledAtFormatted, duration: duration ?? 60, amount: bookingAmt, bookingId: booking.id, dashboardUrl, role: "sponsor" }),
       }));
     }
 

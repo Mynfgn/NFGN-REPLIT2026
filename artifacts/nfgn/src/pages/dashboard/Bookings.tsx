@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, Star, Clock, CreditCard, CheckCircle2, AlertCircle, Search, Wallet, User } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Calendar, Star, Clock, CreditCard, CheckCircle2, AlertCircle, Search, Wallet, User, DollarSign, Smartphone } from "lucide-react";
 
 const BRAND_GOLD = "#C9A84C";
 const BRAND_GREEN = "#2D6A4F";
@@ -35,6 +36,20 @@ function statusColor(status: string) {
   }
 }
 
+const PAYMENT_OPTIONS = [
+  { value: "card",      label: "Credit / Debit Card",  icon: CreditCard },
+  { value: "paypal",    label: "PayPal",                icon: DollarSign },
+  { value: "cashapp",   label: "Cash App Pay",          icon: Smartphone },
+  { value: "cash",      label: "Cash / In-Person",      icon: Wallet },
+];
+
+const PAYMENT_INSTRUCTIONS: Record<string, string> = {
+  paypal:  "You will receive an invoice to your PayPal email. Complete payment within 24 hours to confirm your booking.",
+  cashapp: "Send payment to $NFGNetwork on Cash App. Include your booking reference number in the note.",
+  cash:    "Pay in person at your scheduled session. Bring exact change or check made out to NFGN.",
+  card:    "A payment link will be sent to your email to securely complete your card payment.",
+};
+
 interface BookingModalProps {
   professional: any;
   walletBalance: number;
@@ -48,23 +63,26 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
   const [date, setDate] = useState("");
   const [time, setTime] = useState("10:00");
   const [duration, setDuration] = useState("60");
-  const [paymentMethod, setPaymentMethod] = useState("wallet");
+  const [applyWallet, setApplyWallet] = useState(walletBalance > 0);
+  const [paymentMethod, setPaymentMethod] = useState("card");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const amount = (parseFloat(duration) / 60) * professional.hourlyRate;
-  const canPayWithWallet = walletBalance >= amount;
+  const walletApplied = applyWallet ? Math.min(walletBalance, amount) : 0;
+  const remainingDue = Math.max(0, amount - walletApplied);
+  const walletCoversAll = walletApplied >= amount;
 
   const handleSubmit = async () => {
     setError(null);
     if (!date) { setError("Please select a date."); return; }
     if (!service) { setError("Please select a service."); return; }
-    if (paymentMethod === "wallet" && !canPayWithWallet) {
-      setError(`Insufficient wallet balance. You need $${amount.toFixed(2)} but have $${walletBalance.toFixed(2)}.`);
-      return;
+    if (!walletCoversAll && !paymentMethod) {
+      setError("Please select a payment method for the remaining balance."); return;
     }
 
     const scheduledAt = new Date(`${date}T${time}:00`).toISOString();
+    const finalPaymentMethod = walletCoversAll ? "wallet" : (applyWallet ? `wallet+${paymentMethod}` : paymentMethod);
 
     createBooking.mutate(
       { data: {
@@ -72,7 +90,8 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
         serviceType: service,
         scheduledAt,
         duration: parseInt(duration),
-        paymentMethod,
+        paymentMethod: finalPaymentMethod,
+        walletAmount: walletApplied,
         amount,
         notes: notes || undefined,
       }},
@@ -87,7 +106,7 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-serif flex items-center gap-2">
             <Calendar className="h-5 w-5 text-primary" />
@@ -152,26 +171,87 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
             </Select>
           </div>
 
-          <div>
-            <Label>Payment Method</Label>
-            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="wallet">
-                  <span className="flex items-center gap-2">
-                    <Wallet className="h-3.5 w-3.5" />
-                    E-Wallet (Balance: ${walletBalance.toFixed(2)})
-                  </span>
-                </SelectItem>
-                <SelectItem value="card">Credit / Debit Card</SelectItem>
-              </SelectContent>
-            </Select>
-            {paymentMethod === "wallet" && !canPayWithWallet && (
-              <p className="text-xs text-red-500 mt-1">Insufficient wallet balance for this session.</p>
+          {/* ── Session Total Summary ── */}
+          <div className="rounded-lg border border-primary/20 bg-primary/5 overflow-hidden">
+            <div className="flex justify-between items-center px-4 py-3">
+              <span className="text-sm font-medium">Session Total</span>
+              <span className="text-lg font-bold" style={{ color: BRAND_GOLD }}>${amount.toFixed(2)}</span>
+            </div>
+
+            {/* E-Wallet Credit */}
+            {walletBalance > 0 && (
+              <div className="border-t border-primary/10 px-4 py-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="apply-wallet"
+                    checked={applyWallet}
+                    onCheckedChange={(v) => setApplyWallet(!!v)}
+                  />
+                  <label htmlFor="apply-wallet" className="text-sm cursor-pointer select-none flex items-center gap-1.5">
+                    <Wallet className="h-3.5 w-3.5 text-primary" />
+                    Apply E-Wallet credit
+                    <span className="font-semibold text-primary">(${walletBalance.toFixed(2)} available)</span>
+                  </label>
+                </div>
+
+                {applyWallet && (
+                  <div className="ml-6 text-xs space-y-0.5 text-muted-foreground">
+                    <div className="flex justify-between">
+                      <span>Wallet applied:</span>
+                      <span className="text-green-600 font-medium">− ${walletApplied.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between font-semibold text-sm text-foreground">
+                      <span>Remaining due:</span>
+                      <span style={{ color: remainingDue === 0 ? "#2D6A4F" : BRAND_GOLD }}>
+                        ${remainingDue.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
+
+          {/* ── Payment Method (shown when remaining > $0) ── */}
+          {!walletCoversAll && (
+            <div className="space-y-2">
+              <Label>Payment Method {applyWallet && remainingDue > 0 && <span className="text-muted-foreground font-normal">(for remaining ${remainingDue.toFixed(2)})</span>}</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {PAYMENT_OPTIONS.map(opt => {
+                  const Icon = opt.icon;
+                  const selected = paymentMethod === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setPaymentMethod(opt.value)}
+                      className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all ${
+                        selected
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border bg-background hover:border-primary/40 text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <Icon className="h-4 w-4 flex-shrink-0" />
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+              {paymentMethod && PAYMENT_INSTRUCTIONS[paymentMethod] && (
+                <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-800 text-xs flex gap-2">
+                  <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                  {PAYMENT_INSTRUCTIONS[paymentMethod]}
+                </div>
+              )}
+            </div>
+          )}
+
+          {walletCoversAll && applyWallet && (
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm">
+              <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+              Your E-Wallet balance fully covers this session. No additional payment needed.
+            </div>
+          )}
 
           <div>
             <Label>Notes (optional)</Label>
@@ -181,11 +261,6 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
               onChange={e => setNotes(e.target.value)}
               rows={3}
             />
-          </div>
-
-          <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 flex justify-between items-center">
-            <span className="text-sm font-medium">Session Total</span>
-            <span className="text-lg font-bold" style={{ color: BRAND_GOLD }}>${amount.toFixed(2)}</span>
           </div>
 
           {error && (
@@ -199,7 +274,7 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button onClick={handleSubmit} disabled={createBooking.isPending}>
-            {createBooking.isPending ? "Booking…" : "Confirm Booking"}
+            {createBooking.isPending ? "Booking…" : `Confirm & Book`}
           </Button>
         </DialogFooter>
       </DialogContent>

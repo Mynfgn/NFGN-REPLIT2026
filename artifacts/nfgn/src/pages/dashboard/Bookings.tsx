@@ -49,6 +49,14 @@ const PAYMENT_INSTRUCTIONS: Record<string, string> = {
   card:    "A payment link will be sent to your email to securely complete your card payment.",
 };
 
+const PAYMENT_SUCCESS_STEPS: Record<string, { title: string; steps: string[] }> = {
+  card:    { title: "Pay by Card", steps: ["Check your email for a secure payment link.", "Click the link and enter your card details.", "Your booking will be confirmed once payment clears."] },
+  paypal:  { title: "Pay via PayPal", steps: ["Check your PayPal email for an invoice.", "Complete the payment within 24 hours.", "Your booking will be confirmed once payment clears."] },
+  cashapp: { title: "Pay via Cash App", steps: ["Open Cash App and send your payment to $NFGNetwork.", "Add your booking reference # in the note.", "Your booking will be confirmed once payment is verified."] },
+  cash:    { title: "Pay In Person", steps: ["Bring exact change or a check made out to NFGN.", "Pay at the start of your scheduled session.", "Your booking is reserved — no upfront payment needed."] },
+  wallet:  { title: "Paid with E-Wallet", steps: ["Your E-Wallet balance covered the full session cost.", "No additional payment is required.", "Your booking is confirmed!"] },
+};
+
 interface BookingModalProps {
   professional: any;
   walletBalance: number;
@@ -67,6 +75,7 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
   const [error, setError] = useState<string | null>(null);
   const [walletInput, setWalletInput] = useState("");
   const [walletError, setWalletError] = useState<string | null>(null);
+  const [bookedResult, setBookedResult] = useState<{ id: number; paymentMethod: string; amount: number; walletApplied: number; service: string; scheduledAt: string } | null>(null);
 
   const amount = (parseFloat(duration) / 60) * professional.hourlyRate;
 
@@ -97,6 +106,11 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
 
     const scheduledAt = new Date(`${date}T${time}:00`).toISOString();
     const finalPaymentMethod = walletCoversAll ? "wallet" : (walletApplied > 0 ? `wallet+${paymentMethod}` : paymentMethod);
+    const capturedService = service;
+    const capturedScheduledAt = scheduledAt;
+    const capturedAmount = amount;
+    const capturedWallet = walletApplied;
+    const capturedPayment = walletCoversAll ? "wallet" : paymentMethod;
 
     createBooking.mutate(
       { data: {
@@ -110,13 +124,97 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
         notes: notes || undefined,
       }},
       {
-        onSuccess: () => onBooked(),
+        onSuccess: (res: any) => {
+          setBookedResult({
+            id: res.id,
+            paymentMethod: capturedPayment,
+            amount: capturedAmount,
+            walletApplied: capturedWallet,
+            service: capturedService,
+            scheduledAt: capturedScheduledAt,
+          });
+          onBooked();
+        },
         onError: (err: any) => setError(err?.message ?? "Failed to book. Please try again."),
       },
     );
   };
 
   const today = new Date().toISOString().split("T")[0];
+
+  // ── Success confirmation screen ──────────────────────────────────────────
+  if (bookedResult) {
+    const successInfo = PAYMENT_SUCCESS_STEPS[bookedResult.paymentMethod] ?? PAYMENT_SUCCESS_STEPS.card;
+    const remaining = Math.max(0, bookedResult.amount - bookedResult.walletApplied);
+    const isFullyPaid = bookedResult.paymentMethod === "wallet" || remaining === 0;
+    return (
+      <Dialog open onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-serif flex items-center gap-2 text-green-700">
+              <CheckCircle2 className="h-5 w-5" />
+              Booking Confirmed!
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="p-4 rounded-lg bg-green-50 border border-green-200 space-y-1">
+              <p className="font-semibold text-green-800 text-sm">{bookedResult.service} with {professional.name}</p>
+              <p className="text-xs text-green-700">{new Date(bookedResult.scheduledAt).toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" })}</p>
+              <p className="text-xs text-green-700">Booking Reference: <strong>#{bookedResult.id}</strong></p>
+            </div>
+
+            <div className="p-4 rounded-lg border bg-muted/40 space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Session Total</span>
+                <span className="font-semibold">${bookedResult.amount.toFixed(2)}</span>
+              </div>
+              {bookedResult.walletApplied > 0 && (
+                <div className="flex justify-between text-green-700">
+                  <span>E-Wallet Applied</span>
+                  <span className="font-medium">− ${bookedResult.walletApplied.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between border-t pt-1 mt-1">
+                <span className="font-semibold">Remaining Due</span>
+                <span className="font-bold" style={{ color: isFullyPaid ? "#2D6A4F" : "#C9A84C" }}>
+                  {isFullyPaid ? "✓ $0.00 (Paid)" : `$${remaining.toFixed(2)}`}
+                </span>
+              </div>
+            </div>
+
+            {!isFullyPaid && (
+              <div className="space-y-2">
+                <p className="text-sm font-semibold flex items-center gap-1.5">
+                  <CreditCard className="h-4 w-4 text-primary" />
+                  {successInfo.title} — Next Steps
+                </p>
+                <ol className="space-y-2">
+                  {successInfo.steps.map((step, i) => (
+                    <li key={i} className="flex gap-3 text-sm">
+                      <span className="h-5 w-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
+                      <span className="text-muted-foreground">{step.replace("#", `#${bookedResult.id}`)}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+
+            {isFullyPaid && (
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm">
+                <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+                Your E-Wallet balance fully covered this session. No additional payment needed.
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button onClick={onClose} className="w-full">Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open onOpenChange={onClose}>

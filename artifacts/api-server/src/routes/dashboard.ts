@@ -43,41 +43,76 @@ function formatOrder(order: typeof ordersTable.$inferSelect, userName: string) {
 }
 
 router.get("/dashboard/summary", requireAdmin, async (req, res): Promise<void> => {
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfThisWeek = new Date(now);
+  startOfThisWeek.setDate(now.getDate() - now.getDay());
+  startOfThisWeek.setHours(0, 0, 0, 0);
+  const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  // All-time totals
   const [{ totalSales }] = await db.select({ totalSales: sum(ordersTable.total) }).from(ordersTable).where(eq(ordersTable.paymentStatus, "demo_paid"));
   const [{ totalOrders }] = await db.select({ totalOrders: count() }).from(ordersTable);
   const [{ activeMembers }] = await db.select({ activeMembers: count() }).from(usersTable).where(eq(usersTable.status, "active"));
   const [{ proMembers }] = await db.select({ proMembers: count() }).from(usersTable).where(eq(usersTable.isProMember, true));
 
-  // Platform-wide GCV (total CV from all orders — all-time)
+  // Period-based revenue
+  const [{ revenueToday }] = await db.select({ revenueToday: sum(ordersTable.total) }).from(ordersTable).where(gte(ordersTable.createdAt, startOfToday));
+  const [{ revenueThisWeek }] = await db.select({ revenueThisWeek: sum(ordersTable.total) }).from(ordersTable).where(gte(ordersTable.createdAt, startOfThisWeek));
+  const [{ revenueThisMonth }] = await db.select({ revenueThisMonth: sum(ordersTable.total) }).from(ordersTable).where(gte(ordersTable.createdAt, startOfThisMonth));
+
+  // Period-based order counts
+  const [{ ordersToday }] = await db.select({ ordersToday: count() }).from(ordersTable).where(gte(ordersTable.createdAt, startOfToday));
+  const [{ ordersThisWeek }] = await db.select({ ordersThisWeek: count() }).from(ordersTable).where(gte(ordersTable.createdAt, startOfThisWeek));
+  const [{ ordersThisMonth }] = await db.select({ ordersThisMonth: count() }).from(ordersTable).where(gte(ordersTable.createdAt, startOfThisMonth));
+
+  // Period-based new member counts
+  const [{ newMembersToday }] = await db.select({ newMembersToday: count() }).from(usersTable).where(gte(usersTable.createdAt, startOfToday));
+  const [{ newMembersThisWeek }] = await db.select({ newMembersThisWeek: count() }).from(usersTable).where(gte(usersTable.createdAt, startOfThisWeek));
+  const [{ newMembersThisMonth }] = await db.select({ newMembersThisMonth: count() }).from(usersTable).where(gte(usersTable.createdAt, startOfThisMonth));
+
+  // Platform-wide GCV
   const [{ platformGCV }] = await db.select({ platformGCV: sum(orderItemsTable.cvTotal) }).from(orderItemsTable);
-  // Platform GCV this month
-  const startOfThisMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   const [{ platformGCVThisMonth }] = await db.select({ platformGCVThisMonth: sum(orderItemsTable.cvTotal) })
     .from(orderItemsTable)
     .innerJoin(ordersTable, eq(orderItemsTable.orderId, ordersTable.id))
     .where(gte(ordersTable.createdAt, startOfThisMonth));
 
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  const [{ newCustomers }] = await db.select({ newCustomers: count() }).from(usersTable).where(
-    and(eq(usersTable.role, "customer"), gte(usersTable.createdAt, thirtyDaysAgo))
-  );
+  // Urgent action counts
+  const [{ pendingOrdersCount }] = await db.select({ pendingOrdersCount: count() }).from(ordersTable)
+    .where(eq(ordersTable.paymentStatus, "pending"));
+  const [{ processingOrdersCount }] = await db.select({ processingOrdersCount: count() }).from(ordersTable)
+    .where(eq(ordersTable.status, "processing"));
+  const [{ pendingBookingsCount }] = await db.select({ pendingBookingsCount: count() }).from(bookingsTable)
+    .where(eq(bookingsTable.paymentStatus, "pending"));
 
   const [{ pendingPayouts }] = await db.select({ pendingPayouts: sum(payoutsTable.amount) }).from(payoutsTable).where(eq(payoutsTable.status, "pending"));
+  const [{ pendingPayoutsCount }] = await db.select({ pendingPayoutsCount: count() }).from(payoutsTable).where(eq(payoutsTable.status, "pending"));
   const [{ pendingCommissions }] = await db.select({ pendingCommissions: sum(commissionsTable.commissionAmount) }).from(commissionsTable).where(eq(commissionsTable.status, "pending"));
   const [{ totalBookings }] = await db.select({ totalBookings: count() }).from(bookingsTable);
 
+  // Recent pending orders needing attention
+  const pendingOrderRows = await db.select({
+    order: ordersTable,
+    user: usersTable,
+  }).from(ordersTable)
+    .leftJoin(usersTable, eq(ordersTable.userId, usersTable.id))
+    .where(eq(ordersTable.paymentStatus, "pending"))
+    .orderBy(desc(ordersTable.createdAt))
+    .limit(6);
+
+  // Recent orders (all)
   const recentOrderRows = await db.select({
     order: ordersTable,
     user: usersTable,
   }).from(ordersTable)
     .leftJoin(usersTable, eq(ordersTable.userId, usersTable.id))
     .orderBy(desc(ordersTable.createdAt))
-    .limit(5);
+    .limit(6);
 
-  const recentRegistrations = await db.select().from(usersTable).orderBy(desc(usersTable.createdAt)).limit(5);
+  const recentRegistrations = await db.select().from(usersTable).orderBy(desc(usersTable.createdAt)).limit(8);
 
-  const salesByMonth: { month: string; sales: number }[] = [];
+  const salesByMonth: { month: string; sales: number; orders: number }[] = [];
   for (let i = 5; i >= 0; i--) {
     const date = new Date();
     date.setMonth(date.getMonth() - i);
@@ -87,7 +122,10 @@ router.get("/dashboard/summary", requireAdmin, async (req, res): Promise<void> =
     const [{ val }] = await db.select({ val: sum(ordersTable.total) }).from(ordersTable).where(
       and(gte(ordersTable.createdAt, startOfMonth), sql`${ordersTable.createdAt} <= ${endOfMonth}`)
     );
-    salesByMonth.push({ month: monthStr, sales: parseFloat(val ?? "0") });
+    const [{ cnt }] = await db.select({ cnt: count() }).from(ordersTable).where(
+      and(gte(ordersTable.createdAt, startOfMonth), sql`${ordersTable.createdAt} <= ${endOfMonth}`)
+    );
+    salesByMonth.push({ month: monthStr, sales: parseFloat(val ?? "0"), orders: Number(cnt) });
   }
 
   const topProductRows = await db.select({
@@ -105,12 +143,28 @@ router.get("/dashboard/summary", requireAdmin, async (req, res): Promise<void> =
     totalOrders: Number(totalOrders),
     activeMembers: Number(activeMembers),
     proMembers: Number(proMembers),
-    newCustomers: Number(newCustomers),
     platformGCV: parseInt(platformGCV ?? "0"),
     platformGCVThisMonth: parseInt(platformGCVThisMonth ?? "0"),
+    // Period metrics
+    revenueToday: parseFloat(revenueToday ?? "0"),
+    revenueThisWeek: parseFloat(revenueThisWeek ?? "0"),
+    revenueThisMonth: parseFloat(revenueThisMonth ?? "0"),
+    ordersToday: Number(ordersToday),
+    ordersThisWeek: Number(ordersThisWeek),
+    ordersThisMonth: Number(ordersThisMonth),
+    newMembersToday: Number(newMembersToday),
+    newMembersThisWeek: Number(newMembersThisWeek),
+    newMembersThisMonth: Number(newMembersThisMonth),
+    // Urgent actions
+    pendingOrdersCount: Number(pendingOrdersCount),
+    processingOrdersCount: Number(processingOrdersCount),
+    pendingBookingsCount: Number(pendingBookingsCount),
     pendingPayouts: parseFloat(pendingPayouts ?? "0"),
+    pendingPayoutsCount: Number(pendingPayoutsCount),
     pendingCommissions: parseFloat(pendingCommissions ?? "0"),
     totalBookings: Number(totalBookings),
+    // Lists
+    pendingOrders: pendingOrderRows.map(r => formatOrder(r.order, r.user ? `${r.user.firstName} ${r.user.lastName}` : "Unknown")),
     recentOrders: recentOrderRows.map(r => formatOrder(r.order, r.user ? `${r.user.firstName} ${r.user.lastName}` : "Unknown")),
     recentRegistrations: recentRegistrations.map(u => ({
       id: u.id, email: u.email, firstName: u.firstName, lastName: u.lastName,

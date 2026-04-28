@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, ordersTable, orderItemsTable, cartItemsTable, productsTable, usersTable, appSettingsTable, promoCodesTable, dollarCreditsTable } from "@workspace/db";
+import { db, ordersTable, orderItemsTable, cartItemsTable, productsTable, usersTable, appSettingsTable, promoCodesTable, dollarCreditsTable, walletsTable, walletTransactionsTable } from "@workspace/db";
 import { eq, and, desc, count, sql, inArray, gte } from "drizzle-orm";
 import { requireAuth, requireAdmin } from "../lib/auth";
 import { processCommissions, type OrderItemForCommission } from "../lib/commissions";
@@ -226,7 +226,7 @@ router.get("/orders", requireAuth, async (req, res): Promise<void> => {
 
 router.post("/orders", requireAuth, async (req, res): Promise<void> => {
   const currentUser = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
-  const { paymentMethod, shippingAddress, promoCode, notes } = req.body;
+  const { paymentMethod, shippingAddress, promoCode, notes, walletAmount } = req.body;
 
   if (!paymentMethod || !shippingAddress) {
     res.status(400).json({ error: "paymentMethod and shippingAddress required" });
@@ -269,19 +269,55 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
     }
   }
 
+  // ── Tax is calculated on (subtotal - promoDiscount), BEFORE wallet credit.
+  // Wallet credit is a payment method, not a price reduction — it does NOT
+  // reduce the taxable amount. This ensures tax compliance.
   const afterDiscount = subtotal - discount;
   const tax = afterDiscount * taxRate;
   const shipping = afterDiscount >= freeShippingThreshold ? 0 : shippingRate;
   const total = afterDiscount + tax + shipping;
 
+  // ── Validate & clamp wallet credit (applied post-tax, never reduces taxable base) ──
+  const requestedWallet = parseFloat(String(walletAmount ?? 0)) || 0;
+  let walletDeduction = 0;
+  let walletRecord: typeof walletsTable.$inferSelect | null = null;
+
+  if (requestedWallet > 0) {
+    const [w] = await db.select().from(walletsTable).where(eq(walletsTable.userId, currentUser.id));
+    if (!w) {
+      res.status(400).json({ error: "Wallet not found." });
+      return;
+    }
+    const available = parseFloat(w.balance);
+    if (requestedWallet > available) {
+      res.status(400).json({ error: `Wallet balance too low. Available: $${available.toFixed(2)}.` });
+      return;
+    }
+    // Clamp: can't apply more than the actual order total
+    walletDeduction = Math.min(requestedWallet, total);
+    walletRecord = w;
+  }
+
+  const walletCoversAll = walletDeduction >= total;
+
   const orderNumber = `NFGN-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+  // Determine payment status
+  let paymentStatus: string;
+  if (walletCoversAll) {
+    paymentStatus = "paid";
+  } else if (paymentMethod === "cod") {
+    paymentStatus = "pending";
+  } else {
+    paymentStatus = "demo_paid";
+  }
 
   const [order] = await db.insert(ordersTable).values({
     orderNumber,
     userId: currentUser.id,
     status: "pending",
     paymentMethod,
-    paymentStatus: paymentMethod === "cod" ? "pending" : "demo_paid",
+    paymentStatus,
     subtotal: String(subtotal),
     tax: String(tax),
     shipping: String(shipping),
@@ -291,6 +327,21 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
     promoCode: promoCode ?? undefined,
     notes: notes ?? undefined,
   }).returning();
+
+  // ── Deduct wallet credit and record transaction ──────────────────────────
+  if (walletDeduction > 0 && walletRecord) {
+    const newBalance = parseFloat(walletRecord.balance) - walletDeduction;
+    await db.update(walletsTable)
+      .set({ balance: String(newBalance) })
+      .where(eq(walletsTable.id, walletRecord.id));
+    await db.insert(walletTransactionsTable).values({
+      walletId: walletRecord.id,
+      type: "debit",
+      amount: String(walletDeduction),
+      balance: String(newBalance),
+      description: `E-Wallet credit applied to order ${orderNumber}`,
+    });
+  }
 
   // Increment promo code usedCount
   if (appliedPromoId) {

@@ -5,6 +5,7 @@ import {
   useRemoveCartItem,
   useCreateOrder,
   useGetMe,
+  useGetWallet,
   useRegister,
   useLogin,
 } from "@workspace/api-client-react";
@@ -43,6 +44,7 @@ import {
   Info,
   Shield,
   Zap,
+  Wallet,
 } from "lucide-react";
 import { Link } from "wouter";
 import { customFetch } from "@/lib/custom-fetch";
@@ -398,11 +400,16 @@ export function CartDrawer() {
   const [paypalLoading, setPaypalLoading] = useState(false);
   const [paypalError, setPaypalError] = useState<string | null>(null);
   const paypalButtonsRef = useRef<any>(null);
+  const [walletInput, setWalletInput] = useState("");
+  const [walletError, setWalletError] = useState<string | null>(null);
 
   const { data: cart, isLoading: cartLoading } = useGetCart({
     query: { enabled: isAuthenticated && cartOpen } as any,
   });
   const { data: me } = useGetMe({
+    query: { enabled: isAuthenticated } as any,
+  });
+  const { data: walletData } = useGetWallet({
     query: { enabled: isAuthenticated } as any,
   });
 
@@ -447,6 +454,8 @@ export function CartDrawer() {
       setPromoError(null);
       setLastOrder(null);
       setOptimisticQtys({});
+      setWalletInput("");
+      setWalletError(null);
     }, 300);
   }
 
@@ -587,7 +596,7 @@ export function CartDrawer() {
         setPaymentProcessing(false);
         return;
       }
-      createOrder.mutate({ data: { paymentMethod: "cash_app", shippingAddress: addr, promoCode: promoApplied?.code || promoCode || undefined, squarePaymentId: payData.paymentId } } as any);
+      createOrder.mutate({ data: { paymentMethod: "cash_app", shippingAddress: addr, promoCode: promoApplied?.code || promoCode || undefined, squarePaymentId: payData.paymentId, walletAmount: walletApplied } } as any);
     } catch (err: any) {
       toast({ title: "Payment error", description: err?.message ?? "Something went wrong. Please try again.", variant: "destructive" });
       setPaymentProcessing(false);
@@ -665,7 +674,7 @@ export function CartDrawer() {
               return;
             }
             const addr = `${shipping.fullName}, ${shipping.address}, ${shipping.city}, ${shipping.state} ${shipping.zip}${shipping.phone ? " | " + shipping.phone : ""}`;
-            createOrder.mutate({ data: { paymentMethod: "paypal", shippingAddress: addr, promoCode: promoApplied?.code || promoCode || undefined, squarePaymentId: result.captureId } } as any);
+            createOrder.mutate({ data: { paymentMethod: "paypal", shippingAddress: addr, promoCode: promoApplied?.code || promoCode || undefined, squarePaymentId: result.captureId, walletAmount: walletApplied } } as any);
           },
           onError: (err: any) => {
             setPaypalError("PayPal encountered an error. Please try again or use a different payment method.");
@@ -767,7 +776,7 @@ export function CartDrawer() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             sourceId: result.token,
-            amount: discountedTotal,
+            amount: finalDue,
             note: `NFGN Order — ${shipping.fullName}`,
           }),
         });
@@ -777,7 +786,7 @@ export function CartDrawer() {
           setPaymentProcessing(false);
           return;
         }
-        createOrder.mutate({ data: { paymentMethod: "square", shippingAddress: addr, promoCode: promoApplied?.code || promoCode || undefined, squarePaymentId: payData.paymentId } } as any);
+        createOrder.mutate({ data: { paymentMethod: "square", shippingAddress: addr, promoCode: promoApplied?.code || promoCode || undefined, squarePaymentId: payData.paymentId, walletAmount: walletApplied } } as any);
       } catch (err: any) {
         toast({ title: "Payment error", description: err?.message ?? "Something went wrong. Please try again.", variant: "destructive" });
         setPaymentProcessing(false);
@@ -785,7 +794,7 @@ export function CartDrawer() {
       return;
     }
 
-    createOrder.mutate({ data: { paymentMethod, shippingAddress: addr, promoCode: promoApplied?.code || promoCode || undefined } } as any);
+    createOrder.mutate({ data: { paymentMethod, shippingAddress: addr, promoCode: promoApplied?.code || promoCode || undefined, walletAmount: walletApplied } } as any);
   }
 
   const items = cart?.items ?? [];
@@ -806,7 +815,14 @@ export function CartDrawer() {
       : Math.min(promoApplied.discountValue, subtotal)
     : 0;
   const discountedTotal = subtotal - promoDiscount;
-  discountedTotalRef.current = discountedTotal;
+
+  const walletBalance = parseFloat(String(walletData?.balance ?? "0"));
+  const rawWalletInput = parseFloat(walletInput) || 0;
+  const walletApplied = Math.min(walletBalance, Math.max(0, rawWalletInput), discountedTotal);
+  const finalDue = Math.max(0, discountedTotal - walletApplied);
+  const walletCoversAll = walletApplied >= discountedTotal;
+
+  discountedTotalRef.current = finalDue;
 
   return (
     <Sheet open={cartOpen} onOpenChange={handleOpenChange}>
@@ -1009,7 +1025,16 @@ export function CartDrawer() {
               <section>
                 <h3 className="font-semibold text-xs uppercase tracking-wider text-muted-foreground mb-3">
                   Payment Method
+                  {walletApplied > 0 && !walletCoversAll && (
+                    <span className="ml-2 text-primary normal-case font-normal">(for remaining ${finalDue.toFixed(2)})</span>
+                  )}
                 </h3>
+                {walletCoversAll && (
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm mb-3">
+                    <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+                    Your E-Wallet balance fully covers this order — no additional payment required.
+                  </div>
+                )}
                 <div className="space-y-2">
                   {PAYMENT_METHODS.map(pm => (
                     <button
@@ -1099,7 +1124,7 @@ export function CartDrawer() {
                       <div className="bg-green-100 rounded-lg p-3 space-y-1">
                         <p className="text-xs font-semibold text-green-800">How it works:</p>
                         <p className="text-xs text-green-700">1. Tap the button — Cash App opens on your device.</p>
-                        <p className="text-xs text-green-700">2. Approve <strong>${discountedTotal.toFixed(2)}</strong> in your Cash App.</p>
+                        <p className="text-xs text-green-700">2. Approve <strong>${finalDue.toFixed(2)}</strong> in your Cash App.</p>
                         <p className="text-xs text-green-700">3. Return here — your order confirms automatically, no waiting.</p>
                       </div>
                       <p className="text-center text-xs text-green-600">
@@ -1115,12 +1140,12 @@ export function CartDrawer() {
                       <div className="bg-white rounded-xl border-2 border-green-400 p-4 text-center">
                         <p className="text-xs text-green-600 font-medium uppercase tracking-wider mb-1">NFGN Official Cash App</p>
                         <p className="text-2xl font-black text-green-700">$NewFaceGlobalNetwork</p>
-                        <p className="text-xs text-muted-foreground mt-1">Send exactly <strong>${discountedTotal.toFixed(2)}</strong> to this $cashtag</p>
+                        <p className="text-xs text-muted-foreground mt-1">Send exactly <strong>${finalDue.toFixed(2)}</strong> to this $cashtag</p>
                       </div>
                       <div className="bg-white rounded-lg p-3 border border-green-200 space-y-1.5">
                         <p className="text-xs font-bold text-green-800 flex items-center gap-1"><Info className="h-3 w-3" /> How to send via Cash App:</p>
                         <p className="text-xs text-green-700">1. Open Cash App and tap the <strong>$</strong> icon.</p>
-                        <p className="text-xs text-green-700">2. Type amount: <strong>${discountedTotal.toFixed(2)}</strong></p>
+                        <p className="text-xs text-green-700">2. Type amount: <strong>${finalDue.toFixed(2)}</strong></p>
                         <p className="text-xs text-green-700">3. Tap <strong>"Pay"</strong>, search <strong>$NewFaceGlobalNetwork</strong>.</p>
                         <p className="text-xs text-green-700">4. Add your name and order info in the <strong>For</strong> field.</p>
                         <p className="text-xs text-green-700">5. Confirm & send — then click <strong>"Place Order"</strong> below.</p>
@@ -1189,14 +1214,14 @@ export function CartDrawer() {
                       <div className="bg-white rounded-xl border-2 border-sky-400 p-4 text-center">
                         <p className="text-xs text-sky-600 font-medium uppercase tracking-wider mb-1">NFGN Official PayPal</p>
                         <p className="text-lg font-bold text-sky-800">newfaceglobalnetwork@gmail.com</p>
-                        <p className="text-xs text-muted-foreground mt-1">Send exactly <strong>${discountedTotal.toFixed(2)}</strong> to this PayPal account</p>
+                        <p className="text-xs text-muted-foreground mt-1">Send exactly <strong>${finalDue.toFixed(2)}</strong> to this PayPal account</p>
                       </div>
                       <div className="bg-white rounded-lg p-3 border border-sky-200 space-y-1.5">
                         <p className="text-xs font-bold text-sky-800 flex items-center gap-1"><Info className="h-3 w-3" /> How to send via PayPal:</p>
                         <p className="text-xs text-sky-700">1. Log into <strong>PayPal.com</strong> or open the PayPal app.</p>
                         <p className="text-xs text-sky-700">2. Click <strong>"Send & Request"</strong> → <strong>"Send Money"</strong>.</p>
                         <p className="text-xs text-sky-700">3. Enter <strong>newfaceglobalnetwork@gmail.com</strong> as the recipient.</p>
-                        <p className="text-xs text-sky-700">4. Amount: <strong>${discountedTotal.toFixed(2)}</strong></p>
+                        <p className="text-xs text-sky-700">4. Amount: <strong>${finalDue.toFixed(2)}</strong></p>
                         <p className="text-xs text-sky-700">5. Choose <strong>"Friends & Family"</strong> to avoid extra fees.</p>
                         <p className="text-xs text-sky-700">6. Add your name and order info, confirm & send.</p>
                         <p className="text-xs text-sky-700">7. Click <strong>"Place Order"</strong> below — we confirm within <strong>24 hours</strong>.</p>
@@ -1302,6 +1327,85 @@ export function CartDrawer() {
                 )}
               </section>
 
+              {/* ── E-Wallet Credit ── */}
+              {isAuthenticated && walletBalance > 0 && (
+                <section>
+                  <h3 className="font-semibold text-xs uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-1.5">
+                    <Wallet className="h-3.5 w-3.5" /> E-Wallet Credit
+                  </h3>
+                  <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Available balance</span>
+                      <span className="font-bold text-primary">${walletBalance.toFixed(2)}</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">
+                        Apply toward order total (enter any amount up to ${Math.min(walletBalance, discountedTotal).toFixed(2)})
+                      </Label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium text-sm">$</span>
+                        <Input
+                          type="number"
+                          min="0"
+                          max={Math.min(walletBalance, discountedTotal).toFixed(2)}
+                          step="0.01"
+                          placeholder={`0.00 – ${Math.min(walletBalance, discountedTotal).toFixed(2)}`}
+                          value={walletInput}
+                          onChange={e => {
+                            setWalletInput(e.target.value);
+                            setWalletError(null);
+                            const val = parseFloat(e.target.value) || 0;
+                            if (val > walletBalance) {
+                              setWalletError(`Maximum available is $${walletBalance.toFixed(2)}`);
+                            } else if (val > discountedTotal) {
+                              setWalletError(`Cannot exceed order total of $${discountedTotal.toFixed(2)}`);
+                            }
+                          }}
+                          className="pl-7"
+                        />
+                      </div>
+                      {walletError && (
+                        <p className="text-xs text-destructive flex items-center gap-1">
+                          <AlertTriangle className="h-3 w-3 flex-shrink-0" /> {walletError}
+                        </p>
+                      )}
+                      <div className="flex gap-2 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => { setWalletInput(Math.min(walletBalance, discountedTotal).toFixed(2)); setWalletError(null); }}
+                          className="text-xs px-2 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-medium"
+                        >
+                          Apply max (${Math.min(walletBalance, discountedTotal).toFixed(2)})
+                        </button>
+                        {walletInput && (
+                          <button
+                            type="button"
+                            onClick={() => { setWalletInput(""); setWalletError(null); }}
+                            className="text-xs px-2 py-1 rounded bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    {walletApplied > 0 && (
+                      <div className="border-t border-primary/20 pt-2 space-y-1">
+                        <div className="flex justify-between text-sm text-green-700 font-medium">
+                          <span>Wallet credit applied</span>
+                          <span>−${walletApplied.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-sm font-bold">
+                          <span>Remaining due</span>
+                          <span style={{ color: walletCoversAll ? "#2D6A4F" : "#C9A84C" }}>
+                            {walletCoversAll ? "✓ $0.00 — Fully covered!" : `$${finalDue.toFixed(2)}`}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </section>
+              )}
+
               {/* ── Order Summary ── */}
               <section className="bg-muted/40 rounded-xl p-4 space-y-2">
                 <h3 className="font-semibold text-sm">Order Summary</h3>
@@ -1327,6 +1431,20 @@ export function CartDrawer() {
                     <span className="text-green-700">${discountedTotal.toFixed(2)}</span>
                   </div>
                 )}
+                {walletApplied > 0 && (
+                  <div className="flex justify-between text-sm text-primary font-medium">
+                    <span className="flex items-center gap-1"><Wallet className="h-3 w-3" /> E-Wallet credit</span>
+                    <span>−${walletApplied.toFixed(2)}</span>
+                  </div>
+                )}
+                {walletApplied > 0 && (
+                  <div className="flex justify-between text-sm font-bold border-t pt-1.5">
+                    <span>Amount due</span>
+                    <span style={{ color: walletCoversAll ? "#2D6A4F" : "#C9A84C" }}>
+                      {walletCoversAll ? "✓ $0.00" : `$${finalDue.toFixed(2)}`}
+                    </span>
+                  </div>
+                )}
                 <p className="text-xs text-muted-foreground">+ shipping & taxes calculated on order</p>
               </section>
             </div>
@@ -1341,10 +1459,12 @@ export function CartDrawer() {
                   Use the <strong>PayPal</strong> button above to complete your order instantly.
                 </p>
               ) : (
-                <Button className="w-full gap-2" size="lg" onClick={placeOrder} disabled={createOrder.isPending || paymentProcessing || !isAuthenticated}>
+                <Button className="w-full gap-2" size="lg" onClick={placeOrder} disabled={createOrder.isPending || paymentProcessing || !isAuthenticated || !!walletError}>
                   {createOrder.isPending || paymentProcessing
                     ? <><Loader2 className="h-4 w-4 animate-spin" /> {paymentProcessing ? "Processing Payment…" : "Placing Order…"}</>
-                    : <>Place Order · ${discountedTotal.toFixed(2)} <ArrowRight className="h-4 w-4" /></>
+                    : walletCoversAll
+                      ? <>Place Order · Covered by Wallet <ArrowRight className="h-4 w-4" /></>
+                      : <>Place Order · ${finalDue.toFixed(2)} <ArrowRight className="h-4 w-4" /></>
                   }
                 </Button>
               )}
@@ -1383,14 +1503,14 @@ export function CartDrawer() {
               </div>
             )}
 
-            {(paymentMethod === "cash_app" || paymentMethod === "paypal") && (
+            {(paymentMethod === "cash_app" || paymentMethod === "paypal") && !walletCoversAll && (
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-900 w-full text-left">
                 <p className="font-bold mb-1">⚠️ Action Required — Send Payment Now</p>
                 {paymentMethod === "cash_app" && (
-                  <p className="text-xs">Send <strong>${lastOrder?.total?.toFixed(2)}</strong> to <strong>$NewFaceGlobalNetwork</strong> on Cash App. Include your order number in the note.</p>
+                  <p className="text-xs">Send <strong>${finalDue.toFixed(2)}</strong> to <strong>$NewFaceGlobalNetwork</strong> on Cash App. Include your order number in the note.</p>
                 )}
                 {paymentMethod === "paypal" && (
-                  <p className="text-xs">Send <strong>${lastOrder?.total?.toFixed(2)}</strong> via PayPal Friends & Family to <strong>newfaceglobalnetwork@gmail.com</strong>. Include your order number in the note.</p>
+                  <p className="text-xs">Send <strong>${finalDue.toFixed(2)}</strong> via PayPal Friends & Family to <strong>newfaceglobalnetwork@gmail.com</strong>. Include your order number in the note.</p>
                 )}
               </div>
             )}

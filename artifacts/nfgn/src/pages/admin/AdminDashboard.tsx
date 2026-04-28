@@ -207,6 +207,39 @@ export function AdminDashboard() {
         </div>
       </div>
 
+      {/* ── REVENUE CHART ── */}
+      <Card className="shadow-sm">
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
+          <CardTitle className="font-serif text-base">Revenue Trend — Last 6 Months</CardTitle>
+          <Link href="/admin/reports">
+            <Button variant="ghost" size="sm" className="text-xs gap-1 h-7">
+              Full Report <ExternalLink className="h-3 w-3" />
+            </Button>
+          </Link>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <ResponsiveContainer width="100%" height={200}>
+            <AreaChart data={d?.salesByMonth ?? []} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={GOLD} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={GOLD} stopOpacity={0.02} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false}
+                tickFormatter={v => v === 0 ? "$0" : `$${(v / 1000).toFixed(0)}k`} />
+              <Tooltip
+                formatter={(v: number) => [`$${v.toFixed(2)}`, "Revenue"]}
+                contentStyle={{ borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 12 }}
+              />
+              <Area type="monotone" dataKey="sales" stroke={GOLD} strokeWidth={2.5} fill="url(#goldGrad)" dot={{ fill: GOLD, r: 3 }} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
       {/* ── URGENT ACTIONS ── */}
       <div>
         <div className="flex items-center gap-2 mb-3">
@@ -252,6 +285,9 @@ export function AdminDashboard() {
           />
         </div>
       </div>
+
+      {/* ── GLOBAL MEMBER DISTRIBUTION ── */}
+      <MemberMapCard title="Global Member Distribution" />
 
       {/* ── PERIOD SELECTOR + METRICS ── */}
       <div>
@@ -337,39 +373,6 @@ export function AdminDashboard() {
           </Card>
         </div>
       </div>
-
-      {/* ── REVENUE CHART ── */}
-      <Card className="shadow-sm">
-        <CardHeader className="pb-2 flex flex-row items-center justify-between">
-          <CardTitle className="font-serif text-base">Revenue Trend — Last 6 Months</CardTitle>
-          <Link href="/admin/reports">
-            <Button variant="ghost" size="sm" className="text-xs gap-1 h-7">
-              Full Report <ExternalLink className="h-3 w-3" />
-            </Button>
-          </Link>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <ResponsiveContainer width="100%" height={200}>
-            <AreaChart data={d?.salesByMonth ?? []} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={GOLD} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={GOLD} stopOpacity={0.02} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false}
-                tickFormatter={v => v === 0 ? "$0" : `$${(v / 1000).toFixed(0)}k`} />
-              <Tooltip
-                formatter={(v: number) => [`$${v.toFixed(2)}`, "Revenue"]}
-                contentStyle={{ borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 12 }}
-              />
-              <Area type="monotone" dataKey="sales" stroke={GOLD} strokeWidth={2.5} fill="url(#goldGrad)" dot={{ fill: GOLD, r: 3 }} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
 
       {/* ── PENDING ORDERS + RECENT REGISTRATIONS ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -533,8 +536,7 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      {/* ── MEMBER MAP ── */}
-      <MemberMapCard title="Global Member Distribution" />
+
 
     </div>
   );

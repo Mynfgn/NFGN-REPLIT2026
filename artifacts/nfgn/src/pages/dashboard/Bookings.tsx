@@ -75,7 +75,7 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
   const [error, setError] = useState<string | null>(null);
   const [walletInput, setWalletInput] = useState("");
   const [walletError, setWalletError] = useState<string | null>(null);
-  const [bookedResult, setBookedResult] = useState<{ id: number; paymentMethod: string; amount: number; walletApplied: number; service: string; scheduledAt: string } | null>(null);
+  const [bookedResult, setBookedResult] = useState<{ id: number; paymentMethod: string; amount: number; walletApplied: number; service: string; scheduledAt: string; paymentLink?: string | null } | null>(null);
 
   const amount = (parseFloat(duration) / 60) * professional.hourlyRate;
 
@@ -132,6 +132,7 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
             walletApplied: capturedWallet,
             service: capturedService,
             scheduledAt: capturedScheduledAt,
+            paymentLink: res.paymentLink ?? null,
           });
           onBooked();
         },
@@ -184,11 +185,26 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
             </div>
 
             {!isFullyPaid && (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <p className="text-sm font-semibold flex items-center gap-1.5">
                   <CreditCard className="h-4 w-4 text-primary" />
                   {successInfo.title} — Next Steps
                 </p>
+
+                {/* Square payment link — direct Pay Now button */}
+                {bookedResult.paymentLink && (
+                  <a
+                    href={bookedResult.paymentLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full rounded-lg py-3 text-sm font-bold text-white transition-colors"
+                    style={{ background: "#C9A84C" }}
+                  >
+                    <CreditCard className="h-4 w-4" />
+                    Pay ${remaining.toFixed(2)} Now — Secure Card Checkout
+                  </a>
+                )}
+
                 <ol className="space-y-2">
                   {successInfo.steps.map((step, i) => (
                     <li key={i} className="flex gap-3 text-sm">

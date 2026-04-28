@@ -30,6 +30,7 @@ export const bookingsTable = pgTable("bookings", {
   paymentStatus: text("payment_status").notNull().default("pending"),
   amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
   notes: text("notes"),
+  paymentLink: text("payment_link"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

@@ -3,6 +3,7 @@ import { db, bookingsTable, professionalsTable, usersTable, messagesTable, walle
 import { eq, and, desc, count, or, inArray } from "drizzle-orm";
 import { requireAuth, requireAdmin } from "../lib/auth";
 import { sendEmail, bookingConfirmationHtml } from "../lib/mailer";
+import { createSquarePaymentLink } from "../lib/square";
 
 const router: IRouter = Router();
 
@@ -21,6 +22,7 @@ function formatBooking(b: typeof bookingsTable.$inferSelect, userName: string, p
     paymentStatus: b.paymentStatus,
     amount: parseFloat(b.amount),
     notes: b.notes ?? null,
+    paymentLink: b.paymentLink ?? null,
     createdAt: b.createdAt.toISOString(),
   };
 }
@@ -88,6 +90,11 @@ router.post("/bookings", requireAuth, async (req, res): Promise<void> => {
     });
   }
 
+  const bookingAmount = parseFloat(String(amount));
+  const remainingAfterWallet = Math.max(0, bookingAmount - walletDeduction);
+  const needsCardPayment = remainingAfterWallet > 0 && (paymentMethod === "card" || paymentMethod.includes("card"));
+
+  // ── Insert the booking first (no payment link yet) ───────────────────────
   const [booking] = await db.insert(bookingsTable).values({
     userId,
     professionalId,
@@ -101,14 +108,29 @@ router.post("/bookings", requireAuth, async (req, res): Promise<void> => {
     notes: notes ?? undefined,
   }).returning();
 
+  // ── Generate Square payment link (card payments with remaining balance) ──
+  if (needsCardPayment) {
+    const squareLink = await createSquarePaymentLink({
+      name: `NFGN Booking #${booking.id} — ${serviceType}`,
+      amountCents: Math.round(remainingAfterWallet * 100),
+      bookingId: booking.id,
+    });
+    if (squareLink) {
+      await db.update(bookingsTable)
+        .set({ paymentLink: squareLink })
+        .where(eq(bookingsTable.id, booking.id));
+      booking.paymentLink = squareLink;
+    }
+  }
+
   const [member] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
-  const [pro] = await db.select().from(professionalsTable).where(eq(professionalsTable.id, professionalId));
+  const [proRow] = await db.select().from(professionalsTable).where(eq(professionalsTable.id, professionalId));
 
   // ── Post-booking notifications (non-blocking) ─────────────────────────────
   try {
     const dashboardUrl = process.env.APP_URL ? `${process.env.APP_URL}/dashboard` : "https://nfgn.com/dashboard";
     const memberName = member ? `${member.firstName} ${member.lastName}` : "Unknown Member";
-    const providerName = pro?.name ?? "Unknown Professional";
+    const providerName = proRow?.name ?? "Unknown Professional";
     const scheduledAtFormatted = new Date(scheduledAt).toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" });
     const bookingAmt = parseFloat(String(amount));
     const walletNote = walletDeduction > 0
@@ -122,8 +144,8 @@ router.post("/bookings", requireAuth, async (req, res): Promise<void> => {
 
     // ── Find provider's linked user (if any) ──
     let providerUser: typeof usersTable.$inferSelect | null = null;
-    if (pro?.userId) {
-      const [pu] = await db.select().from(usersTable).where(eq(usersTable.id, pro.userId));
+    if (proRow?.userId) {
+      const [pu] = await db.select().from(usersTable).where(eq(usersTable.id, proRow.userId));
       providerUser = pu ?? null;
     }
 
@@ -233,7 +255,7 @@ router.post("/bookings", requireAuth, async (req, res): Promise<void> => {
     console.error("[BOOKINGS] Notification error (non-blocking):", err);
   }
 
-  res.status(201).json(formatBooking(booking, member ? `${member.firstName} ${member.lastName}` : "Unknown", pro?.name ?? "Unknown"));
+  res.status(201).json(formatBooking(booking, member ? `${member.firstName} ${member.lastName}` : "Unknown", proRow?.name ?? "Unknown"));
 });
 
 router.get("/bookings/:id", requireAuth, async (req, res): Promise<void> => {

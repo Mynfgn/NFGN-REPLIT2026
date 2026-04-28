@@ -10,7 +10,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar, Star, Clock, CreditCard, CheckCircle2, AlertCircle, Search, Wallet, User, DollarSign, Smartphone } from "lucide-react";
 
 const BRAND_GOLD = "#C9A84C";
@@ -63,26 +62,41 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
   const [date, setDate] = useState("");
   const [time, setTime] = useState("10:00");
   const [duration, setDuration] = useState("60");
-  const [applyWallet, setApplyWallet] = useState(walletBalance > 0);
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [walletInput, setWalletInput] = useState("");
+  const [walletError, setWalletError] = useState<string | null>(null);
 
   const amount = (parseFloat(duration) / 60) * professional.hourlyRate;
-  const walletApplied = applyWallet ? Math.min(walletBalance, amount) : 0;
+
+  const parsedWallet = parseFloat(walletInput) || 0;
+  const walletApplied = Math.min(Math.max(0, parsedWallet), walletBalance, amount);
   const remainingDue = Math.max(0, amount - walletApplied);
   const walletCoversAll = walletApplied >= amount;
+
+  const handleWalletInput = (val: string) => {
+    setWalletInput(val);
+    setWalletError(null);
+    const n = parseFloat(val) || 0;
+    if (n > walletBalance) {
+      setWalletError(`Max available: $${walletBalance.toFixed(2)}`);
+    } else if (n > amount) {
+      setWalletError(`Cannot exceed session total ($${amount.toFixed(2)})`);
+    }
+  };
 
   const handleSubmit = async () => {
     setError(null);
     if (!date) { setError("Please select a date."); return; }
     if (!service) { setError("Please select a service."); return; }
+    if (walletError) { setError(walletError); return; }
     if (!walletCoversAll && !paymentMethod) {
       setError("Please select a payment method for the remaining balance."); return;
     }
 
     const scheduledAt = new Date(`${date}T${time}:00`).toISOString();
-    const finalPaymentMethod = walletCoversAll ? "wallet" : (applyWallet ? `wallet+${paymentMethod}` : paymentMethod);
+    const finalPaymentMethod = walletCoversAll ? "wallet" : (walletApplied > 0 ? `wallet+${paymentMethod}` : paymentMethod);
 
     createBooking.mutate(
       { data: {
@@ -181,21 +195,49 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
             {/* E-Wallet Credit */}
             {walletBalance > 0 && (
               <div className="border-t border-primary/10 px-4 py-3 space-y-2">
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="apply-wallet"
-                    checked={applyWallet}
-                    onCheckedChange={(v) => setApplyWallet(!!v)}
-                  />
-                  <label htmlFor="apply-wallet" className="text-sm cursor-pointer select-none flex items-center gap-1.5">
-                    <Wallet className="h-3.5 w-3.5 text-primary" />
-                    Apply E-Wallet credit
-                    <span className="font-semibold text-primary">(${walletBalance.toFixed(2)} available)</span>
-                  </label>
+                <div className="flex items-center gap-1.5 text-sm font-semibold">
+                  <Wallet className="h-3.5 w-3.5 text-primary" />
+                  <span>E-Wallet Credit</span>
+                  <span className="font-normal text-muted-foreground ml-1">(${walletBalance.toFixed(2)} available)</span>
                 </div>
 
-                {applyWallet && (
-                  <div className="ml-6 text-xs space-y-0.5 text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <div className={`flex items-center border rounded-md overflow-hidden flex-1 ${walletError ? "border-red-400" : "border-border"}`}>
+                    <span className="px-2 text-muted-foreground text-sm select-none bg-muted border-r py-1.5">$</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={walletInput}
+                      onChange={(e) => handleWalletInput(e.target.value)}
+                      placeholder="0.00"
+                      className="flex-1 px-2 py-1.5 text-sm bg-transparent outline-none"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleWalletInput(String(Math.min(walletBalance, amount).toFixed(2)))}
+                    className="text-xs px-2 py-1.5 rounded border border-primary/40 text-primary hover:bg-primary/10 transition-colors whitespace-nowrap"
+                  >
+                    Apply max
+                  </button>
+                  {walletInput && (
+                    <button
+                      type="button"
+                      onClick={() => { setWalletInput(""); setWalletError(null); }}
+                      className="text-xs px-2 py-1.5 rounded border border-border text-muted-foreground hover:bg-muted transition-colors"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+
+                {walletError && (
+                  <p className="text-xs text-red-600">{walletError}</p>
+                )}
+
+                {walletApplied > 0 && !walletError && (
+                  <div className="text-xs space-y-0.5 text-muted-foreground">
                     <div className="flex justify-between">
                       <span>Wallet applied:</span>
                       <span className="text-green-600 font-medium">− ${walletApplied.toFixed(2)}</span>
@@ -203,7 +245,7 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
                     <div className="flex justify-between font-semibold text-sm text-foreground">
                       <span>Remaining due:</span>
                       <span style={{ color: remainingDue === 0 ? "#2D6A4F" : BRAND_GOLD }}>
-                        ${remainingDue.toFixed(2)}
+                        {remainingDue === 0 ? "✓ $0.00" : `$${remainingDue.toFixed(2)}`}
                       </span>
                     </div>
                   </div>
@@ -215,7 +257,7 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
           {/* ── Payment Method (shown when remaining > $0) ── */}
           {!walletCoversAll && (
             <div className="space-y-2">
-              <Label>Payment Method {applyWallet && remainingDue > 0 && <span className="text-muted-foreground font-normal">(for remaining ${remainingDue.toFixed(2)})</span>}</Label>
+              <Label>Payment Method {walletApplied > 0 && remainingDue > 0 && <span className="text-muted-foreground font-normal">(for remaining ${remainingDue.toFixed(2)})</span>}</Label>
               <div className="grid grid-cols-2 gap-2">
                 {PAYMENT_OPTIONS.map(opt => {
                   const Icon = opt.icon;
@@ -246,7 +288,7 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
             </div>
           )}
 
-          {walletCoversAll && applyWallet && (
+          {walletCoversAll && walletApplied > 0 && (
             <div className="flex items-center gap-2 p-3 rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm">
               <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
               Your E-Wallet balance fully covers this session. No additional payment needed.

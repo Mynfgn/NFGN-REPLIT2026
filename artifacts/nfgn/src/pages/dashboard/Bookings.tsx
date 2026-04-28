@@ -134,7 +134,7 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
             scheduledAt: capturedScheduledAt,
             paymentLink: res.paymentLink ?? null,
           });
-          onBooked();
+          // Don't call onBooked() here — let the confirmation screen show first
         },
         onError: (err: any) => setError(err?.message ?? "Failed to book. Please try again."),
       },
@@ -148,8 +148,9 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
     const successInfo = PAYMENT_SUCCESS_STEPS[bookedResult.paymentMethod] ?? PAYMENT_SUCCESS_STEPS.card;
     const remaining = Math.max(0, bookedResult.amount - bookedResult.walletApplied);
     const isFullyPaid = bookedResult.paymentMethod === "wallet" || remaining === 0;
+    const handleDone = () => { onBooked(); onClose(); };
     return (
-      <Dialog open onOpenChange={onClose}>
+      <Dialog open onOpenChange={handleDone}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="font-serif flex items-center gap-2 text-green-700">
@@ -225,7 +226,7 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
           </div>
 
           <DialogFooter>
-            <Button onClick={onClose} className="w-full">Done</Button>
+            <Button onClick={handleDone} className="w-full">Done</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

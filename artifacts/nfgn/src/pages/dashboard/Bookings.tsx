@@ -46,11 +46,11 @@ const PAYMENT_INSTRUCTIONS: Record<string, string> = {
   paypal:  "You will receive an invoice to your PayPal email. Complete payment within 24 hours to confirm your booking.",
   cashapp: "Send payment to $NFGNetwork on Cash App. Include your booking reference number in the note.",
   cash:    "Pay in person at your scheduled session. Bring exact change or check made out to NFGN.",
-  card:    "A payment link will be sent to your email to securely complete your card payment.",
+  card:    "A secure checkout link will be generated for you to complete card payment right after booking.",
 };
 
 const PAYMENT_SUCCESS_STEPS: Record<string, { title: string; steps: string[] }> = {
-  card:    { title: "Pay by Card", steps: ["Check your email for a secure payment link.", "Click the link and enter your card details.", "Your booking will be confirmed once payment clears."] },
+  card:    { title: "Pay by Card", steps: ["Click the gold \"Pay Now\" button above.", "Enter your card details on the secure checkout page.", "Your booking will be confirmed once payment clears."] },
   paypal:  { title: "Pay via PayPal", steps: ["Check your PayPal email for an invoice.", "Complete the payment within 24 hours.", "Your booking will be confirmed once payment clears."] },
   cashapp: { title: "Pay via Cash App", steps: ["Open Cash App and send your payment to $NFGNetwork.", "Add your booking reference # in the note.", "Your booking will be confirmed once payment is verified."] },
   cash:    { title: "Pay In Person", steps: ["Bring exact change or a check made out to NFGN.", "Pay at the start of your scheduled session.", "Your booking is reserved — no upfront payment needed."] },

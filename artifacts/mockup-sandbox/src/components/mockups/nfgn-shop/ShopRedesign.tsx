@@ -148,7 +148,7 @@ function ProductCard({ product, accent }: { product: typeof CATEGORIES[0]["produ
 function TickerBar() {
   const items = ["FREE SHIPPING on Pro Packages", "LIMITED TIME: Bundle & Save 20%", "NEW: Holistic Health Cookbook just arrived", "Join 500+ Pro Members nationwide"];
   return (
-    <div style={{ background: GREEN_DARK, overflow: "hidden", padding: "10px 0" }}>
+    <div style={{ background: "#6B21A8", overflow: "hidden", padding: "10px 0" }}>
       <div style={{
         display: "flex", gap: 60, whiteSpace: "nowrap",
         animation: "ticker 24s linear infinite",

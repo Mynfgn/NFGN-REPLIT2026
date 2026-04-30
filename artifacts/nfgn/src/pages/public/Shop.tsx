@@ -290,7 +290,17 @@ function ProductCard({
   );
 }
 
-function ProPackageCard({ pkg }: { pkg: typeof HARDCODED_PRO_PACKAGES[0] }) {
+function ProPackageCard({
+  pkg,
+  matchedProduct,
+  onAdd,
+  adding,
+}: {
+  pkg: typeof HARDCODED_PRO_PACKAGES[0];
+  matchedProduct: Product | null;
+  onAdd: (e: React.MouseEvent, id: number) => void;
+  adding: boolean;
+}) {
   const [hover, setHover] = useState(false);
   const savings = pkg.originalPrice - pkg.price;
 
@@ -381,8 +391,10 @@ function ProPackageCard({ pkg }: { pkg: typeof HARDCODED_PRO_PACKAGES[0] }) {
         ))}
       </div>
       {/* CTA */}
-      <Link href="/join">
+      {matchedProduct ? (
         <button
+          disabled={adding}
+          onClick={(e) => onAdd(e, matchedProduct.id)}
           style={{
             width: "100%",
             padding: "13px 0",
@@ -392,7 +404,7 @@ function ProPackageCard({ pkg }: { pkg: typeof HARDCODED_PRO_PACKAGES[0] }) {
             borderRadius: 8,
             fontWeight: 800,
             fontSize: 14,
-            cursor: "pointer",
+            cursor: adding ? "not-allowed" : "pointer",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -400,9 +412,33 @@ function ProPackageCard({ pkg }: { pkg: typeof HARDCODED_PRO_PACKAGES[0] }) {
             transition: "all 0.2s ease",
           }}
         >
-          <Shield size={15} /> Get Started
+          {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingCart size={15} />}
+          Add to Cart
         </button>
-      </Link>
+      ) : (
+        <Link href="/join">
+          <button
+            style={{
+              width: "100%",
+              padding: "13px 0",
+              background: hover ? GOLD : "transparent",
+              color: hover ? "#000" : GOLD,
+              border: `1.5px solid ${GOLD}`,
+              borderRadius: 8,
+              fontWeight: 800,
+              fontSize: 14,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              transition: "all 0.2s ease",
+            }}
+          >
+            <Shield size={15} /> Get Started
+          </button>
+        </Link>
+      )}
     </div>
   );
 }
@@ -514,7 +550,24 @@ export function Shop() {
   };
 
   const products: Product[] = data?.products ?? [];
+  const proProducts = products.filter((p) => p.isProPackage);
   const regularProducts = products.filter((p) => !p.isProPackage);
+
+  // Map each hardcoded tier to the closest real pro product (within 25% of target price).
+  // Falls back to null if no acceptable match exists, causing the card to show "Get Started".
+  function findClosestProProduct(targetPrice: number): Product | null {
+    const tolerance = targetPrice * 0.25;
+    let best: Product | null = null;
+    let bestDiff = Infinity;
+    for (const p of proProducts) {
+      const diff = Math.abs(p.price - targetPrice);
+      if (diff <= tolerance && diff < bestDiff) {
+        best = p;
+        bestDiff = diff;
+      }
+    }
+    return best;
+  }
   const saleProducts = regularProducts.filter((p) => p.comparePrice && p.comparePrice > p.price).slice(0, 3);
 
   const grouped = CATEGORY_GROUPS.map((group) => ({
@@ -637,7 +690,13 @@ export function Shop() {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {HARDCODED_PRO_PACKAGES.map((pkg) => (
-              <ProPackageCard key={pkg.id} pkg={pkg} />
+              <ProPackageCard
+                key={pkg.id}
+                pkg={pkg}
+                matchedProduct={findClosestProProduct(pkg.price)}
+                onAdd={handleAddToCart}
+                adding={addingId === findClosestProProduct(pkg.price)?.id}
+              />
             ))}
           </div>
         </div>

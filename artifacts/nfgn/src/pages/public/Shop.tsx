@@ -67,23 +67,39 @@ const CATEGORY_GROUPS = [
   },
 ];
 
-const PRO_PACKAGE_PERKS: Record<number, string[]> = {};
-const DEFAULT_PRO_PERKS = [
-  "Full Pro Membership",
-  "Commission Eligible",
-  "Network Access",
-  "Training Materials",
+const HARDCODED_PRO_PACKAGES = [
+  {
+    id: "starter",
+    name: "NFGN Starter Pack",
+    price: 197.94,
+    originalPrice: 249.00,
+    badge: "Most Popular",
+    badgeColor: GOLD,
+    perks: ["Full Pro Membership", "Commission Eligible", "Network Access", "Training Materials"],
+  },
+  {
+    id: "builder",
+    name: "NFGN Builder Pack",
+    price: 395.87,
+    originalPrice: 499.00,
+    badge: "Best Value",
+    badgeColor: GREEN_LIGHT,
+    perks: ["Everything in Starter", "2x Product Bundle", "Priority Support", "Marketing Kit"],
+  },
+  {
+    id: "elite",
+    name: "NFGN Elite Pack",
+    price: 597.00,
+    originalPrice: 749.00,
+    badge: "Elite",
+    badgeColor: "#c77dff",
+    perks: ["Everything in Builder", "3x Product Bundle", "1-on-1 Coaching", "VIP Events Access"],
+  },
 ];
 
 function categorySlugFromName(name?: string | null): string {
   if (!name) return "";
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-}
-
-function proBadge(price: number): { label: string; color: string } {
-  if (price < 250) return { label: "Starter", color: GOLD };
-  if (price < 450) return { label: "Best Value", color: GREEN_LIGHT };
-  return { label: "Elite", color: "#c77dff" };
 }
 
 function TickerBar() {
@@ -274,21 +290,9 @@ function ProductCard({
   );
 }
 
-function ProPackageCard({
-  product,
-  onAdd,
-  adding,
-}: {
-  product: Product;
-  onAdd: (e: React.MouseEvent, id: number) => void;
-  adding: boolean;
-}) {
+function ProPackageCard({ pkg }: { pkg: typeof HARDCODED_PRO_PACKAGES[0] }) {
   const [hover, setHover] = useState(false);
-  const badge = proBadge(product.price);
-  const perks = PRO_PACKAGE_PERKS[product.id] ?? DEFAULT_PRO_PERKS;
-  const savings = product.comparePrice && product.comparePrice > product.price
-    ? product.comparePrice - product.price
-    : null;
+  const savings = pkg.originalPrice - pkg.price;
 
   return (
     <div
@@ -309,6 +313,7 @@ function ProPackageCard({
         flexDirection: "column",
       }}
     >
+      {/* Top corner glow */}
       <div
         style={{
           position: "absolute",
@@ -320,42 +325,42 @@ function ProPackageCard({
           borderRadius: "0 12px 0 100%",
         }}
       />
+      {/* Badge */}
       <div
         style={{
           display: "inline-flex",
           alignItems: "center",
           gap: 6,
           marginBottom: 18,
-          background: `${badge.color}18`,
-          border: `1px solid ${badge.color}40`,
+          background: `${pkg.badgeColor}18`,
+          border: `1px solid ${pkg.badgeColor}40`,
           padding: "4px 12px",
           borderRadius: 99,
           width: "fit-content",
         }}
       >
-        <BadgeCheck size={12} color={badge.color} />
-        <span style={{ color: badge.color, fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" }}>
-          {badge.label}
+        <BadgeCheck size={12} color={pkg.badgeColor} />
+        <span style={{ color: pkg.badgeColor, fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+          {pkg.badge}
         </span>
       </div>
-      <h3 style={{ color: "#fff", fontSize: 20, fontWeight: 800, margin: "0 0 8px", lineHeight: 1.2 }}>
-        {product.name}
+      {/* Name */}
+      <h3 style={{ color: "#fff", fontSize: 20, fontWeight: 800, margin: "0 0 6px", lineHeight: 1.2 }}>
+        {pkg.name}
       </h3>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: savings ? 4 : 20 }}>
-        <span style={{ color: GOLD, fontSize: 32, fontWeight: 900 }}>${product.price.toFixed(2)}</span>
-        {product.comparePrice && product.comparePrice > product.price && (
-          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 14, textDecoration: "line-through" }}>
-            ${product.comparePrice.toFixed(2)}
-          </span>
-        )}
+      {/* Price */}
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 6 }}>
+        <span style={{ color: GOLD, fontSize: 32, fontWeight: 900 }}>${pkg.price.toFixed(2)}</span>
+        <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 14, textDecoration: "line-through" }}>
+          ${pkg.originalPrice.toFixed(2)}
+        </span>
       </div>
-      {savings && (
-        <p style={{ color: GREEN_LIGHT, fontSize: 12, fontWeight: 700, margin: "0 0 20px" }}>
-          You save ${savings.toFixed(2)}
-        </p>
-      )}
-      <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 24, flex: 1 }}>
-        {perks.map((perk) => (
+      <p style={{ color: GREEN_LIGHT, fontSize: 12, fontWeight: 700, margin: "0 0 22px" }}>
+        You save ${savings.toFixed(2)}
+      </p>
+      {/* Perks */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 26, flex: 1 }}>
+        {pkg.perks.map((perk) => (
           <div key={perk} style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div
               style={{
@@ -375,29 +380,29 @@ function ProPackageCard({
           </div>
         ))}
       </div>
-      <button
-        disabled={adding}
-        onClick={(e) => onAdd(e, product.id)}
-        style={{
-          width: "100%",
-          padding: "13px 0",
-          background: hover ? GOLD : "transparent",
-          color: hover ? "#000" : GOLD,
-          border: `1.5px solid ${GOLD}`,
-          borderRadius: 8,
-          fontWeight: 800,
-          fontSize: 14,
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 8,
-          transition: "all 0.2s ease",
-        }}
-      >
-        {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingCart size={15} />}
-        Add to Cart
-      </button>
+      {/* CTA */}
+      <Link href="/join">
+        <button
+          style={{
+            width: "100%",
+            padding: "13px 0",
+            background: hover ? GOLD : "transparent",
+            color: hover ? "#000" : GOLD,
+            border: `1.5px solid ${GOLD}`,
+            borderRadius: 8,
+            fontWeight: 800,
+            fontSize: 14,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            transition: "all 0.2s ease",
+          }}
+        >
+          <Shield size={15} /> Get Started
+        </button>
+      </Link>
     </div>
   );
 }
@@ -509,7 +514,6 @@ export function Shop() {
   };
 
   const products: Product[] = data?.products ?? [];
-  const proProducts = products.filter((p) => p.isProPackage);
   const regularProducts = products.filter((p) => !p.isProPackage);
   const saleProducts = regularProducts.filter((p) => p.comparePrice && p.comparePrice > p.price).slice(0, 3);
 
@@ -613,48 +617,31 @@ export function Shop() {
       </div>
 
       {/* ── ZONE 1: BLACK — Pro Registration Packages ───── */}
-      {(isLoading || proProducts.length > 0) && (
-        <div style={{ background: "#0a0a0a", padding: "64px 0 80px" }}>
-          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-              <div style={{ background: GOLD, borderRadius: 8, padding: 10 }}>
-                <Package size={22} color="#000" />
-              </div>
-              <div>
-                <p style={{ color: GOLD, fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", margin: 0 }}>
-                  Members Only
-                </p>
-                <h2 style={{ color: "#fff", fontSize: 30, fontWeight: 900, margin: 0, fontFamily: "serif" }}>
-                  Pro Registration Packages
-                </h2>
-              </div>
+      <div style={{ background: "#0a0a0a", padding: "64px 0 80px" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+            <div style={{ background: GOLD, borderRadius: 8, padding: 10 }}>
+              <Package size={22} color="#000" />
             </div>
-            <p style={{ color: "rgba(255,255,255,0.4)", marginBottom: 40, fontSize: 15 }}>
-              Start your NFGN journey — choose the package that fits your goals.
-            </p>
-
-            {isLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} style={{ background: "#0d0d0d", border: "1px solid rgba(201,168,76,0.15)", borderRadius: 12, padding: 28 }}>
-                    <Skeleton className="h-6 w-24 mb-4" style={{ background: "#222" }} />
-                    <Skeleton className="h-8 w-40 mb-3" style={{ background: "#222" }} />
-                    <Skeleton className="h-10 w-28 mb-6" style={{ background: "#222" }} />
-                    {[1, 2, 3, 4].map((j) => <Skeleton key={j} className="h-4 w-full mb-2" style={{ background: "#222" }} />)}
-                    <Skeleton className="h-11 w-full mt-4" style={{ background: "#222" }} />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {proProducts.map((p) => (
-                  <ProPackageCard key={p.id} product={p} onAdd={handleAddToCart} adding={addingId === p.id} />
-                ))}
-              </div>
-            )}
+            <div>
+              <p style={{ color: GOLD, fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", margin: 0 }}>
+                Members Only
+              </p>
+              <h2 style={{ color: "#fff", fontSize: 30, fontWeight: 900, margin: 0, fontFamily: "serif" }}>
+                Pro Registration Packages
+              </h2>
+            </div>
+          </div>
+          <p style={{ color: "rgba(255,255,255,0.4)", marginBottom: 40, fontSize: 15 }}>
+            Start your NFGN journey — choose the package that fits your goals.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {HARDCODED_PRO_PACKAGES.map((pkg) => (
+              <ProPackageCard key={pkg.id} pkg={pkg} />
+            ))}
           </div>
         </div>
-      )}
+      </div>
 
       {/* ── ZONE 3: GOLD — Ticker ────────────────────────── */}
       <TickerBar />

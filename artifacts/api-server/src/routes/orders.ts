@@ -183,6 +183,11 @@ function formatOrder(order: typeof ordersTable.$inferSelect, userName: string, i
  * Admin panel must use GET /admin/orders to access all members' orders.
  */
 router.get("/orders", requireAuth, async (req, res): Promise<void> => {
+  // Disable caching so the browser never serves a stale all-orders response.
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.removeHeader("ETag");
+
   const currentUser = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
   const page = parseInt(String(req.query.page ?? "1"));
   const limit = parseInt(String(req.query.limit ?? "20"));

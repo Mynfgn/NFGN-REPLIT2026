@@ -17,8 +17,6 @@ const statusColors: Record<string, string> = {
 };
 
 export function OrdersPage() {
-  const { data, isLoading } = useListOrders({ page: 1, limit: 20 });
-  const orders = data?.orders ?? [];
   const [receiptOrder, setReceiptOrder] = useState<any | null>(null);
 
   const { data: me } = useQuery({
@@ -26,6 +24,14 @@ export function OrdersPage() {
     queryFn: () => customFetch("/api/auth/me").then(r => r.json()),
     staleTime: 60_000,
   });
+
+  // Always scope orders to the current user's ID so admins viewing their
+  // member dashboard don't accidentally see every member's orders.
+  const { data, isLoading } = useListOrders(
+    { page: 1, limit: 20, userId: me?.id },
+    { query: { enabled: !!me?.id } },
+  );
+  const orders = data?.orders ?? [];
 
   const { data: bppData } = useQuery({
     queryKey: ["/api/bpp/dashboard"],

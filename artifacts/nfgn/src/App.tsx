@@ -52,6 +52,7 @@ import { AdminDashboard } from "@/pages/admin/AdminDashboard";
 import { UsersPage } from "@/pages/admin/Users";
 import { AdminOrdersPage } from "@/pages/admin/Orders";
 import { AdminCommissionsPage } from "@/pages/admin/Commissions";
+import { ProBookingCommissionsPage } from "@/pages/admin/ProBookingCommissions";
 import { AdminPayoutsPage } from "@/pages/admin/Payouts";
 import { AdminGenealogyPage } from "@/pages/admin/AdminGenealogy";
 import { AdminProductsPage } from "@/pages/admin/Products";
@@ -304,6 +305,11 @@ function Router() {
       <Route path="/admin/commissions">
         <RequireAuth requireAdmin>
           <AdminLayout><AdminCommissionsPage /></AdminLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/admin/pro-booking-commissions">
+        <RequireAuth requireAdmin>
+          <AdminLayout><ProBookingCommissionsPage /></AdminLayout>
         </RequireAuth>
       </Route>
       <Route path="/admin/referral-commissions">

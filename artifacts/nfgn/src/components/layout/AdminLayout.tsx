@@ -8,7 +8,7 @@ import {
   Award, Banknote, Calendar, Settings,
   MessageSquare, Tag, BarChart, LogOut, Menu, X,
   ShieldCheck, Network, Star, Percent, Gift, Home, Clock, UserCircle,
-  ChevronDown, ChevronRight,
+  ChevronDown, ChevronRight, Briefcase,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -38,7 +38,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const isOrdersSection = location.startsWith("/admin/orders");
-  const isCommissionsSection = location.startsWith("/admin/referral-commissions") || location.startsWith("/admin/bonuses") || location.startsWith("/admin/bpp") || location.startsWith("/admin/commissions");
+  const isCommissionsSection = location.startsWith("/admin/referral-commissions") || location.startsWith("/admin/bonuses") || location.startsWith("/admin/bpp") || location.startsWith("/admin/commissions") || location.startsWith("/admin/pro-booking-commissions");
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     Orders: isOrdersSection,
     Commissions: isCommissionsSection,
@@ -83,6 +83,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
         { name: "Referral Commissions", href: "/admin/referral-commissions", icon: Gift },
         { name: "Pro Member Bonuses", href: "/admin/bonuses", icon: Star },
         { name: "Bill Payer Program", href: "/admin/bpp", icon: Home },
+        { name: "Pro Booking Commissions", href: "/admin/pro-booking-commissions", icon: Briefcase },
       ],
     },
     { name: "Payouts", href: "/admin/payouts", icon: Banknote },

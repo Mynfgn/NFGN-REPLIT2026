@@ -689,15 +689,18 @@ export function Shop() {
             Start your NFGN journey — choose the package that fits your goals.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {HARDCODED_PRO_PACKAGES.map((pkg) => (
-              <ProPackageCard
-                key={pkg.id}
-                pkg={pkg}
-                matchedProduct={findClosestProProduct(pkg.price)}
-                onAdd={handleAddToCart}
-                adding={addingId === findClosestProProduct(pkg.price)?.id}
-              />
-            ))}
+            {HARDCODED_PRO_PACKAGES.map((pkg) => {
+              const matched = findClosestProProduct(pkg.price);
+              return (
+                <ProPackageCard
+                  key={pkg.id}
+                  pkg={pkg}
+                  matchedProduct={matched}
+                  onAdd={handleAddToCart}
+                  adding={addingId === matched?.id}
+                />
+              );
+            })}
           </div>
         </div>
       </div>

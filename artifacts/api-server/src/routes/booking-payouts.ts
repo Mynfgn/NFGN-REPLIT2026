@@ -28,6 +28,14 @@ function fmt(p: typeof bookingPayoutsTable.$inferSelect) {
   };
 }
 
+router.get("/my-booking-earnings", requireAuth, async (req, res): Promise<void> => {
+  const currentUser = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
+  const rows = await db.select().from(bookingPayoutsTable)
+    .where(eq(bookingPayoutsTable.professionalUserId, currentUser.id))
+    .orderBy(desc(bookingPayoutsTable.createdAt));
+  res.json({ payouts: rows.map(fmt) });
+});
+
 router.get("/booking-payouts", requireAdmin, async (req, res): Promise<void> => {
   const page = parseInt(String(req.query.page ?? "1"));
   const limit = parseInt(String(req.query.limit ?? "30"));

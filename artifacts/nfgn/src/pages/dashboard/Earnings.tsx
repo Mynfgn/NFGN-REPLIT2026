@@ -1,8 +1,9 @@
 import { useListCommissions, useGetMemberAnalytics, useGetWallet } from "@workspace/api-client-react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, TrendingUp, DollarSign, Award, Users, Star, Clock } from "lucide-react";
+import { Loader2, TrendingUp, DollarSign, Award, Users, Star, Clock, Briefcase } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
@@ -23,6 +24,14 @@ export function EarningsPage() {
   const { data: commissionsData, isLoading: loadingC } = useListCommissions({ page: 1, limit: 200 });
   const { data: analytics, isLoading: loadingA } = useGetMemberAnalytics();
   const { data: wallet } = useGetWallet();
+  const { data: bookingEarningsData, isLoading: loadingBE } = useQuery({
+    queryKey: ["my-booking-earnings"],
+    queryFn: async () => {
+      const r = await fetch("/api/my-booking-earnings", { credentials: "include" });
+      if (!r.ok) throw new Error("Failed");
+      return r.json();
+    },
+  });
 
   const commissions = commissionsData?.commissions ?? [];
 
@@ -62,6 +71,10 @@ export function EarningsPage() {
 
   const walletBalance = wallet?.balance ?? 0;
   const lifetimeEarned = wallet?.totalEarned ?? 0;
+
+  const bookingPayouts: any[] = bookingEarningsData?.payouts ?? [];
+  const bookingPendingTotal = bookingPayouts.filter(p => p.status === "pending").reduce((s, p) => s + p.payoutAmount, 0);
+  const bookingApprovedTotal = bookingPayouts.filter(p => p.status === "approved").reduce((s, p) => s + p.payoutAmount, 0);
 
   return (
     <div className="space-y-6">
@@ -125,6 +138,15 @@ export function EarningsPage() {
           <TabsTrigger value="history">Commission History</TabsTrigger>
           <TabsTrigger value="chart">Monthly Earnings</TabsTrigger>
           <TabsTrigger value="breakdown">Earnings Breakdown</TabsTrigger>
+          <TabsTrigger value="booking" className="gap-1.5">
+            <Briefcase className="h-3.5 w-3.5" />
+            Booking Earnings
+            {bookingPayouts.filter(p => p.status === "pending").length > 0 && (
+              <span className="bg-amber-500 text-white text-xs rounded-full px-1.5 py-0.5 font-bold leading-none">
+                {bookingPayouts.filter(p => p.status === "pending").length}
+              </span>
+            )}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="history">
@@ -272,6 +294,78 @@ export function EarningsPage() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="booking">
+          {loadingBE ? (
+            <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+          ) : bookingPayouts.length === 0 ? (
+            <Card>
+              <CardContent className="py-16 text-center text-muted-foreground">
+                <Briefcase className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                <p className="font-medium">No booking sessions found</p>
+                <p className="text-sm mt-1">Your 80% service earnings will appear here once you are registered as a professional and members start booking your services.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <Card className="border-l-4 border-l-amber-400">
+                  <CardContent className="p-4">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Pending Approval</p>
+                    <p className="text-2xl font-bold text-amber-600">${bookingPendingTotal.toFixed(2)}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Awaiting admin release</p>
+                  </CardContent>
+                </Card>
+                <Card className="border-l-4 border-l-green-500">
+                  <CardContent className="p-4">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Approved & In Wallet</p>
+                    <p className="text-2xl font-bold text-green-600">${bookingApprovedTotal.toFixed(2)}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Available to cash out</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Briefcase className="h-4 w-4" style={{ color: BRAND_GOLD }} />
+                    My Booking Sessions (80% Earnings)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {bookingPayouts.map((p: any) => (
+                    <div key={p.id} className="flex items-start justify-between border-b pb-3 last:border-0 gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-full flex items-center justify-center flex-shrink-0"
+                          style={{ background: `${BRAND_GOLD}18`, color: BRAND_GOLD }}>
+                          <Briefcase className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">{p.serviceType}</p>
+                          <p className="text-xs text-muted-foreground">Booked by {p.memberName} · Booking #{p.bookingId}</p>
+                          <p className="text-xs text-muted-foreground">{new Date(p.createdAt).toLocaleDateString("en-US", { dateStyle: "medium" })}</p>
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="font-bold text-green-600">+${p.payoutAmount.toFixed(2)}</p>
+                        <p className="text-xs text-muted-foreground">80% of ${p.bookingAmount.toFixed(2)}</p>
+                        {p.status === "pending" && (
+                          <Badge className="mt-1 text-xs bg-amber-100 text-amber-800 border-amber-300">Pending Approval</Badge>
+                        )}
+                        {p.status === "approved" && (
+                          <Badge className="mt-1 text-xs bg-green-100 text-green-800 border-green-300">Approved — In Wallet</Badge>
+                        )}
+                        {p.status === "rejected" && (
+                          <Badge variant="destructive" className="mt-1 text-xs">Rejected</Badge>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>

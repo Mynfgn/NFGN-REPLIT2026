@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useListOrders, useUpdateOrderStatus } from "@workspace/api-client-react";
-import { useMutation } from "@tanstack/react-query";
+import { useUpdateOrderStatus } from "@workspace/api-client-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { customFetch } from "@/lib/custom-fetch";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, Receipt, RefreshCw, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ReceiptModal } from "@/components/orders/ReceiptModal";
-import { customFetch } from "@/lib/custom-fetch";
 
 export function AdminOrdersPage() {
   const [status, setStatus] = useState("all");
@@ -25,10 +25,11 @@ export function AdminOrdersPage() {
   const [fullRefund, setFullRefund] = useState(false);
   const { toast } = useToast();
 
-  const { data, isLoading, refetch } = useListOrders({
-    page,
-    limit: 20,
-    status: status !== "all" ? status : undefined,
+  const statusParam = status !== "all" ? `&status=${status}` : "";
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["/api/admin/orders", page, status],
+    queryFn: () =>
+      customFetch(`/api/admin/orders?page=${page}&limit=20${statusParam}`).then((r: any) => r.json()),
   });
   const updateStatus = useUpdateOrderStatus();
 

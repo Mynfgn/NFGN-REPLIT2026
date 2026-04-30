@@ -176,23 +176,66 @@ function formatOrder(order: typeof ordersTable.$inferSelect, userName: string, i
   };
 }
 
+/**
+ * Member-facing: GET /orders
+ * ALWAYS returns only the authenticated user's own orders.
+ * Admins viewing their member dashboard are also scoped to their own orders here.
+ * Admin panel must use GET /admin/orders to access all members' orders.
+ */
 router.get("/orders", requireAuth, async (req, res): Promise<void> => {
   const currentUser = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
   const page = parseInt(String(req.query.page ?? "1"));
   const limit = parseInt(String(req.query.limit ?? "20"));
   const offset = (page - 1) * limit;
   const status = req.query.status as string | undefined;
-  const userId = req.query.userId ? parseInt(String(req.query.userId)) : undefined;
 
+  // Always scope to the current user — no cross-member visibility.
+  const targetUserId = currentUser.id;
+
+  const whereClause = and(
+    eq(ordersTable.userId, targetUserId),
+    status ? eq(ordersTable.status, status) : undefined,
+  );
+
+  const orders = await db.select({
+    order: ordersTable,
+    user: usersTable,
+  }).from(ordersTable)
+    .leftJoin(usersTable, eq(ordersTable.userId, usersTable.id))
+    .where(whereClause)
+    .limit(limit)
+    .offset(offset)
+    .orderBy(desc(ordersTable.createdAt));
+
+  const [{ value: total }] = await db.select({ value: count() }).from(ordersTable).where(whereClause);
+
+  const result = [];
+  for (const row of orders) {
+    const items = await db.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, row.order.id));
+    const userName = row.user ? `${row.user.firstName} ${row.user.lastName}` : "Unknown";
+    result.push(formatOrder(row.order, userName, items));
+  }
+
+  res.json({ orders: result, total, page, totalPages: Math.ceil(total / limit) });
+});
+
+/**
+ * Admin-only: GET /admin/orders
+ * Returns all orders across all members, with optional filters.
+ */
+router.get("/admin/orders", requireAdmin, async (req, res): Promise<void> => {
+  const page = parseInt(String(req.query.page ?? "1"));
+  const limit = parseInt(String(req.query.limit ?? "20"));
+  const offset = (page - 1) * limit;
+  const status = req.query.status as string | undefined;
+  const userId = req.query.userId ? parseInt(String(req.query.userId)) : undefined;
   const paymentStatus = req.query.paymentStatus as string | undefined;
   const paymentMethod = req.query.paymentMethod as string | undefined;
-  const isAdmin = ["super_admin", "admin", "store_admin"].includes(currentUser.role);
-  const targetUserId = isAdmin ? userId : currentUser.id;
 
   const paymentMethods = paymentMethod ? paymentMethod.split(",").map(s => s.trim()).filter(Boolean) : undefined;
 
   const whereClause = and(
-    targetUserId ? eq(ordersTable.userId, targetUserId) : undefined,
+    userId ? eq(ordersTable.userId, userId) : undefined,
     status ? eq(ordersTable.status, status) : undefined,
     paymentStatus ? eq(ordersTable.paymentStatus, paymentStatus) : undefined,
     paymentMethods && paymentMethods.length === 1

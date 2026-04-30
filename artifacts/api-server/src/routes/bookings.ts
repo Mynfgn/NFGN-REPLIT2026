@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, bookingsTable, professionalsTable, usersTable, messagesTable, walletsTable, walletTransactionsTable } from "@workspace/db";
+import { db, bookingsTable, professionalsTable, usersTable, messagesTable, walletsTable, walletTransactionsTable, bookingPayoutsTable } from "@workspace/db";
 import { eq, and, desc, count, or, inArray } from "drizzle-orm";
 import { requireAuth, requireAdmin } from "../lib/auth";
 import { sendEmail, bookingConfirmationHtml } from "../lib/mailer";
@@ -125,6 +125,54 @@ router.post("/bookings", requireAuth, async (req, res): Promise<void> => {
 
   const [member] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
   const [proRow] = await db.select().from(professionalsTable).where(eq(professionalsTable.id, professionalId));
+
+  // ── Book-A-Pro payout split (80/20) ──────────────────────────────────────
+  try {
+    const totalAmount = parseFloat(String(amount));
+    const payoutAmount = totalAmount * 0.80;         // 80% → professional
+    const commissionPool = totalAmount * 0.20;       // 20% → commissionable pool
+    const productSalesCommission = commissionPool * 0.60; // 60% of pool
+    const referralCommission = commissionPool * 0.25;     // 25% of pool
+    const nfgnFees = commissionPool * 0.15;               // 15% of pool
+
+    await db.insert(bookingPayoutsTable).values({
+      bookingId: booking.id,
+      professionalId,
+      professionalUserId: proRow?.userId ?? null,
+      professionalName: proRow?.name ?? "Unknown",
+      memberName: member ? `${member.firstName} ${member.lastName}` : "Unknown",
+      serviceType,
+      bookingAmount: String(totalAmount),
+      payoutAmount: String(payoutAmount),
+      commissionPool: String(commissionPool),
+      productSalesCommission: String(productSalesCommission),
+      referralCommission: String(referralCommission),
+      nfgnFees: String(nfgnFees),
+      status: "pending",
+    });
+
+    // Credit professional's pending wallet balance (shown as "pending" until admin approves)
+    if (proRow?.userId) {
+      let [proWallet] = await db.select().from(walletsTable).where(eq(walletsTable.userId, proRow.userId));
+      if (!proWallet) {
+        [proWallet] = await db.insert(walletsTable).values({ userId: proRow.userId }).returning();
+      }
+      const newPending = parseFloat(proWallet.pendingBalance) + payoutAmount;
+      await db.update(walletsTable)
+        .set({ pendingBalance: String(newPending) })
+        .where(eq(walletsTable.id, proWallet.id));
+      await db.insert(walletTransactionsTable).values({
+        walletId: proWallet.id,
+        type: "booking_payout_pending",
+        amount: String(payoutAmount),
+        balance: String(parseFloat(proWallet.balance)),
+        description: `Book-A-Pro pending payout — Booking #${booking.id} (${serviceType}) — awaiting admin approval`,
+        reference: String(booking.id),
+      });
+    }
+  } catch (err) {
+    console.error("[BOOKINGS] Payout split error (non-blocking):", err);
+  }
 
   // ── Post-booking notifications (non-blocking) ─────────────────────────────
   try {

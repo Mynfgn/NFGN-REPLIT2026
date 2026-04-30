@@ -21,6 +21,7 @@ import visionGoalsRouter from "./vision_goals";
 import dollarCreditsRouter from "./dollar_credits";
 import paymentsRouter from "./payments";
 import paypalRouter from "./paypal";
+import bookingPayoutsRouter from "./booking-payouts";
 
 const router: IRouter = Router();
 
@@ -46,5 +47,6 @@ router.use(visionGoalsRouter);
 router.use(dollarCreditsRouter);
 router.use(paymentsRouter);
 router.use(paypalRouter);
+router.use(bookingPayoutsRouter);
 
 export default router;

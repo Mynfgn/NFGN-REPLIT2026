@@ -344,12 +344,12 @@ router.get("/dashboard/analytics", requireAuth, async (req, res): Promise<void> 
     rolling30DayPcv = parseInt(pcvSum ?? "0");
   }
 
-  // ── Group Volume (GV) — this month ────────────────────────────────────────
+  // ── Group Volume (GV) — this month (downline only, excludes member's own PCV) ─
   let groupVolume = 0;
-  if (communityIds.length > 0) {
+  if (downlineIds.length > 0) {
     const communityOrders = await db.select({ id: ordersTable.id })
       .from(ordersTable)
-      .where(and(inArray(ordersTable.userId, communityIds), gte(ordersTable.createdAt, monthStart)));
+      .where(and(inArray(ordersTable.userId, downlineIds), gte(ordersTable.createdAt, monthStart)));
 
     if (communityOrders.length > 0) {
       const [{ gvSum }] = await db.select({ gvSum: sum(orderItemsTable.cvTotal) })

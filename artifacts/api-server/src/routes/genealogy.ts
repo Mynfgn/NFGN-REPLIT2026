@@ -27,11 +27,11 @@ async function getDownlineIds(userId: number, maxDepth = 9, depth = 1): Promise<
   return ids;
 }
 
-/** Compute Group Volume: PV of user + sum of PV of all downline members. */
+/** Compute Group Volume: sum of PV of all downline members only (excludes the member's own PCV). */
 async function computeGV(userId: number): Promise<number> {
   const downlineIds = await getDownlineIds(userId);
-  const allIds = [userId, ...downlineIds];
-  const orders = await db.select({ id: ordersTable.id }).from(ordersTable).where(inArray(ordersTable.userId, allIds));
+  if (downlineIds.length === 0) return 0;
+  const orders = await db.select({ id: ordersTable.id }).from(ordersTable).where(inArray(ordersTable.userId, downlineIds));
   if (orders.length === 0) return 0;
   const [{ gvSum }] = await db.select({ gvSum: sum(orderItemsTable.cvTotal) })
     .from(orderItemsTable)

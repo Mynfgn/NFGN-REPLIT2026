@@ -2,11 +2,11 @@ import { useListProducts, useAddToCart } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { resolveImageSrc } from "@/lib/image";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   ShoppingCart, Loader2, Leaf, Sparkles, Flame, BookOpen,
-  Star, ChevronRight, Package, BadgeCheck,
+  ChevronRight, Package, BadgeCheck, Check, ArrowRight,
+  Users, TrendingUp, Star, Gift, Shield, Zap,
 } from "lucide-react";
 import { useCartStore } from "@/hooks/use-cart-store";
 import { useToast } from "@/hooks/use-toast";
@@ -14,12 +14,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 
 const GOLD = "#C9A84C";
-const GOLD_LIGHT = "rgba(201,168,76,0.10)";
-const GOLD_MED = "rgba(201,168,76,0.22)";
 const GREEN = "#2D6A4F";
-const DARK = "#0a0a0a";
-const DARK2 = "#111111";
-const DARK3 = "#1a1a1a";
+const GREEN_DARK = "#1e4d38";
+const GREEN_LIGHT = "#52b788";
 
 type Product = {
   id: number;
@@ -35,46 +32,47 @@ type Product = {
   description?: string | null;
 };
 
-const CATEGORY_GROUPS: {
-  key: string;
-  label: string;
-  icon: React.ReactNode;
-  accent: string;
-  description: string;
-  slugs: string[];
-}[] = [
+const CATEGORY_GROUPS = [
   {
     key: "herbal",
     label: "Herbal Products",
-    icon: <Leaf className="h-6 w-6" />,
-    accent: GREEN,
+    icon: <Leaf className="h-5 w-5" />,
+    accentColor: GREEN,
     description: "Naturopathic herbal formulations — cleanses, gut health, appetite support & holistic wellness.",
     slugs: ["cleanses", "appetite-support", "herbal-wellness"],
   },
   {
     key: "soaps",
     label: "Soaps & Lotions",
-    icon: <Sparkles className="h-6 w-6" />,
-    accent: GOLD,
+    icon: <Sparkles className="h-5 w-5" />,
+    accentColor: "#8B5CF6",
     description: "Handmade natural soaps, body lotions, and nourishing skin-care oils crafted with love.",
     slugs: ["soaps-body-care", "lotions-oils"],
   },
   {
     key: "candles",
     label: "Aromatherapy Candles",
-    icon: <Flame className="h-6 w-6" />,
-    accent: "#E07B54",
+    icon: <Flame className="h-5 w-5" />,
+    accentColor: "#E07B54",
     description: "Therapeutic aromatics and hand-poured candles to create calm, focus, and healing spaces.",
     slugs: ["candles-aromatics"],
   },
   {
     key: "books",
-    label: "Books & Media",
-    icon: <BookOpen className="h-6 w-6" />,
-    accent: "#7B8FD4",
+    label: "Books & Education",
+    icon: <BookOpen className="h-5 w-5" />,
+    accentColor: "#3B82F6",
     description: "Naturopathic education, wellness books, guides, and professional service packages.",
     slugs: ["books-education", "services"],
   },
+];
+
+const PRO_PACKAGE_PERKS: Record<number, string[]> = {};
+const DEFAULT_PRO_PERKS = [
+  "Full Pro Membership",
+  "Commission Eligible",
+  "Network Access",
+  "Training Materials",
 ];
 
 function categorySlugFromName(name?: string | null): string {
@@ -82,174 +80,398 @@ function categorySlugFromName(name?: string | null): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-function ProductCard({ product, onAdd, adding }: {
+function proBadge(price: number): { label: string; color: string } {
+  if (price < 250) return { label: "Starter", color: GOLD };
+  if (price < 450) return { label: "Best Value", color: GREEN_LIGHT };
+  return { label: "Elite", color: "#c77dff" };
+}
+
+function TickerBar() {
+  const items = [
+    "FREE SHIPPING on Pro Packages",
+    "LIMITED TIME: Bundle & Save 20%",
+    "NEW: Holistic Health Cookbook just arrived",
+    "Join 500+ Pro Members nationwide",
+  ];
+  return (
+    <div style={{ background: GOLD, overflow: "hidden", padding: "20px 0" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: 72,
+          whiteSpace: "nowrap",
+          animation: "ticker 24s linear infinite",
+        }}
+      >
+        {[...items, ...items].map((item, i) => (
+          <span
+            key={i}
+            style={{
+              color: "#fff",
+              fontSize: 20,
+              fontWeight: 800,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 16,
+              textShadow: "0 1px 4px rgba(0,0,0,0.3)",
+            }}
+          >
+            <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 14 }}>✦</span> {item}
+          </span>
+        ))}
+      </div>
+      <style>{`@keyframes ticker { from { transform: translateX(0) } to { transform: translateX(-50%) } }`}</style>
+    </div>
+  );
+}
+
+function ProductCard({
+  product,
+  accentColor,
+  onAdd,
+  adding,
+}: {
   product: Product;
+  accentColor: string;
   onAdd: (e: React.MouseEvent, id: number) => void;
   adding: boolean;
 }) {
+  const [hover, setHover] = useState(false);
   const img = resolveImageSrc(product.image);
   const outOfStock = product.stock === 0;
+  const onSale = product.comparePrice && product.comparePrice > product.price;
 
   return (
     <Link href={`/product/${product.slug}`}>
       <div
-        className="group relative overflow-hidden rounded-sm flex flex-col cursor-pointer h-full transition-all duration-300"
-        style={{ background: DARK3, border: `1px solid rgba(255,255,255,0.07)` }}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        style={{
+          background: hover ? "#f8f9fa" : "#fff",
+          border: `1.5px solid ${hover ? accentColor : "#e5e7eb"}`,
+          borderRadius: 10,
+          overflow: "hidden",
+          boxShadow: hover ? `0 8px 28px rgba(0,0,0,0.10)` : "0 2px 8px rgba(0,0,0,0.05)",
+          transition: "all 0.22s ease",
+          cursor: "pointer",
+          transform: hover ? "translateY(-3px)" : "none",
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+        }}
       >
         {/* Image */}
-        <div className="relative overflow-hidden" style={{ aspectRatio: "1/1", background: "#111" }}>
+        <div
+          style={{
+            background: img ? "#f3f4f6" : `linear-gradient(135deg, ${accentColor}15, ${accentColor}08)`,
+            height: 150,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
           {img ? (
             <img
               src={img}
               alt={product.name}
-              className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                transition: "transform 0.5s ease",
+                transform: hover ? "scale(1.05)" : "scale(1)",
+              }}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <span className="font-serif text-3xl font-black opacity-10" style={{ color: GOLD }}>NFGN</span>
-            </div>
+            <span style={{ fontSize: 36, opacity: 0.15, color: accentColor, fontWeight: 900, fontFamily: "serif" }}>
+              NFGN
+            </span>
           )}
-          {/* Hover gold overlay */}
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            style={{ background: "rgba(201,168,76,0.06)" }} />
-
-          {/* Badges */}
-          {product.isProPackage && (
-            <div className="absolute top-3 left-3 flex items-center gap-1 px-2 py-1 rounded-sm text-xs font-bold"
-              style={{ background: GOLD, color: DARK }}>
-              <BadgeCheck className="h-3 w-3" /> PRO
-            </div>
+          {onSale && !outOfStock && (
+            <span
+              style={{
+                position: "absolute",
+                top: 10,
+                left: 10,
+                background: GREEN,
+                color: "#fff",
+                fontSize: 10,
+                fontWeight: 800,
+                padding: "3px 8px",
+                borderRadius: 99,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}
+            >
+              SALE
+            </span>
           )}
           {outOfStock && (
-            <div className="absolute inset-0 flex items-center justify-center"
-              style={{ background: "rgba(0,0,0,0.65)" }}>
-              <span className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.6)" }}>Out of Stock</span>
-            </div>
-          )}
-          {product.comparePrice && product.comparePrice > product.price && !outOfStock && (
-            <div className="absolute top-3 right-3 px-2 py-1 rounded-sm text-xs font-bold"
-              style={{ background: "#2D6A4F", color: "#6EE7A0" }}>
-              SALE
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                background: "rgba(0,0,0,0.55)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <span style={{ color: "rgba(255,255,255,0.8)", fontWeight: 600, fontSize: 13 }}>Out of Stock</span>
             </div>
           )}
         </div>
 
         {/* Info */}
-        <div className="flex flex-col flex-1 p-4">
-          <p className="text-xs font-bold tracking-widest uppercase mb-1" style={{ color: GOLD }}>
+        <div style={{ padding: "14px 14px 16px", flex: 1, display: "flex", flexDirection: "column", gap: 5 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: accentColor, letterSpacing: "0.1em", textTransform: "uppercase", margin: 0 }}>
             {product.categoryName || "Wellness"}
           </p>
-          <h3 className="font-bold leading-tight mb-2 flex-1 group-hover:text-[#C9A84C] transition-colors"
-            style={{ color: "rgba(255,255,255,0.9)", fontSize: "0.95rem" }}>
+          <h4 style={{ fontSize: 14, fontWeight: 700, color: "#111", lineHeight: 1.3, flex: 1, margin: 0 }}>
             {product.name}
-          </h3>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg font-black" style={{ color: GOLD }}>${product.price.toFixed(2)}</span>
-            {product.comparePrice && product.comparePrice > product.price && (
-              <span className="text-sm line-through" style={{ color: "rgba(255,255,255,0.3)" }}>
-                ${product.comparePrice.toFixed(2)}
+          </h4>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+            <span style={{ fontSize: 17, fontWeight: 900, color: "#111" }}>${product.price.toFixed(2)}</span>
+            {onSale && (
+              <span style={{ fontSize: 13, color: "#9ca3af", textDecoration: "line-through" }}>
+                ${product.comparePrice!.toFixed(2)}
               </span>
             )}
           </div>
-          <Button
-            className="w-full gap-2 rounded-sm font-bold text-sm"
+          <button
             disabled={outOfStock || adding}
             onClick={(e) => onAdd(e, product.id)}
-            style={!outOfStock ? { background: GOLD, color: DARK, border: "none" } : {}}
-            variant={outOfStock ? "outline" : "default"}
+            style={{
+              marginTop: 8,
+              width: "100%",
+              padding: "9px 0",
+              background: hover && !outOfStock ? accentColor : "transparent",
+              color: outOfStock ? "#9ca3af" : hover ? "#fff" : accentColor,
+              border: `1.5px solid ${outOfStock ? "#e5e7eb" : accentColor}`,
+              borderRadius: 7,
+              fontWeight: 700,
+              fontSize: 13,
+              cursor: outOfStock ? "not-allowed" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              transition: "all 0.18s ease",
+            }}
           >
-            {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingCart className="h-4 w-4" />}
+            {adding ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ShoppingCart size={14} />
+            )}
             {outOfStock ? "Out of Stock" : "Add to Cart"}
-          </Button>
+          </button>
         </div>
       </div>
     </Link>
   );
 }
 
-function CategorySection({ group, products, onAdd, addingId }: {
-  group: typeof CATEGORY_GROUPS[0];
+function ProPackageCard({
+  product,
+  onAdd,
+  adding,
+}: {
+  product: Product;
+  onAdd: (e: React.MouseEvent, id: number) => void;
+  adding: boolean;
+}) {
+  const [hover, setHover] = useState(false);
+  const badge = proBadge(product.price);
+  const perks = PRO_PACKAGE_PERKS[product.id] ?? DEFAULT_PRO_PERKS;
+  const savings = product.comparePrice && product.comparePrice > product.price
+    ? product.comparePrice - product.price
+    : null;
+
+  return (
+    <div
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        background: hover ? "#111" : "#0d0d0d",
+        border: `1.5px solid ${hover ? GOLD : "rgba(201,168,76,0.25)"}`,
+        borderRadius: 12,
+        padding: "28px 24px 32px",
+        transition: "all 0.22s ease",
+        transform: hover ? "translateY(-4px)" : "none",
+        boxShadow: hover ? `0 16px 40px rgba(201,168,76,0.12)` : "none",
+        cursor: "pointer",
+        position: "relative",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          right: 0,
+          width: 120,
+          height: 120,
+          background: `radial-gradient(circle, ${GOLD}12, transparent 70%)`,
+          borderRadius: "0 12px 0 100%",
+        }}
+      />
+      <div
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          marginBottom: 18,
+          background: `${badge.color}18`,
+          border: `1px solid ${badge.color}40`,
+          padding: "4px 12px",
+          borderRadius: 99,
+          width: "fit-content",
+        }}
+      >
+        <BadgeCheck size={12} color={badge.color} />
+        <span style={{ color: badge.color, fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+          {badge.label}
+        </span>
+      </div>
+      <h3 style={{ color: "#fff", fontSize: 20, fontWeight: 800, margin: "0 0 8px", lineHeight: 1.2 }}>
+        {product.name}
+      </h3>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: savings ? 4 : 20 }}>
+        <span style={{ color: GOLD, fontSize: 32, fontWeight: 900 }}>${product.price.toFixed(2)}</span>
+        {product.comparePrice && product.comparePrice > product.price && (
+          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 14, textDecoration: "line-through" }}>
+            ${product.comparePrice.toFixed(2)}
+          </span>
+        )}
+      </div>
+      {savings && (
+        <p style={{ color: GREEN_LIGHT, fontSize: 12, fontWeight: 700, margin: "0 0 20px" }}>
+          You save ${savings.toFixed(2)}
+        </p>
+      )}
+      <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 24, flex: 1 }}>
+        {perks.map((perk) => (
+          <div key={perk} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: "50%",
+                background: "rgba(201,168,76,0.12)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <Check size={11} color={GOLD} />
+            </div>
+            <span style={{ color: "rgba(255,255,255,0.75)", fontSize: 13 }}>{perk}</span>
+          </div>
+        ))}
+      </div>
+      <button
+        disabled={adding}
+        onClick={(e) => onAdd(e, product.id)}
+        style={{
+          width: "100%",
+          padding: "13px 0",
+          background: hover ? GOLD : "transparent",
+          color: hover ? "#000" : GOLD,
+          border: `1.5px solid ${GOLD}`,
+          borderRadius: 8,
+          fontWeight: 800,
+          fontSize: 14,
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+          transition: "all 0.2s ease",
+        }}
+      >
+        {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingCart size={15} />}
+        Add to Cart
+      </button>
+    </div>
+  );
+}
+
+function CategorySection({
+  group,
+  products,
+  onAdd,
+  addingId,
+}: {
+  group: (typeof CATEGORY_GROUPS)[0];
   products: Product[];
   onAdd: (e: React.MouseEvent, id: number) => void;
   addingId: number | null;
 }) {
   if (products.length === 0) return null;
   return (
-    <section className="mb-20">
-      {/* Section header */}
-      <div className="flex items-center gap-5 mb-8 pb-5" style={{ borderBottom: `1px solid rgba(255,255,255,0.07)` }}>
-        <div className="h-14 w-14 rounded-sm flex items-center justify-center flex-shrink-0"
-          style={{ background: `${group.accent}18`, color: group.accent, border: `1px solid ${group.accent}35` }}>
+    <section style={{ marginBottom: 60 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 14,
+          marginBottom: 24,
+          paddingBottom: 18,
+          borderBottom: "2px solid #f3f4f6",
+        }}
+      >
+        <div
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 10,
+            background: `${group.accentColor}12`,
+            border: `1.5px solid ${group.accentColor}30`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: group.accentColor,
+            flexShrink: 0,
+          }}
+        >
           {group.icon}
         </div>
-        <div className="flex-1">
-          <h2 className="text-2xl font-serif font-black text-white">{group.label}</h2>
-          <p className="text-sm mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>{group.description}</p>
+        <div style={{ flex: 1 }}>
+          <h3 style={{ color: "#111", fontSize: 22, fontWeight: 900, margin: 0, fontFamily: "serif" }}>
+            {group.label}
+          </h3>
+          <p style={{ color: "#6b7280", fontSize: 13, margin: 0 }}>{group.description}</p>
         </div>
-        <span className="text-xs font-bold tracking-widest uppercase px-3 py-1 rounded-full"
-          style={{ background: `${group.accent}15`, color: group.accent, border: `1px solid ${group.accent}25` }}>
+        <span
+          style={{
+            background: `${group.accentColor}10`,
+            border: `1px solid ${group.accentColor}25`,
+            color: group.accentColor,
+            fontSize: 12,
+            fontWeight: 700,
+            padding: "4px 12px",
+            borderRadius: 99,
+          }}
+        >
           {products.length} {products.length === 1 ? "item" : "items"}
         </span>
       </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {products.map((p) => (
           <ProductCard
             key={p.id}
             product={p}
+            accentColor={group.accentColor}
             onAdd={onAdd}
             adding={addingId === p.id}
           />
         ))}
-      </div>
-    </section>
-  );
-}
-
-function ProRegistrationSection({ products, onAdd, addingId }: {
-  products: Product[];
-  onAdd: (e: React.MouseEvent, id: number) => void;
-  addingId: number | null;
-}) {
-  if (products.length === 0) return null;
-  return (
-    <section className="mb-20 rounded-sm overflow-hidden" style={{ border: `1px solid ${GOLD_MED}`, background: "rgba(201,168,76,0.04)" }}>
-      {/* Banner header */}
-      <div className="px-8 py-6 flex flex-col md:flex-row items-start md:items-center gap-4"
-        style={{ borderBottom: `1px solid ${GOLD_MED}`, background: "rgba(201,168,76,0.06)" }}>
-        <div className="h-14 w-14 rounded-sm flex items-center justify-center flex-shrink-0"
-          style={{ background: GOLD, color: DARK }}>
-          <Package className="h-7 w-7" />
-        </div>
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <Star className="h-4 w-4" style={{ color: GOLD }} />
-            <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: GOLD }}>Members Only</span>
-          </div>
-          <h2 className="text-2xl font-serif font-black text-white">Pro Registration Products</h2>
-          <p className="text-sm mt-1" style={{ color: "rgba(255,255,255,0.5)" }}>
-            Official NFGN Pro Member packages — includes membership access, commissions eligibility, and full network benefits.
-          </p>
-        </div>
-        <Link href="/join">
-          <div className="flex items-center gap-1 text-sm font-semibold whitespace-nowrap"
-            style={{ color: GOLD }}>
-            Learn More <ChevronRight className="h-4 w-4" />
-          </div>
-        </Link>
-      </div>
-
-      <div className="p-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {products.map((p) => (
-            <ProductCard
-              key={p.id}
-              product={p}
-              onAdd={onAdd}
-              adding={addingId === p.id}
-            />
-          ))}
-        </div>
       </div>
     </section>
   );
@@ -287,9 +509,9 @@ export function Shop() {
   };
 
   const products: Product[] = data?.products ?? [];
-
   const proProducts = products.filter((p) => p.isProPackage);
   const regularProducts = products.filter((p) => !p.isProPackage);
+  const saleProducts = regularProducts.filter((p) => p.comparePrice && p.comparePrice > p.price).slice(0, 3);
 
   const grouped = CATEGORY_GROUPS.map((group) => ({
     group,
@@ -303,92 +525,425 @@ export function Shop() {
   const uncategorized = regularProducts.filter((p) => !assignedIds.has(p.id));
 
   return (
-    <div style={{ background: DARK, minHeight: "100vh" }}>
-      {/* Hero banner */}
-      <div className="relative overflow-hidden" style={{ background: DARK2, borderBottom: `1px solid ${GOLD_MED}` }}>
-        <div className="absolute inset-0 pointer-events-none"
+    <div style={{ fontFamily: "'Inter','Segoe UI',sans-serif", minHeight: "100vh", background: "#fff" }}>
+
+      {/* ── ZONE 1: BLACK — Hero ─────────────────────────── */}
+      <div style={{ background: "#000", borderBottom: "2px solid #1a1a1a" }}>
+        <div
           style={{
-            backgroundImage: `linear-gradient(rgba(201,168,76,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.03) 1px, transparent 1px)`,
-            backgroundSize: "50px 50px",
-          }} />
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-40 pointer-events-none"
-          style={{ background: `radial-gradient(ellipse, ${GOLD}18, transparent 70%)`, filter: "blur(30px)" }} />
-        <div className="relative z-10 max-w-6xl mx-auto px-6 py-16 text-center">
-          <div className="inline-flex items-center gap-2 mb-4 px-4 py-1.5 rounded-full"
-            style={{ background: GOLD_LIGHT, border: `1px solid ${GOLD_MED}` }}>
-            <Sparkles className="h-3.5 w-3.5" style={{ color: GOLD }} />
-            <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: GOLD }}>NFGN Marketplace</span>
+            backgroundImage: `linear-gradient(rgba(201,168,76,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.05) 1px, transparent 1px)`,
+            backgroundSize: "40px 40px",
+          }}
+        >
+          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "64px 32px 72px", textAlign: "center" }}>
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 20,
+                background: "rgba(201,168,76,0.10)",
+                border: "1px solid rgba(201,168,76,0.25)",
+                padding: "7px 18px",
+                borderRadius: 99,
+              }}
+            >
+              <Sparkles size={13} color={GOLD} />
+              <span style={{ color: GOLD, fontSize: 12, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>
+                NFGN Marketplace
+              </span>
+            </div>
+            <h1
+              style={{
+                color: "#fff",
+                fontSize: "clamp(36px, 6vw, 60px)",
+                fontWeight: 900,
+                lineHeight: 1.1,
+                margin: "0 0 16px",
+                fontFamily: "'Playfair Display',serif",
+              }}
+            >
+              Wellness. <span style={{ color: GOLD }}>Elevated.</span>
+            </h1>
+            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 18, maxWidth: 500, margin: "0 auto 32px" }}>
+              Premium naturopathic products crafted with care — for your body, mind, and business.
+            </p>
+            <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
+              <a
+                href="#products"
+                style={{
+                  background: GOLD,
+                  color: "#000",
+                  padding: "13px 32px",
+                  borderRadius: 8,
+                  fontWeight: 800,
+                  fontSize: 15,
+                  border: "none",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  textDecoration: "none",
+                }}
+              >
+                <ShoppingCart size={17} /> Shop Now
+              </a>
+              <Link href="/join">
+                <span
+                  style={{
+                    background: "transparent",
+                    color: "#fff",
+                    padding: "13px 28px",
+                    borderRadius: 8,
+                    fontWeight: 700,
+                    fontSize: 15,
+                    border: "1px solid rgba(255,255,255,0.2)",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  Become a Member <ArrowRight size={16} />
+                </span>
+              </Link>
+            </div>
           </div>
-          <h1 className="text-5xl md:text-6xl font-serif font-black text-white mb-4">Our Products</h1>
-          <p className="text-base max-w-xl mx-auto" style={{ color: "rgba(255,255,255,0.5)" }}>
-            Premium naturopathic formulations, handmade body care, aromatherapy, and wellness education — all in one place.
-          </p>
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="max-w-7xl mx-auto px-6 py-16">
-        {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} className="space-y-3">
-                <Skeleton className="h-56 w-full rounded-sm" />
-                <Skeleton className="h-4 w-2/3" />
-                <Skeleton className="h-4 w-1/3" />
-                <Skeleton className="h-9 w-full rounded-sm" />
+      {/* ── ZONE 1: BLACK — Pro Registration Packages ───── */}
+      {(isLoading || proProducts.length > 0) && (
+        <div style={{ background: "#0a0a0a", padding: "64px 0 80px" }}>
+          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+              <div style={{ background: GOLD, borderRadius: 8, padding: 10 }}>
+                <Package size={22} color="#000" />
+              </div>
+              <div>
+                <p style={{ color: GOLD, fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", margin: 0 }}>
+                  Members Only
+                </p>
+                <h2 style={{ color: "#fff", fontSize: 30, fontWeight: 900, margin: 0, fontFamily: "serif" }}>
+                  Pro Registration Packages
+                </h2>
+              </div>
+            </div>
+            <p style={{ color: "rgba(255,255,255,0.4)", marginBottom: 40, fontSize: 15 }}>
+              Start your NFGN journey — choose the package that fits your goals.
+            </p>
+
+            {isLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} style={{ background: "#0d0d0d", border: "1px solid rgba(201,168,76,0.15)", borderRadius: 12, padding: 28 }}>
+                    <Skeleton className="h-6 w-24 mb-4" style={{ background: "#222" }} />
+                    <Skeleton className="h-8 w-40 mb-3" style={{ background: "#222" }} />
+                    <Skeleton className="h-10 w-28 mb-6" style={{ background: "#222" }} />
+                    {[1, 2, 3, 4].map((j) => <Skeleton key={j} className="h-4 w-full mb-2" style={{ background: "#222" }} />)}
+                    <Skeleton className="h-11 w-full mt-4" style={{ background: "#222" }} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {proProducts.map((p) => (
+                  <ProPackageCard key={p.id} product={p} onAdd={handleAddToCart} adding={addingId === p.id} />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── ZONE 3: GOLD — Ticker ────────────────────────── */}
+      <TickerBar />
+
+      {/* ── ZONE 3: GREEN — Specials ─────────────────────── */}
+      {saleProducts.length > 0 && (
+        <div style={{ background: GREEN, padding: "56px 0" }}>
+          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 32, flexWrap: "wrap" }}>
+              <Zap size={22} color={GOLD} />
+              <h2 style={{ color: "#fff", fontSize: 28, fontWeight: 900, margin: 0, fontFamily: "serif" }}>
+                Current Specials & Sales
+              </h2>
+              <span
+                style={{
+                  background: GOLD,
+                  color: "#000",
+                  fontSize: 11,
+                  fontWeight: 800,
+                  padding: "4px 12px",
+                  borderRadius: 99,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Limited Offers
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {saleProducts.map((p) => (
+                <Link key={p.id} href={`/product/${p.slug}`}>
+                  <SaleCard product={p} />
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── ZONE 2: WHITE — All Products ─────────────────── */}
+      <div id="products" style={{ background: "#fff", padding: "72px 0" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px" }}>
+          <div style={{ textAlign: "center", marginBottom: 56 }}>
+            <p style={{ color: GREEN, fontSize: 12, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 8 }}>
+              Our Collection
+            </p>
+            <h2 style={{ color: "#111", fontSize: 38, fontWeight: 900, margin: "0 0 12px", fontFamily: "serif" }}>
+              All Products
+            </h2>
+            <p style={{ color: "#6b7280", fontSize: 16, maxWidth: 480, margin: "0 auto" }}>
+              Handcrafted naturopathic formulations for every aspect of your wellness journey.
+            </p>
+            <div style={{ width: 60, height: 3, background: GOLD, borderRadius: 99, margin: "20px auto 0" }} />
+          </div>
+
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i}>
+                  <Skeleton className="h-40 w-full rounded-lg mb-3" />
+                  <Skeleton className="h-3 w-20 mb-2" />
+                  <Skeleton className="h-4 w-full mb-2" />
+                  <Skeleton className="h-5 w-24 mb-3" />
+                  <Skeleton className="h-9 w-full rounded-lg" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <>
+              {grouped.map(({ group, products: gProducts }) => (
+                <CategorySection
+                  key={group.key}
+                  group={group}
+                  products={gProducts}
+                  onAdd={handleAddToCart}
+                  addingId={addingId}
+                />
+              ))}
+
+              {uncategorized.length > 0 && (
+                <CategorySection
+                  group={{
+                    key: "other",
+                    label: "More Products",
+                    icon: <Sparkles className="h-5 w-5" />,
+                    accentColor: GOLD,
+                    description: "Additional wellness offerings from NFGN.",
+                    slugs: [],
+                  }}
+                  products={uncategorized}
+                  onAdd={handleAddToCart}
+                  addingId={addingId}
+                />
+              )}
+
+              {products.length === 0 && (
+                <div style={{ textAlign: "center", padding: "80px 0" }}>
+                  <div style={{ fontSize: 56, marginBottom: 16, opacity: 0.2, color: GOLD }}>✦</div>
+                  <h3 style={{ fontSize: 20, fontWeight: 700, color: "#111", marginBottom: 8 }}>No products yet</h3>
+                  <p style={{ color: "#6b7280" }}>Check back soon — the marketplace is being stocked.</p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* ── ZONE 3: GREEN — Become a Member CTA ─────────── */}
+      <div
+        style={{
+          background: `linear-gradient(135deg, ${GREEN} 0%, ${GREEN_DARK} 100%)`,
+          padding: "72px 0",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: -80,
+            right: -80,
+            width: 300,
+            height: 300,
+            borderRadius: "50%",
+            background: "rgba(201,168,76,0.08)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            bottom: -60,
+            left: -60,
+            width: 220,
+            height: 220,
+            borderRadius: "50%",
+            background: "rgba(255,255,255,0.04)",
+          }}
+        />
+        <div style={{ maxWidth: 800, margin: "0 auto", padding: "0 32px", textAlign: "center", position: "relative" }}>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              marginBottom: 20,
+              background: "rgba(201,168,76,0.15)",
+              border: "1px solid rgba(201,168,76,0.3)",
+              padding: "7px 18px",
+              borderRadius: 99,
+            }}
+          >
+            <Users size={13} color={GOLD} />
+            <span style={{ color: GOLD, fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>
+              Join the Network
+            </span>
+          </div>
+          <h2
+            style={{
+              color: "#fff",
+              fontSize: "clamp(28px, 5vw, 42px)",
+              fontWeight: 900,
+              margin: "0 0 16px",
+              fontFamily: "serif",
+              lineHeight: 1.2,
+            }}
+          >
+            Become an NFGN<br />Pro Member Today
+          </h2>
+          <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 17, marginBottom: 32, lineHeight: 1.6 }}>
+            Earn commissions, access exclusive products, build your network, and transform lives — including your own.
+          </p>
+          <div style={{ display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap", marginBottom: 36 }}>
+            {["Commission Eligible", "Network Access", "Pro Pricing", "Training Included"].map((b) => (
+              <div key={b} style={{ display: "flex", alignItems: "center", gap: 6, color: "#fff", fontSize: 14 }}>
+                <Check size={16} color={GOLD} /> {b}
               </div>
             ))}
           </div>
-        ) : (
-          <>
-            {/* Pro Registration — always first */}
-            <ProRegistrationSection
-              products={proProducts}
-              onAdd={handleAddToCart}
-              addingId={addingId}
-            />
-
-            {/* Category sections */}
-            {grouped.map(({ group, products: gProducts }) => (
-              <CategorySection
-                key={group.key}
-                group={group}
-                products={gProducts}
-                onAdd={handleAddToCart}
-                addingId={addingId}
-              />
-            ))}
-
-            {/* Uncategorized fallback */}
-            {uncategorized.length > 0 && (
-              <section className="mb-20">
-                <div className="flex items-center gap-4 mb-8 pb-5" style={{ borderBottom: `1px solid rgba(255,255,255,0.07)` }}>
-                  <div className="h-14 w-14 rounded-sm flex items-center justify-center" style={{ background: GOLD_LIGHT, color: GOLD }}>
-                    <Sparkles className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-serif font-black text-white">More Products</h2>
-                    <p className="text-sm mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>Additional wellness offerings from NFGN.</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                  {uncategorized.map((p) => (
-                    <ProductCard key={p.id} product={p} onAdd={handleAddToCart} adding={addingId === p.id} />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {products.length === 0 && (
-              <div className="text-center py-32">
-                <div className="text-6xl mb-6 opacity-20" style={{ color: GOLD }}>✦</div>
-                <h3 className="text-xl font-bold text-white mb-2">No products yet</h3>
-                <p style={{ color: "rgba(255,255,255,0.4)" }}>Check back soon — the marketplace is being stocked.</p>
-              </div>
-            )}
-          </>
-        )}
+          <Link href="/join">
+            <span
+              style={{
+                background: GOLD,
+                color: "#000",
+                padding: "16px 40px",
+                borderRadius: 10,
+                fontWeight: 800,
+                fontSize: 16,
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 10,
+                boxShadow: "0 8px 30px rgba(201,168,76,0.35)",
+                textDecoration: "none",
+              }}
+            >
+              <Shield size={19} /> Get Started — Join Now
+            </span>
+          </Link>
+        </div>
       </div>
+
+      {/* ── ZONE 3: GREEN — Trust / Stats Strip ──────────── */}
+      <div style={{ background: GREEN_DARK, padding: "28px 32px" }}>
+        <div
+          style={{
+            maxWidth: 1200,
+            margin: "0 auto",
+            display: "grid",
+            gridTemplateColumns: "repeat(2, 1fr)",
+            gap: 24,
+          }}
+          className="sm:grid-cols-4"
+        >
+          {[
+            { icon: <Users size={20} />, stat: "500+", label: "Pro Members" },
+            { icon: <TrendingUp size={20} />, stat: "$2M+", label: "Paid in Commissions" },
+            { icon: <Star size={20} />, stat: "4.9★", label: "Customer Rating" },
+            { icon: <Gift size={20} />, stat: "100+", label: "Products Available" },
+          ].map((s, i) => (
+            <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+              <div style={{ color: GOLD }}>{s.icon}</div>
+              <div style={{ color: "#fff", fontSize: 22, fontWeight: 900 }}>{s.stat}</div>
+              <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 12 }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SaleCard({ product }: { product: Product }) {
+  const [hover, setHover] = useState(false);
+  const savings = ((product.comparePrice! - product.price) / product.comparePrice! * 100).toFixed(0);
+  return (
+    <div
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        background: hover ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.07)",
+        border: `1.5px solid ${hover ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.12)"}`,
+        borderRadius: 12,
+        padding: "20px 18px",
+        cursor: "pointer",
+        transition: "all 0.2s ease",
+        transform: hover ? "scale(1.02)" : "none",
+        display: "flex",
+        alignItems: "center",
+        gap: 16,
+      }}
+    >
+      <div
+        style={{
+          width: 48,
+          height: 48,
+          borderRadius: 10,
+          background: "rgba(201,168,76,0.15)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: GOLD,
+          flexShrink: 0,
+          fontSize: 20,
+          fontWeight: 900,
+        }}
+      >
+        %
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 3px" }}>
+          On Sale Now
+        </p>
+        <h4 style={{ color: "#fff", fontSize: 14, fontWeight: 800, margin: "0 0 4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {product.name}
+        </h4>
+        <span
+          style={{
+            background: GOLD,
+            color: "#000",
+            fontSize: 11,
+            fontWeight: 900,
+            padding: "3px 10px",
+            borderRadius: 99,
+          }}
+        >
+          {savings}% OFF
+        </span>
+      </div>
+      <ChevronRight size={18} color="rgba(255,255,255,0.4)" />
     </div>
   );
 }

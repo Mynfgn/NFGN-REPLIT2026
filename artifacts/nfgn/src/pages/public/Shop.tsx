@@ -11,7 +11,7 @@ import {
 import { useCartStore } from "@/hooks/use-cart-store";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const GOLD = "#C9A84C";
 const GREEN = "#2D6A4F";
@@ -67,35 +67,16 @@ const CATEGORY_GROUPS = [
   },
 ];
 
-const HARDCODED_PRO_PACKAGES = [
-  {
-    id: "starter",
-    name: "NFGN Starter Pack",
-    price: 197.94,
-    originalPrice: 249.00,
-    badge: "Most Popular",
-    badgeColor: GOLD,
-    perks: ["Full Pro Membership", "Commission Eligible", "Network Access", "Training Materials"],
-  },
-  {
-    id: "builder",
-    name: "NFGN Builder Pack",
-    price: 395.87,
-    originalPrice: 499.00,
-    badge: "Best Value",
-    badgeColor: GREEN_LIGHT,
-    perks: ["Everything in Starter", "2x Product Bundle", "Priority Support", "Marketing Kit"],
-  },
-  {
-    id: "elite",
-    name: "NFGN Elite Pack",
-    price: 597.00,
-    originalPrice: 749.00,
-    badge: "Elite",
-    badgeColor: "#c77dff",
-    perks: ["Everything in Builder", "3x Product Bundle", "1-on-1 Coaching", "VIP Events Access"],
-  },
-];
+type ProPackage = {
+  id: number;
+  name: string;
+  price: number;
+  originalPrice: number;
+  badge: string;
+  badgeColor: string;
+  perks: string[];
+  sortOrder: number;
+};
 
 function categorySlugFromName(name?: string | null): string {
   if (!name) return "";
@@ -295,7 +276,7 @@ function ProPackageCard({
   onAdd,
   adding,
 }: {
-  pkg: typeof HARDCODED_PRO_PACKAGES[0];
+  pkg: ProPackage;
   matchedProduct: Product | null;
   onAdd: (e: React.MouseEvent, id: number) => void;
   adding: boolean;
@@ -524,6 +505,17 @@ export function Shop() {
   const { isAuthenticated } = useAuth();
   const qc = useQueryClient();
   const [addingId, setAddingId] = useState<number | null>(null);
+  const [proPackages, setProPackages] = useState<ProPackage[]>([]);
+  const [proPackagesLoading, setProPackagesLoading] = useState(true);
+
+  useEffect(() => {
+    setProPackagesLoading(true);
+    fetch("/api/pro-packages")
+      .then((r) => r.json())
+      .then((data: ProPackage[]) => setProPackages(Array.isArray(data) ? data : []))
+      .catch(() => setProPackages([]))
+      .finally(() => setProPackagesLoading(false));
+  }, []);
 
   const addToCart = useAddToCart({
     mutation: {
@@ -552,12 +544,9 @@ export function Shop() {
   const proProducts = products.filter((p) => p.isProPackage);
   const regularProducts = products.filter((p) => !p.isProPackage);
 
-  // Map each hardcoded tier to the closest real pro product by price.
-  // A "clean match" is defined as within 25% of the tier's target price — e.g. the
-  // $197.94 Starter tier matches a DB product priced between ~$148 and ~$247.
+  // Map each package tier to the closest real pro product by price (within 25% tolerance).
   // If no DB pro product falls within that band, the card falls back to a
   // "Get Started" link pointing to /join instead of Add to Cart.
-  // If catalog prices shift, update HARDCODED_PRO_PACKAGES prices or the tolerance.
   function findClosestProProduct(targetPrice: number): Product | null {
     const tolerance = targetPrice * 0.25;
     let best: Product | null = null;
@@ -692,18 +681,35 @@ export function Shop() {
             Start your NFGN journey — choose the package that fits your goals.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {HARDCODED_PRO_PACKAGES.map((pkg) => {
-              const matched = findClosestProProduct(pkg.price);
-              return (
-                <ProPackageCard
-                  key={pkg.id}
-                  pkg={pkg}
-                  matchedProduct={matched}
-                  onAdd={handleAddToCart}
-                  adding={addingId === matched?.id}
+            {proPackagesLoading ? (
+              [1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  style={{
+                    background: "#111",
+                    border: "1.5px solid rgba(201,168,76,0.15)",
+                    borderRadius: 12,
+                    padding: "28px 24px 32px",
+                    minHeight: 320,
+                    opacity: 0.5,
+                    animation: "pulse 1.5s ease-in-out infinite",
+                  }}
                 />
-              );
-            })}
+              ))
+            ) : proPackages.length === 0 ? null : (
+              proPackages.map((pkg) => {
+                const matched = findClosestProProduct(pkg.price);
+                return (
+                  <ProPackageCard
+                    key={pkg.id}
+                    pkg={pkg}
+                    matchedProduct={matched}
+                    onAdd={handleAddToCart}
+                    adding={addingId === matched?.id}
+                  />
+                );
+              })
+            )}
           </div>
         </div>
       </div>

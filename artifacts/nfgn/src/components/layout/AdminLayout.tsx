@@ -8,7 +8,7 @@ import {
   Award, Banknote, Calendar, Settings,
   MessageSquare, Tag, BarChart, LogOut, Menu, X,
   ShieldCheck, Network, Star, Percent, Gift, Home, Clock, UserCircle,
-  ChevronDown, ChevronRight, Briefcase,
+  ChevronDown, ChevronRight, Briefcase, PackageCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -74,6 +74,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       ],
     },
     { name: "Categories", href: "/admin/categories", icon: FolderTree },
+    { name: "Registration Packages", href: "/admin/pro-packages", icon: PackageCheck },
     {
       name: "Commissions",
       href: "/admin/commissions",

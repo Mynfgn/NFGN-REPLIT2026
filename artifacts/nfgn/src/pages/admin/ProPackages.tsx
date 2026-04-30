@@ -1,0 +1,400 @@
+import { useState, useEffect } from "react";
+import { customFetch } from "@/lib/custom-fetch";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import { Plus, Pencil, Trash2, RefreshCw, Package, Check, GripVertical } from "lucide-react";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+
+interface ProPackage {
+  id: number;
+  name: string;
+  price: number;
+  originalPrice: number;
+  badge: string;
+  badgeColor: string;
+  perks: string[];
+  sortOrder: number;
+}
+
+const EMPTY_FORM = {
+  name: "",
+  price: "",
+  originalPrice: "",
+  badge: "",
+  badgeColor: "#C9A84C",
+  perksRaw: "",
+  sortOrder: "0",
+};
+
+export function AdminProPackagesPage() {
+  const [packages, setPackages] = useState<ProPackage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editPkg, setEditPkg] = useState<ProPackage | null>(null);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<ProPackage | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const fetchPackages = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/pro-packages");
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data: ProPackage[] = await res.json();
+      setPackages(data);
+    } catch {
+      toast.error("Failed to load pro packages");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchPackages(); }, []);
+
+  const openCreate = () => {
+    setEditPkg(null);
+    setForm({ ...EMPTY_FORM, sortOrder: String(packages.length + 1) });
+    setDialogOpen(true);
+  };
+
+  const openEdit = (pkg: ProPackage) => {
+    setEditPkg(pkg);
+    setForm({
+      name: pkg.name,
+      price: String(pkg.price),
+      originalPrice: String(pkg.originalPrice),
+      badge: pkg.badge,
+      badgeColor: pkg.badgeColor,
+      perksRaw: pkg.perks.join("\n"),
+      sortOrder: String(pkg.sortOrder),
+    });
+    setDialogOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (!form.name.trim() || !form.price || !form.originalPrice) {
+      toast.error("Name, price, and original price are required");
+      return;
+    }
+    const price = parseFloat(form.price);
+    const originalPrice = parseFloat(form.originalPrice);
+    if (isNaN(price) || isNaN(originalPrice)) {
+      toast.error("Price values must be valid numbers");
+      return;
+    }
+
+    const perks = form.perksRaw
+      .split("\n")
+      .map((p) => p.trim())
+      .filter(Boolean);
+
+    setSaving(true);
+    try {
+      const body = {
+        name: form.name.trim(),
+        price,
+        originalPrice,
+        badge: form.badge.trim(),
+        badgeColor: form.badgeColor,
+        perks,
+        sortOrder: parseInt(form.sortOrder) || 0,
+      };
+
+      let res: Response;
+      if (editPkg) {
+        res = await customFetch(`/api/pro-packages/${editPkg.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+      } else {
+        res = await customFetch("/api/pro-packages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+      }
+
+      if (!res.ok) throw new Error("Failed to save");
+      toast.success(editPkg ? "Package updated" : "Package created");
+      setDialogOpen(false);
+      fetchPackages();
+    } catch {
+      toast.error("Failed to save package");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const res = await customFetch(`/api/pro-packages/${deleteTarget.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete");
+      toast.success("Package deleted");
+      setDeleteTarget(null);
+      fetchPackages();
+    } catch {
+      toast.error("Failed to delete package");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const savings = (pkg: ProPackage) => (pkg.originalPrice - pkg.price).toFixed(2);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Registration Packages</h1>
+          <p className="text-muted-foreground mt-1">
+            Manage the pro registration tiers shown on the Shop page.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={fetchPackages} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+          <Button size="sm" onClick={openCreate}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Package
+          </Button>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Package className="h-5 w-5" />
+            Pro Registration Packages ({packages.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex items-center justify-center py-12 text-muted-foreground">
+              <RefreshCw className="h-5 w-5 animate-spin mr-2" /> Loading...
+            </div>
+          ) : packages.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Package className="h-12 w-12 mx-auto mb-3 opacity-30" />
+              <p>No packages yet. Click "Add Package" to create one.</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-8">Order</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Badge</TableHead>
+                  <TableHead className="text-right">Price</TableHead>
+                  <TableHead className="text-right">Original Price</TableHead>
+                  <TableHead className="text-right">Savings</TableHead>
+                  <TableHead>Perks</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {packages.map((pkg) => (
+                  <TableRow key={pkg.id}>
+                    <TableCell>
+                      <GripVertical className="h-4 w-4 text-muted-foreground" />
+                    </TableCell>
+                    <TableCell className="font-medium">{pkg.name}</TableCell>
+                    <TableCell>
+                      {pkg.badge ? (
+                        <Badge
+                          style={{
+                            background: `${pkg.badgeColor}20`,
+                            color: pkg.badgeColor,
+                            border: `1px solid ${pkg.badgeColor}40`,
+                          }}
+                        >
+                          {pkg.badge}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right font-semibold">
+                      ${pkg.price.toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right text-muted-foreground line-through">
+                      ${pkg.originalPrice.toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right text-green-600 font-medium">
+                      ${savings(pkg)}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-0.5">
+                        {pkg.perks.slice(0, 3).map((perk) => (
+                          <div key={perk} className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Check className="h-3 w-3 text-green-500 flex-shrink-0" />
+                            {perk}
+                          </div>
+                        ))}
+                        {pkg.perks.length > 3 && (
+                          <span className="text-xs text-muted-foreground">
+                            +{pkg.perks.length - 3} more
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => openEdit(pkg)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => setDeleteTarget(pkg)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editPkg ? "Edit Package" : "Create Package"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label>Package Name</Label>
+              <Input
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                placeholder="e.g. NFGN Starter Pack"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>Price ($)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={form.price}
+                  onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+                  placeholder="197.94"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Original Price ($)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={form.originalPrice}
+                  onChange={(e) => setForm((f) => ({ ...f, originalPrice: e.target.value }))}
+                  placeholder="249.00"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>Badge Label</Label>
+                <Input
+                  value={form.badge}
+                  onChange={(e) => setForm((f) => ({ ...f, badge: e.target.value }))}
+                  placeholder="Most Popular"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Badge Color</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={form.badgeColor}
+                    onChange={(e) => setForm((f) => ({ ...f, badgeColor: e.target.value }))}
+                    placeholder="#C9A84C"
+                    className="flex-1"
+                  />
+                  <input
+                    type="color"
+                    value={form.badgeColor}
+                    onChange={(e) => setForm((f) => ({ ...f, badgeColor: e.target.value }))}
+                    className="h-10 w-10 rounded border cursor-pointer p-0.5"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Sort Order</Label>
+              <Input
+                type="number"
+                min="0"
+                value={form.sortOrder}
+                onChange={(e) => setForm((f) => ({ ...f, sortOrder: e.target.value }))}
+                placeholder="0"
+              />
+              <p className="text-xs text-muted-foreground">Lower numbers appear first on the Shop page.</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Perks (one per line)</Label>
+              <textarea
+                className="w-full min-h-[120px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-y"
+                value={form.perksRaw}
+                onChange={(e) => setForm((f) => ({ ...f, perksRaw: e.target.value }))}
+                placeholder={"Full Pro Membership\nCommission Eligible\nNetwork Access"}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? "Saving..." : editPkg ? "Save Changes" : "Create Package"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Package?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete "{deleteTarget?.name}" from the shop. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}

@@ -76,6 +76,7 @@ import { AdminMessagesPage } from "@/pages/admin/AdminMessages";
 import { OrdersAwaitingApprovalPage } from "@/pages/admin/OrdersAwaitingApproval";
 import { OrdersForApprovalPage } from "@/pages/admin/OrdersForApproval";
 import { AdminProfilePage } from "@/pages/admin/AdminProfile";
+import { AdminProPackagesPage } from "@/pages/admin/ProPackages";
 
 // Stubs for pages still being built
 const Stub = ({ name }: { name: string }) => (
@@ -385,6 +386,11 @@ function Router() {
       <Route path="/admin/profile">
         <RequireAuth requireAdmin>
           <AdminLayout><AdminProfilePage /></AdminLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/admin/pro-packages">
+        <RequireAuth requireAdmin>
+          <AdminLayout><AdminProPackagesPage /></AdminLayout>
         </RequireAuth>
       </Route>
 

@@ -553,8 +553,12 @@ export function Shop() {
   const proProducts = products.filter((p) => p.isProPackage);
   const regularProducts = products.filter((p) => !p.isProPackage);
 
-  // Map each hardcoded tier to the closest real pro product (within 25% of target price).
-  // Falls back to null if no acceptable match exists, causing the card to show "Get Started".
+  // Map each hardcoded tier to the closest real pro product by price.
+  // A "clean match" is defined as within 25% of the tier's target price — e.g. the
+  // $197.94 Starter tier matches a DB product priced between ~$148 and ~$247.
+  // If no DB pro product falls within that band, the card falls back to a
+  // "Get Started" link pointing to /join instead of Add to Cart.
+  // If catalog prices shift, update HARDCODED_PRO_PACKAGES prices or the tolerance.
   function findClosestProProduct(targetPrice: number): Product | null {
     const tolerance = targetPrice * 0.25;
     let best: Product | null = null;

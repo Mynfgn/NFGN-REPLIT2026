@@ -104,10 +104,9 @@ function categorySlugFromName(name?: string | null): string {
 
 function TickerBar() {
   const items = [
-    "FREE SHIPPING on Pro Packages",
-    "LIMITED TIME: Bundle & Save 20%",
-    "NEW: Holistic Health Cookbook just arrived",
-    "Join 500+ Pro Members nationwide",
+    "Find out how you can \"GET PAID TO LOSE WEIGHT!\"",
+    "Become A Member For FREE!",
+    "SALE!! 1 Month Free Pro Membership with the purchase of IGNITE PRO XL.",
   ];
   return (
     <div style={{ background: GOLD, overflow: "hidden", padding: "20px 0" }}>

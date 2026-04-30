@@ -148,14 +148,14 @@ function ProductCard({ product, accent }: { product: typeof CATEGORIES[0]["produ
 function TickerBar() {
   const items = ["FREE SHIPPING on Pro Packages", "LIMITED TIME: Bundle & Save 20%", "NEW: Holistic Health Cookbook just arrived", "Join 500+ Pro Members nationwide"];
   return (
-    <div style={{ background: "#C9A84C", overflow: "hidden", padding: "16px 0" }}>
+    <div style={{ background: "#C9A84C", overflow: "hidden", padding: "20px 0" }}>
       <div style={{
         display: "flex", gap: 72, whiteSpace: "nowrap",
         animation: "ticker 24s linear infinite",
       }}>
         {[...items, ...items].map((item, i) => (
-          <span key={i} style={{ color: "#fff", fontSize: 15, fontWeight: 800, display: "inline-flex", alignItems: "center", gap: 12, textShadow: "0 1px 3px rgba(0,0,0,0.25)" }}>
-            <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 12 }}>✦</span> {item}
+          <span key={i} style={{ color: "#fff", fontSize: 20, fontWeight: 800, display: "inline-flex", alignItems: "center", gap: 16, textShadow: "0 1px 4px rgba(0,0,0,0.3)" }}>
+            <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 14 }}>✦</span> {item}
           </span>
         ))}
       </div>

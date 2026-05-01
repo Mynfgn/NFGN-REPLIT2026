@@ -41,7 +41,7 @@ const STATUS_LABELS: Record<string, string> = {
   completed: "Completed",
   cancelled: "Cancelled",
   "no-show": "No Show",
-  "payment_declined": "Payment Declined",
+  "payment_declined": "Payment Not Received",
 };
 
 const STATUS_OPTIONS = ["pending", "confirmed", "completed", "cancelled", "no-show", "payment_declined"];

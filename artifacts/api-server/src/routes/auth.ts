@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, usersTable, walletsTable, genealogyNodesTable, notificationsTable, professionalsTable, ordersTable, orderItemsTable, productsTable, appSettingsTable } from "@workspace/db";
-import { eq, count } from "drizzle-orm";
+import { eq, count, sql } from "drizzle-orm";
 import { hashPassword, verifyPassword, generateToken, generateReferralCode, requireAuth } from "../lib/auth";
 import { LoginBody, RegisterBody } from "@workspace/api-zod";
 import { processCommissions, type OrderItemForCommission } from "../lib/commissions";
@@ -68,7 +68,7 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     return;
   }
 
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.email, parsed.data.email.toLowerCase()));
+  const [user] = await db.select().from(usersTable).where(sql`lower(${usersTable.email}) = lower(${parsed.data.email})`);
   if (!user) {
     res.status(401).json({ error: "Invalid credentials" });
     return;
@@ -107,7 +107,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
   const bookAProSubServices: string[] = Array.isArray(req.body.bookAProSubServices) ? req.body.bookAProSubServices : [];
   const bookAProBio: string | undefined = req.body.bookAProBio ?? undefined;
 
-  const [existing] = await db.select().from(usersTable).where(eq(usersTable.email, email.toLowerCase()));
+  const [existing] = await db.select().from(usersTable).where(sql`lower(${usersTable.email}) = lower(${email})`);
   if (existing) {
     res.status(400).json({ error: "Email already in use" });
     return;
@@ -224,7 +224,7 @@ router.post("/auth/register-pro", async (req, res): Promise<void> => {
   const bookAProSubServices: string[] = Array.isArray(req.body.bookAProSubServices) ? req.body.bookAProSubServices : [];
   const bookAProBio: string | undefined = req.body.bookAProBio ?? undefined;
 
-  const [existing] = await db.select().from(usersTable).where(eq(usersTable.email, email.toLowerCase()));
+  const [existing] = await db.select().from(usersTable).where(sql`lower(${usersTable.email}) = lower(${email})`);
   if (existing) {
     res.status(400).json({ error: "An account with this email already exists." });
     return;

@@ -62,6 +62,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   const navItems: NavItem[] = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { name: "Users", href: "/admin/users", icon: Users },
+    { name: "Shop", href: "/shop", icon: Store },
     { name: "Products", href: "/admin/products", icon: ShoppingBag },
     {
       name: "Orders",
@@ -74,7 +75,6 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       ],
     },
     { name: "Categories", href: "/admin/categories", icon: FolderTree },
-    { name: "Shop", href: "/shop", icon: Store },
     { name: "Registration Packages", href: "/admin/pro-packages", icon: PackageCheck },
     {
       name: "Commissions",

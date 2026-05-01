@@ -197,6 +197,26 @@ router.post("/users/:id/admin-reset-password", requireAdmin, async (req, res): P
   res.json({ success: true });
 });
 
+// ── Toggle COD Permission (Admin only) ─────────────────────────────────────
+router.patch("/users/:id/cod-permission", requireAdmin, async (req, res): Promise<void> => {
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const { canAcceptCod } = req.body;
+  if (typeof canAcceptCod !== "boolean") {
+    res.status(400).json({ error: "canAcceptCod must be a boolean" }); return;
+  }
+
+  const [updated] = await db
+    .update(usersTable)
+    .set({ canAcceptCod })
+    .where(eq(usersTable.id, id))
+    .returning({ id: usersTable.id, canAcceptCod: usersTable.canAcceptCod });
+
+  if (!updated) { res.status(404).json({ error: "User not found" }); return; }
+  res.json({ success: true, canAcceptCod: updated.canAcceptCod });
+});
+
 // ── Change Referral Code (Admin only) ──────────────────────────────────────
 router.patch("/users/:id/referral-code", requireAdmin, async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);

@@ -1036,7 +1036,14 @@ export function CartDrawer() {
                   </div>
                 )}
                 <div className="space-y-2">
-                  {PAYMENT_METHODS.map(pm => (
+                  {PAYMENT_METHODS.filter(pm => {
+                    if (pm.id !== "cod") return true;
+                    // COD is only available to admins or members explicitly approved by admin
+                    const role = (me as any)?.role ?? "";
+                    const isAdmin = role === "admin" || role === "super_admin";
+                    const isApproved = (me as any)?.canAcceptCod === true;
+                    return isAdmin || isApproved;
+                  }).map(pm => (
                     <button
                       key={pm.id}
                       onClick={() => setPaymentMethod(pm.id)}

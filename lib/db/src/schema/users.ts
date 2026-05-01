@@ -51,6 +51,10 @@ export const usersTable = pgTable("users", {
   // 'retail_member' → 'referring_retail_member' → 'unqualified_pro_member'
   // Pro Members use role='pro_member' instead
   memberTier: text("member_tier").notNull().default("retail_member"),
+
+  // When true, this member is approved to collect Cash on Delivery payments.
+  // Only admins can toggle this. COD is hidden in checkout for all others.
+  canAcceptCod: boolean("can_accept_cod").notNull().default(false),
 });
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({ id: true, createdAt: true, updatedAt: true });

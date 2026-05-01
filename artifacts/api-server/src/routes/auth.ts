@@ -42,6 +42,7 @@ function formatUser(user: typeof usersTable.$inferSelect, sponsorName?: string) 
     bookAProCategory: user.bookAProCategory ?? null,
     bookAProSubServices: (user.bookAProSubServices as string[] | null) ?? [],
     bookAProBio: user.bookAProBio ?? null,
+    canAcceptCod: user.canAcceptCod ?? false,
   };
 }
 

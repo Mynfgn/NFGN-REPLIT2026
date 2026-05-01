@@ -204,6 +204,10 @@ export function AdminProfilePage() {
   /* ── Member: status ── */
   const [mStatusSaving, setMStatusSaving] = useState(false);
 
+  /* ── Member: COD permission ── */
+  const [codEnabled, setCodEnabled] = useState(false);
+  const [codSaving, setCodSaving] = useState(false);
+
   /* ── Member: change sponsor ── */
   const [sponsorSearch, setSponsorSearch] = useState("");
   const [sponsorResults, setSponsorResults] = useState<any[]>([]);
@@ -262,9 +266,33 @@ export function AdminProfilePage() {
     setMRef(m.referralCode ?? "");
     setMPV(String(m.pvAdjustment ?? 0));
     setMGV(String(m.gvAdjustment ?? 0));
+    setCodEnabled(m.canAcceptCod ?? false);
     setUNameMsg(null); setMPwdMsg(null); setMRefMsg(null); setMVolMsg(null); setSponsorMsg(null);
     setMPwd({ next: "", confirm: "" });
     setNewSponsor(null); setSponsorSearch("");
+  }
+
+  async function toggleCodPermission(enabled: boolean) {
+    if (!selectedMember) return;
+    setCodSaving(true);
+    try {
+      const res = await customFetch(`/api/users/${selectedMember.id}/cod-permission`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ canAcceptCod: enabled }),
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "Failed");
+      setCodEnabled(enabled);
+      setSelectedMember((p: any) => ({ ...p, canAcceptCod: enabled }));
+      toast({
+        title: enabled ? "COD enabled" : "COD disabled",
+        description: enabled
+          ? `${selectedMember.firstName} can now collect Cash on Delivery payments.`
+          : `COD collection has been removed for ${selectedMember.firstName}.`,
+      });
+    } catch (e: any) {
+      toast({ title: "Failed to update COD permission", description: e.message, variant: "destructive" });
+    } finally { setCodSaving(false); }
   }
 
   async function saveMemberUsername() {
@@ -658,6 +686,42 @@ export function AdminProfilePage() {
                   <X className="h-3.5 w-3.5" /> Clear
                 </Button>
               </div>
+
+              {/* ── COD Permission ── */}
+              <Section title="Cash on Delivery (COD) Permission" icon={Banknote} sub="Allow this member to collect Cash on Delivery payments from customers. Only approved members may use COD.">
+                <div className="flex items-center justify-between gap-4 py-1">
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-semibold">
+                      {codEnabled ? "COD collection is enabled" : "COD collection is disabled"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {codEnabled
+                        ? `${selectedMember.firstName} can accept COD orders from customers.`
+                        : "This member cannot accept COD orders. Toggle on to grant permission."}
+                    </p>
+                  </div>
+                  <button
+                    disabled={codSaving}
+                    onClick={() => toggleCodPermission(!codEnabled)}
+                    className="flex-shrink-0 flex items-center gap-2 focus:outline-none"
+                    title={codEnabled ? "Disable COD" : "Enable COD"}
+                  >
+                    {codSaving ? (
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    ) : codEnabled ? (
+                      <ToggleRight className="h-10 w-10 text-green-600" />
+                    ) : (
+                      <ToggleLeft className="h-10 w-10 text-muted-foreground" />
+                    )}
+                  </button>
+                </div>
+                {codEnabled && (
+                  <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-2.5 flex items-center gap-2 text-green-800 text-xs">
+                    <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0 text-green-600" />
+                    <span><strong>{selectedMember.firstName}</strong> is approved to collect COD payments. Disable at any time to revoke access.</span>
+                  </div>
+                )}
+              </Section>
 
               {/* ── Change Username ── */}
               <Section title="Change Username" icon={UserCircle} sub="Update this member's first and last name.">

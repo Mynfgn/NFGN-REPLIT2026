@@ -1,12 +1,12 @@
 import { useListProducts, useAddToCart } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import { resolveImageSrc } from "@/lib/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   ShoppingCart, Loader2, Leaf, Sparkles, Flame, BookOpen,
   ChevronRight, Package, BadgeCheck, Check, ArrowRight,
-  Users, TrendingUp, Star, Gift, Shield, Zap,
+  Users, TrendingUp, Star, Gift, Shield, Zap, ArrowLeft,
 } from "lucide-react";
 import { useCartStore } from "@/hooks/use-cart-store";
 import { useToast } from "@/hooks/use-toast";
@@ -499,6 +499,9 @@ function CategorySection({
 }
 
 export function Shop() {
+  const search = useSearch();
+  const fromAdmin = new URLSearchParams(search).get("from") === "admin";
+
   const { data, isLoading } = useListProducts({ limit: 100 });
   const { setCartOpen } = useCartStore();
   const { toast } = useToast();
@@ -575,6 +578,34 @@ export function Shop() {
 
   return (
     <div style={{ fontFamily: "'Inter','Segoe UI',sans-serif", minHeight: "100vh", background: "#fff" }}>
+
+      {/* ── Back To Admin bar ─────────────────────────────── */}
+      {fromAdmin && (
+        <div style={{ background: "#0a0a0a", borderBottom: "1px solid #C9A84C33" }}>
+          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "8px 24px" }}>
+            <Link
+              href="/admin"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                color: "#C9A84C",
+                fontSize: 13,
+                fontWeight: 600,
+                textDecoration: "none",
+                letterSpacing: "0.02em",
+                opacity: 0.9,
+                transition: "opacity 0.15s",
+              }}
+              onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
+              onMouseLeave={e => (e.currentTarget.style.opacity = "0.9")}
+            >
+              <ArrowLeft size={14} />
+              Back to Admin
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* ── ZONE 1: BLACK — Hero ─────────────────────────── */}
       <div style={{ background: "#000", borderBottom: "2px solid #1a1a1a" }}>

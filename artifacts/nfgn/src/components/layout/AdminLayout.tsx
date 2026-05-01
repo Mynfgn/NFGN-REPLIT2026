@@ -62,7 +62,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   const navItems: NavItem[] = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { name: "Users", href: "/admin/users", icon: Users },
-    { name: "Shop", href: "/shop", icon: Store },
+    { name: "Shop", href: "/shop?from=admin", icon: Store },
     { name: "Products", href: "/admin/products", icon: ShoppingBag },
     {
       name: "Orders",
@@ -143,11 +143,12 @@ export function AdminLayout({ children }: { children: ReactNode }) {
 
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
           {navItems.map((item) => {
+            const hrefPath = item.href.split("?")[0];
             const isActive = item.exact
-              ? location === item.href
-              : item.href === '/admin'
+              ? location === hrefPath
+              : hrefPath === '/admin'
               ? location === '/admin'
-              : location.startsWith(item.href);
+              : location.startsWith(hrefPath);
 
             const isGroupOpen = openGroups[item.name] ?? false;
             const hasChildren = item.children && item.children.length > 0;

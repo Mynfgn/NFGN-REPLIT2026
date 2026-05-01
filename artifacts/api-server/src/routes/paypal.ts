@@ -44,24 +44,13 @@ router.post("/payments/paypal/create-order", requireAuth, async (req, res) => {
           },
           description: "NFGN Purchase",
         }],
-        payment_source: {
-          paypal: {
-            experience_context: {
-              brand_name: "New Face Global Network",
-              locale: "en-US",
-              landing_page: "LOGIN",
-              user_action: "PAY_NOW",
-              return_url: `${process.env.FRONTEND_URL ?? "https://3280747d-3245-4349-926e-ca1de22cbeb6-00-1r53mdpeusoj8.kirk.replit.dev"}/shop`,
-              cancel_url: `${process.env.FRONTEND_URL ?? "https://3280747d-3245-4349-926e-ca1de22cbeb6-00-1r53mdpeusoj8.kirk.replit.dev"}/shop`,
-            },
-          },
-        },
       }),
     });
 
     const data = await response.json() as any;
     if (!response.ok) {
-      return res.status(400).json({ error: data.message ?? "Failed to create PayPal order" });
+      req.log.error({ paypalError: data }, "PayPal create-order failed");
+      return res.status(400).json({ error: data.message ?? "Failed to create PayPal order", details: data.details ?? null });
     }
 
     return res.json({ id: data.id, status: data.status });

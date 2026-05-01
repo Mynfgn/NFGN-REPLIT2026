@@ -657,7 +657,16 @@ export function CartDrawer() {
               body: JSON.stringify({ amount: discountedTotalRef.current }),
             });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error ?? "Could not create PayPal order");
+            if (!res.ok) {
+              // Account restriction — fall back to manual payment flow
+              const isRestricted = Array.isArray(data?.details) && data.details.some((d: any) => d.issue === "PAYEE_ACCOUNT_RESTRICTED");
+              if (isRestricted) {
+                setPaypalSection("manual");
+                toast({ title: "Use manual PayPal transfer", description: "Our PayPal checkout is temporarily unavailable. Please send payment manually to the address shown below." });
+                throw new Error("Account restricted — manual flow shown");
+              }
+              throw new Error(data.error ?? "Could not create PayPal order");
+            }
             return data.id;
           },
           onApprove: async (data: any) => {
@@ -676,9 +685,9 @@ export function CartDrawer() {
             const addr = `${shipping.fullName}, ${shipping.address}, ${shipping.city}, ${shipping.state} ${shipping.zip}${shipping.phone ? " | " + shipping.phone : ""}`;
             createOrder.mutate({ data: { paymentMethod: "paypal", shippingAddress: addr, promoCode: promoApplied?.code || promoCode || undefined, squarePaymentId: result.captureId, walletAmount: walletApplied } } as any);
           },
-          onError: (err: any) => {
-            setPaypalError("PayPal encountered an error. Please try again or use a different payment method.");
-            console.error("PayPal error", err);
+          onError: (_err: any) => {
+            // If we already switched to manual (e.g. account restriction), suppress the generic error
+            setPaypalError(prev => prev ?? "PayPal encountered an error. Please try again or use the manual transfer option below.");
           },
           onCancel: () => {
             toast({ title: "Payment cancelled", description: "Your PayPal payment was cancelled. You can try again anytime." });

@@ -67,7 +67,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
             <div className="hidden md:flex items-center gap-2">
               {isAuthenticated ? (
                 <Link href="/dashboard">
-                  <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">Dashboard</Button>
+                  <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">Member Dashboard</Button>
                 </Link>
               ) : (
                 <Link href="/login">
@@ -106,7 +106,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
               <div className="pt-4 border-t flex flex-col gap-2">
                 {isAuthenticated ? (
                   <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                    <Button className="w-full" variant="outline">Dashboard</Button>
+                    <Button className="w-full" variant="outline">Member Dashboard</Button>
                   </Link>
                 ) : (
                   <Link href="/login" onClick={() => setMobileMenuOpen(false)}>

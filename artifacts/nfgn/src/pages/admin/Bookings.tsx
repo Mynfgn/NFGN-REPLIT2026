@@ -32,9 +32,19 @@ const STATUS_COLORS: Record<string, string> = {
   completed: "bg-blue-100 text-blue-800 border-blue-200",
   cancelled: "bg-red-100 text-red-800 border-red-200",
   "no-show": "bg-gray-100 text-gray-700 border-gray-200",
+  "payment_declined": "bg-rose-100 text-rose-800 border-rose-200",
 };
 
-const STATUS_OPTIONS = ["pending", "confirmed", "completed", "cancelled", "no-show"];
+const STATUS_LABELS: Record<string, string> = {
+  pending: "Pending",
+  confirmed: "Confirmed",
+  completed: "Completed",
+  cancelled: "Cancelled",
+  "no-show": "No Show",
+  "payment_declined": "Payment Declined",
+};
+
+const STATUS_OPTIONS = ["pending", "confirmed", "completed", "cancelled", "no-show", "payment_declined"];
 
 function BookingDetailModal({ booking, onClose, onUpdated }: { booking: Booking; onClose: () => void; onUpdated: () => void }) {
   const [status, setStatus] = useState(booking.status);
@@ -92,7 +102,13 @@ function BookingDetailModal({ booking, onClose, onUpdated }: { booking: Booking;
             </div>
             <div className="space-y-0.5">
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Payment</p>
-              <p className="font-medium capitalize">{booking.paymentMethod} — <span className="capitalize">{booking.paymentStatus}</span></p>
+              {booking.paymentStatus === "declined" || booking.status === "payment_declined" ? (
+                <p className="font-medium text-rose-700">
+                  <span className="capitalize">{booking.paymentMethod}</span> — <span className="font-semibold">Declined</span>
+                </p>
+              ) : (
+                <p className="font-medium capitalize">{booking.paymentMethod} — <span className="capitalize">{booking.paymentStatus}</span></p>
+              )}
             </div>
             <div className="space-y-0.5">
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Booked On</p>
@@ -113,7 +129,7 @@ function BookingDetailModal({ booking, onClose, onUpdated }: { booking: Booking;
               </SelectTrigger>
               <SelectContent>
                 {STATUS_OPTIONS.map(s => (
-                  <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
+                  <SelectItem key={s} value={s}>{STATUS_LABELS[s] ?? s}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -215,7 +231,7 @@ export function AdminBookingsPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
-            {STATUS_OPTIONS.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
+            {STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{STATUS_LABELS[s] ?? s}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
@@ -268,8 +284,8 @@ export function AdminBookingsPage() {
                       </td>
                       <td className="px-4 py-3 font-bold text-primary">${b.amount.toFixed(2)}</td>
                       <td className="px-4 py-3">
-                        <Badge className={`text-xs border capitalize ${STATUS_COLORS[b.status] ?? "bg-gray-100 text-gray-700"}`} variant="outline">
-                          {b.status}
+                        <Badge className={`text-xs border ${STATUS_COLORS[b.status] ?? "bg-gray-100 text-gray-700"}`} variant="outline">
+                          {STATUS_LABELS[b.status] ?? b.status}
                         </Badge>
                       </td>
                       <td className="px-4 py-3">

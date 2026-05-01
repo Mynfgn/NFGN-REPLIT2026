@@ -355,7 +355,7 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
   if (walletCoversAll) {
     paymentStatus = "paid";
   } else if (paymentMethod === "cod") {
-    paymentStatus = "pending";
+    paymentStatus = "not_received";
   } else {
     paymentStatus = "demo_paid";
   }
@@ -481,7 +481,8 @@ router.patch("/orders/:id", requireAdmin, async (req, res): Promise<void> => {
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
   const { status, paymentStatus } = req.body;
-  const updates: Partial<typeof ordersTable.$inferInsert> = { status };
+  const updates: Partial<typeof ordersTable.$inferInsert> = {};
+  if (status) updates.status = status;
   if (paymentStatus) updates.paymentStatus = paymentStatus;
 
   const [updated] = await db.update(ordersTable).set(updates).where(eq(ordersTable.id, id)).returning();

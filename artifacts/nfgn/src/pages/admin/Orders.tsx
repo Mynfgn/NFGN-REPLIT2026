@@ -86,6 +86,33 @@ export function AdminOrdersPage() {
 
   const statusOptions = ["pending", "approved", "processing", "completed", "cancelled"];
 
+  const PAYMENT_STATUS_LABELS: Record<string, string> = {
+    paid: "Paid",
+    not_received: "COD: Not Received",
+    collected: "COD: Collected",
+    payment_received: "COD: Payment Received",
+    demo_paid: "Demo Paid",
+    pending: "Pending",
+    refunded: "Refunded",
+  };
+
+  const COD_PAYMENT_OPTIONS = [
+    { value: "not_received", label: "Not Received" },
+    { value: "collected", label: "Collected" },
+    { value: "payment_received", label: "Payment Received" },
+  ];
+
+  function handlePaymentStatusChange(orderId: number, newPaymentStatus: string) {
+    customFetch(`/api/orders/${orderId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ paymentStatus: newPaymentStatus }),
+    }).then((res: any) => {
+      if (res.ok) { toast({ title: "Payment status updated" }); refetch(); }
+      else toast({ variant: "destructive", title: "Update failed" });
+    });
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -143,10 +170,14 @@ export function AdminOrdersPage() {
                           </Badge>
                           <Badge
                             variant={
-                              order.paymentStatus === "demo_paid" ? "default" : "secondary"
+                              order.paymentStatus === "paid" || order.paymentStatus === "demo_paid" || order.paymentStatus === "collected" || order.paymentStatus === "payment_received"
+                                ? "default"
+                                : order.paymentStatus === "not_received"
+                                ? "destructive"
+                                : "secondary"
                             }
                           >
-                            {order.paymentStatus?.replace("_", " ")}
+                            {PAYMENT_STATUS_LABELS[order.paymentStatus] ?? order.paymentStatus?.replace(/_/g, " ")}
                           </Badge>
                           {(order.refundAmount ?? 0) > 0 && (
                             <Badge variant="destructive" className="text-xs">
@@ -220,6 +251,23 @@ export function AdminOrdersPage() {
                             ))}
                           </SelectContent>
                         </Select>
+                        {order.paymentMethod === "cod" && (
+                          <Select
+                            value={order.paymentStatus}
+                            onValueChange={(s) => handlePaymentStatusChange(order.id, s)}
+                          >
+                            <SelectTrigger className="w-40 h-7 text-xs border-amber-300 text-amber-800">
+                              <SelectValue placeholder="COD Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {COD_PAYMENT_OPTIONS.map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
                       </div>
                     </div>
                   </div>

@@ -60,6 +60,52 @@ function wrap(content: string, heading: string): string {
 </html>`;
 }
 
+export function codReminderMemberHtml(opts: {
+  memberName: string;
+  orderNumber: string;
+  orderId: number;
+  total: string;
+  items: string;
+  dashboardUrl: string;
+}): string {
+  return wrap(`
+    <p>Hi ${opts.memberName},</p>
+    <p>This is a reminder that your Cash on Delivery order is awaiting payment collection.</p>
+    <div class="detail-box">
+      <p><strong>Order #:</strong> ${opts.orderNumber}</p>
+      <p><strong>Items:</strong> ${opts.items}</p>
+      <p><strong>Amount Due:</strong> $${opts.total}</p>
+    </div>
+    <p>Please have the full payment of <strong>$${opts.total}</strong> ready for the delivery representative when your order arrives.</p>
+    <p>If you have any questions, contact NFGN directly.</p>
+    <a class="cta" href="${opts.dashboardUrl}">View My Order</a>
+  `, "COD Payment Reminder — Action Required");
+}
+
+export function codReminderCorporateHtml(opts: {
+  memberName: string;
+  memberEmail: string;
+  orderNumber: string;
+  orderId: number;
+  total: string;
+  items: string;
+  placedAt: string;
+  adminUrl: string;
+}): string {
+  return wrap(`
+    <p>A Cash on Delivery order has been pending for <strong>24 hours</strong> without payment confirmation.</p>
+    <div class="detail-box">
+      <p><strong>Order #:</strong> ${opts.orderNumber}</p>
+      <p><strong>Member:</strong> ${opts.memberName} (${opts.memberEmail})</p>
+      <p><strong>Items:</strong> ${opts.items}</p>
+      <p><strong>Amount Due:</strong> $${opts.total}</p>
+      <p><strong>Order Placed:</strong> ${opts.placedAt}</p>
+    </div>
+    <p>Please follow up to confirm whether payment was collected and update the order status accordingly.</p>
+    <a class="cta" href="${opts.adminUrl}">View in Admin</a>
+  `, "COD Order — 24-Hour Payment Reminder");
+}
+
 export function bookingConfirmationHtml(opts: {
   recipientName: string;
   memberName: string;

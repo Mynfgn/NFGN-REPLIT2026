@@ -15,9 +15,7 @@ import { useState, useEffect } from "react";
 import { customFetch } from "@/lib/custom-fetch";
 
 const GOLD = "#C9A84C";
-const GREEN = "#2D6A4F";
-const GREEN_DARK = "#1e4d38";
-const GREEN_LIGHT = "#52b788";
+const GOLD_MUTED = "rgba(201,168,76,0.75)";
 
 type Product = {
   id: number;
@@ -38,7 +36,7 @@ const CATEGORY_GROUPS = [
     key: "herbal",
     label: "Herbal Products",
     icon: <Leaf className="h-5 w-5" />,
-    accentColor: GREEN,
+    accentColor: GOLD,
     description: "Naturopathic herbal formulations — cleanses, gut health, appetite support & holistic wellness.",
     slugs: ["cleanses", "appetite-support", "herbal-wellness"],
   },
@@ -203,10 +201,10 @@ function ProductCard({
                 position: "absolute",
                 top: 10,
                 left: 10,
-                background: GREEN,
-                color: "#fff",
+                background: GOLD,
+                color: "#000",
                 fontSize: 10,
-                fontWeight: 800,
+                fontWeight: 900,
                 padding: "3px 8px",
                 borderRadius: 99,
                 letterSpacing: "0.08em",
@@ -357,7 +355,7 @@ function ProPackageCard({
           ${pkg.originalPrice.toFixed(2)}
         </span>
       </div>
-      <p style={{ color: GREEN_LIGHT, fontSize: 12, fontWeight: 700, margin: "0 0 22px" }}>
+      <p style={{ color: GOLD_MUTED, fontSize: 12, fontWeight: 700, margin: "0 0 22px" }}>
         You save ${savings.toFixed(2)}
       </p>
       {/* Perks */}
@@ -760,9 +758,9 @@ export function Shop() {
       {/* ── ZONE 3: GOLD — Ticker ────────────────────────── */}
       <TickerBar />
 
-      {/* ── ZONE 3: GREEN — Specials ─────────────────────── */}
+      {/* ── Specials ─────────────────────────────────────── */}
       {saleProducts.length > 0 && (
-        <div style={{ background: GREEN, padding: "56px 0" }}>
+        <div style={{ background: "linear-gradient(135deg, #1a1200, #0a0a0a)", padding: "56px 0", borderTop: "1px solid rgba(201,168,76,0.25)" }}>
           <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 32, flexWrap: "wrap" }}>
               <Zap size={22} color={GOLD} />
@@ -799,7 +797,7 @@ export function Shop() {
       <div id="products" style={{ background: "#fff", padding: "72px 0" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px" }}>
           <div style={{ textAlign: "center", marginBottom: 56 }}>
-            <p style={{ color: GREEN, fontSize: 12, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 8 }}>
+            <p style={{ color: GOLD, fontSize: 12, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 8 }}>
               Our Collection
             </p>
             <h2 style={{ color: "#111", fontSize: 38, fontWeight: 900, margin: "0 0 12px", fontFamily: "serif" }}>
@@ -863,10 +861,10 @@ export function Shop() {
         </div>
       </div>
 
-      {/* ── ZONE 3: GREEN — Become a Member CTA ─────────── */}
+      {/* ── ZONE 3: BLACK/GOLD — Become a Member CTA ─────────── */}
       <div
         style={{
-          background: `linear-gradient(135deg, ${GREEN} 0%, ${GREEN_DARK} 100%)`,
+          background: `linear-gradient(135deg, #1a1200 0%, #0a0a0a 100%)`,
           padding: "72px 0",
           position: "relative",
           overflow: "hidden",
@@ -957,8 +955,8 @@ export function Shop() {
         </div>
       </div>
 
-      {/* ── ZONE 3: GREEN — Trust / Stats Strip ──────────── */}
-      <div style={{ background: GREEN_DARK, padding: "28px 32px" }}>
+      {/* ── Trust / Stats Strip ──────────────────────────── */}
+      <div style={{ background: "#0a0a0a", padding: "28px 32px", borderTop: "1px solid rgba(201,168,76,0.2)" }}>
         <div
           style={{
             maxWidth: 1200,

@@ -5,13 +5,8 @@ import { requireAdmin } from "../lib/auth";
 
 const router: IRouter = Router();
 
-router.get("/pro-packages", async (req, res): Promise<void> => {
-  const packages = await db
-    .select()
-    .from(proPackagesTable)
-    .orderBy(asc(proPackagesTable.sortOrder), asc(proPackagesTable.id));
-
-  res.json(packages.map((p) => ({
+function serializePackage(p: typeof proPackagesTable.$inferSelect) {
+  return {
     id: p.id,
     name: p.name,
     price: parseFloat(p.price),
@@ -20,11 +15,21 @@ router.get("/pro-packages", async (req, res): Promise<void> => {
     badgeColor: p.badgeColor,
     perks: p.perks,
     sortOrder: p.sortOrder,
-  })));
+    productId: p.productId ?? null,
+  };
+}
+
+router.get("/pro-packages", async (req, res): Promise<void> => {
+  const packages = await db
+    .select()
+    .from(proPackagesTable)
+    .orderBy(asc(proPackagesTable.sortOrder), asc(proPackagesTable.id));
+
+  res.json(packages.map(serializePackage));
 });
 
 router.post("/pro-packages", requireAdmin, async (req, res): Promise<void> => {
-  const { name, price, originalPrice, badge, badgeColor, perks, sortOrder } = req.body;
+  const { name, price, originalPrice, badge, badgeColor, perks, sortOrder, productId } = req.body;
 
   if (!name || price == null || originalPrice == null) {
     res.status(400).json({ error: "name, price, and originalPrice are required" });
@@ -41,19 +46,11 @@ router.post("/pro-packages", requireAdmin, async (req, res): Promise<void> => {
       badgeColor: badgeColor ?? "#C9A84C",
       perks: perks ?? [],
       sortOrder: sortOrder ?? 0,
+      productId: productId != null ? Number(productId) : null,
     })
     .returning();
 
-  res.status(201).json({
-    id: pkg.id,
-    name: pkg.name,
-    price: parseFloat(pkg.price),
-    originalPrice: parseFloat(pkg.originalPrice),
-    badge: pkg.badge,
-    badgeColor: pkg.badgeColor,
-    perks: pkg.perks,
-    sortOrder: pkg.sortOrder,
-  });
+  res.status(201).json(serializePackage(pkg));
 });
 
 router.put("/pro-packages/reorder", requireAdmin, async (req, res): Promise<void> => {
@@ -100,7 +97,7 @@ router.put("/pro-packages/:id", requireAdmin, async (req, res): Promise<void> =>
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
-  const { name, price, originalPrice, badge, badgeColor, perks, sortOrder } = req.body;
+  const { name, price, originalPrice, badge, badgeColor, perks, sortOrder, productId } = req.body;
 
   const [pkg] = await db
     .update(proPackagesTable)
@@ -112,22 +109,14 @@ router.put("/pro-packages/:id", requireAdmin, async (req, res): Promise<void> =>
       ...(badgeColor !== undefined && { badgeColor }),
       ...(perks !== undefined && { perks }),
       ...(sortOrder !== undefined && { sortOrder }),
+      ...("productId" in req.body && { productId: productId != null ? Number(productId) : null }),
     })
     .where(eq(proPackagesTable.id, id))
     .returning();
 
   if (!pkg) { res.status(404).json({ error: "Not found" }); return; }
 
-  res.json({
-    id: pkg.id,
-    name: pkg.name,
-    price: parseFloat(pkg.price),
-    originalPrice: parseFloat(pkg.originalPrice),
-    badge: pkg.badge,
-    badgeColor: pkg.badgeColor,
-    perks: pkg.perks,
-    sortOrder: pkg.sortOrder,
-  });
+  res.json(serializePackage(pkg));
 });
 
 router.delete("/pro-packages/:id", requireAdmin, async (req, res): Promise<void> => {

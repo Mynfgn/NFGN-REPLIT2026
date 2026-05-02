@@ -11,6 +11,7 @@ export const proPackagesTable = pgTable("pro_packages", {
   badgeColor: text("badge_color").notNull().default("#C9A84C"),
   perks: text("perks").array().notNull().default([]),
   sortOrder: integer("sort_order").notNull().default(0),
+  productId: integer("product_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

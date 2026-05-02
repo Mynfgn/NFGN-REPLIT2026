@@ -75,6 +75,7 @@ type ProPackage = {
   badgeColor: string;
   perks: string[];
   sortOrder: number;
+  productId: number | null;
 };
 
 function categorySlugFromName(name?: string | null): string {
@@ -557,10 +558,16 @@ export function Shop() {
   const proProducts = products.filter((p) => p.isProPackage);
   const regularProducts = products.filter((p) => !p.isProPackage);
 
-  // Map each package tier to the closest real pro product by price (within 25% tolerance).
-  // If no DB pro product falls within that band, the card falls back to a
-  // "Get Started" link pointing to /join instead of Add to Cart.
-  function findClosestProProduct(targetPrice: number): Product | null {
+  // Resolve which real product to use for a package card's "Add to Cart" button.
+  // Prefer the admin-configured direct product link (productId); fall back to
+  // fuzzy price matching (within 25% tolerance) when no link is set.
+  function resolveProProduct(pkg: ProPackage): Product | null {
+    if (pkg.productId != null) {
+      const direct = products.find((p) => p.id === pkg.productId);
+      if (direct) return direct;
+      // productId set but product not found (stale link) — fall through to fuzzy match
+    }
+    const targetPrice = pkg.price;
     const tolerance = targetPrice * 0.25;
     let best: Product | null = null;
     let bestDiff = Infinity;
@@ -739,7 +746,7 @@ export function Shop() {
               ))
             ) : proPackages.length === 0 ? null : (
               proPackages.map((pkg) => {
-                const matched = findClosestProProduct(pkg.price);
+                const matched = resolveProProduct(pkg);
                 return (
                   <ProPackageCard
                     key={pkg.id}

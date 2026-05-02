@@ -28,6 +28,9 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { Plus, Pencil, Trash2, RefreshCw, Package, Check, GripVertical, Save } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +44,14 @@ interface ProPackage {
   badgeColor: string;
   perks: string[];
   sortOrder: number;
+  productId: number | null;
+}
+
+interface ShopProduct {
+  id: number;
+  name: string;
+  price: number;
+  isProPackage: boolean | null;
 }
 
 const EMPTY_FORM = {
@@ -51,15 +62,17 @@ const EMPTY_FORM = {
   badgeColor: "#C9A84C",
   perksRaw: "",
   sortOrder: "0",
+  productId: "",
 };
 
 interface SortableRowProps {
   pkg: ProPackage;
+  products: ShopProduct[];
   onEdit: (pkg: ProPackage) => void;
   onDelete: (pkg: ProPackage) => void;
 }
 
-function SortableRow({ pkg, onEdit, onDelete }: SortableRowProps) {
+function SortableRow({ pkg, products, onEdit, onDelete }: SortableRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: pkg.id });
 
@@ -71,6 +84,7 @@ function SortableRow({ pkg, onEdit, onDelete }: SortableRowProps) {
   };
 
   const savings = (pkg.originalPrice - pkg.price).toFixed(2);
+  const linkedProduct = pkg.productId != null ? products.find((p) => p.id === pkg.productId) : null;
 
   return (
     <TableRow ref={setNodeRef} style={style}>
@@ -124,6 +138,15 @@ function SortableRow({ pkg, onEdit, onDelete }: SortableRowProps) {
           )}
         </div>
       </TableCell>
+      <TableCell>
+        {linkedProduct ? (
+          <span className="text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded px-2 py-0.5">
+            {linkedProduct.name}
+          </span>
+        ) : (
+          <span className="text-xs text-muted-foreground italic">None (fuzzy match)</span>
+        )}
+      </TableCell>
       <TableCell className="text-right">
         <div className="flex justify-end gap-2">
           <Button variant="ghost" size="icon" onClick={() => onEdit(pkg)}>
@@ -145,6 +168,7 @@ function SortableRow({ pkg, onEdit, onDelete }: SortableRowProps) {
 
 export function AdminProPackagesPage() {
   const [packages, setPackages] = useState<ProPackage[]>([]);
+  const [products, setProducts] = useState<ShopProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editPkg, setEditPkg] = useState<ProPackage | null>(null);
@@ -174,7 +198,27 @@ export function AdminProPackagesPage() {
     }
   };
 
-  useEffect(() => { fetchPackages(); }, []);
+  const fetchProducts = async () => {
+    try {
+      const res = await fetch("/api/products?limit=200");
+      if (!res.ok) return;
+      const data = await res.json();
+      const list: ShopProduct[] = (data.products ?? []).map((p: ShopProduct) => ({
+        id: p.id,
+        name: p.name,
+        price: p.price,
+        isProPackage: p.isProPackage,
+      }));
+      setProducts(list);
+    } catch {
+      // silently ignore; product list is optional
+    }
+  };
+
+  useEffect(() => {
+    fetchPackages();
+    fetchProducts();
+  }, []);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -224,6 +268,7 @@ export function AdminProPackagesPage() {
       badgeColor: pkg.badgeColor,
       perksRaw: pkg.perks.join("\n"),
       sortOrder: String(pkg.sortOrder),
+      productId: pkg.productId != null ? String(pkg.productId) : "",
     });
     setDialogOpen(true);
   };
@@ -255,6 +300,7 @@ export function AdminProPackagesPage() {
         badgeColor: form.badgeColor,
         perks,
         sortOrder: parseInt(form.sortOrder) || 0,
+        productId: form.productId !== "" ? parseInt(form.productId) : null,
       };
 
       let res: Response;
@@ -363,6 +409,7 @@ export function AdminProPackagesPage() {
                       <TableHead className="text-right">Original Price</TableHead>
                       <TableHead className="text-right">Savings</TableHead>
                       <TableHead>Perks</TableHead>
+                      <TableHead>Linked Product</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -371,6 +418,7 @@ export function AdminProPackagesPage() {
                       <SortableRow
                         key={pkg.id}
                         pkg={pkg}
+                        products={products}
                         onEdit={openEdit}
                         onDelete={setDeleteTarget}
                       />
@@ -456,6 +504,29 @@ export function AdminProPackagesPage() {
                 onChange={(e) => setForm((f) => ({ ...f, perksRaw: e.target.value }))}
                 placeholder={"Full Pro Membership\nCommission Eligible\nNetwork Access"}
               />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Linked Shop Product</Label>
+              <Select
+                value={form.productId !== "" ? form.productId : "none"}
+                onValueChange={(val) => setForm((f) => ({ ...f, productId: val === "none" ? "" : val }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="None — use fuzzy price match" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None — use fuzzy price match</SelectItem>
+                  {products.map((p) => (
+                    <SelectItem key={p.id} value={String(p.id)}>
+                      {p.name} (${Number(p.price).toFixed(2)})
+                      {p.isProPackage ? " ★" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Directly links this card's "Add to Cart" button to a specific shop product. Leave empty to fall back to automatic price matching.
+              </p>
             </div>
           </div>
           <DialogFooter>

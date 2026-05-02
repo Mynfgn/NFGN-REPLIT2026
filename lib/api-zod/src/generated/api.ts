@@ -1098,6 +1098,7 @@ export const CreateBookingBody = zod.object({
   duration: zod.number(),
   paymentMethod: zod.string(),
   amount: zod.number(),
+  walletAmount: zod.number().optional(),
   notes: zod.string().nullish(),
 });
 

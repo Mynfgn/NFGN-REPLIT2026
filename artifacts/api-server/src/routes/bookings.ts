@@ -1,8 +1,8 @@
 import { Router, type IRouter } from "express";
-import { db, bookingsTable, professionalsTable, usersTable, messagesTable, walletsTable, walletTransactionsTable, bookingPayoutsTable } from "@workspace/db";
-import { eq, and, desc, count, or, inArray } from "drizzle-orm";
+import { db, bookingsTable, professionalsTable, usersTable, messagesTable, walletsTable, walletTransactionsTable, bookingPayoutsTable, professionalAvailabilityTable } from "@workspace/db";
+import { eq, and, desc, count, or, inArray, gte, lte } from "drizzle-orm";
 import { requireAuth, requireAdmin } from "../lib/auth";
-import { sendEmail, bookingConfirmationHtml } from "../lib/mailer";
+import { sendEmail, bookingConfirmationHtml, booking8hrReminderHtml } from "../lib/mailer";
 import { createSquarePaymentLink } from "../lib/square";
 
 const router: IRouter = Router();
@@ -23,6 +23,10 @@ function formatBooking(b: typeof bookingsTable.$inferSelect, userName: string, p
     amount: parseFloat(b.amount),
     notes: b.notes ?? null,
     paymentLink: b.paymentLink ?? null,
+    referralUserId: b.referralUserId ?? null,
+    serviceRenderedAt: b.serviceRenderedAt?.toISOString() ?? null,
+    digitalSignature: b.digitalSignature ?? null,
+    digitalSignedAt: b.digitalSignedAt?.toISOString() ?? null,
     createdAt: b.createdAt.toISOString(),
   };
 }
@@ -95,6 +99,10 @@ router.post("/bookings", requireAuth, async (req, res): Promise<void> => {
   const needsCardPayment = remainingAfterWallet > 0 && (paymentMethod === "card" || paymentMethod.includes("card"));
 
   // ── Insert the booking first (no payment link yet) ───────────────────────
+  // ── Find member's sponsor (referral user) ──────────────────────────────
+  const [memberForReferral] = await db.select({ sponsorId: usersTable.sponsorId }).from(usersTable).where(eq(usersTable.id, userId));
+  const referralUserId = memberForReferral?.sponsorId ?? null;
+
   const [booking] = await db.insert(bookingsTable).values({
     userId,
     professionalId,
@@ -106,6 +114,7 @@ router.post("/bookings", requireAuth, async (req, res): Promise<void> => {
     paymentStatus: walletDeduction >= parseFloat(String(amount)) ? "paid" : "pending",
     amount: String(amount),
     notes: notes ?? undefined,
+    referralUserId: referralUserId ?? undefined,
   }).returning();
 
   // ── Generate Square payment link (card payments with remaining balance) ──
@@ -262,29 +271,42 @@ router.post("/bookings", requireAuth, async (req, res): Promise<void> => {
     }
 
     // ── Send emails ──
+    const memberEmail = member?.email ?? "";
+    const memberPhone = member?.phone ?? undefined;
+    const providerEmail = providerUser?.email ?? "";
+    const providerPhone = providerUser?.phone ?? undefined;
+
+    const sharedEmailOpts = {
+      memberName, memberEmail, memberPhone,
+      providerName, providerEmail, providerPhone,
+      serviceType, scheduledAt: scheduledAtFormatted,
+      duration: duration ?? 60, amount: bookingAmt,
+      bookingId: booking.id, dashboardUrl,
+    };
+
     const emailJobs: Promise<void>[] = [];
 
-    if (member?.email) {
+    if (memberEmail) {
       emailJobs.push(sendEmail({
-        to: member.email,
-        subject: `Booking Confirmed — ${serviceType} with ${providerName}`,
-        html: bookingConfirmationHtml({ recipientName: memberName, memberName, providerName, serviceType, scheduledAt: scheduledAtFormatted, duration: duration ?? 60, amount: bookingAmt, bookingId: booking.id, dashboardUrl, role: "member" }),
+        to: memberEmail,
+        subject: `Congratulations! Booking Confirmed — ${serviceType} with ${providerName}`,
+        html: bookingConfirmationHtml({ ...sharedEmailOpts, recipientName: memberName, role: "member" }),
       }));
     }
 
-    if (providerUser?.email) {
+    if (providerEmail) {
       emailJobs.push(sendEmail({
-        to: providerUser.email,
-        subject: `New Booking — ${serviceType} from ${memberName}`,
-        html: bookingConfirmationHtml({ recipientName: providerName, memberName, providerName, serviceType, scheduledAt: scheduledAtFormatted, duration: duration ?? 60, amount: bookingAmt, bookingId: booking.id, dashboardUrl, role: "provider" }),
+        to: providerEmail,
+        subject: `New Appointment Booked — ${serviceType} from ${memberName}`,
+        html: bookingConfirmationHtml({ ...sharedEmailOpts, recipientName: providerName, role: "provider" }),
       }));
     }
 
     if (sponsorUser?.email) {
       emailJobs.push(sendEmail({
         to: sponsorUser.email,
-        subject: `[NFGN] Your Downline Member ${memberName} Booked a Session`,
-        html: bookingConfirmationHtml({ recipientName: `${sponsorUser.firstName} ${sponsorUser.lastName}`, memberName, providerName, serviceType, scheduledAt: scheduledAtFormatted, duration: duration ?? 60, amount: bookingAmt, bookingId: booking.id, dashboardUrl, role: "sponsor" }),
+        subject: `Congratulations! Your Downline ${memberName} Just Booked a Session`,
+        html: bookingConfirmationHtml({ ...sharedEmailOpts, recipientName: `${sponsorUser.firstName} ${sponsorUser.lastName}`, role: "sponsor" }),
       }));
     }
 
@@ -293,7 +315,7 @@ router.post("/bookings", requireAuth, async (req, res): Promise<void> => {
         emailJobs.push(sendEmail({
           to: admin.email,
           subject: `[NFGN Admin] New Booking — ${memberName} booked ${serviceType}`,
-          html: bookingConfirmationHtml({ recipientName: `${admin.firstName} ${admin.lastName}`, memberName, providerName, serviceType, scheduledAt: scheduledAtFormatted, duration: duration ?? 60, amount: bookingAmt, bookingId: booking.id, dashboardUrl, role: "admin" }),
+          html: bookingConfirmationHtml({ ...sharedEmailOpts, recipientName: `${admin.firstName} ${admin.lastName}`, role: "admin" }),
         }));
       }
     }
@@ -399,6 +421,173 @@ router.get("/professionals/:id", async (req, res): Promise<void> => {
     services: pro.services ?? [],
     createdAt: pro.createdAt.toISOString(),
   });
+});
+
+// ── Professional availability management ──────────────────────────────────
+
+router.get("/professionals/my-availability", requireAuth, async (req, res): Promise<void> => {
+  const currentUser = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
+  if (!currentUser.isBookAProProvider) { res.status(403).json({ error: "Not a provider" }); return; }
+
+  const [proRow] = await db.select().from(professionalsTable).where(eq(professionalsTable.userId, currentUser.id));
+  if (!proRow) { res.status(404).json({ error: "Professional profile not found" }); return; }
+
+  const slots = await db.select().from(professionalAvailabilityTable)
+    .where(eq(professionalAvailabilityTable.professionalId, proRow.id))
+    .orderBy(professionalAvailabilityTable.availableDate, professionalAvailabilityTable.startTime);
+
+  const bookings = await db.select().from(bookingsTable)
+    .where(eq(bookingsTable.professionalId, proRow.id));
+
+  res.json({ slots, bookings: bookings.map(b => ({ id: b.id, scheduledAt: b.scheduledAt, duration: b.duration, status: b.status })) });
+});
+
+router.post("/professionals/my-availability", requireAuth, async (req, res): Promise<void> => {
+  const currentUser = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
+  if (!currentUser.isBookAProProvider) { res.status(403).json({ error: "Not a provider" }); return; }
+
+  const [proRow] = await db.select().from(professionalsTable).where(eq(professionalsTable.userId, currentUser.id));
+  if (!proRow) { res.status(404).json({ error: "Professional profile not found" }); return; }
+
+  const { availableDate, startTime, endTime } = req.body;
+  if (!availableDate || !startTime || !endTime) { res.status(400).json({ error: "availableDate, startTime, endTime required" }); return; }
+
+  const [slot] = await db.insert(professionalAvailabilityTable).values({
+    professionalId: proRow.id,
+    availableDate,
+    startTime,
+    endTime,
+  }).returning();
+
+  res.status(201).json(slot);
+});
+
+router.delete("/professionals/my-availability/:id", requireAuth, async (req, res): Promise<void> => {
+  const currentUser = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
+  if (!currentUser.isBookAProProvider) { res.status(403).json({ error: "Not a provider" }); return; }
+
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+  const [proRow] = await db.select().from(professionalsTable).where(eq(professionalsTable.userId, currentUser.id));
+  if (!proRow) { res.status(404).json({ error: "Professional profile not found" }); return; }
+
+  const [deleted] = await db.delete(professionalAvailabilityTable)
+    .where(and(eq(professionalAvailabilityTable.id, id), eq(professionalAvailabilityTable.professionalId, proRow.id)))
+    .returning();
+
+  if (!deleted) { res.status(404).json({ error: "Slot not found" }); return; }
+  res.json({ success: true });
+});
+
+router.get("/professionals/:id/availability", async (req, res): Promise<void> => {
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+  const slots = await db.select().from(professionalAvailabilityTable)
+    .where(eq(professionalAvailabilityTable.professionalId, id))
+    .orderBy(professionalAvailabilityTable.availableDate, professionalAvailabilityTable.startTime);
+
+  const bookings = await db.select({
+    id: bookingsTable.id,
+    scheduledAt: bookingsTable.scheduledAt,
+    duration: bookingsTable.duration,
+    status: bookingsTable.status,
+  }).from(bookingsTable)
+    .where(and(eq(bookingsTable.professionalId, id)));
+
+  res.json({ slots, bookings });
+});
+
+// ── Mark service as rendered ──────────────────────────────────────────────
+
+router.patch("/bookings/:id/service-rendered", requireAuth, async (req, res): Promise<void> => {
+  const currentUser = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+
+  const [booking] = await db.select().from(bookingsTable).where(eq(bookingsTable.id, id));
+  if (!booking) { res.status(404).json({ error: "Not found" }); return; }
+
+  const isAdmin = ["super_admin", "admin", "store_admin"].includes(currentUser.role);
+  const [proRow] = await db.select().from(professionalsTable).where(eq(professionalsTable.id, booking.professionalId));
+  const isProvider = proRow?.userId === currentUser.id;
+
+  if (!isAdmin && !isProvider) { res.status(403).json({ error: "Forbidden" }); return; }
+
+  const [updated] = await db.update(bookingsTable)
+    .set({ serviceRenderedAt: new Date(), status: "completed" })
+    .where(eq(bookingsTable.id, id))
+    .returning();
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, updated.userId));
+  const [pro] = await db.select().from(professionalsTable).where(eq(professionalsTable.id, updated.professionalId));
+
+  if (user?.email) {
+    const dashUrl = process.env.APP_URL ? `${process.env.APP_URL}/dashboard/bookings` : "https://nfgn.com/dashboard/bookings";
+    await sendEmail({
+      to: user.email,
+      subject: `Service Complete — Please Sign Your Receipt for Booking #${id}`,
+      html: `<!DOCTYPE html><html><body style="font-family:sans-serif;padding:32px;background:#f9f9f9;">
+        <div style="max-width:560px;margin:auto;background:#fff;border-radius:10px;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,.08);">
+          <h2 style="color:#C9A84C;">Service Completed!</h2>
+          <p>Hi ${user.firstName}, your service "<strong>${updated.serviceType}</strong>" has been marked as completed by your professional <strong>${pro?.name ?? "your provider"}</strong>.</p>
+          <p>Please log in to your back office to <strong>digitally sign your receipt</strong>, confirming you received and are satisfied with the service.</p>
+          <a href="${dashUrl}" style="display:inline-block;margin-top:16px;background:#C9A84C;color:#000;text-decoration:none;padding:12px 28px;border-radius:6px;font-weight:700;">Sign My Receipt</a>
+        </div>
+      </body></html>`,
+    });
+  }
+
+  res.json(formatBooking(updated, user ? `${user.firstName} ${user.lastName}` : "Unknown", pro?.name ?? "Unknown"));
+});
+
+// ── Digital signature ─────────────────────────────────────────────────────
+
+router.post("/bookings/:id/sign", requireAuth, async (req, res): Promise<void> => {
+  const currentUser = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+
+  const [booking] = await db.select().from(bookingsTable).where(eq(bookingsTable.id, id));
+  if (!booking) { res.status(404).json({ error: "Not found" }); return; }
+  if (booking.userId !== currentUser.id) { res.status(403).json({ error: "Forbidden" }); return; }
+  if (booking.digitalSignature) { res.status(400).json({ error: "Already signed" }); return; }
+
+  const { signature } = req.body;
+  if (!signature || typeof signature !== "string") { res.status(400).json({ error: "signature required" }); return; }
+
+  const [updated] = await db.update(bookingsTable)
+    .set({ digitalSignature: signature, digitalSignedAt: new Date() })
+    .where(eq(bookingsTable.id, id))
+    .returning();
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, updated.userId));
+  const [pro] = await db.select().from(professionalsTable).where(eq(professionalsTable.id, updated.professionalId));
+
+  const admins = await db.select().from(usersTable).where(or(eq(usersTable.role, "admin"), eq(usersTable.role, "super_admin")));
+  const signedAt = new Date().toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" });
+  const receiptHtml = `<!DOCTYPE html><html><body style="font-family:sans-serif;padding:32px;background:#f9f9f9;">
+    <div style="max-width:560px;margin:auto;background:#fff;border-radius:10px;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,.08);">
+      <h2 style="color:#C9A84C;">Signed Receipt — Booking #${id}</h2>
+      <p><strong>Service:</strong> ${updated.serviceType}</p>
+      <p><strong>Member:</strong> ${user ? `${user.firstName} ${user.lastName}` : "Unknown"}</p>
+      <p><strong>Professional:</strong> ${pro?.name ?? "Unknown"}</p>
+      <p><strong>Signed At:</strong> ${signedAt}</p>
+      <p><strong>Digital Signature:</strong></p>
+      <div style="border:1px solid #ccc;border-radius:6px;padding:8px;background:#fafafa;">
+        <img src="${signature}" alt="Signature" style="max-width:100%;height:auto;" />
+      </div>
+      <p style="margin-top:16px;color:#2D6A4F;font-weight:700;">The member has confirmed they received and are satisfied with this service.</p>
+    </div>
+  </body></html>`;
+
+  const notifyJobs: Promise<void>[] = [];
+  if (user?.email) {
+    notifyJobs.push(sendEmail({ to: user.email, subject: `Receipt Signed — Booking #${id}`, html: receiptHtml }));
+  }
+  for (const admin of admins) {
+    if (admin.email) {
+      notifyJobs.push(sendEmail({ to: admin.email, subject: `[NFGN] Receipt Signed by ${user?.firstName ?? "Member"} — Booking #${id}`, html: receiptHtml }));
+    }
+  }
+  await Promise.allSettled(notifyJobs);
+
+  res.json(formatBooking(updated, user ? `${user.firstName} ${user.lastName}` : "Unknown", pro?.name ?? "Unknown"));
 });
 
 router.patch("/professionals/:id", requireAdmin, async (req, res): Promise<void> => {

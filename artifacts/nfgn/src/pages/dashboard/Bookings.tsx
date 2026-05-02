@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useListProfessionals, useListBookings, useCreateBooking, useGetWallet, getListBookingsQueryKey } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { customFetch } from "@/lib/custom-fetch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, Star, Clock, CreditCard, CheckCircle2, AlertCircle, Search, Wallet, User, DollarSign, Smartphone } from "lucide-react";
+import { Calendar, Star, Clock, CreditCard, CheckCircle2, AlertCircle, Search, Wallet, User, DollarSign, Smartphone, Loader2, PenLine } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const BRAND_GOLD = "#C9A84C";
 const BRAND_GREEN = "#2D6A4F";
@@ -68,8 +70,36 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
   const createBooking = useCreateBooking();
   const [service, setService] = useState(professional.services?.[0] ?? "");
   const [date, setDate] = useState("");
-  const [time, setTime] = useState("10:00");
+  const [time, setTime] = useState("");
   const [duration, setDuration] = useState("60");
+
+  const { data: availabilityData } = useQuery({
+    queryKey: ["/api/professionals", professional.id, "availability"],
+    queryFn: () => customFetch(`/api/professionals/${professional.id}/availability`).then((r: any) => r.json()),
+    enabled: !!professional.id,
+  });
+
+  const availableSlots: { id: number; availableDate: string; startTime: string; endTime: string }[] = availabilityData?.slots ?? [];
+  const existingBookings: { id: number; scheduledAt: string; duration: number }[] = availabilityData?.bookings ?? [];
+
+  const slotsForDate = date ? availableSlots.filter(s => s.availableDate === date) : [];
+
+  function isTimeBlocked(t: string): boolean {
+    if (!date) return false;
+    const [h, m] = t.split(":").map(Number);
+    const slotMs = h * 60 + m;
+    const dur = parseInt(duration) || 60;
+    return existingBookings.some(b => {
+      if (b.scheduledAt.slice(0, 10) !== date) return false;
+      const bDate = new Date(b.scheduledAt);
+      const bStart = bDate.getHours() * 60 + bDate.getMinutes();
+      const bEnd = bStart + (b.duration ?? 60);
+      return slotMs < bEnd && slotMs + dur > bStart;
+    });
+  }
+
+  const hasAvailabilitySet = availableSlots.length > 0 || existingBookings.length > 0;
+  const noSlotsForDate = date && hasAvailabilitySet && slotsForDate.length === 0;
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -122,7 +152,7 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
         walletAmount: walletApplied,
         amount,
         notes: notes || undefined,
-      }},
+      } as any },
       {
         onSuccess: (res: any) => {
           setBookedResult({
@@ -290,13 +320,51 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Date</Label>
-              <Input type="date" min={today} value={date} onChange={e => setDate(e.target.value)} />
+              <Input type="date" min={today} value={date} onChange={e => { setDate(e.target.value); setTime(""); }} />
             </div>
             <div>
               <Label>Time</Label>
-              <Input type="time" value={time} onChange={e => setTime(e.target.value)} />
+              {slotsForDate.length > 0 ? (
+                <Select value={time} onValueChange={setTime}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a time slot" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {slotsForDate.map(slot => {
+                      const [sh, sm] = slot.startTime.split(":").map(Number);
+                      const [eh, em] = slot.endTime.split(":").map(Number);
+                      const times: string[] = [];
+                      let cur = sh * 60 + sm;
+                      const end = eh * 60 + em;
+                      const step = parseInt(duration) || 60;
+                      while (cur + step <= end) {
+                        const hh = String(Math.floor(cur / 60)).padStart(2, "0");
+                        const mm = String(cur % 60).padStart(2, "0");
+                        times.push(`${hh}:${mm}`);
+                        cur += 30;
+                      }
+                      return times.map(t => {
+                        const blocked = isTimeBlocked(t);
+                        return (
+                          <SelectItem key={`${slot.id}-${t}`} value={t} disabled={blocked}>
+                            {t} {blocked ? "(booked)" : `– ${slot.endTime}`}
+                          </SelectItem>
+                        );
+                      });
+                    })}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input type="time" value={time} onChange={e => setTime(e.target.value)} placeholder="HH:MM" />
+              )}
             </div>
           </div>
+          {noSlotsForDate && (
+            <div className="flex items-start gap-2 rounded-lg p-3 text-sm" style={{ background: "#fef3c7", color: "#92400e" }}>
+              <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+              <span>This professional has no available slots set for this date. Choose another date or enter a time manually.</span>
+            </div>
+          )}
 
           <div>
             <Label>Duration</Label>
@@ -452,6 +520,142 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
   );
 }
 
+// ── Digital Signature Dialog ─────────────────────────────────────────────
+
+function SignatureDialog({ booking, onClose, onSigned }: { booking: any; onClose: () => void; onSigned: () => void }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [drawing, setDrawing] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  const [empty, setEmpty] = useState(true);
+  const { toast } = useToast();
+  const qc = useQueryClient();
+
+  const getCtx = () => canvasRef.current?.getContext("2d") ?? null;
+
+  const startDraw = (e: React.MouseEvent | React.TouchEvent) => {
+    const ctx = getCtx();
+    if (!ctx) return;
+    setDrawing(true);
+    setEmpty(false);
+    const rect = canvasRef.current!.getBoundingClientRect();
+    const x = "touches" in e ? e.touches[0].clientX - rect.left : (e as React.MouseEvent).clientX - rect.left;
+    const y = "touches" in e ? e.touches[0].clientY - rect.top : (e as React.MouseEvent).clientY - rect.top;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  };
+
+  const draw = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!drawing) return;
+    const ctx = getCtx();
+    if (!ctx) return;
+    const rect = canvasRef.current!.getBoundingClientRect();
+    const x = "touches" in e ? e.touches[0].clientX - rect.left : (e as React.MouseEvent).clientX - rect.left;
+    const y = "touches" in e ? e.touches[0].clientY - rect.top : (e as React.MouseEvent).clientY - rect.top;
+    ctx.lineTo(x, y);
+    ctx.strokeStyle = "#0a0a0a";
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.stroke();
+  };
+
+  const stopDraw = () => setDrawing(false);
+
+  const clearCanvas = () => {
+    const ctx = getCtx();
+    if (!ctx || !canvasRef.current) return;
+    ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    setEmpty(true);
+  };
+
+  const signMutation = useMutation({
+    mutationFn: async () => {
+      if (!canvasRef.current) throw new Error("No canvas");
+      const signature = canvasRef.current.toDataURL("image/png");
+      const res = await customFetch(`/api/bookings/${booking.id}/sign`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ signature }),
+      });
+      if (!res.ok) throw new Error(await (res as any).text());
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Receipt signed — thank you!" });
+      qc.invalidateQueries({ queryKey: ["/api/bookings"] });
+      onSigned();
+      onClose();
+    },
+    onError: (e: any) => toast({ variant: "destructive", title: "Could not submit signature", description: e.message }),
+  });
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="font-serif">Sign Your Receipt</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="rounded-lg border bg-muted/30 p-3 text-sm space-y-1">
+            <p><strong>Service:</strong> {booking.serviceType}</p>
+            <p><strong>Professional:</strong> {booking.professionalName}</p>
+            <p><strong>Date:</strong> {new Date(booking.scheduledAt).toLocaleDateString("en-US", { dateStyle: "full" })}</p>
+          </div>
+
+          <div>
+            <p className="text-sm font-medium mb-2">Please sign below to confirm you received and are satisfied with the service:</p>
+            <div className="relative rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 overflow-hidden" style={{ touchAction: "none" }}>
+              <canvas
+                ref={canvasRef}
+                width={460}
+                height={140}
+                className="w-full cursor-crosshair"
+                onMouseDown={startDraw}
+                onMouseMove={draw}
+                onMouseUp={stopDraw}
+                onMouseLeave={stopDraw}
+                onTouchStart={startDraw}
+                onTouchMove={draw}
+                onTouchEnd={stopDraw}
+              />
+              {empty && (
+                <p className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground pointer-events-none">
+                  Draw your signature here
+                </p>
+              )}
+            </div>
+            <Button variant="ghost" size="sm" className="mt-1 text-xs text-muted-foreground" onClick={clearCanvas}>
+              Clear
+            </Button>
+          </div>
+
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={e => setAgreed(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-gray-300"
+            />
+            <span className="text-sm">
+              I confirm that I received the service described above and I am satisfied with the quality of work provided.
+            </span>
+          </label>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button
+            disabled={empty || !agreed || signMutation.isPending}
+            onClick={() => signMutation.mutate()}
+            style={{ background: "#C9A84C", color: "#000" }}
+          >
+            {signMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Submit Signature"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function BookingsPage() {
   const queryClient = useQueryClient();
   const { data: prosData, isLoading: prosLoading } = useListProfessionals();
@@ -461,6 +665,7 @@ export function BookingsPage() {
   const [search, setSearch] = useState("");
   const [selectedPro, setSelectedPro] = useState<any | null>(null);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [signatureBooking, setSignatureBooking] = useState<any | null>(null);
 
   const professionals = prosData ?? [];
   const bookings = bookingsData?.bookings ?? [];
@@ -630,6 +835,21 @@ export function BookingsPage() {
                     <Badge className={`text-xs border ${statusColor(booking.status)}`} variant="outline">
                       {booking.status}
                     </Badge>
+                    {(booking as any).digitalSignature ? (
+                      <Badge variant="outline" className="text-xs border-green-300 text-green-700 bg-green-50 gap-1">
+                        <CheckCircle2 className="h-3 w-3" /> Signed
+                      </Badge>
+                    ) : (booking as any).serviceRenderedAt ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs gap-1.5 border-amber-300 text-amber-800 hover:bg-amber-50"
+                        onClick={() => setSignatureBooking(booking)}
+                      >
+                        <PenLine className="h-3.5 w-3.5" />
+                        Sign Receipt
+                      </Button>
+                    ) : null}
                   </div>
                 </CardContent>
               </Card>
@@ -644,6 +864,17 @@ export function BookingsPage() {
           walletBalance={walletBalance}
           onClose={() => setSelectedPro(null)}
           onBooked={handleBooked}
+        />
+      )}
+
+      {signatureBooking && (
+        <SignatureDialog
+          booking={signatureBooking}
+          onClose={() => setSignatureBooking(null)}
+          onSigned={() => {
+            queryClient.invalidateQueries({ queryKey: getListBookingsQueryKey() });
+            setSignatureBooking(null);
+          }}
         />
       )}
     </div>

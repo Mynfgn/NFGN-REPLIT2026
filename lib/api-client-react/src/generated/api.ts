@@ -37,6 +37,7 @@ import type {
   CreatePromoBody,
   DashboardSummary,
   DownlineMember,
+  Error,
   GenealogyNode,
   GenealogyStats,
   GetCommissionReportParams,

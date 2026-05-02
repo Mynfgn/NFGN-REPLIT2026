@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, numeric, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, numeric, boolean, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -31,8 +31,22 @@ export const bookingsTable = pgTable("bookings", {
   amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
   notes: text("notes"),
   paymentLink: text("payment_link"),
+  referralUserId: integer("referral_user_id"),
+  reminder8hrSentAt: timestamp("reminder_8hr_sent_at", { withTimezone: true }),
+  serviceRenderedAt: timestamp("service_rendered_at", { withTimezone: true }),
+  digitalSignature: text("digital_signature"),
+  digitalSignedAt: timestamp("digital_signed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+});
+
+export const professionalAvailabilityTable = pgTable("professional_availability", {
+  id: serial("id").primaryKey(),
+  professionalId: integer("professional_id").notNull(),
+  availableDate: date("available_date").notNull(),
+  startTime: text("start_time").notNull(),
+  endTime: text("end_time").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const insertBookingSchema = createInsertSchema(bookingsTable).omit({ id: true, createdAt: true, updatedAt: true });

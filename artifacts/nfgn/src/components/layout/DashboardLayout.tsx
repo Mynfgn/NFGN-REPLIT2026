@@ -9,7 +9,7 @@ import {
   BarChart3, LogOut, Menu, X, UserPlus, ArrowRightLeft,
   TrendingUp, Wrench, Home, Star, BookOpen, DollarSign,
   ChevronDown, ChevronRight, ShieldCheck, Link2, Sparkles,
-  CreditCard, Zap, Store,
+  CreditCard, Zap, Store, CalendarDays,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { roleLabel, tierLabel } from "@/lib/labels";
@@ -287,6 +287,17 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       items: section.items.filter(item => !item.minTier || tierAtLeast(effectiveTier, item.minTier)),
     }))
     .filter(section => section.items.length > 0);
+
+  // Inject provider-only availability section for Book-A-Pro providers
+  if ((user as any)?.isBookAProProvider) {
+    const hasProviderSection = visibleSections.some(s => s.label === "My Professional Services");
+    if (!hasProviderSection) {
+      visibleSections.push({
+        label: "My Professional Services",
+        items: [{ name: "Manage Availability", href: "/dashboard/pro-availability", icon: CalendarDays }],
+      });
+    }
+  }
 
   // Display label for member tier
   const displayLabel = (() => {

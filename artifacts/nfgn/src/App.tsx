@@ -69,6 +69,7 @@ import { AffiliateStorefront } from "@/pages/public/AffiliateStorefront";
 import { PoliciesPage } from "@/pages/public/Policies";
 import { ReferralLinkPage } from "@/pages/dashboard/ReferralLink";
 import { BookingsPage } from "@/pages/dashboard/Bookings";
+import { ProAvailabilityPage } from "@/pages/dashboard/ProAvailability";
 import { BPPDashboardPage } from "@/pages/dashboard/BPP";
 import { AdminBPPPage } from "@/pages/admin/BPP";
 import { AdminPromoCodesPage } from "@/pages/admin/PromoCodes";
@@ -234,6 +235,11 @@ function Router() {
       <Route path="/dashboard/bookings">
         <RequireAuth>
           <DashboardLayout><BookingsPage /></DashboardLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/dashboard/pro-availability">
+        <RequireAuth>
+          <DashboardLayout><ProAvailabilityPage /></DashboardLayout>
         </RequireAuth>
       </Route>
       <Route path="/dashboard/payouts">

@@ -106,10 +106,14 @@ export function codReminderCorporateHtml(opts: {
   `, "COD Order — 24-Hour Payment Reminder");
 }
 
-export function bookingConfirmationHtml(opts: {
+export interface BookingEmailOpts {
   recipientName: string;
   memberName: string;
+  memberEmail: string;
+  memberPhone?: string;
   providerName: string;
+  providerEmail: string;
+  providerPhone?: string;
   serviceType: string;
   scheduledAt: string;
   duration: number;
@@ -117,34 +121,144 @@ export function bookingConfirmationHtml(opts: {
   bookingId: number;
   dashboardUrl: string;
   role: "member" | "provider" | "admin" | "sponsor";
-}): string {
-  const roleLabel =
-    opts.role === "member"   ? "Your Booking Confirmation" :
-    opts.role === "provider" ? "New Appointment Request"   :
-    opts.role === "sponsor"  ? "Downline Booking Activity" :
-                               "Booking Alert";
+}
 
-  const detail = `
+export function bookingConfirmationHtml(opts: BookingEmailOpts): string {
+  const isOldSignature = !opts.memberEmail; // backward compat guard
+
+  const bookingDetail = `
     <div class="detail-box">
       <p><strong>Service:</strong> ${opts.serviceType}</p>
       <p><strong>Professional:</strong> ${opts.providerName}</p>
       <p><strong>Member:</strong> ${opts.memberName}</p>
-      <p><strong>Date & Time:</strong> ${opts.scheduledAt}</p>
+      <p><strong>Date &amp; Time:</strong> ${opts.scheduledAt}</p>
       <p><strong>Duration:</strong> ${opts.duration} minutes</p>
       <p><strong>Amount:</strong> $${opts.amount.toFixed(2)}</p>
       <p><strong>Booking #:</strong> ${opts.bookingId}</p>
-    </div>
-    <p>You can view details and manage this booking in your back office.</p>
-    <a class="cta" href="${opts.dashboardUrl}">View in Back Office</a>`;
+    </div>`;
 
-  const intro =
+  const proContact = `
+    <div class="detail-box" style="border-left:4px solid #C9A84C;">
+      <p style="margin:0 0 6px;font-weight:700;color:#0a0a0a;">Professional Contact Information</p>
+      <p><strong>Name:</strong> ${opts.providerName}</p>
+      <p><strong>Email:</strong> <a href="mailto:${opts.providerEmail}">${opts.providerEmail}</a></p>
+      ${opts.providerPhone ? `<p><strong>Phone:</strong> ${opts.providerPhone}</p>` : ""}
+    </div>`;
+
+  const memberContact = `
+    <div class="detail-box" style="border-left:4px solid #2D6A4F;">
+      <p style="margin:0 0 6px;font-weight:700;color:#0a0a0a;">Client Contact Information</p>
+      <p><strong>Name:</strong> ${opts.memberName}</p>
+      <p><strong>Email:</strong> <a href="mailto:${opts.memberEmail}">${opts.memberEmail}</a></p>
+      ${opts.memberPhone ? `<p><strong>Phone:</strong> ${opts.memberPhone}</p>` : ""}
+    </div>`;
+
+  const nonRefundableNotice = `
+    <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:14px 18px;margin:16px 0;font-size:13px;color:#856404;">
+      <strong>Cancellation Policy:</strong> This appointment is <strong>non-refundable</strong> once booked.
+      If you need to reschedule, please contact your professional directly as soon as possible.
+    </div>`;
+
+  const paymentHoldNotice = `
+    <div style="background:#d1ecf1;border:1px solid #bee5eb;border-radius:8px;padding:14px 18px;margin:16px 0;font-size:13px;color:#0c5460;">
+      <strong>Payment Notice:</strong> Your payout for this booking will be held in <em>Pending</em> status
+      until the service has been fully delivered and confirmed. Once the session is complete, your earnings
+      will be released to your wallet for admin approval.
+    </div>`;
+
+  const cta = `<a class="cta" href="${opts.dashboardUrl}">View in Back Office</a>`;
+
+  if (opts.role === "member") {
+    return wrap(`
+      <p>Congratulations, ${opts.recipientName}! Your appointment has been successfully booked. Here are your details:</p>
+      ${bookingDetail}
+      ${proContact}
+      ${nonRefundableNotice}
+      <p>Please reach out to your professional directly to coordinate any details. We wish you a wonderful session!</p>
+      ${cta}
+    `, "Booking Confirmed — Congratulations!");
+  }
+
+  if (opts.role === "provider") {
+    return wrap(`
+      <p>Congratulations, ${opts.recipientName}! You have a new appointment booking. Here are the details:</p>
+      ${bookingDetail}
+      ${memberContact}
+      ${paymentHoldNotice}
+      <p>Please contact your client to confirm any details and prepare for the session. We look forward to seeing you deliver a great experience!</p>
+      ${cta}
+    `, "New Appointment Booked — Congratulations!");
+  }
+
+  if (opts.role === "sponsor") {
+    return wrap(`
+      <p>Congratulations, ${opts.recipientName}! Your downline member <strong>${opts.memberName}</strong> has just booked a professional service. This is a great sign of activity in your network!</p>
+      ${bookingDetail}
+      <p>Keep up the great work growing your team. Log in to your back office to see the full details.</p>
+      ${cta}
+    `, "Downline Booking — Your Team is Active!");
+  }
+
+  return wrap(`
+    <p>A new Book-A-Pro appointment has been placed. Here is the full summary:</p>
+    ${bookingDetail}
+    ${proContact}
+    ${memberContact}
+    <p>Please monitor this booking and ensure both parties have connected. You can update the status from your admin panel.</p>
+    ${cta}
+  `, "New Booking Alert — Admin Notification");
+}
+
+export function booking8hrReminderHtml(opts: {
+  recipientName: string;
+  memberName: string;
+  memberEmail: string;
+  memberPhone?: string;
+  providerName: string;
+  providerEmail: string;
+  providerPhone?: string;
+  serviceType: string;
+  scheduledAt: string;
+  duration: number;
+  bookingId: number;
+  dashboardUrl: string;
+  role: "member" | "provider" | "admin" | "sponsor";
+}): string {
+  const bookingDetail = `
+    <div class="detail-box">
+      <p><strong>Service:</strong> ${opts.serviceType}</p>
+      <p><strong>Professional:</strong> ${opts.providerName}</p>
+      <p><strong>Member:</strong> ${opts.memberName}</p>
+      <p><strong>Date &amp; Time:</strong> ${opts.scheduledAt}</p>
+      <p><strong>Duration:</strong> ${opts.duration} minutes</p>
+      <p><strong>Booking #:</strong> ${opts.bookingId}</p>
+    </div>`;
+
+  const contactBlock =
     opts.role === "member"
-      ? `<p>Hi ${opts.recipientName}, your appointment has been confirmed! Here are the details:</p>`
+      ? `<div class="detail-box" style="border-left:4px solid #C9A84C;">
+           <p style="margin:0 0 6px;font-weight:700;">Your Professional's Contact</p>
+           <p><strong>${opts.providerName}</strong> — <a href="mailto:${opts.providerEmail}">${opts.providerEmail}</a>${opts.providerPhone ? ` · ${opts.providerPhone}` : ""}</p>
+         </div>`
       : opts.role === "provider"
-      ? `<p>Hi ${opts.recipientName}, you have a new booking request from <strong>${opts.memberName}</strong>. Here are the details:</p>`
-      : opts.role === "sponsor"
-      ? `<p>Hi ${opts.recipientName}, your downline member <strong>${opts.memberName}</strong> has just booked a professional session. Here are the details:</p>`
-      : `<p>A new booking has been placed on the platform. Here is a summary:</p>`;
+      ? `<div class="detail-box" style="border-left:4px solid #2D6A4F;">
+           <p style="margin:0 0 6px;font-weight:700;">Your Client's Contact</p>
+           <p><strong>${opts.memberName}</strong> — <a href="mailto:${opts.memberEmail}">${opts.memberEmail}</a>${opts.memberPhone ? ` · ${opts.memberPhone}` : ""}</p>
+         </div>`
+      : "";
 
-  return wrap(intro + detail, roleLabel);
+  const introMap: Record<string, string> = {
+    member:   `Hi ${opts.recipientName}, this is your <strong>8-hour reminder</strong> for your upcoming appointment!`,
+    provider: `Hi ${opts.recipientName}, you have an appointment <strong>in 8 hours</strong>. Make sure you are prepared!`,
+    sponsor:  `Hi ${opts.recipientName}, your downline member <strong>${opts.memberName}</strong> has an appointment in 8 hours.`,
+    admin:    `This is an automated 8-hour reminder for an upcoming Book-A-Pro appointment.`,
+  };
+
+  return wrap(`
+    <p>${introMap[opts.role] ?? introMap.admin}</p>
+    ${bookingDetail}
+    ${contactBlock}
+    <p>Please make sure everyone is ready and has confirmed contact with each other. We wish you a successful session!</p>
+    <a class="cta" href="${opts.dashboardUrl}">View Booking</a>
+  `, "Appointment in 8 Hours — Reminder");
 }

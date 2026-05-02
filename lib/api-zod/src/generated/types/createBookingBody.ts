@@ -13,6 +13,7 @@ export interface CreateBookingBody {
   duration: number;
   paymentMethod: string;
   amount: number;
+  walletAmount?: number;
   /** @nullable */
   notes?: string | null;
 }

@@ -24,6 +24,9 @@ interface Booking {
   amount: number;
   notes: string | null;
   createdAt: string;
+  serviceRenderedAt: string | null;
+  digitalSignature: string | null;
+  digitalSignedAt: string | null;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -49,6 +52,7 @@ const STATUS_OPTIONS = ["pending", "confirmed", "completed", "cancelled", "no-sh
 function BookingDetailModal({ booking, onClose, onUpdated }: { booking: Booking; onClose: () => void; onUpdated: () => void }) {
   const [status, setStatus] = useState(booking.status);
   const [saving, setSaving] = useState(false);
+  const [markingRendered, setMarkingRendered] = useState(false);
 
   const handleUpdate = async () => {
     setSaving(true);
@@ -58,6 +62,16 @@ function BookingDetailModal({ booking, onClose, onUpdated }: { booking: Booking;
       body: JSON.stringify({ status }),
     });
     setSaving(false);
+    if (res.ok) { onUpdated(); onClose(); }
+  };
+
+  const handleMarkRendered = async () => {
+    setMarkingRendered(true);
+    const res = await customFetch(`/api/bookings/${booking.id}/service-rendered`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+    });
+    setMarkingRendered(false);
     if (res.ok) { onUpdated(); onClose(); }
   };
 
@@ -121,6 +135,63 @@ function BookingDetailModal({ booking, onClose, onUpdated }: { booking: Booking;
               <p>{booking.notes}</p>
             </div>
           )}
+
+          {/* Service rendered + digital signature status */}
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="space-y-0.5">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Service Rendered</p>
+              {booking.serviceRenderedAt ? (
+                <p className="font-medium text-green-700 flex items-center gap-1">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  {new Date(booking.serviceRenderedAt).toLocaleDateString()}
+                </p>
+              ) : (
+                <p className="text-muted-foreground italic text-xs">Not yet marked</p>
+              )}
+            </div>
+            <div className="space-y-0.5">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Digital Signature</p>
+              {booking.digitalSignature ? (
+                <div>
+                  <p className="font-medium text-green-700 flex items-center gap-1 text-xs">
+                    <CheckCircle2 className="h-3.5 w-3.5" /> Signed
+                  </p>
+                  {booking.digitalSignedAt && (
+                    <p className="text-xs text-muted-foreground">{new Date(booking.digitalSignedAt).toLocaleDateString()}</p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-muted-foreground italic text-xs">Not yet signed</p>
+              )}
+            </div>
+          </div>
+
+          {!booking.serviceRenderedAt && (
+            <div className="p-3 rounded-lg border border-amber-200 bg-amber-50 text-sm">
+              <p className="font-medium text-amber-800 mb-2">Service Not Yet Marked as Rendered</p>
+              <p className="text-amber-700 text-xs mb-3">
+                Once the professional has delivered the service, click below to notify the member to sign their receipt.
+                This will also mark the booking as completed.
+              </p>
+              <Button
+                size="sm"
+                onClick={handleMarkRendered}
+                disabled={markingRendered}
+                className="w-full"
+                style={{ background: "#C9A84C", color: "#000" }}
+              >
+                {markingRendered ? <><RefreshCw className="h-4 w-4 mr-2 animate-spin" />Marking…</> : "Mark Service as Rendered"}
+              </Button>
+            </div>
+          )}
+
+          {booking.digitalSignature && (
+            <div className="space-y-1">
+              <p className="text-xs font-medium">Member's Signature</p>
+              <img src={booking.digitalSignature} alt="Signature" className="border rounded-lg p-2 bg-gray-50 max-h-20 object-contain w-full" />
+            </div>
+          )}
+
           <div>
             <p className="text-sm font-medium mb-2">Update Status</p>
             <Select value={status} onValueChange={setStatus}>

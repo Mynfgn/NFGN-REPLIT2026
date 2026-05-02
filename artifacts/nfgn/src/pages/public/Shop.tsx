@@ -640,7 +640,7 @@ export function Shop() {
             backgroundSize: "40px 40px",
           }}
         >
-          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "64px 32px 72px", textAlign: "center" }}>
+          <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto", padding: "64px 0 72px", textAlign: "center" }}>
             <div
               style={{
                 display: "inline-flex",
@@ -719,7 +719,7 @@ export function Shop() {
 
       {/* ── ZONE 1: BLACK — Pro Registration Packages ───── */}
       <div style={{ background: GREY_900, padding: "64px 0 80px", borderBottom: `1px solid ${GREY_800}` }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px" }}>
+        <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
             <div style={{ background: GOLD, borderRadius: 8, padding: 10 }}>
               <Package size={22} color="#000" />
@@ -736,7 +736,7 @@ export function Shop() {
           <p style={{ color: GREY_600, marginBottom: 40, fontSize: 15 }}>
             Start your NFGN journey — choose the package that fits your goals.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {proPackagesLoading ? (
               [1, 2, 3].map((i) => (
                 <div
@@ -776,7 +776,7 @@ export function Shop() {
       {/* ── Specials ─────────────────────────────────────── */}
       {saleProducts.length > 0 && (
         <div style={{ background: "linear-gradient(135deg, #1a1200, #0a0a0a)", padding: "56px 0", borderTop: "1px solid rgba(201,168,76,0.25)" }}>
-          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px" }}>
+          <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 32, flexWrap: "wrap" }}>
               <Zap size={22} color={GOLD} />
               <h2 style={{ color: "#fff", fontSize: 28, fontWeight: 900, margin: 0, fontFamily: "serif" }}>
@@ -810,7 +810,7 @@ export function Shop() {
 
       {/* ── ZONE 2: WHITE — All Products ─────────────────── */}
       <div id="products" style={{ background: GREY_50, padding: "72px 0" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px" }}>
+        <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 56 }}>
             <p style={{ color: GOLD, fontSize: 12, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 8 }}>
               Our Collection
@@ -907,7 +907,7 @@ export function Shop() {
             background: "rgba(255,255,255,0.04)",
           }}
         />
-        <div style={{ maxWidth: 800, margin: "0 auto", padding: "0 32px", textAlign: "center", position: "relative" }}>
+        <div className="px-4 md:px-8" style={{ maxWidth: 800, margin: "0 auto", textAlign: "center", position: "relative" }}>
           <div
             style={{
               display: "inline-flex",
@@ -971,7 +971,7 @@ export function Shop() {
       </div>
 
       {/* ── Trust / Stats Strip ──────────────────────────── */}
-      <div style={{ background: "#0a0a0a", padding: "28px 32px", borderTop: "1px solid rgba(201,168,76,0.2)" }}>
+      <div className="px-4 md:px-8" style={{ background: "#0a0a0a", padding: "28px 0", borderTop: "1px solid rgba(201,168,76,0.2)" }}>
         <div
           style={{
             maxWidth: 1200,

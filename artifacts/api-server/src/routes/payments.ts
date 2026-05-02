@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { SquareClient, SquareEnvironment } from "square";
+import { SquareClient, SquareEnvironment, SquareError } from "square";
 import { requireAuth } from "../lib/auth";
 
 const router: IRouter = Router();
@@ -19,7 +19,9 @@ router.post("/payments/square/process", requireAuth, async (req, res) => {
       return res.status(400).json({ error: "sourceId and amount are required" });
     }
 
-    const response = await squareClient.payments.createPayment({
+    // Square SDK v44 uses payments.create() (not createPayment)
+    // amountMoney.amount must be BigInt
+    const response = await squareClient.payments.create({
       sourceId,
       idempotencyKey: `${(req as any).user.id}-${Date.now()}`,
       amountMoney: {
@@ -31,7 +33,7 @@ router.post("/payments/square/process", requireAuth, async (req, res) => {
       buyerEmailAddress: (req as any).user.email,
     });
 
-    const payment = response.payment;
+    const payment = (response as any).payment ?? (response as any).body?.payment;
     if (payment?.status === "COMPLETED") {
       return res.json({
         success: true,
@@ -46,8 +48,13 @@ router.post("/payments/square/process", requireAuth, async (req, res) => {
       status: payment?.status,
     });
   } catch (err: any) {
-    const errors = err?.errors ?? [];
-    const message = errors[0]?.detail ?? err?.message ?? "Payment failed";
+    // Square SDK v44 throws SquareError with statusCode + body.errors
+    if (err instanceof SquareError) {
+      const errors = (err as any).body?.errors ?? [];
+      const message = errors[0]?.detail ?? err.message ?? "Payment failed";
+      return res.status(err.statusCode ?? 400).json({ error: message });
+    }
+    const message = err?.message ?? "Payment failed";
     return res.status(400).json({ error: message });
   }
 });

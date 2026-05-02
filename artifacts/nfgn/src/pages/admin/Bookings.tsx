@@ -4,10 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, Search, RefreshCw, CheckCircle2, XCircle, Clock, User, DollarSign, Filter } from "lucide-react";
+import { Calendar, Search, RefreshCw, CheckCircle2, XCircle, Clock, User, DollarSign, Filter, Lock, Unlock } from "lucide-react";
 
 interface Booking {
   id: number;
@@ -27,6 +28,8 @@ interface Booking {
   serviceRenderedAt: string | null;
   digitalSignature: string | null;
   digitalSignedAt: string | null;
+  paymentReleasedAt: string | null;
+  cancellationNote: string | null;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -53,6 +56,12 @@ function BookingDetailModal({ booking, onClose, onUpdated }: { booking: Booking;
   const [status, setStatus] = useState(booking.status);
   const [saving, setSaving] = useState(false);
   const [markingRendered, setMarkingRendered] = useState(false);
+  const [releasingPayment, setReleasingPayment] = useState(false);
+  const [releaseError, setReleaseError] = useState("");
+  const [cancellationNote, setCancellationNote] = useState(booking.cancellationNote ?? "");
+  const [savingNote, setSavingNote] = useState(false);
+
+  const isCancelled = ["cancelled", "no-show"].includes(booking.status);
 
   const handleUpdate = async () => {
     setSaving(true);
@@ -73,6 +82,33 @@ function BookingDetailModal({ booking, onClose, onUpdated }: { booking: Booking;
     });
     setMarkingRendered(false);
     if (res.ok) { onUpdated(); onClose(); }
+  };
+
+  const handleReleasePayment = async () => {
+    setReleasingPayment(true);
+    setReleaseError("");
+    const res = await customFetch(`/api/bookings/${booking.id}/release-payment`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+    });
+    setReleasingPayment(false);
+    if (res.ok) { onUpdated(); onClose(); }
+    else {
+      const data = await res.json().catch(() => ({}));
+      setReleaseError((data as any).error ?? "Could not release payment.");
+    }
+  };
+
+  const handleSaveCancellationNote = async () => {
+    if (!cancellationNote.trim()) return;
+    setSavingNote(true);
+    const res = await customFetch(`/api/bookings/${booking.id}/cancellation-note`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cancellationNote }),
+    });
+    setSavingNote(false);
+    if (res.ok) { onUpdated(); }
   };
 
   return (
@@ -185,10 +221,83 @@ function BookingDetailModal({ booking, onClose, onUpdated }: { booking: Booking;
             </div>
           )}
 
+          {/* Member signature preview */}
           {booking.digitalSignature && (
             <div className="space-y-1">
-              <p className="text-xs font-medium">Member's Signature</p>
+              <p className="text-xs font-medium">Member's Signature (Proof of Service Receipt)</p>
               <img src={booking.digitalSignature} alt="Signature" className="border rounded-lg p-2 bg-gray-50 max-h-20 object-contain w-full" />
+            </div>
+          )}
+
+          {/* Release Payment section */}
+          {!isCancelled && booking.serviceRenderedAt && (
+            booking.paymentReleasedAt ? (
+              <div className="p-3 rounded-lg border border-green-200 bg-green-50 flex items-center gap-2 text-sm text-green-800">
+                <Unlock className="h-4 w-4 shrink-0" />
+                <div>
+                  <p className="font-semibold">Payment Released</p>
+                  <p className="text-xs text-green-700">{new Date(booking.paymentReleasedAt).toLocaleString()}</p>
+                </div>
+              </div>
+            ) : (
+              <div className={`p-3 rounded-lg border text-sm ${booking.digitalSignature ? "border-green-200 bg-green-50" : "border-rose-200 bg-rose-50"}`}>
+                <div className="flex items-start gap-2 mb-2">
+                  {booking.digitalSignature
+                    ? <Unlock className="h-4 w-4 text-green-700 mt-0.5 shrink-0" />
+                    : <Lock className="h-4 w-4 text-rose-700 mt-0.5 shrink-0" />}
+                  <div>
+                    <p className={`font-semibold ${booking.digitalSignature ? "text-green-800" : "text-rose-800"}`}>
+                      {booking.digitalSignature ? "Ready to Release Payment" : "Payment Locked — Awaiting Member Signature"}
+                    </p>
+                    <p className={`text-xs mt-0.5 ${booking.digitalSignature ? "text-green-700" : "text-rose-700"}`}>
+                      {booking.digitalSignature
+                        ? "The member has signed the digital receipt confirming they received the service. You may now release payment to the professional."
+                        : "Funds cannot be released until the member signs the digital receipt. This signature serves as proof that the service was received. Once the member signs, this button will unlock."}
+                    </p>
+                  </div>
+                </div>
+                {booking.digitalSignature && (
+                  <>
+                    {releaseError && <p className="text-rose-700 text-xs mb-2">{releaseError}</p>}
+                    <Button
+                      size="sm"
+                      onClick={handleReleasePayment}
+                      disabled={releasingPayment}
+                      className="w-full"
+                      style={{ background: "#2D6A4F", color: "#fff" }}
+                    >
+                      {releasingPayment ? <><RefreshCw className="h-4 w-4 mr-2 animate-spin" />Releasing…</> : "Release Payment to Professional"}
+                    </Button>
+                  </>
+                )}
+              </div>
+            )
+          )}
+
+          {/* Cancellation statement — required when booking is cancelled */}
+          {isCancelled && (
+            <div className="p-3 rounded-lg border border-amber-200 bg-amber-50 text-sm space-y-2">
+              <p className="font-semibold text-amber-800">Cancellation Statement</p>
+              <p className="text-xs text-amber-700">
+                The professional must record a statement indicating the customer cancelled.
+                This is required on the receipt in place of a digital signature.
+              </p>
+              {booking.cancellationNote && !cancellationNote ? null : null}
+              <Textarea
+                value={cancellationNote}
+                onChange={e => setCancellationNote(e.target.value)}
+                placeholder="e.g. Customer cancelled appointment on [date]. Service was not rendered. No payment due to professional."
+                className="text-xs min-h-[80px] bg-white"
+              />
+              <Button
+                size="sm"
+                onClick={handleSaveCancellationNote}
+                disabled={savingNote || !cancellationNote.trim() || cancellationNote === booking.cancellationNote}
+                className="w-full"
+                style={{ background: "#C9A84C", color: "#000" }}
+              >
+                {savingNote ? <><RefreshCw className="h-4 w-4 mr-2 animate-spin" />Saving…</> : "Save Cancellation Statement"}
+              </Button>
             </div>
           )}
 

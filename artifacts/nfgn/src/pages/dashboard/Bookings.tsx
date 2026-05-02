@@ -593,17 +593,28 @@ function SignatureDialog({ booking, onClose, onSigned }: { booking: any; onClose
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-serif">Sign Your Receipt</DialogTitle>
+          <DialogTitle className="font-serif">Digital Receipt — Proof of Service</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
+          {/* Legal notice banner */}
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 space-y-1">
+            <p className="font-bold uppercase tracking-wide">Important — Please Read</p>
+            <p>
+              Your signature below serves as your legal confirmation that you personally received the service listed
+              from the professional named below. This digital signature is required before payment can be released
+              to the professional. Do not sign if you did not receive the service.
+            </p>
+          </div>
+
           <div className="rounded-lg border bg-muted/30 p-3 text-sm space-y-1">
             <p><strong>Service:</strong> {booking.serviceType}</p>
             <p><strong>Professional:</strong> {booking.professionalName}</p>
             <p><strong>Date:</strong> {new Date(booking.scheduledAt).toLocaleDateString("en-US", { dateStyle: "full" })}</p>
+            <p><strong>Amount:</strong> ${typeof booking.amount === "number" ? booking.amount.toFixed(2) : booking.amount}</p>
           </div>
 
           <div>
-            <p className="text-sm font-medium mb-2">Please sign below to confirm you received and are satisfied with the service:</p>
+            <p className="text-sm font-medium mb-2">Sign below with your finger or mouse:</p>
             <div className="relative rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 overflow-hidden" style={{ touchAction: "none" }}>
               <canvas
                 ref={canvasRef}
@@ -637,7 +648,9 @@ function SignatureDialog({ booking, onClose, onSigned }: { booking: any; onClose
               className="mt-0.5 h-4 w-4 rounded border-gray-300"
             />
             <span className="text-sm">
-              I confirm that I received the service described above and I am satisfied with the quality of work provided.
+              I, the member, confirm that I personally received the service described above from{" "}
+              <strong>{booking.professionalName}</strong>. I understand this digital signature authorizes the
+              release of payment to the professional and serves as the official record of service delivery.
             </span>
           </label>
         </div>
@@ -648,7 +661,7 @@ function SignatureDialog({ booking, onClose, onSigned }: { booking: any; onClose
             onClick={() => signMutation.mutate()}
             style={{ background: "#C9A84C", color: "#000" }}
           >
-            {signMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Submit Signature"}
+            {signMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign & Submit Receipt"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -835,9 +848,13 @@ export function BookingsPage() {
                     <Badge className={`text-xs border ${statusColor(booking.status)}`} variant="outline">
                       {booking.status}
                     </Badge>
-                    {(booking as any).digitalSignature ? (
+                    {(booking as any).paymentReleasedAt ? (
+                      <Badge variant="outline" className="text-xs border-green-400 text-green-800 bg-green-100 gap-1 font-semibold">
+                        <CheckCircle2 className="h-3 w-3" /> Payment Released
+                      </Badge>
+                    ) : (booking as any).digitalSignature ? (
                       <Badge variant="outline" className="text-xs border-green-300 text-green-700 bg-green-50 gap-1">
-                        <CheckCircle2 className="h-3 w-3" /> Signed
+                        <CheckCircle2 className="h-3 w-3" /> Signed — Awaiting Payment Release
                       </Badge>
                     ) : (booking as any).serviceRenderedAt ? (
                       <Button

@@ -36,6 +36,8 @@ export const bookingsTable = pgTable("bookings", {
   serviceRenderedAt: timestamp("service_rendered_at", { withTimezone: true }),
   digitalSignature: text("digital_signature"),
   digitalSignedAt: timestamp("digital_signed_at", { withTimezone: true }),
+  paymentReleasedAt: timestamp("payment_released_at", { withTimezone: true }),
+  cancellationNote: text("cancellation_note"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

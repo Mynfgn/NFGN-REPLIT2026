@@ -27,6 +27,8 @@ function formatBooking(b: typeof bookingsTable.$inferSelect, userName: string, p
     serviceRenderedAt: b.serviceRenderedAt?.toISOString() ?? null,
     digitalSignature: b.digitalSignature ?? null,
     digitalSignedAt: b.digitalSignedAt?.toISOString() ?? null,
+    paymentReleasedAt: b.paymentReleasedAt?.toISOString() ?? null,
+    cancellationNote: b.cancellationNote ?? null,
     createdAt: b.createdAt.toISOString(),
   };
 }
@@ -576,9 +578,14 @@ router.post("/bookings/:id/sign", requireAuth, async (req, res): Promise<void> =
     </div>
   </body></html>`;
 
+  const proUser = pro?.userId ? (await db.select().from(usersTable).where(eq(usersTable.id, pro.userId)))[0] : null;
+
   const notifyJobs: Promise<void>[] = [];
   if (user?.email) {
     notifyJobs.push(sendEmail({ to: user.email, subject: `Receipt Signed — Booking #${id}`, html: receiptHtml }));
+  }
+  if (proUser?.email) {
+    notifyJobs.push(sendEmail({ to: proUser.email, subject: `[NFGN] Member Signed Receipt — Booking #${id}`, html: receiptHtml }));
   }
   for (const admin of admins) {
     if (admin.email) {
@@ -587,6 +594,85 @@ router.post("/bookings/:id/sign", requireAuth, async (req, res): Promise<void> =
   }
   await Promise.allSettled(notifyJobs);
 
+  res.json(formatBooking(updated, user ? `${user.firstName} ${user.lastName}` : "Unknown", pro?.name ?? "Unknown"));
+});
+
+// PATCH /api/bookings/:id/release-payment — admin releases payment to professional; requires digital signature
+router.patch("/bookings/:id/release-payment", requireAuth, async (req, res): Promise<void> => {
+  const currentUser = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
+  const isAdmin = ["super_admin", "admin", "store_admin"].includes(currentUser.role);
+  if (!isAdmin) { res.status(403).json({ error: "Admins only" }); return; }
+
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+  const [row] = await db.select({ booking: bookingsTable, user: usersTable, pro: professionalsTable })
+    .from(bookingsTable)
+    .leftJoin(usersTable, eq(bookingsTable.userId, usersTable.id))
+    .leftJoin(professionalsTable, eq(bookingsTable.professionalId, professionalsTable.id))
+    .where(eq(bookingsTable.id, id));
+  if (!row) { res.status(404).json({ error: "Booking not found" }); return; }
+
+  if (!row.booking.digitalSignature) {
+    res.status(400).json({ error: "Cannot release payment: member has not yet signed the digital receipt." });
+    return;
+  }
+  if (row.booking.paymentReleasedAt) {
+    res.status(400).json({ error: "Payment has already been released for this booking." });
+    return;
+  }
+
+  const [updated] = await db.update(bookingsTable)
+    .set({ paymentReleasedAt: new Date(), paymentStatus: "released" })
+    .where(eq(bookingsTable.id, id))
+    .returning();
+
+  const member = row.user;
+  const pro = row.pro;
+  const proUser = pro?.userId ? (await db.select().from(usersTable).where(eq(usersTable.id, pro.userId)))[0] : null;
+  const admins = await db.select().from(usersTable).where(or(eq(usersTable.role, "admin"), eq(usersTable.role, "super_admin")));
+  const releasedAt = new Date().toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" });
+
+  const releaseHtml = `<!DOCTYPE html><html><body style="font-family:sans-serif;padding:32px;background:#f9f9f9;">
+    <div style="max-width:560px;margin:auto;background:#fff;border-radius:10px;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,.08);">
+      <h2 style="color:#2D6A4F;">Payment Released — Booking #${id}</h2>
+      <p>The member's digital receipt has been verified and payment has been released to the professional.</p>
+      <p><strong>Service:</strong> ${updated.serviceType}</p>
+      <p><strong>Member:</strong> ${member ? `${member.firstName} ${member.lastName}` : "Unknown"}</p>
+      <p><strong>Professional:</strong> ${pro?.name ?? "Unknown"}</p>
+      <p><strong>Amount:</strong> $${parseFloat(updated.amount).toFixed(2)}</p>
+      <p><strong>Released At:</strong> ${releasedAt}</p>
+      <p style="margin-top:16px;color:#C9A84C;font-weight:700;">Thank you for using New Face Global Network!</p>
+    </div>
+  </body></html>`;
+
+  const notifyJobs: Promise<void>[] = [];
+  if (member?.email) notifyJobs.push(sendEmail({ to: member.email, subject: `Payment Released — Booking #${id}`, html: releaseHtml }));
+  if (proUser?.email) notifyJobs.push(sendEmail({ to: proUser.email, subject: `[NFGN] Your Payment Has Been Released — Booking #${id}`, html: releaseHtml }));
+  for (const admin of admins) {
+    if (admin.email) notifyJobs.push(sendEmail({ to: admin.email, subject: `[NFGN] Payment Released — Booking #${id}`, html: releaseHtml }));
+  }
+  await Promise.allSettled(notifyJobs);
+
+  res.json(formatBooking(updated, member ? `${member.firstName} ${member.lastName}` : "Unknown", pro?.name ?? "Unknown"));
+});
+
+// PATCH /api/bookings/:id/cancellation-note — admin/pro records a cancellation statement on the receipt
+router.patch("/bookings/:id/cancellation-note", requireAuth, async (req, res): Promise<void> => {
+  const currentUser = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
+  const isAdmin = ["super_admin", "admin", "store_admin"].includes(currentUser.role);
+  if (!isAdmin) { res.status(403).json({ error: "Admins only" }); return; }
+
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+  const { cancellationNote } = req.body as { cancellationNote: string };
+  if (!cancellationNote?.trim()) { res.status(400).json({ error: "cancellationNote is required" }); return; }
+
+  const [updated] = await db.update(bookingsTable)
+    .set({ cancellationNote: cancellationNote.trim() })
+    .where(eq(bookingsTable.id, id))
+    .returning();
+  if (!updated) { res.status(404).json({ error: "Booking not found" }); return; }
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, updated.userId));
+  const [pro] = await db.select().from(professionalsTable).where(eq(professionalsTable.id, updated.professionalId));
   res.json(formatBooking(updated, user ? `${user.firstName} ${user.lastName}` : "Unknown", pro?.name ?? "Unknown"));
 });
 

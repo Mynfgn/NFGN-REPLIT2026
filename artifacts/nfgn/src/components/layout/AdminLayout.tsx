@@ -8,7 +8,7 @@ import {
   Award, Banknote, Calendar, Settings,
   MessageSquare, Tag, BarChart, LogOut, Menu, X,
   ShieldCheck, Network, Star, Percent, Gift, Home, Clock, UserCircle,
-  ChevronDown, ChevronRight, Briefcase, PackageCheck, Store,
+  ChevronDown, ChevronRight, Briefcase, PackageCheck, Store, Megaphone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -93,6 +93,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     { name: "Professionals", href: "/admin/professionals", icon: Users },
     { name: "Messages", href: "/admin/messages", icon: MessageSquare },
     { name: "Promos", href: "/admin/promos", icon: Tag },
+    { name: "Banner Messages", href: "/admin/banner-messages", icon: Megaphone },
     { name: "Administrative Settings", href: "/admin/settings", icon: Settings },
     { name: "Pro Compensation Settings", href: "/admin/compensation", icon: Percent },
     { name: "Reports", href: "/admin/reports", icon: BarChart },

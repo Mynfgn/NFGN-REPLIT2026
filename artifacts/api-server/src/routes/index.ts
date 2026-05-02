@@ -23,6 +23,7 @@ import paymentsRouter from "./payments";
 import paypalRouter from "./paypal";
 import bookingPayoutsRouter from "./booking-payouts";
 import proPackagesRouter from "./pro-packages";
+import bannersRouter from "./banners";
 
 const router: IRouter = Router();
 
@@ -50,5 +51,6 @@ router.use(paymentsRouter);
 router.use(paypalRouter);
 router.use(bookingPayoutsRouter);
 router.use(proPackagesRouter);
+router.use(bannersRouter);
 
 export default router;

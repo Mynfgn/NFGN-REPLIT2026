@@ -1,5 +1,5 @@
 import { useListProducts, useAddToCart } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useSearch } from "wouter";
 import { resolveImageSrc } from "@/lib/image";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,6 +12,7 @@ import { useCartStore } from "@/hooks/use-cart-store";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect } from "react";
+import { customFetch } from "@/lib/custom-fetch";
 
 const GOLD = "#C9A84C";
 const GREEN = "#2D6A4F";
@@ -83,12 +84,23 @@ function categorySlugFromName(name?: string | null): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
+const FALLBACK_BANNER_ITEMS = [
+  "Find out how you can \"GET PAID TO LOSE WEIGHT!\"",
+  "Become A Member For FREE!",
+  "SALE!! 1 Month Free Pro Membership with the purchase of IGNITE PRO XL.",
+];
+
 function TickerBar() {
-  const items = [
-    "Find out how you can \"GET PAID TO LOSE WEIGHT!\"",
-    "Become A Member For FREE!",
-    "SALE!! 1 Month Free Pro Membership with the purchase of IGNITE PRO XL.",
-  ];
+  const { data: banners } = useQuery<{ id: number; message: string }[]>({
+    queryKey: ["/api/banners"],
+    queryFn: () => customFetch("/api/banners").then(r => r.json()),
+    staleTime: 60000,
+  });
+
+  const items = banners && banners.length > 0
+    ? banners.map(b => b.message)
+    : FALLBACK_BANNER_ITEMS;
+
   return (
     <div style={{ background: GOLD, overflow: "hidden", padding: "20px 0" }}>
       <div

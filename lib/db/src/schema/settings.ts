@@ -2,6 +2,15 @@ import { pgTable, text, serial, timestamp, numeric, integer, boolean, jsonb } fr
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
+export const bannerMessagesTable = pgTable("banner_messages", {
+  id: serial("id").primaryKey(),
+  message: text("message").notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+});
+
 export const appSettingsTable = pgTable("app_settings", {
   id: serial("id").primaryKey(),
   companyName: text("company_name").notNull().default("New Face Global Network"),

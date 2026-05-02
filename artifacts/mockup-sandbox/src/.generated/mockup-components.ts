@@ -6,5 +6,5 @@ export const modules: ModuleMap = {
   "./components/mockups/nfgn-shop/ShopRedesign.tsx": () => import("../components/mockups/nfgn-shop/ShopRedesign.tsx"),
   "./components/mockups/nfgn-home/Redesign.tsx": () => import("../components/mockups/nfgn-home/Redesign.tsx"),
   "./components/mockups/nfgn-theme-compare/Dark.tsx": () => import("../components/mockups/nfgn-theme-compare/Dark.tsx"),
-  "./components/mockups/nfgn-theme-compare/Light.tsx": () => import("../components/mockups/nfgn-theme-compare/Light.tsx"),
+  "./components/mockups/nfgn-theme-compare/Light.tsx": () => import("../components/mockups/nfgn-theme-compare/Light.tsx")
 };

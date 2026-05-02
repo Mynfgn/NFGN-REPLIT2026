@@ -16,6 +16,14 @@ import { customFetch } from "@/lib/custom-fetch";
 
 const GOLD = "#C9A84C";
 const GOLD_MUTED = "rgba(201,168,76,0.75)";
+const WHITE = "#ffffff";
+const GREY_50 = "#f9f9f9";
+const GREY_100 = "#f0f0f0";
+const GREY_200 = "#e2e2e2";
+const GREY_400 = "#a0a0a0";
+const GREY_600 = "#6b7280";
+const GREY_800 = "#2a2a2a";
+const GREY_900 = "#1a1a1a";
 
 type Product = {
   id: number;
@@ -154,11 +162,11 @@ function ProductCard({
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
         style={{
-          background: hover ? "#f8f9fa" : "#fff",
-          border: `1.5px solid ${hover ? accentColor : "#e5e7eb"}`,
+          background: hover ? GREY_50 : WHITE,
+          border: `1.5px solid ${hover ? accentColor : GREY_200}`,
           borderRadius: 10,
           overflow: "hidden",
-          boxShadow: hover ? `0 8px 28px rgba(0,0,0,0.10)` : "0 2px 8px rgba(0,0,0,0.05)",
+          boxShadow: hover ? `0 8px 28px rgba(0,0,0,0.10)` : "0 2px 6px rgba(0,0,0,0.04)",
           transition: "all 0.22s ease",
           cursor: "pointer",
           transform: hover ? "translateY(-3px)" : "none",
@@ -236,13 +244,13 @@ function ProductCard({
           <p style={{ fontSize: 11, fontWeight: 700, color: accentColor, letterSpacing: "0.1em", textTransform: "uppercase", margin: 0 }}>
             {product.categoryName || "Wellness"}
           </p>
-          <h4 style={{ fontSize: 14, fontWeight: 700, color: "#111", lineHeight: 1.3, flex: 1, margin: 0 }}>
+          <h4 style={{ fontSize: 14, fontWeight: 700, color: "#1a1a1a", lineHeight: 1.3, flex: 1, margin: 0 }}>
             {product.name}
           </h4>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
-            <span style={{ fontSize: 17, fontWeight: 900, color: "#111" }}>${product.price.toFixed(2)}</span>
+            <span style={{ fontSize: 17, fontWeight: 900, color: "#1a1a1a" }}>${product.price.toFixed(2)}</span>
             {onSale && (
-              <span style={{ fontSize: 13, color: "#9ca3af", textDecoration: "line-through" }}>
+              <span style={{ fontSize: 13, color: GREY_400, textDecoration: "line-through" }}>
                 ${product.comparePrice!.toFixed(2)}
               </span>
             )}
@@ -255,8 +263,8 @@ function ProductCard({
               width: "100%",
               padding: "9px 0",
               background: hover && !outOfStock ? accentColor : "transparent",
-              color: outOfStock ? "#9ca3af" : hover ? "#fff" : accentColor,
-              border: `1.5px solid ${outOfStock ? "#e5e7eb" : accentColor}`,
+              color: outOfStock ? GREY_400 : hover ? "#fff" : accentColor,
+              border: `1.5px solid ${outOfStock ? GREY_200 : accentColor}`,
               borderRadius: 7,
               fontWeight: 700,
               fontSize: 13,
@@ -300,13 +308,13 @@ function ProPackageCard({
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{
-        background: hover ? "#111" : "#0d0d0d",
-        border: `1.5px solid ${hover ? GOLD : "rgba(201,168,76,0.25)"}`,
+        background: hover ? GREY_900 : "#111",
+        border: `1.5px solid ${hover ? GOLD : GREY_800}`,
         borderRadius: 12,
         padding: "28px 24px 32px",
         transition: "all 0.22s ease",
         transform: hover ? "translateY(-4px)" : "none",
-        boxShadow: hover ? `0 16px 40px rgba(201,168,76,0.12)` : "none",
+        boxShadow: hover ? `0 16px 40px rgba(201,168,76,0.15)` : "0 2px 12px rgba(0,0,0,0.3)",
         cursor: "pointer",
         position: "relative",
         overflow: "hidden",
@@ -352,7 +360,7 @@ function ProPackageCard({
       {/* Price */}
       <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 6 }}>
         <span style={{ color: GOLD, fontSize: 32, fontWeight: 900 }}>${pkg.price.toFixed(2)}</span>
-        <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 14, textDecoration: "line-through" }}>
+        <span style={{ color: GREY_600, fontSize: 14, textDecoration: "line-through" }}>
           ${pkg.originalPrice.toFixed(2)}
         </span>
       </div>
@@ -377,7 +385,7 @@ function ProPackageCard({
             >
               <Check size={11} color={GOLD} />
             </div>
-            <span style={{ color: "rgba(255,255,255,0.75)", fontSize: 13 }}>{perk}</span>
+            <span style={{ color: GREY_400, fontSize: 13 }}>{perk}</span>
           </div>
         ))}
       </div>
@@ -455,7 +463,7 @@ function CategorySection({
           gap: 14,
           marginBottom: 24,
           paddingBottom: 18,
-          borderBottom: "2px solid #f3f4f6",
+          borderBottom: `2px solid ${GREY_200}`,
         }}
       >
         <div
@@ -475,10 +483,10 @@ function CategorySection({
           {group.icon}
         </div>
         <div style={{ flex: 1 }}>
-          <h3 style={{ color: "#111", fontSize: 22, fontWeight: 900, margin: 0, fontFamily: "serif" }}>
+          <h3 style={{ color: "#1a1a1a", fontSize: 22, fontWeight: 900, margin: 0, fontFamily: "serif" }}>
             {group.label}
           </h3>
-          <p style={{ color: "#6b7280", fontSize: 13, margin: 0 }}>{group.description}</p>
+          <p style={{ color: GREY_600, fontSize: 13, margin: 0 }}>{group.description}</p>
         </div>
         <span
           style={{
@@ -662,7 +670,7 @@ export function Shop() {
             >
               Wellness. <span style={{ color: GOLD }}>Elevated.</span>
             </h1>
-            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 18, maxWidth: 500, margin: "0 auto 32px" }}>
+            <p style={{ color: GREY_400, fontSize: 18, maxWidth: 500, margin: "0 auto 32px" }}>
               Premium naturopathic products crafted with care — for your body, mind, and business.
             </p>
             <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
@@ -710,7 +718,7 @@ export function Shop() {
       </div>
 
       {/* ── ZONE 1: BLACK — Pro Registration Packages ───── */}
-      <div style={{ background: "#0a0a0a", padding: "64px 0 80px" }}>
+      <div style={{ background: GREY_900, padding: "64px 0 80px", borderBottom: `1px solid ${GREY_800}` }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
             <div style={{ background: GOLD, borderRadius: 8, padding: 10 }}>
@@ -725,7 +733,7 @@ export function Shop() {
               </h2>
             </div>
           </div>
-          <p style={{ color: "rgba(255,255,255,0.4)", marginBottom: 40, fontSize: 15 }}>
+          <p style={{ color: GREY_600, marginBottom: 40, fontSize: 15 }}>
             Start your NFGN journey — choose the package that fits your goals.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -801,16 +809,16 @@ export function Shop() {
       )}
 
       {/* ── ZONE 2: WHITE — All Products ─────────────────── */}
-      <div id="products" style={{ background: "#fff", padding: "72px 0" }}>
+      <div id="products" style={{ background: GREY_50, padding: "72px 0" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px" }}>
           <div style={{ textAlign: "center", marginBottom: 56 }}>
             <p style={{ color: GOLD, fontSize: 12, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 8 }}>
               Our Collection
             </p>
-            <h2 style={{ color: "#111", fontSize: 38, fontWeight: 900, margin: "0 0 12px", fontFamily: "serif" }}>
+            <h2 style={{ color: "#1a1a1a", fontSize: 38, fontWeight: 900, margin: "0 0 12px", fontFamily: "serif" }}>
               All Products
             </h2>
-            <p style={{ color: "#6b7280", fontSize: 16, maxWidth: 480, margin: "0 auto" }}>
+            <p style={{ color: GREY_600, fontSize: 16, maxWidth: 480, margin: "0 auto" }}>
               Handcrafted naturopathic formulations for every aspect of your wellness journey.
             </p>
             <div style={{ width: 60, height: 3, background: GOLD, borderRadius: 99, margin: "20px auto 0" }} />
@@ -859,8 +867,8 @@ export function Shop() {
               {products.length === 0 && (
                 <div style={{ textAlign: "center", padding: "80px 0" }}>
                   <div style={{ fontSize: 56, marginBottom: 16, opacity: 0.2, color: GOLD }}>✦</div>
-                  <h3 style={{ fontSize: 20, fontWeight: 700, color: "#111", marginBottom: 8 }}>No products yet</h3>
-                  <p style={{ color: "#6b7280" }}>Check back soon — the marketplace is being stocked.</p>
+                  <h3 style={{ fontSize: 20, fontWeight: 700, color: "#1a1a1a", marginBottom: 8 }}>No products yet</h3>
+                  <p style={{ color: GREY_600 }}>Check back soon — the marketplace is being stocked.</p>
                 </div>
               )}
             </>
@@ -929,12 +937,12 @@ export function Shop() {
           >
             Become an NFGN<br />Pro Member Today
           </h2>
-          <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 17, marginBottom: 32, lineHeight: 1.6 }}>
+          <p style={{ color: GREY_400, fontSize: 17, marginBottom: 32, lineHeight: 1.6 }}>
             Earn commissions, access exclusive products, build your network, and transform lives — including your own.
           </p>
           <div style={{ display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap", marginBottom: 36 }}>
             {["Commission Eligible", "Network Access", "Pro Pricing", "Training Included"].map((b) => (
-              <div key={b} style={{ display: "flex", alignItems: "center", gap: 6, color: "#fff", fontSize: 14 }}>
+              <div key={b} style={{ display: "flex", alignItems: "center", gap: 6, color: GREY_100, fontSize: 14 }}>
                 <Check size={16} color={GOLD} /> {b}
               </div>
             ))}
@@ -982,8 +990,8 @@ export function Shop() {
           ].map((s, i) => (
             <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
               <div style={{ color: GOLD }}>{s.icon}</div>
-              <div style={{ color: "#fff", fontSize: 22, fontWeight: 900 }}>{s.stat}</div>
-              <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 12 }}>{s.label}</div>
+              <div style={{ color: WHITE, fontSize: 22, fontWeight: 900 }}>{s.stat}</div>
+              <div style={{ color: GREY_400, fontSize: 12 }}>{s.label}</div>
             </div>
           ))}
         </div>
@@ -1000,8 +1008,8 @@ function SaleCard({ product }: { product: Product }) {
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{
-        background: hover ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.07)",
-        border: `1.5px solid ${hover ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.12)"}`,
+        background: hover ? GREY_800 : "#1c1c1c",
+        border: `1.5px solid ${hover ? GREY_600 : GREY_800}`,
         borderRadius: 12,
         padding: "20px 18px",
         cursor: "pointer",
@@ -1030,10 +1038,10 @@ function SaleCard({ product }: { product: Product }) {
         %
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 3px" }}>
+        <p style={{ color: GREY_400, fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 3px" }}>
           On Sale Now
         </p>
-        <h4 style={{ color: "#fff", fontSize: 14, fontWeight: 800, margin: "0 0 4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <h4 style={{ color: WHITE, fontSize: 14, fontWeight: 800, margin: "0 0 4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {product.name}
         </h4>
         <span
@@ -1049,7 +1057,7 @@ function SaleCard({ product }: { product: Product }) {
           {savings}% OFF
         </span>
       </div>
-      <ChevronRight size={18} color="rgba(255,255,255,0.4)" />
+      <ChevronRight size={18} color={GREY_400} />
     </div>
   );
 }

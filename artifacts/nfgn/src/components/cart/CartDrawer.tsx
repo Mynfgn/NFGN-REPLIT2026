@@ -75,50 +75,59 @@ const PAYMENT_METHODS: {
   id: PaymentMethod;
   label: string;
   sub: string;
-  color: string;
-  border: string;
+  accentColor: string;
+  activeBg: string;
   icon: React.ReactNode;
 }[] = [
   {
     id: "square",
     label: "Credit / Debit Card",
     sub: "Powered by Square — Secure & Encrypted",
-    color: "bg-blue-50",
-    border: "border-blue-400",
-    icon: <CreditCard className="h-6 w-6 text-blue-600" />,
+    accentColor: "#2563eb",
+    activeBg: "#eff6ff",
+    icon: (
+      <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #1d4ed8, #3b82f6)" }}>
+        <CreditCard className="h-5 w-5 text-white" />
+      </div>
+    ),
   },
   {
     id: "cash_app",
     label: "Cash App",
     sub: "Send payment to $NewFaceGlobalNetwork",
-    color: "bg-green-50",
-    border: "border-green-500",
+    accentColor: "#00C853",
+    activeBg: "#f0fff4",
     icon: (
-      <svg viewBox="0 0 32 32" className="h-6 w-6">
-        <rect width="32" height="32" rx="8" fill="#00D64F" />
-        <text x="16" y="23" textAnchor="middle" fill="white" fontSize="18" fontWeight="900" fontFamily="system-ui">$</text>
-      </svg>
+      <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: "#00C853" }}>
+        <span className="text-white font-black text-lg leading-none">$</span>
+      </div>
     ),
   },
   {
     id: "paypal",
     label: "PayPal",
     sub: "Send Friends & Family to NFGN PayPal",
-    color: "bg-sky-50",
-    border: "border-sky-500",
+    accentColor: "#003087",
+    activeBg: "#f0f4ff",
     icon: (
-      <svg viewBox="0 0 24 24" className="h-6 w-6 fill-sky-700">
-        <path d="M7.076 21.337H2.47a.641.641 0 01-.633-.74L4.944 3.217a.641.641 0 01.634-.541h7.78c2.628 0 4.466.613 5.46 1.822.47.572.77 1.186.903 1.826.14.68.1 1.49-.117 2.41v.004c-.676 2.847-2.814 4.292-6.353 4.292H11.29a.77.77 0 00-.761.65l-.855 5.397-.042.267a.641.641 0 01-.633.541H7.076zm10.86-13.8c-.023.15-.05.3-.083.454C16.44 12.3 13.99 13.5 11.027 13.5H9.99l-.938 5.935h2.098l.71-4.492h1.388c2.898 0 5.065-1.178 5.714-4.59.282-1.443.122-2.65-.626-3.566z" />
-      </svg>
+      <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #003087, #009cde)" }}>
+        <svg viewBox="0 0 24 24" className="h-5 w-5 fill-white">
+          <path d="M7.076 21.337H2.47a.641.641 0 01-.633-.74L4.944 3.217a.641.641 0 01.634-.541h7.78c2.628 0 4.466.613 5.46 1.822.47.572.77 1.186.903 1.826.14.68.1 1.49-.117 2.41v.004c-.676 2.847-2.814 4.292-6.353 4.292H11.29a.77.77 0 00-.761.65l-.855 5.397-.042.267a.641.641 0 01-.633.541H7.076zm10.86-13.8c-.023.15-.05.3-.083.454C16.44 12.3 13.99 13.5 11.027 13.5H9.99l-.938 5.935h2.098l.71-4.492h1.388c2.898 0 5.065-1.178 5.714-4.59.282-1.443.122-2.65-.626-3.566z" />
+        </svg>
+      </div>
     ),
   },
   {
     id: "cod",
     label: "Cash on Delivery",
     sub: "By approval only — see eligibility requirements",
-    color: "bg-amber-50",
-    border: "border-amber-400",
-    icon: <Truck className="h-6 w-6 text-amber-600" />,
+    accentColor: "#d97706",
+    activeBg: "#fffbeb",
+    icon: (
+      <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #d97706, #f59e0b)" }}>
+        <Truck className="h-5 w-5 text-white" />
+      </div>
+    ),
   },
 ];
 
@@ -835,17 +844,19 @@ export function CartDrawer() {
 
   return (
     <Sheet open={cartOpen} onOpenChange={handleOpenChange}>
-      <SheetContent side="right" className="w-full sm:w-[460px] p-0 flex flex-col overflow-hidden">
+      <SheetContent side="right" className="w-full sm:w-[460px] p-0 flex flex-col overflow-hidden bg-white">
 
         {/* ════════ CART VIEW ════════ */}
         {view === "cart" && (
           <>
-            <SheetHeader className="px-5 py-4 border-b flex-shrink-0">
-              <SheetTitle className="flex items-center gap-2 font-serif text-xl">
-                <ShoppingCart className="h-5 w-5 text-primary" />
+            <SheetHeader className="px-5 py-5 flex-shrink-0" style={{ background: "linear-gradient(135deg, #0a0a0a 0%, #1c1200 60%, #2D6A4F 100%)" }}>
+              <SheetTitle className="flex items-center gap-2.5 font-serif text-xl text-white">
+                <div className="h-8 w-8 rounded-full flex items-center justify-center" style={{ background: "rgba(201,168,76,0.2)", border: "1px solid rgba(201,168,76,0.4)" }}>
+                  <ShoppingCart className="h-4 w-4" style={{ color: "#C9A84C" }} />
+                </div>
                 Your Cart
                 {isAuthenticated && itemCount > 0 && (
-                  <Badge className="ml-1 bg-primary text-primary-foreground">{itemCount}</Badge>
+                  <Badge className="ml-1 font-bold text-black text-xs" style={{ background: "#C9A84C" }}>{itemCount} item{itemCount !== 1 ? "s" : ""}</Badge>
                 )}
               </SheetTitle>
             </SheetHeader>
@@ -860,12 +871,18 @@ export function CartDrawer() {
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : items.length === 0 ? (
-              <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 text-center gap-4">
-                <Package className="h-16 w-16 text-muted-foreground/20" />
-                <p className="font-semibold text-lg">Your cart is empty</p>
-                <p className="text-muted-foreground text-sm">Browse our naturopathic wellness products and add something you love.</p>
+              <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 text-center gap-5">
+                <div className="h-28 w-28 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, rgba(201,168,76,0.15), rgba(45,106,79,0.15))", border: "2px dashed rgba(201,168,76,0.4)" }}>
+                  <Package className="h-12 w-12" style={{ color: "#C9A84C", opacity: 0.7 }} />
+                </div>
+                <div>
+                  <p className="font-serif font-bold text-2xl">Your cart is empty</p>
+                  <p className="text-muted-foreground text-sm mt-1">Discover our premium naturopathic wellness collection.</p>
+                </div>
                 <Link href="/shop" onClick={() => setCartOpen(false)}>
-                  <Button variant="outline">Browse Our Products</Button>
+                  <Button className="gap-2 font-bold px-6" style={{ background: "linear-gradient(135deg, #C9A84C, #a8893e)", color: "#000" }}>
+                    <ShoppingCart className="h-4 w-4" /> Browse Products
+                  </Button>
                 </Link>
               </div>
             ) : (
@@ -876,21 +893,21 @@ export function CartDrawer() {
                     const displayQty = optimisticQtys[item.id] ?? item.quantity;
                     const displayLineTotal = item.price * displayQty;
                     return (
-                    <div key={item.id} className={`flex gap-3 pb-4 border-b last:border-0 transition-opacity ${isRemoving ? "opacity-40 pointer-events-none" : ""}`}>
-                      <div className="h-[72px] w-16 flex-shrink-0 rounded-md bg-muted overflow-hidden">
+                    <div key={item.id} className={`flex gap-3 p-3 rounded-xl transition-opacity ${isRemoving ? "opacity-40 pointer-events-none" : ""}`} style={{ background: "#faf8f3", border: "1px solid #e8dfc8" }}>
+                      <div className="h-[76px] w-[68px] flex-shrink-0 rounded-lg overflow-hidden" style={{ background: "linear-gradient(135deg, #f5f0e8, #ede5d0)", border: "2px solid #e0d4b8" }}>
                         {resolveImageSrc(item.productImage) ? (
                           <img src={resolveImageSrc(item.productImage)!} alt={item.productName} className="h-full w-full object-cover" />
                         ) : (
-                          <div className="h-full w-full flex items-center justify-center text-muted-foreground text-xs font-bold">NFGN</div>
+                          <div className="h-full w-full flex items-center justify-center font-black text-xs" style={{ color: "#C9A84C" }}>NFGN</div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm leading-snug">{item.productName}</p>
+                        <p className="font-semibold text-sm leading-snug">{item.productName}</p>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <p className="text-primary font-bold text-sm">${item.price.toFixed(2)}</p>
+                          <p className="font-bold text-sm" style={{ color: "#C9A84C" }}>${item.price.toFixed(2)}</p>
                           {(item.cvPerUnit ?? 0) > 0 && (
-                            <span className="text-[10px] font-bold bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-100">
-                              {item.cvPerUnit} CV/ea
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(45,106,79,0.12)", color: "#2D6A4F", border: "1px solid rgba(45,106,79,0.25)" }}>
+                              {item.cvPerUnit} CV
                             </span>
                           )}
                         </div>
@@ -898,19 +915,21 @@ export function CartDrawer() {
                           <button
                             onClick={() => handleQty(item.id, -1, item.quantity)}
                             disabled={isRemoving || displayQty <= 1}
-                            className="h-7 w-7 rounded border flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="h-7 w-7 rounded-lg flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-bold"
+                            style={{ background: "#fff", border: "1.5px solid #C9A84C", color: "#C9A84C" }}
                           >
                             <Minus className="h-3 w-3" />
                           </button>
-                          <span className="text-sm font-semibold w-6 text-center">{displayQty}</span>
+                          <span className="text-sm font-bold w-6 text-center">{displayQty}</span>
                           <button
                             onClick={() => handleQty(item.id, 1, item.quantity)}
                             disabled={isRemoving}
-                            className="h-7 w-7 rounded border flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="h-7 w-7 rounded-lg flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-bold"
+                            style={{ background: "#C9A84C", color: "#000" }}
                           >
                             <Plus className="h-3 w-3" />
                           </button>
-                          <span className="ml-auto text-sm font-semibold">${displayLineTotal.toFixed(2)}</span>
+                          <span className="ml-auto text-sm font-bold" style={{ color: "#0a0a0a" }}>${displayLineTotal.toFixed(2)}</span>
                           <button
                             onClick={() => handleRemove(item.id)}
                             disabled={isRemoving}
@@ -926,10 +945,10 @@ export function CartDrawer() {
                     </div>
                   );})}
                 </div>
-                <div className="border-t px-5 py-4 space-y-3 bg-background flex-shrink-0">
+                <div className="flex-shrink-0 px-5 py-4 space-y-3" style={{ background: "linear-gradient(180deg, #0d0d0d 0%, #111 100%)", borderTop: "3px solid #C9A84C" }}>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span className="font-bold">${subtotal.toFixed(2)}</span>
+                    <span style={{ color: "rgba(255,255,255,0.65)" }}>Subtotal</span>
+                    <span className="font-bold text-white">${subtotal.toFixed(2)}</span>
                   </div>
                   {/* PV Summary */}
                   {(() => {
@@ -942,7 +961,7 @@ export function CartDrawer() {
                     const pvNeeded = Math.max(0, 150 - cartPv);
                     return (
                       <div className="space-y-1.5">
-                        <div className="flex justify-between text-sm font-semibold text-blue-700">
+                        <div className="flex justify-between text-sm font-semibold" style={{ color: "#C9A84C" }}>
                           <span className="flex items-center gap-1">
                             <Zap className="h-3.5 w-3.5" />PV from this order
                           </span>
@@ -961,9 +980,14 @@ export function CartDrawer() {
                       </div>
                     );
                   })()}
-                  <p className="text-xs text-muted-foreground">Shipping & taxes calculated at checkout</p>
-                  <Button className="w-full gap-2" size="lg" onClick={() => setView("checkout")}>
-                    Proceed to Checkout <ArrowRight className="h-4 w-4" />
+                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.45)" }}>Shipping & taxes calculated at checkout</p>
+                  <Button
+                    className="w-full gap-2 font-bold text-base h-12"
+                    size="lg"
+                    onClick={() => setView("checkout")}
+                    style={{ background: "linear-gradient(135deg, #C9A84C 0%, #e8c96a 50%, #C9A84C 100%)", color: "#000", boxShadow: "0 4px 20px rgba(201,168,76,0.4)" }}
+                  >
+                    Proceed to Checkout <ArrowRight className="h-5 w-5" />
                   </Button>
                 </div>
               </>
@@ -974,11 +998,12 @@ export function CartDrawer() {
         {/* ════════ CHECKOUT VIEW ════════ */}
         {view === "checkout" && (
           <>
-            <SheetHeader className="px-5 py-4 border-b flex-shrink-0">
-              <SheetTitle className="flex items-center gap-2 font-serif text-xl">
-                <button onClick={() => setView("cart")} className="mr-1 text-muted-foreground hover:text-foreground">
+            <SheetHeader className="px-5 py-5 flex-shrink-0" style={{ background: "linear-gradient(135deg, #0a0a0a 0%, #1c1200 60%, #2D6A4F 100%)" }}>
+              <SheetTitle className="flex items-center gap-2.5 font-serif text-xl text-white">
+                <button onClick={() => setView("cart")} className="mr-1 rounded-full h-7 w-7 flex items-center justify-center transition-colors hover:bg-white/10" style={{ color: "#C9A84C" }}>
                   <ArrowLeft className="h-5 w-5" />
                 </button>
+                <CreditCard className="h-5 w-5" style={{ color: "#C9A84C" }} />
                 Checkout
               </SheetTitle>
             </SheetHeader>
@@ -987,7 +1012,8 @@ export function CartDrawer() {
 
               {/* ── STEP 1: NFGN Member Identification ── */}
               <section>
-                <h3 className="font-semibold text-xs uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-1">
+                <h3 className="font-bold text-xs uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: "#2D6A4F" }}>
+                  <span className="h-4 w-1 rounded-full inline-block" style={{ background: "#2D6A4F" }} />
                   <User className="h-3.5 w-3.5" /> NFGN Member Status
                 </h3>
                 {isAuthenticated && me ? (
@@ -999,8 +1025,9 @@ export function CartDrawer() {
 
               {/* ── STEP 2: Shipping Address ── */}
               <section>
-                <h3 className="font-semibold text-xs uppercase tracking-wider text-muted-foreground mb-3">
-                  Shipping Address
+                <h3 className="font-bold text-xs uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: "#C9A84C" }}>
+                  <span className="h-4 w-1 rounded-full inline-block" style={{ background: "#C9A84C" }} />
+                  <Truck className="h-3.5 w-3.5" /> Shipping Address
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="col-span-2">
@@ -1032,22 +1059,22 @@ export function CartDrawer() {
 
               {/* ── STEP 3: Payment Method ── */}
               <section>
-                <h3 className="font-semibold text-xs uppercase tracking-wider text-muted-foreground mb-3">
-                  Payment Method
+                <h3 className="font-bold text-xs uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: "#2D6A4F" }}>
+                  <span className="h-4 w-1 rounded-full inline-block" style={{ background: "#2D6A4F" }} />
+                  <CreditCard className="h-3.5 w-3.5" /> Payment Method
                   {walletApplied > 0 && !walletCoversAll && (
-                    <span className="ml-2 text-primary normal-case font-normal">(for remaining ${finalDue.toFixed(2)})</span>
+                    <span className="ml-1 normal-case font-normal" style={{ color: "#C9A84C" }}>(remaining ${finalDue.toFixed(2)})</span>
                   )}
                 </h3>
                 {walletCoversAll && (
-                  <div className="flex items-center gap-2 p-3 rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm mb-3">
+                  <div className="flex items-center gap-2 p-3 rounded-xl mb-3 text-sm font-semibold" style={{ background: "rgba(45,106,79,0.1)", border: "1.5px solid #2D6A4F", color: "#2D6A4F" }}>
                     <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
-                    Your E-Wallet balance fully covers this order — no additional payment required.
+                    Your E-Wallet fully covers this order — no extra payment needed!
                   </div>
                 )}
                 <div className="space-y-2">
                   {PAYMENT_METHODS.filter(pm => {
                     if (pm.id !== "cod") return true;
-                    // COD is only available to admins or members explicitly approved by admin
                     const role = (me as any)?.role ?? "";
                     const isAdmin = role === "admin" || role === "super_admin";
                     const isApproved = (me as any)?.canAcceptCod === true;
@@ -1056,14 +1083,20 @@ export function CartDrawer() {
                     <button
                       key={pm.id}
                       onClick={() => setPaymentMethod(pm.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg border-2 text-left transition-all ${paymentMethod === pm.id ? `${pm.border} ${pm.color}` : "border-border hover:border-muted-foreground/40"}`}
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all"
+                      style={paymentMethod === pm.id
+                        ? { border: `2px solid ${pm.accentColor}`, background: pm.activeBg, boxShadow: `0 0 0 3px ${pm.accentColor}22` }
+                        : { border: "2px solid #e5e7eb", background: "#fff" }}
                     >
                       <div className="flex-shrink-0">{pm.icon}</div>
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-sm">{pm.label}</p>
                         <p className="text-xs text-muted-foreground">{pm.sub}</p>
                       </div>
-                      {paymentMethod === pm.id && <CheckCircle2 className="ml-auto h-5 w-5 text-primary flex-shrink-0" />}
+                      {paymentMethod === pm.id
+                        ? <CheckCircle2 className="ml-auto h-5 w-5 flex-shrink-0" style={{ color: pm.accentColor }} />
+                        : <div className="ml-auto h-5 w-5 rounded-full border-2 border-gray-300 flex-shrink-0" />
+                      }
                     </button>
                   ))}
                 </div>
@@ -1293,7 +1326,10 @@ export function CartDrawer() {
 
               {/* ── Promo Code ── */}
               <section>
-                <h3 className="font-semibold text-xs uppercase tracking-wider text-muted-foreground mb-2">Promo Code</h3>
+                <h3 className="font-bold text-xs uppercase tracking-widest mb-2 flex items-center gap-2" style={{ color: "#C9A84C" }}>
+                  <span className="h-4 w-1 rounded-full inline-block" style={{ background: "#C9A84C" }} />
+                  <Tag className="h-3.5 w-3.5" /> Promo Code
+                </h3>
                 {promoApplied ? (
                   <div className="flex items-center gap-2 rounded-lg border border-green-300 bg-green-50 px-3 py-2">
                     <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
@@ -1346,7 +1382,8 @@ export function CartDrawer() {
               {/* ── E-Wallet Credit ── */}
               {isAuthenticated && walletBalance > 0 && (
                 <section>
-                  <h3 className="font-semibold text-xs uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-1.5">
+                  <h3 className="font-bold text-xs uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: "#2D6A4F" }}>
+                    <span className="h-4 w-1 rounded-full inline-block" style={{ background: "#2D6A4F" }} />
                     <Wallet className="h-3.5 w-3.5" /> E-Wallet Credit
                   </h3>
                   <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-3">
@@ -1423,38 +1460,40 @@ export function CartDrawer() {
               )}
 
               {/* ── Order Summary ── */}
-              <section className="bg-muted/40 rounded-xl p-4 space-y-2">
-                <h3 className="font-semibold text-sm">Order Summary</h3>
+              <section className="rounded-xl p-4 space-y-2" style={{ background: "linear-gradient(135deg, #faf8f3, #f5f0e8)", border: "1.5px solid #e0d4b8" }}>
+                <h3 className="font-bold text-sm flex items-center gap-2" style={{ color: "#0a0a0a" }}>
+                  <Package className="h-4 w-4" style={{ color: "#C9A84C" }} /> Order Summary
+                </h3>
                 {items.map((item: any) => (
                   <div key={item.id} className="flex justify-between text-sm">
                     <span className="text-muted-foreground truncate mr-2">{item.productName} × {item.quantity}</span>
                     <span className="flex-shrink-0 font-medium">${item.lineTotal.toFixed(2)}</span>
                   </div>
                 ))}
-                <div className="border-t pt-2 mt-2 flex justify-between font-bold">
+                <div className="flex justify-between font-bold pt-2 mt-1" style={{ borderTop: "1px solid #d4c4a0" }}>
                   <span>Subtotal</span>
                   <span>${subtotal.toFixed(2)}</span>
                 </div>
                 {promoDiscount > 0 && (
-                  <div className="flex justify-between text-sm text-green-600 font-medium">
+                  <div className="flex justify-between text-sm font-semibold" style={{ color: "#2D6A4F" }}>
                     <span className="flex items-center gap-1"><Tag className="h-3 w-3" /> Promo ({promoApplied!.code})</span>
                     <span>−${promoDiscount.toFixed(2)}</span>
                   </div>
                 )}
                 {promoDiscount > 0 && (
-                  <div className="flex justify-between text-sm font-bold border-t pt-1.5">
+                  <div className="flex justify-between text-sm font-bold pt-1.5" style={{ borderTop: "1px solid #d4c4a0" }}>
                     <span>After Discount</span>
-                    <span className="text-green-700">${discountedTotal.toFixed(2)}</span>
+                    <span style={{ color: "#2D6A4F" }}>${discountedTotal.toFixed(2)}</span>
                   </div>
                 )}
                 {walletApplied > 0 && (
-                  <div className="flex justify-between text-sm text-primary font-medium">
+                  <div className="flex justify-between text-sm font-semibold" style={{ color: "#C9A84C" }}>
                     <span className="flex items-center gap-1"><Wallet className="h-3 w-3" /> E-Wallet credit</span>
                     <span>−${walletApplied.toFixed(2)}</span>
                   </div>
                 )}
                 {walletApplied > 0 && (
-                  <div className="flex justify-between text-sm font-bold border-t pt-1.5">
+                  <div className="flex justify-between text-sm font-bold pt-1.5" style={{ borderTop: "1px solid #d4c4a0" }}>
                     <span>Amount due</span>
                     <span style={{ color: walletCoversAll ? "#2D6A4F" : "#C9A84C" }}>
                       {walletCoversAll ? "✓ $0.00" : `$${finalDue.toFixed(2)}`}
@@ -1465,17 +1504,23 @@ export function CartDrawer() {
               </section>
             </div>
 
-            <div className="border-t px-5 py-4 bg-background flex-shrink-0">
+            <div className="flex-shrink-0 px-5 py-4" style={{ background: "linear-gradient(180deg, #0d0d0d 0%, #111 100%)", borderTop: "3px solid #C9A84C" }}>
               {paymentMethod === "cash_app" && cashAppSection === "button" ? (
-                <p className="text-xs text-center text-green-700 font-medium py-1">
-                  Use the <strong>Cash App Pay</strong> button above to complete your order instantly.
+                <p className="text-xs text-center font-semibold py-1" style={{ color: "#00C853" }}>
+                  Use the <strong>Cash App Pay</strong> button above to complete your order.
                 </p>
               ) : paymentMethod === "paypal" && paypalSection === "button" ? (
-                <p className="text-xs text-center text-sky-700 font-medium py-1">
-                  Use the <strong>PayPal</strong> button above to complete your order instantly.
+                <p className="text-xs text-center font-semibold py-1" style={{ color: "#009cde" }}>
+                  Use the <strong>PayPal</strong> button above to complete your order.
                 </p>
               ) : (
-                <Button className="w-full gap-2" size="lg" onClick={placeOrder} disabled={createOrder.isPending || paymentProcessing || !isAuthenticated || !!walletError}>
+                <Button
+                  className="w-full gap-2 font-bold text-base h-12"
+                  size="lg"
+                  onClick={placeOrder}
+                  disabled={createOrder.isPending || paymentProcessing || !isAuthenticated || !!walletError}
+                  style={{ background: "linear-gradient(135deg, #C9A84C 0%, #e8c96a 50%, #C9A84C 100%)", color: "#000", boxShadow: "0 4px 20px rgba(201,168,76,0.4)" }}
+                >
                   {createOrder.isPending || paymentProcessing
                     ? <><Loader2 className="h-4 w-4 animate-spin" /> {paymentProcessing ? "Processing Payment…" : "Placing Order…"}</>
                     : walletCoversAll
@@ -1485,7 +1530,7 @@ export function CartDrawer() {
                 </Button>
               )}
               {!isAuthenticated && (
-                <p className="text-xs text-center text-muted-foreground mt-2">Sign in above to place your order.</p>
+                <p className="text-xs text-center mt-2" style={{ color: "rgba(255,255,255,0.5)" }}>Sign in above to place your order.</p>
               )}
             </div>
           </>
@@ -1494,55 +1539,72 @@ export function CartDrawer() {
         {/* ════════ CONFIRMATION VIEW ════════ */}
         {view === "confirm" && (
           <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 text-center gap-5">
-            <div className="h-20 w-20 rounded-full bg-green-100 flex items-center justify-center">
-              <CheckCircle2 className="h-10 w-10 text-green-600" />
+            {/* Celebration badge */}
+            <div className="relative">
+              <div className="h-24 w-24 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #C9A84C, #e8c96a)", boxShadow: "0 8px 32px rgba(201,168,76,0.5)" }}>
+                <CheckCircle2 className="h-12 w-12 text-black" />
+              </div>
+              <div className="absolute -top-1 -right-1 h-7 w-7 rounded-full flex items-center justify-center text-sm" style={{ background: "#2D6A4F", border: "2px solid white" }}>
+                🎉
+              </div>
             </div>
+
             <div>
-              <h2 className="text-2xl font-serif font-bold mb-1">Order Placed!</h2>
-              <p className="text-muted-foreground text-sm">Thank you for your purchase. You'll receive a confirmation shortly.</p>
+              <h2 className="text-3xl font-serif font-bold mb-1" style={{ background: "linear-gradient(135deg, #C9A84C, #2D6A4F)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                Order Placed!
+              </h2>
+              <p className="text-muted-foreground text-sm">Thank you for shopping with NFGN. A confirmation email is on its way.</p>
             </div>
 
             {lastOrder && (
-              <div className="bg-muted/40 rounded-xl p-4 w-full text-left space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Order #</span>
-                  <span className="font-mono font-semibold text-xs">{lastOrder.orderNumber}</span>
+              <div className="rounded-xl p-4 w-full text-left space-y-2.5 text-sm" style={{ background: "linear-gradient(135deg, #faf8f3, #f5f0e8)", border: "1.5px solid #C9A84C" }}>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground text-xs uppercase tracking-wider font-semibold">Order #</span>
+                  <span className="font-mono font-bold text-xs px-2 py-1 rounded" style={{ background: "#0a0a0a", color: "#C9A84C" }}>{lastOrder.orderNumber}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Payment</span>
-                  <span className="font-medium capitalize">{PAYMENT_METHODS.find(p => p.id === lastOrder.paymentMethod)?.label ?? lastOrder.paymentMethod}</span>
+                  <span className="font-semibold capitalize">{PAYMENT_METHODS.find(p => p.id === lastOrder.paymentMethod)?.label ?? lastOrder.paymentMethod}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Total</span>
-                  <span className="font-bold text-green-600">${lastOrder.total?.toFixed(2)}</span>
+                <div className="flex justify-between border-t pt-2" style={{ borderColor: "#d4c4a0" }}>
+                  <span className="font-bold">Total</span>
+                  <span className="font-black text-base" style={{ color: "#2D6A4F" }}>${lastOrder.total?.toFixed(2)}</span>
                 </div>
               </div>
             )}
 
             {(paymentMethod === "cash_app" || paymentMethod === "paypal") && !walletCoversAll && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-900 w-full text-left">
-                <p className="font-bold mb-1">⚠️ Action Required — Send Payment Now</p>
+              <div className="rounded-xl p-4 text-sm w-full text-left" style={{ background: "linear-gradient(135deg, #fffbeb, #fef3c7)", border: "2px solid #f59e0b" }}>
+                <p className="font-bold mb-1.5 flex items-center gap-1.5 text-amber-900">
+                  <AlertTriangle className="h-4 w-4 flex-shrink-0" /> Action Required — Send Payment Now
+                </p>
                 {paymentMethod === "cash_app" && (
-                  <p className="text-xs">Send <strong>${finalDue.toFixed(2)}</strong> to <strong>$NewFaceGlobalNetwork</strong> on Cash App. Include your order number in the note.</p>
+                  <p className="text-xs text-amber-800">Send <strong>${finalDue.toFixed(2)}</strong> to <strong>$NewFaceGlobalNetwork</strong> on Cash App. Include your order number in the note.</p>
                 )}
                 {paymentMethod === "paypal" && (
-                  <p className="text-xs">Send <strong>${finalDue.toFixed(2)}</strong> via PayPal Friends & Family to <strong>newfaceglobalnetwork@gmail.com</strong>. Include your order number in the note.</p>
+                  <p className="text-xs text-amber-800">Send <strong>${finalDue.toFixed(2)}</strong> via PayPal Friends & Family to <strong>newfaceglobalnetwork@gmail.com</strong>. Include your order number in the note.</p>
                 )}
               </div>
             )}
 
             {paymentMethod === "cod" && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-900 w-full text-left">
-                <p className="font-bold mb-1">COD Order Submitted</p>
-                <p className="text-xs">An NFGN representative will review your COD request and contact you at the phone number provided. Unapproved COD orders will be cancelled.</p>
+              <div className="rounded-xl p-4 text-sm w-full text-left" style={{ background: "#fffbeb", border: "1.5px solid #d97706" }}>
+                <p className="font-bold mb-1 text-amber-900">COD Order Submitted</p>
+                <p className="text-xs text-amber-800">An NFGN representative will review your COD request and contact you at the phone number provided. Unapproved COD orders will be cancelled.</p>
               </div>
             )}
 
-            <div className="flex flex-col gap-2 w-full">
-              <Link href="/dashboard/orders" onClick={() => setCartOpen(false)}>
-                <Button className="w-full" variant="outline">View My Orders</Button>
+            <div className="flex flex-col gap-2.5 w-full">
+              <Link href="/dashboard/orders" onClick={() => setCartOpen(false)} className="w-full">
+                <Button className="w-full font-semibold" variant="outline" style={{ borderColor: "#C9A84C", color: "#C9A84C" }}>
+                  View My Orders
+                </Button>
               </Link>
-              <Button className="w-full" onClick={() => { setView("cart"); setCartOpen(false); }}>
+              <Button
+                className="w-full font-bold"
+                onClick={() => { setView("cart"); setCartOpen(false); }}
+                style={{ background: "linear-gradient(135deg, #C9A84C 0%, #e8c96a 50%, #C9A84C 100%)", color: "#000", boxShadow: "0 4px 16px rgba(201,168,76,0.35)" }}
+              >
                 Continue Shopping
               </Button>
             </div>

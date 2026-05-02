@@ -406,6 +406,7 @@ export function CartDrawer() {
   const [squareError, setSquareError] = useState<string | null>(null);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const cardContainerRef = useRef<HTMLDivElement>(null);
+  const squareInitializingRef = useRef(false);
   const [cashAppSection, setCashAppSection] = useState<"button" | "manual">("button");
   const [cashAppPay, setCashAppPay] = useState<any>(null);
   const [cashAppPayReady, setCashAppPayReady] = useState(false);
@@ -467,20 +468,30 @@ export function CartDrawer() {
 
   function handleOpenChange(open: boolean) {
     setCartOpen(open);
-    if (!open) setTimeout(() => {
-      setView("cart");
-      setPromoCode("");
-      setPromoApplied(null);
-      setPromoError(null);
-      setLastOrder(null);
-      setOptimisticQtys({});
-      setWalletInput("");
-      setWalletError(null);
-      setSigEmpty(true);
-      setSigAgreed(false);
-      setSigDrawing(false);
-      setSigSubmitting(false);
-    }, 300);
+    if (!open) {
+      if (squareCard) {
+        squareCard.destroy?.();
+        setSquareCard(null);
+        setSquareReady(false);
+        squareInitializingRef.current = false;
+      }
+      setTimeout(() => {
+        setView("cart");
+        setPromoCode("");
+        setPromoApplied(null);
+        setPromoError(null);
+        setLastOrder(null);
+        setOptimisticQtys({});
+        setWalletInput("");
+        setWalletError(null);
+        setSigEmpty(true);
+        setSigAgreed(false);
+        setSigDrawing(false);
+        setSigSubmitting(false);
+        setSquareError(null);
+        setPaymentProcessing(false);
+      }, 300);
+    }
   }
 
   function handleQty(itemId: number, delta: number, serverQty: number) {
@@ -506,7 +517,8 @@ export function CartDrawer() {
 
   /* ── Square Web Payments SDK init ─────────────────────────────── */
   const initSquare = useCallback(async () => {
-    if (squareCard) return;
+    if (squareCard || squareInitializingRef.current) return;
+    squareInitializingRef.current = true;
     try {
       if (!(window as any).Square) {
         const script = document.createElement("script");
@@ -521,17 +533,23 @@ export function CartDrawer() {
       const configRes = await customFetch("/api/payments/square/config");
       const config = await configRes.json();
       const payments = (window as any).Square.payments(config.applicationId, config.locationId);
-      setSquarePayments(payments);
-      const card = await payments.card({ style: {
-        input: { fontSize: "14px", color: "#1a1a1a" },
-        ".input-container": { borderRadius: "8px", borderColor: "#e2e8f0" },
-        ".input-container.is-focus": { borderColor: "#C9A84C" },
-      }});
+      const card = await payments.card({
+        style: {
+          input: { fontSize: "14px", color: "#1a1a1a", backgroundColor: "#ffffff" },
+          ".input-container": { borderRadius: "6px", borderColor: "#d1d5db", backgroundColor: "#ffffff" },
+          ".input-container.is-focus": { borderColor: "#C9A84C" },
+          ".input-container.is-error": { borderColor: "#ef4444" },
+          ".message-text": { color: "#6b7280" },
+          ".message-icon": { color: "#6b7280" },
+        },
+      });
       await card.attach("#square-card-container");
       setSquareCard(card);
+      setSquarePayments(payments);
       setSquareReady(true);
       setSquareError(null);
     } catch (err: any) {
+      squareInitializingRef.current = false;
       setSquareError("Could not load payment form. Please refresh and try again.");
     }
   }, [squareCard]);
@@ -545,6 +563,7 @@ export function CartDrawer() {
         squareCard.destroy?.();
         setSquareCard(null);
         setSquareReady(false);
+        squareInitializingRef.current = false;
       }
     };
   }, [view, paymentMethod]);
@@ -1139,7 +1158,11 @@ export function CartDrawer() {
                       <Loader2 className="h-4 w-4 animate-spin" /> Loading secure payment form…
                     </div>
                   ) : null}
-                  <div ref={cardContainerRef} id="square-card-container" className="min-h-[90px]" />
+                  <div
+                    ref={cardContainerRef}
+                    id="square-card-container"
+                    style={{ minHeight: "90px", background: "#ffffff", borderRadius: "8px", padding: "4px" }}
+                  />
                   <p className="text-[10px] flex items-center gap-1" style={{ color: "rgba(201,168,76,0.6)" }}>
                     <Shield className="h-3 w-3" /> Visa · Mastercard · Amex · Discover · CashApp Pay all accepted
                   </p>

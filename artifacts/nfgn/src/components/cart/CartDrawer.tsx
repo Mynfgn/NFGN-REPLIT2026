@@ -45,6 +45,7 @@ import {
   Shield,
   Zap,
   Wallet,
+  PenLine,
 } from "lucide-react";
 import { Link } from "wouter";
 import { customFetch } from "@/lib/custom-fetch";
@@ -381,8 +382,13 @@ export function CartDrawer() {
     qc.invalidateQueries({ queryKey: ["/api/cart"] });
   }
 
-  /* "cart" | "checkout" | "confirm" */
-  const [view, setView] = useState<"cart" | "checkout" | "confirm">("cart");
+  /* "cart" | "checkout" | "sign" | "confirm" */
+  const [view, setView] = useState<"cart" | "checkout" | "sign" | "confirm">("cart");
+  const sigCanvasRef = useRef<HTMLCanvasElement>(null);
+  const [sigDrawing, setSigDrawing] = useState(false);
+  const [sigEmpty, setSigEmpty] = useState(true);
+  const [sigAgreed, setSigAgreed] = useState(false);
+  const [sigSubmitting, setSigSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("square");
   const [promoCode, setPromoCode] = useState("");
   const [promoValidating, setPromoValidating] = useState(false);
@@ -445,7 +451,12 @@ export function CartDrawer() {
     mutation: {
       onSuccess: (order) => {
         setLastOrder(order);
-        setView("confirm");
+        setSigEmpty(true);
+        setSigAgreed(false);
+        setSigDrawing(false);
+        const ctx = sigCanvasRef.current?.getContext("2d");
+        if (ctx && sigCanvasRef.current) ctx.clearRect(0, 0, sigCanvasRef.current.width, sigCanvasRef.current.height);
+        setView("sign");
         qc.invalidateQueries({ queryKey: ["/api/cart"] });
         qc.invalidateQueries({ queryKey: ["/api/orders"] });
       },
@@ -465,6 +476,10 @@ export function CartDrawer() {
       setOptimisticQtys({});
       setWalletInput("");
       setWalletError(null);
+      setSigEmpty(true);
+      setSigAgreed(false);
+      setSigDrawing(false);
+      setSigSubmitting(false);
     }, 300);
   }
 
@@ -849,7 +864,7 @@ export function CartDrawer() {
         {/* ════════ CART VIEW ════════ */}
         {view === "cart" && (
           <>
-            <SheetHeader className="px-5 py-5 flex-shrink-0" style={{ background: "linear-gradient(135deg, #0a0a0a 0%, #1c1200 60%, #2D6A4F 100%)" }}>
+            <SheetHeader className="px-5 py-5 flex-shrink-0" style={{ background: "linear-gradient(135deg, #0a0a0a 0%, #1c1200 100%)" }}>
               <SheetTitle className="flex items-center gap-2.5 font-serif text-xl text-white">
                 <div className="h-8 w-8 rounded-full flex items-center justify-center" style={{ background: "rgba(201,168,76,0.2)", border: "1px solid rgba(201,168,76,0.4)" }}>
                   <ShoppingCart className="h-4 w-4" style={{ color: "#C9A84C" }} />
@@ -906,7 +921,7 @@ export function CartDrawer() {
                         <div className="flex items-center gap-2 mt-0.5">
                           <p className="font-bold text-sm" style={{ color: "#C9A84C" }}>${item.price.toFixed(2)}</p>
                           {(item.cvPerUnit ?? 0) > 0 && (
-                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(45,106,79,0.12)", color: "#2D6A4F", border: "1px solid rgba(45,106,79,0.25)" }}>
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(201,168,76,0.12)", color: "#C9A84C", border: "1px solid rgba(201,168,76,0.25)" }}>
                               {item.cvPerUnit} CV
                             </span>
                           )}
@@ -998,7 +1013,7 @@ export function CartDrawer() {
         {/* ════════ CHECKOUT VIEW ════════ */}
         {view === "checkout" && (
           <>
-            <SheetHeader className="px-5 py-5 flex-shrink-0" style={{ background: "linear-gradient(135deg, #0a0a0a 0%, #1c1200 60%, #2D6A4F 100%)" }}>
+            <SheetHeader className="px-5 py-5 flex-shrink-0" style={{ background: "linear-gradient(135deg, #0a0a0a 0%, #1c1200 100%)" }}>
               <SheetTitle className="flex items-center gap-2.5 font-serif text-xl text-white">
                 <button onClick={() => setView("cart")} className="mr-1 rounded-full h-7 w-7 flex items-center justify-center transition-colors hover:bg-white/10" style={{ color: "#C9A84C" }}>
                   <ArrowLeft className="h-5 w-5" />
@@ -1453,7 +1468,7 @@ export function CartDrawer() {
                         </div>
                         <div className="flex justify-between text-sm font-bold">
                           <span>Remaining due</span>
-                          <span style={{ color: walletCoversAll ? "#2D6A4F" : "#C9A84C" }}>
+                          <span style={{ color: "#C9A84C" }}>
                             {walletCoversAll ? "✓ $0.00 — Fully covered!" : `$${finalDue.toFixed(2)}`}
                           </span>
                         </div>
@@ -1479,7 +1494,7 @@ export function CartDrawer() {
                   <span>${subtotal.toFixed(2)}</span>
                 </div>
                 {promoDiscount > 0 && (
-                  <div className="flex justify-between text-sm font-semibold" style={{ color: "#2D6A4F" }}>
+                  <div className="flex justify-between text-sm font-semibold" style={{ color: "#C9A84C" }}>
                     <span className="flex items-center gap-1"><Tag className="h-3 w-3" /> Promo ({promoApplied!.code})</span>
                     <span>−${promoDiscount.toFixed(2)}</span>
                   </div>
@@ -1487,7 +1502,7 @@ export function CartDrawer() {
                 {promoDiscount > 0 && (
                   <div className="flex justify-between text-sm font-bold pt-1.5" style={{ borderTop: "1px solid #d4c4a0" }}>
                     <span>After Discount</span>
-                    <span style={{ color: "#2D6A4F" }}>${discountedTotal.toFixed(2)}</span>
+                    <span style={{ color: "#C9A84C" }}>${discountedTotal.toFixed(2)}</span>
                   </div>
                 )}
                 {walletApplied > 0 && (
@@ -1499,7 +1514,7 @@ export function CartDrawer() {
                 {walletApplied > 0 && (
                   <div className="flex justify-between text-sm font-bold pt-1.5" style={{ borderTop: "1px solid #d4c4a0" }}>
                     <span>Amount due</span>
-                    <span style={{ color: walletCoversAll ? "#2D6A4F" : "#C9A84C" }}>
+                    <span style={{ color: "#C9A84C" }}>
                       {walletCoversAll ? "✓ $0.00" : `$${finalDue.toFixed(2)}`}
                     </span>
                   </div>
@@ -1540,6 +1555,167 @@ export function CartDrawer() {
           </>
         )}
 
+        {/* ════════ SIGNATURE VIEW ════════ */}
+        {view === "sign" && (
+          <div className="flex-1 flex flex-col px-6 py-6 gap-4 overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-1">
+              <div className="h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(201,168,76,0.15)", border: "1.5px solid rgba(201,168,76,0.4)" }}>
+                <PenLine className="h-5 w-5" style={{ color: "#C9A84C" }} />
+              </div>
+              <div>
+                <h3 className="font-serif font-bold text-lg leading-tight" style={{ color: "#fff" }}>Proof of Purchase</h3>
+                <p className="text-xs" style={{ color: "#a0a0a0" }}>Sign below to confirm you placed this order</p>
+              </div>
+            </div>
+
+            {/* Legal notice */}
+            <div className="rounded-lg p-3 text-xs space-y-1" style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.25)" }}>
+              <p className="font-bold uppercase tracking-wide" style={{ color: "#C9A84C" }}>Important — Please Read</p>
+              <p style={{ color: "#a0a0a0" }}>
+                Your signature serves as legal confirmation that you personally authorised this purchase. It is recorded with a timestamp and linked to your order as proof of presence at the time of purchase.
+              </p>
+            </div>
+
+            {/* Order summary */}
+            {lastOrder && (
+              <div className="rounded-lg p-3 text-sm space-y-1.5" style={{ background: "#1a1a1a", border: "1.5px solid #2a2a2a" }}>
+                <div className="flex justify-between">
+                  <span style={{ color: "#6b7280" }}>Order #</span>
+                  <span className="font-mono font-bold text-xs px-2 py-0.5 rounded" style={{ background: "#0a0a0a", color: "#C9A84C" }}>{lastOrder.orderNumber}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span style={{ color: "#6b7280" }}>Payment</span>
+                  <span className="font-semibold capitalize" style={{ color: "#fff" }}>{PAYMENT_METHODS.find(p => p.id === lastOrder.paymentMethod)?.label ?? lastOrder.paymentMethod}</span>
+                </div>
+                <div className="flex justify-between border-t pt-1.5" style={{ borderColor: "#2a2a2a" }}>
+                  <span className="font-bold" style={{ color: "#fff" }}>Total</span>
+                  <span className="font-black" style={{ color: "#C9A84C" }}>${lastOrder.total?.toFixed(2)}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Canvas pad */}
+            <div>
+              <p className="text-sm font-medium mb-2" style={{ color: "#e2e2e2" }}>Sign with your finger or mouse:</p>
+              <div
+                className="relative rounded-lg overflow-hidden"
+                style={{ border: "2px dashed #2a2a2a", background: "#f9f9f9", touchAction: "none" }}
+              >
+                <canvas
+                  ref={sigCanvasRef}
+                  width={480}
+                  height={140}
+                  className="w-full cursor-crosshair"
+                  onMouseDown={(e) => {
+                    const ctx = sigCanvasRef.current?.getContext("2d");
+                    if (!ctx) return;
+                    setSigDrawing(true);
+                    setSigEmpty(false);
+                    const rect = sigCanvasRef.current!.getBoundingClientRect();
+                    ctx.beginPath();
+                    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+                  }}
+                  onMouseMove={(e) => {
+                    if (!sigDrawing) return;
+                    const ctx = sigCanvasRef.current?.getContext("2d");
+                    if (!ctx) return;
+                    const rect = sigCanvasRef.current!.getBoundingClientRect();
+                    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+                    ctx.strokeStyle = "#0a0a0a";
+                    ctx.lineWidth = 2;
+                    ctx.lineCap = "round";
+                    ctx.lineJoin = "round";
+                    ctx.stroke();
+                  }}
+                  onMouseUp={() => setSigDrawing(false)}
+                  onMouseLeave={() => setSigDrawing(false)}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    const ctx = sigCanvasRef.current?.getContext("2d");
+                    if (!ctx) return;
+                    setSigDrawing(true);
+                    setSigEmpty(false);
+                    const rect = sigCanvasRef.current!.getBoundingClientRect();
+                    ctx.beginPath();
+                    ctx.moveTo(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top);
+                  }}
+                  onTouchMove={(e) => {
+                    e.preventDefault();
+                    if (!sigDrawing) return;
+                    const ctx = sigCanvasRef.current?.getContext("2d");
+                    if (!ctx) return;
+                    const rect = sigCanvasRef.current!.getBoundingClientRect();
+                    ctx.lineTo(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top);
+                    ctx.strokeStyle = "#0a0a0a";
+                    ctx.lineWidth = 2;
+                    ctx.lineCap = "round";
+                    ctx.lineJoin = "round";
+                    ctx.stroke();
+                  }}
+                  onTouchEnd={() => setSigDrawing(false)}
+                />
+                {sigEmpty && (
+                  <p className="absolute inset-0 flex items-center justify-center text-sm pointer-events-none" style={{ color: "#9ca3af" }}>
+                    Draw your signature here
+                  </p>
+                )}
+              </div>
+              <button
+                className="mt-1 text-xs"
+                style={{ color: "#6b7280", background: "none", border: "none", cursor: "pointer", padding: "2px 0" }}
+                onClick={() => {
+                  const ctx = sigCanvasRef.current?.getContext("2d");
+                  if (ctx && sigCanvasRef.current) ctx.clearRect(0, 0, sigCanvasRef.current.width, sigCanvasRef.current.height);
+                  setSigEmpty(true);
+                }}
+              >
+                Clear
+              </button>
+            </div>
+
+            {/* Consent checkbox */}
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={sigAgreed}
+                onChange={e => setSigAgreed(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded"
+                style={{ accentColor: "#C9A84C" }}
+              />
+              <span className="text-xs leading-relaxed" style={{ color: "#a0a0a0" }}>
+                I confirm that I personally authorised this purchase and am the account holder. I understand this digital signature is timestamped and serves as my official proof of purchase.
+              </span>
+            </label>
+
+            {/* Submit button */}
+            <Button
+              disabled={sigEmpty || !sigAgreed || sigSubmitting}
+              className="w-full font-bold mt-auto"
+              style={{ background: (!sigEmpty && sigAgreed) ? "linear-gradient(135deg,#C9A84C,#e8c96a)" : "#2a2a2a", color: (!sigEmpty && sigAgreed) ? "#000" : "#6b7280", border: "none", transition: "all 0.2s" }}
+              onClick={async () => {
+                if (!lastOrder?.id || !sigCanvasRef.current) return;
+                setSigSubmitting(true);
+                try {
+                  const signature = sigCanvasRef.current.toDataURL("image/png");
+                  await customFetch(`/api/orders/${lastOrder.id}/sign`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ signature }),
+                  });
+                } catch (_) {
+                  // Non-fatal — proceed to confirm even if sign fails
+                } finally {
+                  setSigSubmitting(false);
+                  setView("confirm");
+                }
+              }}
+            >
+              {sigSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <><PenLine className="h-4 w-4 mr-2" />Sign & Confirm Purchase</>}
+            </Button>
+          </div>
+        )}
+
         {/* ════════ CONFIRMATION VIEW ════════ */}
         {view === "confirm" && (
           <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 text-center gap-5">
@@ -1548,13 +1724,13 @@ export function CartDrawer() {
               <div className="h-24 w-24 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #C9A84C, #e8c96a)", boxShadow: "0 8px 32px rgba(201,168,76,0.5)" }}>
                 <CheckCircle2 className="h-12 w-12 text-black" />
               </div>
-              <div className="absolute -top-1 -right-1 h-7 w-7 rounded-full flex items-center justify-center text-sm" style={{ background: "#2D6A4F", border: "2px solid white" }}>
+              <div className="absolute -top-1 -right-1 h-7 w-7 rounded-full flex items-center justify-center text-sm" style={{ background: "#0a0a0a", border: "2px solid #C9A84C" }}>
                 🎉
               </div>
             </div>
 
             <div>
-              <h2 className="text-3xl font-serif font-bold mb-1" style={{ background: "linear-gradient(135deg, #C9A84C, #2D6A4F)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              <h2 className="text-3xl font-serif font-bold mb-1" style={{ color: "#C9A84C" }}>
                 Order Placed!
               </h2>
               <p className="text-muted-foreground text-sm">Thank you for shopping with NFGN. A confirmation email is on its way.</p>
@@ -1572,7 +1748,7 @@ export function CartDrawer() {
                 </div>
                 <div className="flex justify-between border-t pt-2" style={{ borderColor: "#d4c4a0" }}>
                   <span className="font-bold">Total</span>
-                  <span className="font-black text-base" style={{ color: "#2D6A4F" }}>${lastOrder.total?.toFixed(2)}</span>
+                  <span className="font-black text-base" style={{ color: "#C9A84C" }}>${lastOrder.total?.toFixed(2)}</span>
                 </div>
               </div>
             )}

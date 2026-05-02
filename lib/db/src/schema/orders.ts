@@ -22,6 +22,8 @@ export const ordersTable = pgTable("orders", {
   refundNote: text("refund_note"),
   refundedAt: timestamp("refunded_at", { withTimezone: true }),
   codReminderSentAt: timestamp("cod_reminder_sent_at", { withTimezone: true }),
+  digitalSignature: text("digital_signature"),
+  digitalSignedAt: timestamp("digital_signed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

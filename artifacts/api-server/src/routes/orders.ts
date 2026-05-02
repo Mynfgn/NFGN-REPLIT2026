@@ -568,4 +568,29 @@ router.post("/orders/:id/refund", requireAdmin, async (req, res): Promise<void> 
   res.json(formatOrder(updated, userName, items));
 });
 
+// POST /api/orders/:id/sign — member submits digital signature at time of purchase
+router.post("/:id/sign", requireAuth, async (req, res) => {
+  const id = parseInt(req.params.id);
+  const userId = (req as any).user?.id;
+  const { signature } = req.body as { signature?: string };
+
+  if (!signature || typeof signature !== "string" || !signature.startsWith("data:image/")) {
+    res.status(400).json({ error: "Valid signature image required" });
+    return;
+  }
+
+  const [order] = await db.select().from(ordersTable).where(eq(ordersTable.id, id));
+  if (!order) { res.status(404).json({ error: "Order not found" }); return; }
+  if (order.userId !== userId) { res.status(403).json({ error: "Forbidden" }); return; }
+  if (order.digitalSignature) { res.status(409).json({ error: "Already signed" }); return; }
+
+  const [updated] = await db
+    .update(ordersTable)
+    .set({ digitalSignature: signature, digitalSignedAt: new Date() })
+    .where(eq(ordersTable.id, id))
+    .returning();
+
+  res.json({ id: updated.id, digitalSignedAt: updated.digitalSignedAt?.toISOString() });
+});
+
 export default router;

@@ -15,7 +15,7 @@ import { Calendar, Star, Clock, CreditCard, CheckCircle2, AlertCircle, Search, W
 import { useToast } from "@/hooks/use-toast";
 
 const BRAND_GOLD = "#C9A84C";
-const BRAND_GREEN = "#2D6A4F";
+const BRAND_DARK = "#0a0a0a";
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -209,7 +209,7 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
               )}
               <div className="flex justify-between border-t pt-1 mt-1">
                 <span className="font-semibold">Remaining Due</span>
-                <span className="font-bold" style={{ color: isFullyPaid ? "#2D6A4F" : "#C9A84C" }}>
+                <span className="font-bold" style={{ color: isFullyPaid ? BRAND_GOLD : BRAND_GOLD }}>
                   {isFullyPaid ? "✓ $0.00 (Paid)" : `$${remaining.toFixed(2)}`}
                 </span>
               </div>
@@ -291,7 +291,7 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
             <img src={professional.avatar} alt={professional.name} className="h-12 w-12 rounded-full object-cover border-2 border-primary/30" />
           ) : (
             <div className="h-12 w-12 rounded-full flex items-center justify-center text-sm font-bold text-white"
-              style={{ background: `linear-gradient(135deg, ${BRAND_GOLD}, ${BRAND_GREEN})` }}>
+              style={{ background: `linear-gradient(135deg, ${BRAND_GOLD}, ${BRAND_DARK})` }}>
               {professional.name.split(" ").map((w: string) => w[0]).slice(0, 2).join("")}
             </div>
           )}
@@ -440,7 +440,7 @@ function BookingModal({ professional, walletBalance, onClose, onBooked }: Bookin
                     </div>
                     <div className="flex justify-between font-semibold text-sm text-foreground">
                       <span>Remaining due:</span>
-                      <span style={{ color: remainingDue === 0 ? "#2D6A4F" : BRAND_GOLD }}>
+                      <span style={{ color: BRAND_GOLD }}>
                         {remainingDue === 0 ? "✓ $0.00" : `$${remainingDue.toFixed(2)}`}
                       </span>
                     </div>
@@ -750,7 +750,7 @@ export function BookingsPage() {
                       <img src={pro.avatar} alt={pro.name} className="h-16 w-16 rounded-full object-cover flex-shrink-0 border-2 border-primary/30" />
                     ) : (
                       <div className="h-16 w-16 rounded-full flex items-center justify-center text-lg font-bold text-white flex-shrink-0 border-2 border-primary/30"
-                        style={{ background: `linear-gradient(135deg, ${BRAND_GOLD}, ${BRAND_GREEN})` }}>
+                        style={{ background: `linear-gradient(135deg, ${BRAND_GOLD}, ${BRAND_DARK})` }}>
                         {pro.name.split(" ").map((w: string) => w[0]).slice(0, 2).join("")}
                       </div>
                     )}
@@ -827,7 +827,7 @@ export function BookingsPage() {
                 <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-                      style={{ background: `linear-gradient(135deg, ${BRAND_GOLD}, ${BRAND_GREEN})` }}>
+                      style={{ background: `linear-gradient(135deg, ${BRAND_GOLD}, ${BRAND_DARK})` }}>
                       <User className="h-5 w-5" />
                     </div>
                     <div className="min-w-0">

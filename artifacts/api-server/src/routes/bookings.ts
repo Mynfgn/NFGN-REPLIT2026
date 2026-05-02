@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, bookingsTable, professionalsTable, usersTable, messagesTable, walletsTable, walletTransactionsTable, bookingPayoutsTable, professionalAvailabilityTable } from "@workspace/db";
-import { eq, and, desc, count, or, inArray, gte, lte } from "drizzle-orm";
+import { eq, and, desc, count, or, inArray, gte, lte, not } from "drizzle-orm";
 import { requireAuth, requireAdmin } from "../lib/auth";
 import { sendEmail, bookingConfirmationHtml, booking8hrReminderHtml } from "../lib/mailer";
 import { createSquarePaymentLink } from "../lib/square";
@@ -99,6 +99,32 @@ router.post("/bookings", requireAuth, async (req, res): Promise<void> => {
   const bookingAmount = parseFloat(String(amount));
   const remainingAfterWallet = Math.max(0, bookingAmount - walletDeduction);
   const needsCardPayment = remainingAfterWallet > 0 && (paymentMethod === "card" || paymentMethod.includes("card"));
+
+  // ── Conflict check: block if time slot overlaps an existing booking ───────
+  const reqStart = new Date(scheduledAt).getTime();
+  const reqDuration = parseInt(String(duration ?? 60));
+  const reqEnd = reqStart + reqDuration * 60 * 1000;
+
+  const existingBookings = await db.select({
+    scheduledAt: bookingsTable.scheduledAt,
+    duration: bookingsTable.duration,
+  }).from(bookingsTable).where(
+    and(
+      eq(bookingsTable.professionalId, professionalId),
+      not(eq(bookingsTable.status, "cancelled")),
+    )
+  );
+
+  const hasConflict = existingBookings.some(b => {
+    const bStart = new Date(b.scheduledAt).getTime();
+    const bEnd = bStart + b.duration * 60 * 1000;
+    return reqStart < bEnd && reqEnd > bStart;
+  });
+
+  if (hasConflict) {
+    res.status(409).json({ error: "This time slot is already booked. Please choose a different date or time." });
+    return;
+  }
 
   // ── Insert the booking first (no payment link yet) ───────────────────────
   // ── Find member's sponsor (referral user) ──────────────────────────────

@@ -11,7 +11,6 @@ import { Loader2, Plus, Trash2, CalendarDays, Clock, CheckCircle2, AlertCircle }
 import { useToast } from "@/hooks/use-toast";
 
 const BRAND_GOLD = "#C9A84C";
-const BRAND_GREEN = "#2D6A4F";
 
 function getDays(n = 30) {
   const days: Date[] = [];
@@ -176,7 +175,7 @@ export function ProAvailabilityPage() {
                         <div
                           key={slot.id}
                           className="flex items-center justify-between rounded px-2 py-1 text-xs"
-                          style={{ background: "#dcfce7", color: "#166534" }}
+                          style={{ background: "rgba(201,168,76,0.12)", color: "#7a5c10" }}
                         >
                           <div className="flex items-center gap-1">
                             <CheckCircle2 className="h-3 w-3 flex-shrink-0" />

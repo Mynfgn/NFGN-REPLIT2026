@@ -83,11 +83,11 @@ const PAYMENT_METHODS: {
     id: "square",
     label: "Credit / Debit Card",
     sub: "Powered by Square — Secure & Encrypted",
-    accentColor: "#2563eb",
-    activeBg: "#eff6ff",
+    accentColor: "#C9A84C",
+    activeBg: "#1a1200",
     icon: (
-      <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #1d4ed8, #3b82f6)" }}>
-        <CreditCard className="h-5 w-5 text-white" />
+      <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #0a0a0a, #1a1200)", border: "1px solid #C9A84C" }}>
+        <CreditCard className="h-5 w-5" style={{ color: "#C9A84C" }} />
       </div>
     ),
   },
@@ -95,11 +95,11 @@ const PAYMENT_METHODS: {
     id: "cash_app",
     label: "Cash App",
     sub: "Send payment to $NewFaceGlobalNetwork",
-    accentColor: "#00C853",
-    activeBg: "#f0fff4",
+    accentColor: "#C9A84C",
+    activeBg: "#1a1200",
     icon: (
-      <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: "#00C853" }}>
-        <span className="text-white font-black text-lg leading-none">$</span>
+      <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #0a0a0a, #1a1200)", border: "1px solid #C9A84C" }}>
+        <span className="font-black text-xl leading-none" style={{ color: "#C9A84C" }}>$</span>
       </div>
     ),
   },
@@ -107,11 +107,11 @@ const PAYMENT_METHODS: {
     id: "paypal",
     label: "PayPal",
     sub: "Send Friends & Family to NFGN PayPal",
-    accentColor: "#003087",
-    activeBg: "#f0f4ff",
+    accentColor: "#C9A84C",
+    activeBg: "#1a1200",
     icon: (
-      <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #003087, #009cde)" }}>
-        <svg viewBox="0 0 24 24" className="h-5 w-5 fill-white">
+      <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #0a0a0a, #1a1200)", border: "1px solid #C9A84C" }}>
+        <svg viewBox="0 0 24 24" className="h-5 w-5" style={{ fill: "#C9A84C" }}>
           <path d="M7.076 21.337H2.47a.641.641 0 01-.633-.74L4.944 3.217a.641.641 0 01.634-.541h7.78c2.628 0 4.466.613 5.46 1.822.47.572.77 1.186.903 1.826.14.68.1 1.49-.117 2.41v.004c-.676 2.847-2.814 4.292-6.353 4.292H11.29a.77.77 0 00-.761.65l-.855 5.397-.042.267a.641.641 0 01-.633.541H7.076zm10.86-13.8c-.023.15-.05.3-.083.454C16.44 12.3 13.99 13.5 11.027 13.5H9.99l-.938 5.935h2.098l.71-4.492h1.388c2.898 0 5.065-1.178 5.714-4.59.282-1.443.122-2.65-.626-3.566z" />
         </svg>
       </div>
@@ -121,11 +121,11 @@ const PAYMENT_METHODS: {
     id: "cod",
     label: "Cash on Delivery",
     sub: "By approval only — see eligibility requirements",
-    accentColor: "#d97706",
-    activeBg: "#fffbeb",
+    accentColor: "#C9A84C",
+    activeBg: "#1a1200",
     icon: (
-      <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #d97706, #f59e0b)" }}>
-        <Truck className="h-5 w-5 text-white" />
+      <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #0a0a0a, #1a1200)", border: "1px solid #C9A84C" }}>
+        <Truck className="h-5 w-5" style={{ color: "#C9A84C" }} />
       </div>
     ),
   },
@@ -143,20 +143,20 @@ function fmtExpiry(val: string) {
 /* ── Member status banner (inside checkout) ─────────────────────── */
 function MemberBanner({ user }: { user: any }) {
   return (
-    <div className={`rounded-lg p-3 border flex items-center gap-3 ${user.isProMember ? "bg-amber-50 border-amber-200" : "bg-blue-50 border-blue-200"}`}>
-      <div className={`h-10 w-10 rounded-full flex items-center justify-center text-base font-bold text-white flex-shrink-0 ${user.isProMember ? "bg-amber-500" : "bg-blue-500"}`}>
+    <div className="rounded-xl p-3 flex items-center gap-3" style={{ background: "linear-gradient(135deg, #1a1200, #0a0a0a)", border: "1.5px solid #C9A84C" }}>
+      <div className="h-10 w-10 rounded-full flex items-center justify-center text-base font-black flex-shrink-0" style={{ background: "linear-gradient(135deg, #C9A84C, #e8c96a)", color: "#000" }}>
         {user.firstName?.[0] ?? "?"}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-sm">{user.firstName} {user.lastName}</p>
+        <p className="font-semibold text-sm text-white">{user.firstName} {user.lastName}</p>
         <div className="flex items-center gap-1">
           {user.isProMember
-            ? <><Star className="h-3 w-3 text-amber-500" /><span className="text-xs text-amber-700 font-medium">Pro Member</span></>
-            : <><User className="h-3 w-3 text-blue-500" /><span className="text-xs text-blue-700 font-medium">NFGN Member</span></>
+            ? <><Star className="h-3 w-3 fill-current" style={{ color: "#C9A84C" }} /><span className="text-xs font-bold" style={{ color: "#C9A84C" }}>Pro Member</span></>
+            : <><User className="h-3 w-3" style={{ color: "#C9A84C" }} /><span className="text-xs font-medium" style={{ color: "rgba(201,168,76,0.8)" }}>NFGN Member</span></>
           }
         </div>
       </div>
-      <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
+      <CheckCircle2 className="h-5 w-5 flex-shrink-0" style={{ color: "#C9A84C" }} />
     </div>
   );
 }
@@ -654,7 +654,7 @@ export function CartDrawer() {
         if (!pp) throw new Error("PayPal SDK not available");
 
         const buttons = pp.Buttons({
-          style: { layout: "vertical", color: "blue", shape: "rect", label: "pay" },
+          style: { layout: "vertical", color: "gold", shape: "rect", label: "pay" },
           createOrder: async () => {
             if (!shippingValid()) {
               toast({ title: "Missing information", description: "Please fill in your shipping address first.", variant: "destructive" });
@@ -968,8 +968,8 @@ export function CartDrawer() {
                           <span>{cartPv} PV</span>
                         </div>
                         {isProMemberCart && (
-                          <div className={`rounded-lg px-3 py-2 text-xs border flex items-start gap-2 ${cartPv >= 150 ? "bg-green-50 border-green-200 text-green-800" : "bg-amber-50 border-amber-200 text-amber-800"}`}>
-                            <Star className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+                          <div className="rounded-lg px-3 py-2 text-xs border flex items-start gap-2" style={cartPv >= 150 ? { background: "rgba(201,168,76,0.12)", borderColor: "#C9A84C", color: "#C9A84C" } : { background: "rgba(201,168,76,0.06)", borderColor: "rgba(201,168,76,0.4)", color: "rgba(201,168,76,0.8)" }}>
+                            <Star className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 fill-current" />
                             <span>
                               {cartPv >= 150
                                 ? `This order (${cartPv} PV) meets the 150 PV/month BPP requirement!`
@@ -1012,8 +1012,8 @@ export function CartDrawer() {
 
               {/* ── STEP 1: NFGN Member Identification ── */}
               <section>
-                <h3 className="font-bold text-xs uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: "#2D6A4F" }}>
-                  <span className="h-4 w-1 rounded-full inline-block" style={{ background: "#2D6A4F" }} />
+                <h3 className="font-bold text-xs uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: "#C9A84C" }}>
+                  <span className="h-4 w-1 rounded-full inline-block" style={{ background: "#C9A84C" }} />
                   <User className="h-3.5 w-3.5" /> NFGN Member Status
                 </h3>
                 {isAuthenticated && me ? (
@@ -1059,15 +1059,15 @@ export function CartDrawer() {
 
               {/* ── STEP 3: Payment Method ── */}
               <section>
-                <h3 className="font-bold text-xs uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: "#2D6A4F" }}>
-                  <span className="h-4 w-1 rounded-full inline-block" style={{ background: "#2D6A4F" }} />
+                <h3 className="font-bold text-xs uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: "#C9A84C" }}>
+                  <span className="h-4 w-1 rounded-full inline-block" style={{ background: "#C9A84C" }} />
                   <CreditCard className="h-3.5 w-3.5" /> Payment Method
                   {walletApplied > 0 && !walletCoversAll && (
                     <span className="ml-1 normal-case font-normal" style={{ color: "#C9A84C" }}>(remaining ${finalDue.toFixed(2)})</span>
                   )}
                 </h3>
                 {walletCoversAll && (
-                  <div className="flex items-center gap-2 p-3 rounded-xl mb-3 text-sm font-semibold" style={{ background: "rgba(45,106,79,0.1)", border: "1.5px solid #2D6A4F", color: "#2D6A4F" }}>
+                  <div className="flex items-center gap-2 p-3 rounded-xl mb-3 text-sm font-bold" style={{ background: "linear-gradient(135deg, #1a1200, #0d0d0d)", border: "1.5px solid #C9A84C", color: "#C9A84C" }}>
                     <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
                     Your E-Wallet fully covers this order — no extra payment needed!
                   </div>
@@ -1106,26 +1106,26 @@ export function CartDrawer() {
 
               {/* Square Card */}
               {paymentMethod === "square" && (
-                <section className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-4">
+                <section className="rounded-xl p-4 space-y-4" style={{ background: "linear-gradient(135deg, #1a1200, #0d0d0d)", border: "1.5px solid #C9A84C" }}>
                   <div className="flex items-start gap-2">
-                    <Shield className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <Shield className="h-4 w-4 mt-0.5 flex-shrink-0" style={{ color: "#C9A84C" }} />
                     <div>
-                      <p className="font-semibold text-sm text-blue-900">Secure Card Payment — Powered by Square</p>
-                      <p className="text-xs text-blue-700 mt-0.5">
-                        Your card details are entered directly into Square's secure, encrypted payment form. Card data never touches NFGN's servers — it's fully PCI-DSS compliant.
+                      <p className="font-semibold text-sm text-white">Secure Card Payment — Powered by Square</p>
+                      <p className="text-xs mt-0.5" style={{ color: "rgba(201,168,76,0.75)" }}>
+                        Your card details are entered directly into Square's secure, encrypted payment form. Card data never touches NFGN's servers — fully PCI-DSS compliant.
                       </p>
                     </div>
                   </div>
-                  <hr className="border-blue-200" />
+                  <hr style={{ borderColor: "rgba(201,168,76,0.2)" }} />
                   {squareError ? (
-                    <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-xs text-red-700">{squareError}</div>
+                    <div className="rounded-lg p-3 text-xs" style={{ background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.4)", color: "#fca5a5" }}>{squareError}</div>
                   ) : !squareReady ? (
-                    <div className="flex items-center gap-2 text-xs text-blue-700 py-2">
+                    <div className="flex items-center gap-2 text-xs py-2" style={{ color: "#C9A84C" }}>
                       <Loader2 className="h-4 w-4 animate-spin" /> Loading secure payment form…
                     </div>
                   ) : null}
                   <div ref={cardContainerRef} id="square-card-container" className="min-h-[90px]" />
-                  <p className="text-[10px] text-blue-600 flex items-center gap-1">
+                  <p className="text-[10px] flex items-center gap-1" style={{ color: "rgba(201,168,76,0.6)" }}>
                     <Shield className="h-3 w-3" /> Visa · Mastercard · Amex · Discover · CashApp Pay all accepted
                   </p>
                 </section>
@@ -1133,26 +1133,28 @@ export function CartDrawer() {
 
               {/* Cash App */}
               {paymentMethod === "cash_app" && (
-                <section className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-4">
+                <section className="rounded-xl p-4 space-y-4" style={{ background: "linear-gradient(135deg, #1a1200, #0d0d0d)", border: "1.5px solid #C9A84C" }}>
                   {/* Header */}
                   <div className="flex items-center justify-between">
-                    <p className="font-bold text-green-800">Cash App Payment</p>
-                    <div className="h-9 w-9 rounded-xl bg-green-500 flex items-center justify-center">
-                      <span className="text-white font-black text-lg">$</span>
+                    <p className="font-bold text-white">Cash App Payment</p>
+                    <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #C9A84C, #e8c96a)" }}>
+                      <span className="font-black text-xl leading-none text-black">$</span>
                     </div>
                   </div>
 
                   {/* Toggle */}
-                  <div className="flex rounded-xl overflow-hidden border border-green-300 bg-green-100">
+                  <div className="flex rounded-xl overflow-hidden" style={{ border: "1px solid rgba(201,168,76,0.4)", background: "rgba(0,0,0,0.3)" }}>
                     <button
                       onClick={() => setCashAppSection("button")}
-                      className={`flex-1 py-2 text-xs font-semibold transition-colors ${cashAppSection === "button" ? "bg-green-600 text-white" : "text-green-700 hover:bg-green-200"}`}
+                      className="flex-1 py-2 text-xs font-semibold transition-colors"
+                      style={cashAppSection === "button" ? { background: "#C9A84C", color: "#000" } : { color: "rgba(201,168,76,0.7)" }}
                     >
                       ⚡ Pay Instantly
                     </button>
                     <button
                       onClick={() => setCashAppSection("manual")}
-                      className={`flex-1 py-2 text-xs font-semibold transition-colors ${cashAppSection === "manual" ? "bg-green-600 text-white" : "text-green-700 hover:bg-green-200"}`}
+                      className="flex-1 py-2 text-xs font-semibold transition-colors"
+                      style={cashAppSection === "manual" ? { background: "#C9A84C", color: "#000" } : { color: "rgba(201,168,76,0.7)" }}
                     >
                       Send Manually
                     </button>
@@ -1161,24 +1163,24 @@ export function CartDrawer() {
                   {/* Instant CashApp Pay button (Square SDK) */}
                   {cashAppSection === "button" && (
                     <div className="space-y-3">
-                      <p className="text-xs text-green-700 text-center">
+                      <p className="text-xs text-center" style={{ color: "rgba(201,168,76,0.8)" }}>
                         Tap the button — Cash App opens and handles your payment. Order confirms <strong>instantly</strong>.
                       </p>
                       {!cashAppPayReady && (
-                        <div className="flex items-center justify-center gap-2 text-xs text-green-700 py-3">
+                        <div className="flex items-center justify-center gap-2 text-xs py-3" style={{ color: "#C9A84C" }}>
                           <Loader2 className="h-4 w-4 animate-spin" /> Loading Cash App Pay…
                         </div>
                       )}
                       <div ref={cashAppContainerRef} id="cash-app-pay-container" className="min-h-[48px]" />
-                      <div className="bg-green-100 rounded-lg p-3 space-y-1">
-                        <p className="text-xs font-semibold text-green-800">How it works:</p>
-                        <p className="text-xs text-green-700">1. Tap the button — Cash App opens on your device.</p>
-                        <p className="text-xs text-green-700">2. Approve <strong>${finalDue.toFixed(2)}</strong> in your Cash App.</p>
-                        <p className="text-xs text-green-700">3. Return here — your order confirms automatically, no waiting.</p>
+                      <div className="rounded-lg p-3 space-y-1" style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)" }}>
+                        <p className="text-xs font-semibold" style={{ color: "#C9A84C" }}>How it works:</p>
+                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>1. Tap the button — Cash App opens on your device.</p>
+                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>2. Approve <strong style={{ color: "#C9A84C" }}>${finalDue.toFixed(2)}</strong> in your Cash App.</p>
+                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>3. Return here — your order confirms automatically, no waiting.</p>
                       </div>
-                      <p className="text-center text-xs text-green-600">
+                      <p className="text-center text-xs" style={{ color: "rgba(201,168,76,0.6)" }}>
                         Don't have Cash App?{" "}
-                        <button onClick={() => setCashAppSection("manual")} className="underline font-medium">Send manually instead</button>
+                        <button onClick={() => setCashAppSection("manual")} className="underline font-medium" style={{ color: "#C9A84C" }}>Send manually instead</button>
                       </p>
                     </div>
                   )}
@@ -1186,21 +1188,21 @@ export function CartDrawer() {
                   {/* Manual $cashtag fallback */}
                   {cashAppSection === "manual" && (
                     <div className="space-y-3">
-                      <div className="bg-white rounded-xl border-2 border-green-400 p-4 text-center">
-                        <p className="text-xs text-green-600 font-medium uppercase tracking-wider mb-1">NFGN Official Cash App</p>
-                        <p className="text-2xl font-black text-green-700">$NewFaceGlobalNetwork</p>
-                        <p className="text-xs text-muted-foreground mt-1">Send exactly <strong>${finalDue.toFixed(2)}</strong> to this $cashtag</p>
+                      <div className="rounded-xl p-4 text-center" style={{ background: "rgba(201,168,76,0.06)", border: "2px solid #C9A84C" }}>
+                        <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: "rgba(201,168,76,0.7)" }}>NFGN Official Cash App</p>
+                        <p className="text-2xl font-black" style={{ color: "#C9A84C" }}>$NewFaceGlobalNetwork</p>
+                        <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.5)" }}>Send exactly <strong style={{ color: "#fff" }}>${finalDue.toFixed(2)}</strong> to this $cashtag</p>
                       </div>
-                      <div className="bg-white rounded-lg p-3 border border-green-200 space-y-1.5">
-                        <p className="text-xs font-bold text-green-800 flex items-center gap-1"><Info className="h-3 w-3" /> How to send via Cash App:</p>
-                        <p className="text-xs text-green-700">1. Open Cash App and tap the <strong>$</strong> icon.</p>
-                        <p className="text-xs text-green-700">2. Type amount: <strong>${finalDue.toFixed(2)}</strong></p>
-                        <p className="text-xs text-green-700">3. Tap <strong>"Pay"</strong>, search <strong>$NewFaceGlobalNetwork</strong>.</p>
-                        <p className="text-xs text-green-700">4. Add your name and order info in the <strong>For</strong> field.</p>
-                        <p className="text-xs text-green-700">5. Confirm & send — then click <strong>"Place Order"</strong> below.</p>
-                        <p className="text-xs text-green-700">6. We confirm within <strong>24 hours</strong> and ship your order.</p>
+                      <div className="rounded-lg p-3 space-y-1.5" style={{ background: "rgba(201,168,76,0.06)", border: "1px solid rgba(201,168,76,0.2)" }}>
+                        <p className="text-xs font-bold flex items-center gap-1" style={{ color: "#C9A84C" }}><Info className="h-3 w-3" /> How to send via Cash App:</p>
+                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>1. Open Cash App and tap the <strong>$</strong> icon.</p>
+                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>2. Type amount: <strong style={{ color: "#fff" }}>${finalDue.toFixed(2)}</strong></p>
+                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>3. Tap <strong>"Pay"</strong>, search <strong>$NewFaceGlobalNetwork</strong>.</p>
+                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>4. Add your name and order info in the <strong>For</strong> field.</p>
+                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>5. Confirm & send — then click <strong>"Place Order"</strong> below.</p>
+                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>6. We confirm within <strong>24 hours</strong> and ship your order.</p>
                       </div>
-                      <p className="text-xs text-green-600 bg-green-100 rounded p-2">
+                      <p className="text-xs rounded p-2" style={{ color: "rgba(201,168,76,0.8)", background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)" }}>
                         ⚠️ Only send to the official <strong>$NewFaceGlobalNetwork</strong> cashtag. NFGN will never ask you to send to a personal account.
                       </p>
                     </div>
@@ -1210,26 +1212,28 @@ export function CartDrawer() {
 
               {/* PayPal */}
               {paymentMethod === "paypal" && (
-                <section className="bg-sky-50 border border-sky-200 rounded-xl p-4 space-y-4">
+                <section className="rounded-xl p-4 space-y-4" style={{ background: "linear-gradient(135deg, #1a1200, #0d0d0d)", border: "1.5px solid #C9A84C" }}>
                   {/* Header */}
                   <div className="flex items-center justify-between">
-                    <p className="font-bold text-sky-800">PayPal Payment</p>
-                    <div className="h-9 w-9 rounded-xl bg-[#003087] flex items-center justify-center">
-                      <span className="text-white font-black text-sm">PP</span>
+                    <p className="font-bold text-white">PayPal Payment</p>
+                    <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #C9A84C, #e8c96a)" }}>
+                      <span className="font-black text-sm text-black">PP</span>
                     </div>
                   </div>
 
                   {/* Toggle */}
-                  <div className="flex rounded-xl overflow-hidden border border-sky-300 bg-sky-100">
+                  <div className="flex rounded-xl overflow-hidden" style={{ border: "1px solid rgba(201,168,76,0.4)", background: "rgba(0,0,0,0.3)" }}>
                     <button
                       onClick={() => setPaypalSection("button")}
-                      className={`flex-1 py-2 text-xs font-semibold transition-colors ${paypalSection === "button" ? "bg-[#003087] text-white" : "text-sky-700 hover:bg-sky-200"}`}
+                      className="flex-1 py-2 text-xs font-semibold transition-colors"
+                      style={paypalSection === "button" ? { background: "#C9A84C", color: "#000" } : { color: "rgba(201,168,76,0.7)" }}
                     >
                       ⚡ Pay with PayPal
                     </button>
                     <button
                       onClick={() => setPaypalSection("manual")}
-                      className={`flex-1 py-2 text-xs font-semibold transition-colors ${paypalSection === "manual" ? "bg-[#003087] text-white" : "text-sky-700 hover:bg-sky-200"}`}
+                      className="flex-1 py-2 text-xs font-semibold transition-colors"
+                      style={paypalSection === "manual" ? { background: "#C9A84C", color: "#000" } : { color: "rgba(201,168,76,0.7)" }}
                     >
                       Send Manually
                     </button>
@@ -1238,21 +1242,21 @@ export function CartDrawer() {
                   {/* Live PayPal button */}
                   {paypalSection === "button" && (
                     <div className="space-y-3">
-                      <p className="text-xs text-sky-700 text-center">
+                      <p className="text-xs text-center" style={{ color: "rgba(201,168,76,0.8)" }}>
                         Click the button — the PayPal window opens. Log in, approve, and your order confirms <strong>instantly</strong>.
                       </p>
                       {paypalLoading && (
-                        <div className="flex items-center justify-center gap-2 text-xs text-sky-700 py-3">
+                        <div className="flex items-center justify-center gap-2 text-xs py-3" style={{ color: "#C9A84C" }}>
                           <Loader2 className="h-4 w-4 animate-spin" /> Loading PayPal…
                         </div>
                       )}
                       {paypalError && (
-                        <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-xs text-red-700">{paypalError}</div>
+                        <div className="rounded-lg p-3 text-xs" style={{ background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.4)", color: "#fca5a5" }}>{paypalError}</div>
                       )}
                       <div id="paypal-button-container" className="min-h-[48px]" />
-                      <p className="text-center text-xs text-sky-500">
+                      <p className="text-center text-xs" style={{ color: "rgba(201,168,76,0.6)" }}>
                         Don't want to use PayPal?{" "}
-                        <button onClick={() => setPaypalSection("manual")} className="underline font-medium text-sky-600">Send manually instead</button>
+                        <button onClick={() => setPaypalSection("manual")} className="underline font-medium" style={{ color: "#C9A84C" }}>Send manually instead</button>
                       </p>
                     </div>
                   )}
@@ -1260,22 +1264,22 @@ export function CartDrawer() {
                   {/* Manual fallback */}
                   {paypalSection === "manual" && (
                     <div className="space-y-3">
-                      <div className="bg-white rounded-xl border-2 border-sky-400 p-4 text-center">
-                        <p className="text-xs text-sky-600 font-medium uppercase tracking-wider mb-1">NFGN Official PayPal</p>
-                        <p className="text-lg font-bold text-sky-800">newfaceglobalnetwork@gmail.com</p>
-                        <p className="text-xs text-muted-foreground mt-1">Send exactly <strong>${finalDue.toFixed(2)}</strong> to this PayPal account</p>
+                      <div className="rounded-xl p-4 text-center" style={{ background: "rgba(201,168,76,0.06)", border: "2px solid #C9A84C" }}>
+                        <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: "rgba(201,168,76,0.7)" }}>NFGN Official PayPal</p>
+                        <p className="text-lg font-bold" style={{ color: "#C9A84C" }}>newfaceglobalnetwork@gmail.com</p>
+                        <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.5)" }}>Send exactly <strong style={{ color: "#fff" }}>${finalDue.toFixed(2)}</strong> to this PayPal account</p>
                       </div>
-                      <div className="bg-white rounded-lg p-3 border border-sky-200 space-y-1.5">
-                        <p className="text-xs font-bold text-sky-800 flex items-center gap-1"><Info className="h-3 w-3" /> How to send via PayPal:</p>
-                        <p className="text-xs text-sky-700">1. Log into <strong>PayPal.com</strong> or open the PayPal app.</p>
-                        <p className="text-xs text-sky-700">2. Click <strong>"Send & Request"</strong> → <strong>"Send Money"</strong>.</p>
-                        <p className="text-xs text-sky-700">3. Enter <strong>newfaceglobalnetwork@gmail.com</strong> as the recipient.</p>
-                        <p className="text-xs text-sky-700">4. Amount: <strong>${finalDue.toFixed(2)}</strong></p>
-                        <p className="text-xs text-sky-700">5. Choose <strong>"Friends & Family"</strong> to avoid extra fees.</p>
-                        <p className="text-xs text-sky-700">6. Add your name and order info, confirm & send.</p>
-                        <p className="text-xs text-sky-700">7. Click <strong>"Place Order"</strong> below — we confirm within <strong>24 hours</strong>.</p>
+                      <div className="rounded-lg p-3 space-y-1.5" style={{ background: "rgba(201,168,76,0.06)", border: "1px solid rgba(201,168,76,0.2)" }}>
+                        <p className="text-xs font-bold flex items-center gap-1" style={{ color: "#C9A84C" }}><Info className="h-3 w-3" /> How to send via PayPal:</p>
+                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>1. Log into <strong>PayPal.com</strong> or open the PayPal app.</p>
+                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>2. Click <strong>"Send & Request"</strong> → <strong>"Send Money"</strong>.</p>
+                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>3. Enter <strong>newfaceglobalnetwork@gmail.com</strong> as the recipient.</p>
+                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>4. Amount: <strong style={{ color: "#fff" }}>${finalDue.toFixed(2)}</strong></p>
+                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>5. Choose <strong>"Friends & Family"</strong> to avoid extra fees.</p>
+                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>6. Add your name and order info, confirm & send.</p>
+                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>7. Click <strong>"Place Order"</strong> below — we confirm within <strong>24 hours</strong>.</p>
                       </div>
-                      <p className="text-xs text-sky-700 bg-sky-100 rounded p-2">
+                      <p className="text-xs rounded p-2" style={{ color: "rgba(201,168,76,0.8)", background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)" }}>
                         ⚠️ Only send to <strong>newfaceglobalnetwork@gmail.com</strong>. NFGN will never ask you to send to a personal email.
                       </p>
                     </div>
@@ -1287,31 +1291,31 @@ export function CartDrawer() {
               {paymentMethod === "cod" && (
                 <section className="space-y-3">
                   {/* Eligibility warning */}
-                  <div className="bg-amber-50 border-2 border-amber-400 rounded-xl p-4 space-y-2">
+                  <div className="rounded-xl p-4 space-y-2" style={{ background: "linear-gradient(135deg, #1a1200, #0d0d0d)", border: "2px solid #C9A84C" }}>
                     <div className="flex items-start gap-2">
-                      <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <AlertTriangle className="h-5 w-5 mt-0.5 flex-shrink-0" style={{ color: "#C9A84C" }} />
                       <div>
-                        <p className="font-bold text-sm text-amber-900">COD — By Approval Only</p>
-                        <p className="text-xs text-amber-800 mt-1">
+                        <p className="font-bold text-sm text-white">COD — By Approval Only</p>
+                        <p className="text-xs mt-1" style={{ color: "rgba(201,168,76,0.75)" }}>
                           Cash on Delivery is a <strong>restricted payment option</strong> available exclusively for:
                         </p>
                       </div>
                     </div>
-                    <ul className="text-xs text-amber-800 space-y-1 pl-7 list-disc">
+                    <ul className="text-xs space-y-1 pl-7 list-disc" style={{ color: "rgba(201,168,76,0.8)" }}>
                       <li><strong>Pre-approved orders</strong> granted by an NFGN official in advance</li>
                       <li><strong>NFGN special events</strong> and in-person distribution arrangements</li>
                       <li><strong>Orders with written special approval</strong> from an official NFGN representative</li>
                     </ul>
-                    <div className="bg-amber-100 rounded-lg p-2 mt-1">
-                      <p className="text-xs text-amber-900 font-semibold">To request COD approval, contact NFGN directly:</p>
-                      <p className="text-xs text-amber-800">📞 <strong>(678) 909-9974</strong></p>
-                      <p className="text-xs text-amber-800">✉️ <strong>newfaceglobalnetwork@gmail.com</strong></p>
+                    <div className="rounded-lg p-2 mt-1" style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)" }}>
+                      <p className="text-xs font-semibold" style={{ color: "#C9A84C" }}>To request COD approval, contact NFGN directly:</p>
+                      <p className="text-xs" style={{ color: "rgba(255,255,255,0.75)" }}>📞 <strong>(678) 909-9974</strong></p>
+                      <p className="text-xs" style={{ color: "rgba(255,255,255,0.75)" }}>✉️ <strong>newfaceglobalnetwork@gmail.com</strong></p>
                     </div>
                   </div>
 
-                  <div className="bg-white border border-border rounded-xl p-4 space-y-2">
+                  <div className="rounded-xl p-4 space-y-2" style={{ background: "#faf8f3", border: "1px solid #e8dfc8" }}>
                     <div className="flex items-center gap-2">
-                      <Truck className="h-4 w-4 text-amber-600" />
+                      <Truck className="h-4 w-4" style={{ color: "#C9A84C" }} />
                       <p className="font-semibold text-sm">COD Terms</p>
                     </div>
                     <ul className="text-xs text-muted-foreground space-y-1">
@@ -1331,18 +1335,18 @@ export function CartDrawer() {
                   <Tag className="h-3.5 w-3.5" /> Promo Code
                 </h3>
                 {promoApplied ? (
-                  <div className="flex items-center gap-2 rounded-lg border border-green-300 bg-green-50 px-3 py-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  <div className="flex items-center gap-2 rounded-xl px-3 py-2.5" style={{ background: "linear-gradient(135deg, #1a1200, #0d0d0d)", border: "1.5px solid #C9A84C" }}>
+                    <CheckCircle2 className="h-4 w-4 flex-shrink-0" style={{ color: "#C9A84C" }} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-mono font-bold text-green-700">{promoApplied.code}</p>
-                      <p className="text-xs text-green-600">
+                      <p className="text-sm font-mono font-black" style={{ color: "#C9A84C" }}>{promoApplied.code}</p>
+                      <p className="text-xs" style={{ color: "rgba(201,168,76,0.75)" }}>
                         {promoApplied.discountType === "percentage"
                           ? `${promoApplied.discountValue}% off applied`
                           : `$${promoApplied.discountValue.toFixed(2)} off applied`}
-                        {" — "}<span className="font-semibold">−${promoDiscount.toFixed(2)}</span>
+                        {" — "}<span className="font-semibold text-white">−${promoDiscount.toFixed(2)}</span>
                       </p>
                     </div>
-                    <button onClick={clearPromo} className="text-green-600 hover:text-green-800 text-xs underline ml-1 flex-shrink-0">
+                    <button onClick={clearPromo} className="text-xs underline ml-1 flex-shrink-0" style={{ color: "rgba(201,168,76,0.7)" }}>
                       Remove
                     </button>
                   </div>
@@ -1382,8 +1386,8 @@ export function CartDrawer() {
               {/* ── E-Wallet Credit ── */}
               {isAuthenticated && walletBalance > 0 && (
                 <section>
-                  <h3 className="font-bold text-xs uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: "#2D6A4F" }}>
-                    <span className="h-4 w-1 rounded-full inline-block" style={{ background: "#2D6A4F" }} />
+                  <h3 className="font-bold text-xs uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: "#C9A84C" }}>
+                    <span className="h-4 w-1 rounded-full inline-block" style={{ background: "#C9A84C" }} />
                     <Wallet className="h-3.5 w-3.5" /> E-Wallet Credit
                   </h3>
                   <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-3">
@@ -1574,23 +1578,23 @@ export function CartDrawer() {
             )}
 
             {(paymentMethod === "cash_app" || paymentMethod === "paypal") && !walletCoversAll && (
-              <div className="rounded-xl p-4 text-sm w-full text-left" style={{ background: "linear-gradient(135deg, #fffbeb, #fef3c7)", border: "2px solid #f59e0b" }}>
-                <p className="font-bold mb-1.5 flex items-center gap-1.5 text-amber-900">
+              <div className="rounded-xl p-4 text-sm w-full text-left" style={{ background: "linear-gradient(135deg, #1a1200, #0d0d0d)", border: "2px solid #C9A84C" }}>
+                <p className="font-bold mb-1.5 flex items-center gap-1.5" style={{ color: "#C9A84C" }}>
                   <AlertTriangle className="h-4 w-4 flex-shrink-0" /> Action Required — Send Payment Now
                 </p>
                 {paymentMethod === "cash_app" && (
-                  <p className="text-xs text-amber-800">Send <strong>${finalDue.toFixed(2)}</strong> to <strong>$NewFaceGlobalNetwork</strong> on Cash App. Include your order number in the note.</p>
+                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.75)" }}>Send <strong style={{ color: "#C9A84C" }}>${finalDue.toFixed(2)}</strong> to <strong style={{ color: "#fff" }}>$NewFaceGlobalNetwork</strong> on Cash App. Include your order number in the note.</p>
                 )}
                 {paymentMethod === "paypal" && (
-                  <p className="text-xs text-amber-800">Send <strong>${finalDue.toFixed(2)}</strong> via PayPal Friends & Family to <strong>newfaceglobalnetwork@gmail.com</strong>. Include your order number in the note.</p>
+                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.75)" }}>Send <strong style={{ color: "#C9A84C" }}>${finalDue.toFixed(2)}</strong> via PayPal Friends & Family to <strong style={{ color: "#fff" }}>newfaceglobalnetwork@gmail.com</strong>. Include your order number in the note.</p>
                 )}
               </div>
             )}
 
             {paymentMethod === "cod" && (
-              <div className="rounded-xl p-4 text-sm w-full text-left" style={{ background: "#fffbeb", border: "1.5px solid #d97706" }}>
-                <p className="font-bold mb-1 text-amber-900">COD Order Submitted</p>
-                <p className="text-xs text-amber-800">An NFGN representative will review your COD request and contact you at the phone number provided. Unapproved COD orders will be cancelled.</p>
+              <div className="rounded-xl p-4 text-sm w-full text-left" style={{ background: "linear-gradient(135deg, #1a1200, #0d0d0d)", border: "1.5px solid #C9A84C" }}>
+                <p className="font-bold mb-1" style={{ color: "#C9A84C" }}>COD Order Submitted</p>
+                <p className="text-xs" style={{ color: "rgba(255,255,255,0.75)" }}>An NFGN representative will review your COD request and contact you at the phone number provided. Unapproved COD orders will be cancelled.</p>
               </div>
             )}
 

@@ -533,16 +533,7 @@ export function CartDrawer() {
       const configRes = await customFetch("/api/payments/square/config");
       const config = await configRes.json();
       const payments = (window as any).Square.payments(config.applicationId, config.locationId);
-      const card = await payments.card({
-        style: {
-          input: { fontSize: "14px", color: "#1a1a1a", backgroundColor: "#ffffff" },
-          ".input-container": { borderRadius: "6px", borderColor: "#d1d5db", backgroundColor: "#ffffff" },
-          ".input-container.is-focus": { borderColor: "#C9A84C" },
-          ".input-container.is-error": { borderColor: "#ef4444" },
-          ".message-text": { color: "#6b7280" },
-          ".message-icon": { color: "#6b7280" },
-        },
-      });
+      const card = await payments.card();
       await card.attach("#square-card-container");
       setSquareCard(card);
       setSquarePayments(payments);
@@ -550,13 +541,22 @@ export function CartDrawer() {
       setSquareError(null);
     } catch (err: any) {
       squareInitializingRef.current = false;
-      setSquareError("Could not load payment form. Please refresh and try again.");
+      console.error("Square card init error:", err);
+      setSquareError("Could not load payment form. Tap Retry below.");
     }
   }, [squareCard]);
 
   useEffect(() => {
-    if (view === "checkout" && paymentMethod === "square" && cardContainerRef.current && !squareCard) {
-      initSquare();
+    if (view === "checkout" && paymentMethod === "square" && !squareCard) {
+      // Wait for the Sheet slide-in animation (~300ms) to finish before
+      // attaching the Square card form — otherwise the container has zero
+      // dimensions and Square throws ElementNotFoundError.
+      const t = setTimeout(() => {
+        if (cardContainerRef.current && !squareCard) {
+          initSquare();
+        }
+      }, 350);
+      return () => clearTimeout(t);
     }
     return () => {
       if (view !== "checkout" && squareCard) {
@@ -1152,7 +1152,16 @@ export function CartDrawer() {
                   </div>
                   <hr style={{ borderColor: "rgba(201,168,76,0.2)" }} />
                   {squareError ? (
-                    <div className="rounded-lg p-3 text-xs" style={{ background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.4)", color: "#fca5a5" }}>{squareError}</div>
+                    <div className="space-y-2">
+                      <div className="rounded-lg p-3 text-xs" style={{ background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.4)", color: "#fca5a5" }}>{squareError}</div>
+                      <button
+                        onClick={() => { setSquareError(null); squareInitializingRef.current = false; setTimeout(initSquare, 100); }}
+                        className="w-full rounded-lg py-2 text-xs font-bold"
+                        style={{ background: "rgba(201,168,76,0.15)", border: "1px solid rgba(201,168,76,0.4)", color: "#C9A84C" }}
+                      >
+                        ↻ Retry Loading Card Form
+                      </button>
+                    </div>
                   ) : !squareReady ? (
                     <div className="flex items-center gap-2 text-xs py-2" style={{ color: "#C9A84C" }}>
                       <Loader2 className="h-4 w-4 animate-spin" /> Loading secure payment form…

@@ -56,6 +56,46 @@ router.post("/pro-packages", requireAdmin, async (req, res): Promise<void> => {
   });
 });
 
+router.put("/pro-packages/reorder", requireAdmin, async (req, res): Promise<void> => {
+  const { order } = req.body as { order: unknown };
+
+  if (!Array.isArray(order) || order.length === 0) {
+    res.status(400).json({ error: "order must be a non-empty array" });
+    return;
+  }
+
+  for (const item of order) {
+    const entry = item as Record<string, unknown>;
+    if (
+      typeof item !== "object" ||
+      item === null ||
+      typeof entry.id !== "number" ||
+      !Number.isInteger(entry.id) ||
+      (entry.id as number) <= 0 ||
+      typeof entry.sortOrder !== "number" ||
+      !Number.isInteger(entry.sortOrder)
+    ) {
+      res.status(400).json({ error: "each item must have a positive integer id and an integer sortOrder" });
+      return;
+    }
+  }
+
+  const validOrder = order as { id: number; sortOrder: number }[];
+
+  await db.transaction(async (tx) => {
+    await Promise.all(
+      validOrder.map(({ id, sortOrder }) =>
+        tx
+          .update(proPackagesTable)
+          .set({ sortOrder })
+          .where(eq(proPackagesTable.id, id))
+      )
+    );
+  });
+
+  res.sendStatus(204);
+});
+
 router.put("/pro-packages/:id", requireAdmin, async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }

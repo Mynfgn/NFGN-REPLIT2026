@@ -1,4 +1,19 @@
 import { useState, useEffect } from "react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { customFetch } from "@/lib/custom-fetch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +28,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Plus, Pencil, Trash2, RefreshCw, Package, Check, GripVertical } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, Package, Check, GripVertical, Save } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
@@ -38,6 +53,96 @@ const EMPTY_FORM = {
   sortOrder: "0",
 };
 
+interface SortableRowProps {
+  pkg: ProPackage;
+  onEdit: (pkg: ProPackage) => void;
+  onDelete: (pkg: ProPackage) => void;
+}
+
+function SortableRow({ pkg, onEdit, onDelete }: SortableRowProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: pkg.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1 : undefined,
+  };
+
+  const savings = (pkg.originalPrice - pkg.price).toFixed(2);
+
+  return (
+    <TableRow ref={setNodeRef} style={style}>
+      <TableCell>
+        <button
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-muted touch-none"
+          aria-label="Drag to reorder"
+        >
+          <GripVertical className="h-4 w-4 text-muted-foreground" />
+        </button>
+      </TableCell>
+      <TableCell className="font-medium">{pkg.name}</TableCell>
+      <TableCell>
+        {pkg.badge ? (
+          <Badge
+            style={{
+              background: `${pkg.badgeColor}20`,
+              color: pkg.badgeColor,
+              border: `1px solid ${pkg.badgeColor}40`,
+            }}
+          >
+            {pkg.badge}
+          </Badge>
+        ) : (
+          <span className="text-muted-foreground text-sm">—</span>
+        )}
+      </TableCell>
+      <TableCell className="text-right font-semibold">
+        ${pkg.price.toFixed(2)}
+      </TableCell>
+      <TableCell className="text-right text-muted-foreground line-through">
+        ${pkg.originalPrice.toFixed(2)}
+      </TableCell>
+      <TableCell className="text-right text-green-600 font-medium">
+        ${savings}
+      </TableCell>
+      <TableCell>
+        <div className="flex flex-col gap-0.5">
+          {pkg.perks.slice(0, 3).map((perk) => (
+            <div key={perk} className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Check className="h-3 w-3 text-green-500 flex-shrink-0" />
+              {perk}
+            </div>
+          ))}
+          {pkg.perks.length > 3 && (
+            <span className="text-xs text-muted-foreground">
+              +{pkg.perks.length - 3} more
+            </span>
+          )}
+        </div>
+      </TableCell>
+      <TableCell className="text-right">
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" size="icon" onClick={() => onEdit(pkg)}>
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-destructive hover:text-destructive"
+            onClick={() => onDelete(pkg)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
+
 export function AdminProPackagesPage() {
   const [packages, setPackages] = useState<ProPackage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,6 +152,12 @@ export function AdminProPackagesPage() {
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ProPackage | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [orderChanged, setOrderChanged] = useState(false);
+  const [savingOrder, setSavingOrder] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
 
   const fetchPackages = async () => {
     setLoading(true);
@@ -55,6 +166,7 @@ export function AdminProPackagesPage() {
       if (!res.ok) throw new Error("Failed to fetch");
       const data: ProPackage[] = await res.json();
       setPackages(data);
+      setOrderChanged(false);
     } catch {
       toast.error("Failed to load pro packages");
     } finally {
@@ -63,6 +175,38 @@ export function AdminProPackagesPage() {
   };
 
   useEffect(() => { fetchPackages(); }, []);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    setPackages((prev) => {
+      const oldIndex = prev.findIndex((p) => p.id === active.id);
+      const newIndex = prev.findIndex((p) => p.id === over.id);
+      return arrayMove(prev, oldIndex, newIndex);
+    });
+    setOrderChanged(true);
+  };
+
+  const handleSaveOrder = async () => {
+    setSavingOrder(true);
+    try {
+      const order = packages.map((pkg, index) => ({ id: pkg.id, sortOrder: index + 1 }));
+      const res = await customFetch("/api/pro-packages/reorder", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order }),
+      });
+      if (!res.ok) throw new Error("Failed to save order");
+      toast.success("Order saved");
+      setOrderChanged(false);
+      setPackages((prev) => prev.map((pkg, i) => ({ ...pkg, sortOrder: i + 1 })));
+    } catch {
+      toast.error("Failed to save order");
+    } finally {
+      setSavingOrder(false);
+    }
+  };
 
   const openCreate = () => {
     setEditPkg(null);
@@ -155,18 +299,22 @@ export function AdminProPackagesPage() {
     }
   };
 
-  const savings = (pkg: ProPackage) => (pkg.originalPrice - pkg.price).toFixed(2);
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Registration Packages</h1>
           <p className="text-muted-foreground mt-1">
-            Manage the pro registration tiers shown on the Shop page.
+            Manage the pro registration tiers shown on the Shop page. Drag rows to reorder.
           </p>
         </div>
         <div className="flex gap-2">
+          {orderChanged && (
+            <Button size="sm" onClick={handleSaveOrder} disabled={savingOrder}>
+              <Save className="h-4 w-4 mr-2" />
+              {savingOrder ? "Saving..." : "Save Order"}
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={fetchPackages} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
             Refresh
@@ -196,84 +344,41 @@ export function AdminProPackagesPage() {
               <p>No packages yet. Click "Add Package" to create one.</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-8">Order</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Badge</TableHead>
-                  <TableHead className="text-right">Price</TableHead>
-                  <TableHead className="text-right">Original Price</TableHead>
-                  <TableHead className="text-right">Savings</TableHead>
-                  <TableHead>Perks</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {packages.map((pkg) => (
-                  <TableRow key={pkg.id}>
-                    <TableCell>
-                      <GripVertical className="h-4 w-4 text-muted-foreground" />
-                    </TableCell>
-                    <TableCell className="font-medium">{pkg.name}</TableCell>
-                    <TableCell>
-                      {pkg.badge ? (
-                        <Badge
-                          style={{
-                            background: `${pkg.badgeColor}20`,
-                            color: pkg.badgeColor,
-                            border: `1px solid ${pkg.badgeColor}40`,
-                          }}
-                        >
-                          {pkg.badge}
-                        </Badge>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right font-semibold">
-                      ${pkg.price.toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right text-muted-foreground line-through">
-                      ${pkg.originalPrice.toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right text-green-600 font-medium">
-                      ${savings(pkg)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-0.5">
-                        {pkg.perks.slice(0, 3).map((perk) => (
-                          <div key={perk} className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Check className="h-3 w-3 text-green-500 flex-shrink-0" />
-                            {perk}
-                          </div>
-                        ))}
-                        {pkg.perks.length > 3 && (
-                          <span className="text-xs text-muted-foreground">
-                            +{pkg.perks.length - 3} more
-                          </span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => openEdit(pkg)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => setDeleteTarget(pkg)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={packages.map((p) => p.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-8"></TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Badge</TableHead>
+                      <TableHead className="text-right">Price</TableHead>
+                      <TableHead className="text-right">Original Price</TableHead>
+                      <TableHead className="text-right">Savings</TableHead>
+                      <TableHead>Perks</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {packages.map((pkg) => (
+                      <SortableRow
+                        key={pkg.id}
+                        pkg={pkg}
+                        onEdit={openEdit}
+                        onDelete={setDeleteTarget}
+                      />
+                    ))}
+                  </TableBody>
+                </Table>
+              </SortableContext>
+            </DndContext>
           )}
         </CardContent>
       </Card>
@@ -342,17 +447,6 @@ export function AdminProPackagesPage() {
                   />
                 </div>
               </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Sort Order</Label>
-              <Input
-                type="number"
-                min="0"
-                value={form.sortOrder}
-                onChange={(e) => setForm((f) => ({ ...f, sortOrder: e.target.value }))}
-                placeholder="0"
-              />
-              <p className="text-xs text-muted-foreground">Lower numbers appear first on the Shop page.</p>
             </div>
             <div className="space-y-1.5">
               <Label>Perks (one per line)</Label>

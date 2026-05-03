@@ -9,6 +9,7 @@ import {
   MessageSquare, Tag, BarChart, LogOut, Menu, X,
   ShieldCheck, Network, Star, Percent, Gift, Home, Clock, UserCircle,
   ChevronDown, ChevronRight, Briefcase, PackageCheck, Store, Megaphone,
+  FileDown, List,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -39,9 +40,11 @@ export function AdminLayout({ children }: { children: ReactNode }) {
 
   const isOrdersSection = location.startsWith("/admin/orders");
   const isCommissionsSection = location.startsWith("/admin/referral-commissions") || location.startsWith("/admin/bonuses") || location.startsWith("/admin/bpp") || location.startsWith("/admin/commissions") || location.startsWith("/admin/pro-booking-commissions");
+  const isProductsSection = location.startsWith("/admin/products");
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     Orders: isOrdersSection,
     Commissions: isCommissionsSection,
+    Products: isProductsSection,
   });
 
   const handleLogout = () => {
@@ -63,7 +66,16 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { name: "Users", href: "/admin/users", icon: Users },
     { name: "Shop", href: "/shop?from=admin", icon: Store },
-    { name: "Products", href: "/admin/products", icon: ShoppingBag },
+    {
+      name: "Products",
+      href: "/admin/products",
+      icon: ShoppingBag,
+      exact: true,
+      children: [
+        { name: "All Products", href: "/admin/products", icon: List },
+        { name: "Digital Products", href: "/admin/products/digital", icon: FileDown },
+      ],
+    },
     {
       name: "Orders",
       href: "/admin/orders",

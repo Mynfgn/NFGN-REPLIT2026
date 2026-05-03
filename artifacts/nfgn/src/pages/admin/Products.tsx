@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useLocation } from "wouter";
 import { customFetch } from "@/lib/custom-fetch";
 import { useListCategories } from "@workspace/api-client-react";
 import { useUpload } from "@workspace/object-storage-web";
@@ -90,6 +91,9 @@ function slugify(str: string) {
 }
 
 export function AdminProductsPage() {
+  const [location] = useLocation();
+  const isDigitalView = location === "/admin/products/digital";
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -270,10 +274,13 @@ export function AdminProductsPage() {
     }
   };
 
-  const filtered = products.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.slug.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = products.filter(p => {
+    if (isDigitalView && !p.isDownloadable) return false;
+    return (
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.slug.toLowerCase().includes(search.toLowerCase())
+    );
+  });
 
   const activeCount = products.filter(p => p.status === "active").length;
   const totalCv = products.filter(p => p.status === "active").reduce((s, p) => s + (p.cv ?? 0), 0);
@@ -281,21 +288,42 @@ export function AdminProductsPage() {
     ? (products.filter(p => p.status === "active").reduce((s, p) => s + p.commissionRate, 0) / activeCount).toFixed(1)
     : "0";
 
+  const openCreateDigital = () => {
+    setEditProduct(null);
+    setForm({ ...EMPTY_FORM, isDownloadable: true });
+    setDialogOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-serif font-bold text-primary">Product Management</h1>
-          <p className="text-muted-foreground">Add, edit, and manage all NFGN products, pricing, CV, and commissions.</p>
+          {isDigitalView ? (
+            <>
+              <div className="flex items-center gap-2 mb-1">
+                <Download className="h-6 w-6 text-primary" />
+                <h1 className="text-3xl font-serif font-bold text-primary">Digital Products</h1>
+              </div>
+              <p className="text-muted-foreground">Manage downloadable digital products — e-books, music, PDFs, courses, and more.</p>
+              <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full" style={{ background: "rgba(201,168,76,0.12)", color: "#C9A84C", border: "1px solid rgba(201,168,76,0.3)" }}>
+                <Download className="h-3 w-3" /> Showing downloadable products only · No shipping or handling fees
+              </div>
+            </>
+          ) : (
+            <>
+              <h1 className="text-3xl font-serif font-bold text-primary">Product Management</h1>
+              <p className="text-muted-foreground">Add, edit, and manage all NFGN products, pricing, CV, and commissions.</p>
+            </>
+          )}
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={fetchProducts} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
-          <Button size="sm" onClick={openCreate}>
+          <Button size="sm" onClick={isDigitalView ? openCreateDigital : openCreate}>
             <Plus className="h-4 w-4 mr-1" />
-            Add Product
+            {isDigitalView ? "Add Digital Product" : "Add Product"}
           </Button>
         </div>
       </div>
@@ -335,7 +363,10 @@ export function AdminProductsPage() {
       {/* Products Table */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">All Products ({filtered.length})</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2">
+            {isDigitalView && <Download className="h-4 w-4 text-primary" />}
+            {isDigitalView ? `Digital Products (${filtered.length})` : `All Products (${filtered.length})`}
+          </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -365,8 +396,11 @@ export function AdminProductsPage() {
                   ))
                 ) : filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center py-10 text-muted-foreground">
-                      No products found. Click "Add Product" to get started.
+                    <TableCell colSpan={10} className="text-center py-12 text-muted-foreground">
+                      {isDigitalView
+                        ? "No digital products yet. Click \"Add Digital Product\" to upload your first e-book, PDF, music file, or course."
+                        : "No products found. Click \"Add Product\" to get started."
+                      }
                     </TableCell>
                   </TableRow>
                 ) : (

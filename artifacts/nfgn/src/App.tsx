@@ -335,6 +335,11 @@ function Router() {
           <AdminLayout><AdminPayoutsPage /></AdminLayout>
         </RequireAuth>
       </Route>
+      <Route path="/admin/products/digital">
+        <RequireAuth requireAdmin>
+          <AdminLayout><AdminProductsPage /></AdminLayout>
+        </RequireAuth>
+      </Route>
       <Route path="/admin/products">
         <RequireAuth requireAdmin>
           <AdminLayout><AdminProductsPage /></AdminLayout>

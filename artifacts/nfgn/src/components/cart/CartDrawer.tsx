@@ -418,6 +418,11 @@ export function CartDrawer() {
   const paypalButtonsRef = useRef<any>(null);
   const [walletInput, setWalletInput] = useState("");
   const [walletError, setWalletError] = useState<string | null>(null);
+  const [estimatedBreakdown, setEstimatedBreakdown] = useState<{
+    subtotal: number; discount: number; tax: number; shipping: number;
+    total: number; walletDeduction: number; finalDue: number; isFreeShipping: boolean;
+  } | null>(null);
+  const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
 
   const { data: cart, isLoading: cartLoading } = useGetCart({
     query: { enabled: isAuthenticated && cartOpen } as any,
@@ -484,6 +489,8 @@ export function CartDrawer() {
         setOptimisticQtys({});
         setWalletInput("");
         setWalletError(null);
+        setEstimatedBreakdown(null);
+        setSignatureDataUrl(null);
         setSigEmpty(true);
         setSigAgreed(false);
         setSigDrawing(false);
@@ -659,6 +666,15 @@ export function CartDrawer() {
     };
   }, [view, paymentMethod, cashAppSection]);
 
+  /* ── Fetch server-side order estimate (tax + shipping) when entering checkout ── */
+  useEffect(() => {
+    if (view === "checkout" && isAuthenticated) {
+      fetchEstimate();
+    } else if (view !== "checkout") {
+      setEstimatedBreakdown(null);
+    }
+  }, [view, promoApplied, walletInput, isAuthenticated]);
+
   /* ── PayPal SDK init ───────────────────────────────────────────── */
   useEffect(() => {
     if (view !== "checkout" || paymentMethod !== "paypal" || paypalSection !== "button") return;
@@ -802,6 +818,26 @@ export function CartDrawer() {
     setPromoError(null);
   }
 
+  async function fetchEstimate() {
+    if (!isAuthenticated) return;
+    try {
+      const res = await customFetch("/api/orders/estimate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          promoCode: promoApplied?.code || promoCode || undefined,
+          walletAmount: parseFloat(walletInput) || 0,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setEstimatedBreakdown(data);
+      }
+    } catch (_) {
+      // Non-fatal: fall back to client-computed values
+    }
+  }
+
   async function placeOrder() {
     if (!shippingValid()) {
       toast({ title: "Missing information", description: "Please fill in your shipping address.", variant: "destructive" });
@@ -828,7 +864,7 @@ export function CartDrawer() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             sourceId: result.token,
-            amount: finalDue,
+            amount: estimatedBreakdown?.finalDue ?? finalDue,
             note: `NFGN Order — ${shipping.fullName}`,
           }),
         });
@@ -874,7 +910,7 @@ export function CartDrawer() {
   const finalDue = Math.max(0, discountedTotal - walletApplied);
   const walletCoversAll = walletApplied >= discountedTotal;
 
-  discountedTotalRef.current = finalDue;
+  discountedTotalRef.current = estimatedBreakdown?.finalDue ?? finalDue;
 
   return (
     <Sheet open={cartOpen} onOpenChange={handleOpenChange}>
@@ -1531,27 +1567,38 @@ export function CartDrawer() {
                     <span>−${promoDiscount.toFixed(2)}</span>
                   </div>
                 )}
-                {promoDiscount > 0 && (
-                  <div className="flex justify-between text-sm font-bold pt-1.5" style={{ borderTop: "1px solid #d4c4a0" }}>
-                    <span>After Discount</span>
-                    <span style={{ color: "#C9A84C" }}>${discountedTotal.toFixed(2)}</span>
-                  </div>
+                {estimatedBreakdown ? (
+                  <>
+                    <div className="flex justify-between text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
+                      <span>Shipping</span>
+                      <span>{estimatedBreakdown.isFreeShipping ? <span style={{ color: "#C9A84C" }}>Free</span> : `$${estimatedBreakdown.shipping.toFixed(2)}`}</span>
+                    </div>
+                    <div className="flex justify-between text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
+                      <span>Tax</span>
+                      <span>${estimatedBreakdown.tax.toFixed(2)}</span>
+                    </div>
+                    {walletApplied > 0 && (
+                      <div className="flex justify-between text-sm font-semibold" style={{ color: "#C9A84C" }}>
+                        <span className="flex items-center gap-1"><Wallet className="h-3 w-3" /> E-Wallet credit</span>
+                        <span>−${estimatedBreakdown.walletDeduction.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between font-black text-base pt-2 mt-1" style={{ borderTop: "2px solid #C9A84C", color: "#C9A84C" }}>
+                      <span>Total Due</span>
+                      <span>{estimatedBreakdown.finalDue <= 0 ? "✓ Covered by Wallet" : `$${estimatedBreakdown.finalDue.toFixed(2)}`}</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {walletApplied > 0 && (
+                      <div className="flex justify-between text-sm font-semibold" style={{ color: "#C9A84C" }}>
+                        <span className="flex items-center gap-1"><Wallet className="h-3 w-3" /> E-Wallet credit</span>
+                        <span>−${walletApplied.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>+ shipping &amp; taxes calculated on order</p>
+                  </>
                 )}
-                {walletApplied > 0 && (
-                  <div className="flex justify-between text-sm font-semibold" style={{ color: "#C9A84C" }}>
-                    <span className="flex items-center gap-1"><Wallet className="h-3 w-3" /> E-Wallet credit</span>
-                    <span>−${walletApplied.toFixed(2)}</span>
-                  </div>
-                )}
-                {walletApplied > 0 && (
-                  <div className="flex justify-between text-sm font-bold pt-1.5" style={{ borderTop: "1px solid #d4c4a0" }}>
-                    <span>Amount due</span>
-                    <span style={{ color: "#C9A84C" }}>
-                      {walletCoversAll ? "✓ $0.00" : `$${finalDue.toFixed(2)}`}
-                    </span>
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground">+ shipping & taxes calculated on order</p>
               </section>
             </div>
 
@@ -1576,7 +1623,7 @@ export function CartDrawer() {
                     ? <><Loader2 className="h-4 w-4 animate-spin" /> {paymentProcessing ? "Processing Payment…" : "Placing Order…"}</>
                     : walletCoversAll
                       ? <>Place Order · Covered by Wallet <ArrowRight className="h-4 w-4" /></>
-                      : <>Place Order · ${finalDue.toFixed(2)} <ArrowRight className="h-4 w-4" /></>
+                      : <>Place Order · ${(estimatedBreakdown?.finalDue ?? finalDue).toFixed(2)} <ArrowRight className="h-4 w-4" /></>
                   }
                 </Button>
               )}
@@ -1651,9 +1698,11 @@ export function CartDrawer() {
                   onMouseMove={(e) => {
                     if (!sigDrawing) return;
                     const ctx = sigCanvasRef.current?.getContext("2d");
-                    if (!ctx) return;
-                    const rect = sigCanvasRef.current!.getBoundingClientRect();
-                    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+                    if (!ctx || !sigCanvasRef.current) return;
+                    const rect = sigCanvasRef.current.getBoundingClientRect();
+                    const scaleX = sigCanvasRef.current.width / rect.width;
+                    const scaleY = sigCanvasRef.current.height / rect.height;
+                    ctx.lineTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
                     ctx.strokeStyle = "#0a0a0a";
                     ctx.lineWidth = 2;
                     ctx.lineCap = "round";
@@ -1676,9 +1725,11 @@ export function CartDrawer() {
                     e.preventDefault();
                     if (!sigDrawing) return;
                     const ctx = sigCanvasRef.current?.getContext("2d");
-                    if (!ctx) return;
-                    const rect = sigCanvasRef.current!.getBoundingClientRect();
-                    ctx.lineTo(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top);
+                    if (!ctx || !sigCanvasRef.current) return;
+                    const rect = sigCanvasRef.current.getBoundingClientRect();
+                    const scaleX = sigCanvasRef.current.width / rect.width;
+                    const scaleY = sigCanvasRef.current.height / rect.height;
+                    ctx.lineTo((e.touches[0].clientX - rect.left) * scaleX, (e.touches[0].clientY - rect.top) * scaleY);
                     ctx.strokeStyle = "#0a0a0a";
                     ctx.lineWidth = 2;
                     ctx.lineCap = "round";
@@ -1730,6 +1781,7 @@ export function CartDrawer() {
                 setSigSubmitting(true);
                 try {
                   const signature = sigCanvasRef.current.toDataURL("image/png");
+                  setSignatureDataUrl(signature);
                   await customFetch(`/api/orders/${lastOrder.id}/sign`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -1781,6 +1833,25 @@ export function CartDrawer() {
                 <div className="flex justify-between border-t pt-2" style={{ borderColor: "#d4c4a0" }}>
                   <span className="font-bold">Total</span>
                   <span className="font-black text-base" style={{ color: "#C9A84C" }}>${lastOrder.total?.toFixed(2)}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Digital signature confirmation */}
+            {signatureDataUrl && (
+              <div className="w-full rounded-xl overflow-hidden text-left" style={{ border: "1.5px solid #C9A84C", background: "#faf8f3" }}>
+                <div className="px-4 pt-3 pb-1">
+                  <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "#C9A84C" }}>Your Digital Signature</p>
+                  <p className="text-xs mt-0.5" style={{ color: "#888" }}>Signed at {new Date().toLocaleString()}</p>
+                </div>
+                <div className="mx-4 mb-3 rounded-lg overflow-hidden border" style={{ borderColor: "#d4c4a0", background: "#fff" }}>
+                  <img src={signatureDataUrl} alt="Your signature" className="w-full" style={{ maxHeight: 80, objectFit: "contain" }} />
+                </div>
+                <div className="px-4 pb-3">
+                  <p className="text-xs rounded-lg px-3 py-2 leading-relaxed" style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.25)", color: "#666" }}>
+                    <span className="font-bold" style={{ color: "#C9A84C" }}>Agreement confirmed: </span>
+                    I confirm that I personally authorised this purchase and am the account holder. I understand this digital signature is timestamped and serves as my official proof of purchase.
+                  </p>
                 </div>
               </div>
             )}

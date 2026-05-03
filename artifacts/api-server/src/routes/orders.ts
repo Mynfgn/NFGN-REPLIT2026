@@ -163,6 +163,8 @@ function formatOrder(order: typeof ordersTable.$inferSelect, userName: string, i
     promoCode: order.promoCode ?? null,
     notes: order.notes ?? null,
     createdAt: order.createdAt.toISOString(),
+    digitalSignature: order.digitalSignature ?? null,
+    digitalSignedAt: order.digitalSignedAt?.toISOString() ?? null,
     items: items.map(i => ({
       id: i.id,
       productId: i.productId,
@@ -566,6 +568,72 @@ router.post("/orders/:id/refund", requireAdmin, async (req, res): Promise<void> 
   const items = await db.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, id));
   const userName = order.user ? `${order.user.firstName} ${order.user.lastName}` : "Unknown";
   res.json(formatOrder(updated, userName, items));
+});
+
+// POST /api/orders/estimate — compute shipping + tax + final due without creating an order
+router.post("/orders/estimate", requireAuth, async (req, res): Promise<void> => {
+  const currentUser = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
+  const { promoCode, walletAmount } = req.body;
+
+  const cartItems = await db.select({
+    cart: cartItemsTable,
+    product: productsTable,
+  }).from(cartItemsTable)
+    .leftJoin(productsTable, eq(cartItemsTable.productId, productsTable.id))
+    .where(eq(cartItemsTable.userId, currentUser.id));
+
+  if (!cartItems.length) {
+    res.status(400).json({ error: "Cart is empty" });
+    return;
+  }
+
+  const [settings] = await db.select().from(appSettingsTable).limit(1);
+  const taxRate = parseFloat(settings?.taxRate ?? "8.5") / 100;
+  const shippingRate = parseFloat(settings?.shippingRate ?? "9.99");
+  const freeShippingThreshold = parseFloat(settings?.freeShippingThreshold ?? "75");
+
+  let subtotal = 0;
+  for (const { cart, product } of cartItems) {
+    if (product) subtotal += parseFloat(product.price) * cart.quantity;
+  }
+
+  let discount = 0;
+  if (promoCode) {
+    const [promo] = await db.select().from(promoCodesTable).where(eq(promoCodesTable.code, promoCode.toUpperCase().trim()));
+    if (promo && promo.isActive) {
+      discount = promo.discountType === "percentage"
+        ? subtotal * parseFloat(promo.discountValue) / 100
+        : Math.min(parseFloat(promo.discountValue), subtotal);
+    }
+  }
+
+  const afterDiscount = subtotal - discount;
+  const tax = afterDiscount * taxRate;
+  const shipping = afterDiscount >= freeShippingThreshold ? 0 : shippingRate;
+  const total = afterDiscount + tax + shipping;
+
+  const requestedWallet = parseFloat(String(walletAmount ?? 0)) || 0;
+  let walletDeduction = 0;
+  if (requestedWallet > 0) {
+    const [w] = await db.select().from(walletsTable).where(eq(walletsTable.userId, currentUser.id));
+    if (w) {
+      walletDeduction = Math.min(requestedWallet, parseFloat(w.balance), total);
+    }
+  }
+
+  const finalDue = Math.max(0, total - walletDeduction);
+
+  res.json({
+    subtotal,
+    discount,
+    afterDiscount,
+    tax,
+    shipping,
+    total,
+    walletDeduction,
+    finalDue,
+    isFreeShipping: afterDiscount >= freeShippingThreshold,
+  });
 });
 
 // POST /api/orders/:id/sign — member submits digital signature at time of purchase

@@ -1781,17 +1781,17 @@ export function CartDrawer() {
                 setSigSubmitting(true);
                 try {
                   const signature = sigCanvasRef.current.toDataURL("image/png");
-                  setSignatureDataUrl(signature);
                   await customFetch(`/api/orders/${lastOrder.id}/sign`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ signature }),
                   });
+                  setSignatureDataUrl(signature);
+                  setView("confirm");
                 } catch (_) {
-                  // Non-fatal — proceed to confirm even if sign fails
+                  toast({ title: "Signature not saved", description: "Could not save your signature. Please try again.", variant: "destructive" });
                 } finally {
                   setSigSubmitting(false);
-                  setView("confirm");
                 }
               }}
             >

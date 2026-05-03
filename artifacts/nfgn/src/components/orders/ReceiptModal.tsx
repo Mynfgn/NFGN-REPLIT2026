@@ -354,28 +354,28 @@ export function ReceiptModal({ order, open, onClose, isProMember, currentMonthPv
             )}
           </div>
 
-          {/* Digital Signature */}
-          {o.digitalSignature && (
-            <div className="mt-5 rounded-lg overflow-hidden" style={{ border: "1.5px solid #C9A84C" }}>
-              <div className="px-4 py-2.5" style={{ background: "linear-gradient(135deg, #faf8f3, #f5f0e8)", borderBottom: "1px solid #e8dfc8" }}>
-                <p className="text-[10px] font-bold uppercase tracking-[1.5px]" style={{ color: "#C9A84C" }}>Digital Signature — Proof of Purchase</p>
-                {o.digitalSignedAt && (
-                  <p className="text-[10px] mt-0.5" style={{ color: "#888" }}>
-                    Signed: {new Date(o.digitalSignedAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}
-                  </p>
-                )}
-              </div>
+          {/* Digital Signature — always shown; image only when signature was captured */}
+          <div className="mt-5 rounded-lg overflow-hidden" style={{ border: "1.5px solid #C9A84C" }}>
+            <div className="px-4 py-2.5" style={{ background: "linear-gradient(135deg, #faf8f3, #f5f0e8)", borderBottom: "1px solid #e8dfc8" }}>
+              <p className="text-[10px] font-bold uppercase tracking-[1.5px]" style={{ color: "#C9A84C" }}>Electronic Purchase Agreement</p>
+              {o.digitalSignedAt && (
+                <p className="text-[10px] mt-0.5" style={{ color: "#888" }}>
+                  Signed: {new Date(o.digitalSignedAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                </p>
+              )}
+            </div>
+            {o.digitalSignature && (
               <div className="px-4 py-3 bg-white">
                 <img src={o.digitalSignature} alt="Customer signature" className="w-full rounded border" style={{ maxHeight: 80, objectFit: "contain", borderColor: "#e8dfc8" }} />
               </div>
-              <div className="px-4 pb-3">
-                <p className="text-[10px] rounded px-2 py-1.5 leading-relaxed" style={{ background: "rgba(201,168,76,0.07)", border: "1px solid rgba(201,168,76,0.2)", color: "#666" }}>
-                  <span className="font-bold" style={{ color: "#C9A84C" }}>Agreement: </span>
-                  I confirm that I personally authorised this purchase and am the account holder. I understand this digital signature is timestamped and serves as my official proof of purchase. I acknowledge that all sales are final — this product is non-refundable and cannot be returned.
-                </p>
-              </div>
+            )}
+            <div className="px-4 py-3">
+              <p className="text-[10px] rounded px-2 py-1.5 leading-relaxed" style={{ background: "rgba(201,168,76,0.07)", border: "1px solid rgba(201,168,76,0.2)", color: "#666" }}>
+                <span className="font-bold" style={{ color: "#C9A84C" }}>Agreement: </span>
+                I confirm that I personally authorised this purchase and am the account holder. I understand this digital signature is timestamped and serves as my official proof of purchase. I acknowledge that all sales are final — this product is non-refundable and cannot be returned.
+              </p>
             </div>
-          )}
+          </div>
 
           {/* Footer */}
           <div className="text-center mt-6 pt-4 border-t text-[10px] text-muted-foreground space-y-0.5">

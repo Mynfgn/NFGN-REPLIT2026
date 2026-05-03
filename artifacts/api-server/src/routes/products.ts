@@ -26,6 +26,8 @@ function formatProduct(p: typeof productsTable.$inferSelect, categoryName?: stri
     refundPolicy: p.refundPolicy,
     proMemberDiscountEligible: p.proMemberDiscountEligible,
     proMemberDiscountPercent: parseFloat(p.proMemberDiscountPercent ?? "0"),
+    shippingFee: parseFloat(p.shippingFee ?? "9.99"),
+    handlingFee: parseFloat(p.handlingFee ?? "5.00"),
     createdAt: p.createdAt.toISOString(),
   };
 }
@@ -78,7 +80,7 @@ router.get("/products/admin-all", requireAdmin, async (req, res): Promise<void> 
 });
 
 router.post("/products", requireAdmin, async (req, res): Promise<void> => {
-  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent } = req.body;
+  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee } = req.body;
   if (!name || !slug || !description || price == null) {
     res.status(400).json({ error: "Missing required fields" });
     return;
@@ -105,6 +107,8 @@ router.post("/products", requireAdmin, async (req, res): Promise<void> => {
     refundPolicy: refundPolicy ?? "no_refund",
     proMemberDiscountEligible: isProPackage ? false : (proMemberDiscountEligible ?? false),
     proMemberDiscountPercent: isProPackage ? "0" : String(proMemberDiscountPercent ?? 0),
+    shippingFee: shippingFee != null ? String(shippingFee) : undefined,
+    handlingFee: handlingFee != null ? String(handlingFee) : undefined,
     status: "active",
   }).returning();
 
@@ -169,7 +173,7 @@ router.patch("/products/:id", requireAdmin, async (req, res): Promise<void> => {
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
   const updates: Partial<typeof productsTable.$inferInsert> = {};
-  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent } = req.body;
+  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee } = req.body;
   if (name) updates.name = name;
   if (slug) updates.slug = slug;
   if (description) updates.description = description;
@@ -194,6 +198,8 @@ router.patch("/products/:id", requireAdmin, async (req, res): Promise<void> => {
   if (refundPolicy !== undefined) updates.refundPolicy = refundPolicy;
   if (!isProPackage && proMemberDiscountEligible !== undefined) updates.proMemberDiscountEligible = proMemberDiscountEligible;
   if (!isProPackage && proMemberDiscountPercent != null) updates.proMemberDiscountPercent = String(proMemberDiscountPercent);
+  if (shippingFee != null) updates.shippingFee = String(shippingFee);
+  if (handlingFee != null) updates.handlingFee = String(handlingFee);
 
   const [updated] = await db.update(productsTable).set(updates).where(eq(productsTable.id, id)).returning();
   if (!updated) { res.status(404).json({ error: "Not found" }); return; }

@@ -418,9 +418,11 @@ export function CartDrawer() {
   const paypalButtonsRef = useRef<any>(null);
   const [walletInput, setWalletInput] = useState("");
   const [walletError, setWalletError] = useState<string | null>(null);
+  const [isPickup, setIsPickup] = useState(false);
   const [estimatedBreakdown, setEstimatedBreakdown] = useState<{
     subtotal: number; discount: number; tax: number; shipping: number;
-    total: number; walletDeduction: number; finalDue: number; isFreeShipping: boolean;
+    handlingFee: number; total: number; walletDeduction: number; finalDue: number;
+    isFreeShipping: boolean; isPickup: boolean;
   } | null>(null);
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
 
@@ -489,6 +491,7 @@ export function CartDrawer() {
         setOptimisticQtys({});
         setWalletInput("");
         setWalletError(null);
+        setIsPickup(false);
         setEstimatedBreakdown(null);
         setSignatureDataUrl(null);
         setSigEmpty(true);
@@ -778,6 +781,7 @@ export function CartDrawer() {
   }, [view, paymentMethod, paypalSection]);
 
   function shippingValid() {
+    if (isPickup) return !!shipping.fullName.trim();
     return shipping.fullName.trim() && shipping.address.trim() && shipping.city.trim() && shipping.state.trim() && shipping.zip.trim();
   }
 
@@ -827,6 +831,7 @@ export function CartDrawer() {
         body: JSON.stringify({
           promoCode: promoApplied?.code || promoCode || undefined,
           walletAmount: parseFloat(walletInput) || 0,
+          isPickup,
         }),
       });
       if (res.ok) {
@@ -840,10 +845,13 @@ export function CartDrawer() {
 
   async function placeOrder() {
     if (!shippingValid()) {
-      toast({ title: "Missing information", description: "Please fill in your shipping address.", variant: "destructive" });
+      const msg = isPickup ? "Please enter your name for pick-up." : "Please fill in your shipping address.";
+      toast({ title: "Missing information", description: msg, variant: "destructive" });
       return;
     }
-    const addr = `${shipping.fullName}, ${shipping.address}, ${shipping.city}, ${shipping.state} ${shipping.zip}${shipping.phone ? " | " + shipping.phone : ""}`;
+    const addr = isPickup
+      ? `PICKUP — ${shipping.fullName}${shipping.phone ? " | " + shipping.phone : ""}`
+      : `${shipping.fullName}, ${shipping.address}, ${shipping.city}, ${shipping.state} ${shipping.zip}${shipping.phone ? " | " + shipping.phone : ""}`;
 
     if (paymentMethod === "square") {
       if (!squareCard || !squareReady) {
@@ -874,7 +882,7 @@ export function CartDrawer() {
           setPaymentProcessing(false);
           return;
         }
-        createOrder.mutate({ data: { paymentMethod: "square", shippingAddress: addr, promoCode: promoApplied?.code || promoCode || undefined, squarePaymentId: payData.paymentId, walletAmount: walletApplied } } as any);
+        createOrder.mutate({ data: { paymentMethod: "square", shippingAddress: addr, promoCode: promoApplied?.code || promoCode || undefined, squarePaymentId: payData.paymentId, walletAmount: walletApplied, isPickup } } as any);
       } catch (err: any) {
         toast({ title: "Payment error", description: err?.message ?? "Something went wrong. Please try again.", variant: "destructive" });
         setPaymentProcessing(false);
@@ -882,7 +890,7 @@ export function CartDrawer() {
       return;
     }
 
-    createOrder.mutate({ data: { paymentMethod, shippingAddress: addr, promoCode: promoApplied?.code || promoCode || undefined, walletAmount: walletApplied } } as any);
+    createOrder.mutate({ data: { paymentMethod, shippingAddress: addr, promoCode: promoApplied?.code || promoCode || undefined, walletAmount: walletApplied, isPickup } } as any);
   }
 
   const items = cart?.items ?? [];
@@ -1094,38 +1102,81 @@ export function CartDrawer() {
                 )}
               </section>
 
-              {/* ── STEP 2: Shipping Address ── */}
+              {/* ── STEP 2: Delivery or Pick-up ── */}
               <section>
                 <h3 className="font-bold text-xs uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: "#C9A84C" }}>
                   <span className="h-4 w-1 rounded-full inline-block" style={{ background: "#C9A84C" }} />
-                  <Truck className="h-3.5 w-3.5" /> Shipping Address
+                  <Truck className="h-3.5 w-3.5" /> Delivery / Pick-up
                 </h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="col-span-2">
-                    <Label className="text-xs">Full Name *</Label>
-                    <Input placeholder="Jane Smith" value={shipping.fullName} onChange={e => setShipping(s => ({ ...s, fullName: e.target.value }))} className="mt-1" />
-                  </div>
-                  <div className="col-span-2">
-                    <Label className="text-xs">Street Address *</Label>
-                    <Input placeholder="123 Wellness Ave" value={shipping.address} onChange={e => setShipping(s => ({ ...s, address: e.target.value }))} className="mt-1" />
-                  </div>
-                  <div>
-                    <Label className="text-xs">City *</Label>
-                    <Input placeholder="New Orleans" value={shipping.city} onChange={e => setShipping(s => ({ ...s, city: e.target.value }))} className="mt-1" />
-                  </div>
-                  <div>
-                    <Label className="text-xs">State *</Label>
-                    <Input placeholder="LA" value={shipping.state} onChange={e => setShipping(s => ({ ...s, state: e.target.value }))} className="mt-1" />
-                  </div>
-                  <div>
-                    <Label className="text-xs">ZIP Code *</Label>
-                    <Input placeholder="70112" value={shipping.zip} onChange={e => setShipping(s => ({ ...s, zip: e.target.value }))} className="mt-1" />
-                  </div>
-                  <div>
-                    <Label className="text-xs">Phone</Label>
-                    <Input placeholder="(678) 000-0000" value={shipping.phone} onChange={e => setShipping(s => ({ ...s, phone: e.target.value }))} className="mt-1" />
-                  </div>
+
+                {/* Pickup toggle */}
+                <div className="grid grid-cols-2 gap-2 mb-4 p-1 rounded-xl" style={{ background: "#f0ece3" }}>
+                  <button
+                    type="button"
+                    onClick={() => { setIsPickup(false); setTimeout(fetchEstimate, 0); }}
+                    className="flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all"
+                    style={!isPickup
+                      ? { background: "#C9A84C", color: "#000", boxShadow: "0 2px 8px rgba(201,168,76,0.4)" }
+                      : { background: "transparent", color: "#666" }}
+                  >
+                    <Truck className="h-4 w-4" /> Ship to Me
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setIsPickup(true); setTimeout(fetchEstimate, 0); }}
+                    className="flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all"
+                    style={isPickup
+                      ? { background: "#C9A84C", color: "#000", boxShadow: "0 2px 8px rgba(201,168,76,0.4)" }
+                      : { background: "transparent", color: "#666" }}
+                  >
+                    🏪 Pick-up Order
+                  </button>
                 </div>
+
+                {isPickup ? (
+                  <div className="space-y-3">
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
+                      <strong>Pick-up selected:</strong> Shipping is waived. A per-product handling fee applies. Enter your name and phone so we can prepare your order.
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="col-span-2">
+                        <Label className="text-xs">Full Name *</Label>
+                        <Input placeholder="Jane Smith" value={shipping.fullName} onChange={e => setShipping(s => ({ ...s, fullName: e.target.value }))} className="mt-1" />
+                      </div>
+                      <div className="col-span-2">
+                        <Label className="text-xs">Phone (recommended)</Label>
+                        <Input placeholder="(678) 000-0000" value={shipping.phone} onChange={e => setShipping(s => ({ ...s, phone: e.target.value }))} className="mt-1" />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="col-span-2">
+                      <Label className="text-xs">Full Name *</Label>
+                      <Input placeholder="Jane Smith" value={shipping.fullName} onChange={e => setShipping(s => ({ ...s, fullName: e.target.value }))} className="mt-1" />
+                    </div>
+                    <div className="col-span-2">
+                      <Label className="text-xs">Street Address *</Label>
+                      <Input placeholder="123 Wellness Ave" value={shipping.address} onChange={e => setShipping(s => ({ ...s, address: e.target.value }))} className="mt-1" />
+                    </div>
+                    <div>
+                      <Label className="text-xs">City *</Label>
+                      <Input placeholder="New Orleans" value={shipping.city} onChange={e => setShipping(s => ({ ...s, city: e.target.value }))} className="mt-1" />
+                    </div>
+                    <div>
+                      <Label className="text-xs">State *</Label>
+                      <Input placeholder="LA" value={shipping.state} onChange={e => setShipping(s => ({ ...s, state: e.target.value }))} className="mt-1" />
+                    </div>
+                    <div>
+                      <Label className="text-xs">ZIP Code *</Label>
+                      <Input placeholder="70112" value={shipping.zip} onChange={e => setShipping(s => ({ ...s, zip: e.target.value }))} className="mt-1" />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Phone</Label>
+                      <Input placeholder="(678) 000-0000" value={shipping.phone} onChange={e => setShipping(s => ({ ...s, phone: e.target.value }))} className="mt-1" />
+                    </div>
+                  </div>
+                )}
               </section>
 
               {/* ── STEP 3: Payment Method ── */}
@@ -1570,10 +1621,25 @@ export function CartDrawer() {
                 )}
                 {estimatedBreakdown ? (
                   <>
-                    <div className="flex justify-between text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
-                      <span>Shipping</span>
-                      <span>{estimatedBreakdown.isFreeShipping ? <span style={{ color: "#C9A84C" }}>Free</span> : `$${estimatedBreakdown.shipping.toFixed(2)}`}</span>
-                    </div>
+                    {estimatedBreakdown.isPickup ? (
+                      <>
+                        <div className="flex justify-between text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
+                          <span>🏪 Pick-up Order</span>
+                          <span style={{ color: "#C9A84C" }}>Shipping waived</span>
+                        </div>
+                        {estimatedBreakdown.handlingFee > 0 && (
+                          <div className="flex justify-between text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
+                            <span>Handling Fee</span>
+                            <span>${estimatedBreakdown.handlingFee.toFixed(2)}</span>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="flex justify-between text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
+                        <span>Shipping</span>
+                        <span>{estimatedBreakdown.isFreeShipping ? <span style={{ color: "#C9A84C" }}>Free</span> : `$${estimatedBreakdown.shipping.toFixed(2)}`}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
                       <span>Tax</span>
                       <span>${estimatedBreakdown.tax.toFixed(2)}</span>

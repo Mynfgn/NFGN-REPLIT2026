@@ -163,6 +163,8 @@ function formatOrder(order: typeof ordersTable.$inferSelect, userName: string, i
     promoCode: order.promoCode ?? null,
     notes: order.notes ?? null,
     createdAt: order.createdAt.toISOString(),
+    isPickup: order.isPickup,
+    handlingFee: parseFloat(order.handlingFee ?? "0"),
     digitalSignature: order.digitalSignature ?? null,
     digitalSignedAt: order.digitalSignedAt?.toISOString() ?? null,
     items: items.map(i => ({
@@ -276,10 +278,14 @@ router.get("/admin/orders", requireAdmin, async (req, res): Promise<void> => {
 
 router.post("/orders", requireAuth, async (req, res): Promise<void> => {
   const currentUser = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
-  const { paymentMethod, shippingAddress, promoCode, notes, walletAmount } = req.body;
+  const { paymentMethod, shippingAddress, promoCode, notes, walletAmount, isPickup } = req.body;
 
-  if (!paymentMethod || !shippingAddress) {
-    res.status(400).json({ error: "paymentMethod and shippingAddress required" });
+  if (!paymentMethod) {
+    res.status(400).json({ error: "paymentMethod required" });
+    return;
+  }
+  if (!isPickup && !shippingAddress) {
+    res.status(400).json({ error: "shippingAddress required for delivery orders" });
     return;
   }
 
@@ -324,8 +330,23 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
   // reduce the taxable amount. This ensures tax compliance.
   const afterDiscount = subtotal - discount;
   const tax = afterDiscount * taxRate;
-  const shipping = afterDiscount >= freeShippingThreshold ? 0 : shippingRate;
-  const total = afterDiscount + tax + shipping;
+
+  // ── Per-product shipping (delivery) or handling (pickup) ──────────────────
+  let shippingTotal = 0;
+  let handlingTotal = 0;
+  for (const { cart, product } of cartItems) {
+    if (!product) continue;
+    if (isPickup) {
+      handlingTotal += parseFloat(product.handlingFee ?? "5.00") * cart.quantity;
+    } else {
+      shippingTotal += parseFloat(product.shippingFee ?? "9.99") * cart.quantity;
+    }
+  }
+  // Free shipping threshold still applies for delivery
+  if (!isPickup && afterDiscount >= freeShippingThreshold) shippingTotal = 0;
+
+  const shipping = shippingTotal;
+  const total = afterDiscount + tax + shipping + handlingTotal;
 
   // ── Validate & clamp wallet credit (applied post-tax, never reduces taxable base) ──
   const requestedWallet = parseFloat(String(walletAmount ?? 0)) || 0;
@@ -371,9 +392,11 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
     subtotal: String(subtotal),
     tax: String(tax),
     shipping: String(shipping),
+    handlingFee: String(handlingTotal),
+    isPickup: !!isPickup,
     discount: String(discount),
     total: String(total),
-    shippingAddress,
+    shippingAddress: shippingAddress ?? undefined,
     promoCode: promoCode ?? undefined,
     notes: notes ?? undefined,
   }).returning();
@@ -573,7 +596,7 @@ router.post("/orders/:id/refund", requireAdmin, async (req, res): Promise<void> 
 // POST /api/orders/estimate — compute shipping + tax + final due without creating an order
 router.post("/orders/estimate", requireAuth, async (req, res): Promise<void> => {
   const currentUser = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
-  const { promoCode, walletAmount } = req.body;
+  const { promoCode, walletAmount, isPickup } = req.body;
 
   const cartItems = await db.select({
     cart: cartItemsTable,
@@ -589,7 +612,6 @@ router.post("/orders/estimate", requireAuth, async (req, res): Promise<void> => 
 
   const [settings] = await db.select().from(appSettingsTable).limit(1);
   const taxRate = parseFloat(settings?.taxRate ?? "8.5") / 100;
-  const shippingRate = parseFloat(settings?.shippingRate ?? "9.99");
   const freeShippingThreshold = parseFloat(settings?.freeShippingThreshold ?? "75");
 
   let subtotal = 0;
@@ -609,8 +631,22 @@ router.post("/orders/estimate", requireAuth, async (req, res): Promise<void> => 
 
   const afterDiscount = subtotal - discount;
   const tax = afterDiscount * taxRate;
-  const shipping = afterDiscount >= freeShippingThreshold ? 0 : shippingRate;
-  const total = afterDiscount + tax + shipping;
+
+  // Per-product shipping (delivery) or handling (pickup)
+  let shippingTotal = 0;
+  let handlingTotal = 0;
+  for (const { cart, product } of cartItems) {
+    if (!product) continue;
+    if (isPickup) {
+      handlingTotal += parseFloat(product.handlingFee ?? "5.00") * cart.quantity;
+    } else {
+      shippingTotal += parseFloat(product.shippingFee ?? "9.99") * cart.quantity;
+    }
+  }
+  const isFreeShipping = !isPickup && afterDiscount >= freeShippingThreshold;
+  if (isFreeShipping) shippingTotal = 0;
+
+  const total = afterDiscount + tax + shippingTotal + handlingTotal;
 
   const requestedWallet = parseFloat(String(walletAmount ?? 0)) || 0;
   let walletDeduction = 0;
@@ -628,11 +664,13 @@ router.post("/orders/estimate", requireAuth, async (req, res): Promise<void> => 
     discount,
     afterDiscount,
     tax,
-    shipping,
+    shipping: shippingTotal,
+    handlingFee: handlingTotal,
     total,
     walletDeduction,
     finalDue,
-    isFreeShipping: afterDiscount >= freeShippingThreshold,
+    isFreeShipping,
+    isPickup: !!isPickup,
   });
 });
 

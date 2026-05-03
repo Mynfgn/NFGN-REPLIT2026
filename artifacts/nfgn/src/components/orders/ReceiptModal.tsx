@@ -38,6 +38,8 @@ interface Order {
   promoCode?: string | null;
   notes?: string | null;
   createdAt: string;
+  isPickup?: boolean;
+  handlingFee?: number;
   items: OrderItem[];
   digitalSignature?: string | null;
   digitalSignedAt?: string | null;
@@ -306,10 +308,25 @@ export function ReceiptModal({ order, open, onClose, isProMember, currentMonthPv
                   <span>−${fmt(o.discount)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-muted-foreground">
-                <span>Shipping</span>
-                <span>{o.shipping === 0 ? <span className="text-green-600 font-medium">Free</span> : `$${fmt(o.shipping)}`}</span>
-              </div>
+              {o.isPickup ? (
+                <>
+                  <div className="flex justify-between text-muted-foreground">
+                    <span className="flex items-center gap-1">🏪 Pick-up Order</span>
+                    <span className="text-xs text-muted-foreground">Shipping waived</span>
+                  </div>
+                  {(o.handlingFee ?? 0) > 0 && (
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Handling Fee</span>
+                      <span>${fmt(o.handlingFee!)}</span>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Shipping</span>
+                  <span>{o.shipping === 0 ? <span className="text-green-600 font-medium">Free</span> : `$${fmt(o.shipping)}`}</span>
+                </div>
+              )}
               <div className="flex justify-between text-muted-foreground">
                 <span>Tax</span>
                 <span>${fmt(o.tax)}</span>

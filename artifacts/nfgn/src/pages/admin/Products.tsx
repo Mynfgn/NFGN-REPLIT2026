@@ -45,6 +45,8 @@ interface Product {
   status: string;
   commissionRate: number;
   cv: number;
+  shippingFee: number;
+  handlingFee: number;
   dollarCreditEligible: boolean;
   refundPolicy: string;
   proMemberDiscountEligible: boolean;
@@ -65,6 +67,8 @@ const EMPTY_FORM = {
   isProPackage: false,
   commissionRate: "10",
   cv: "0",
+  shippingFee: "9.99",
+  handlingFee: "5.00",
   ingredients: "",
   benefits: "",
   dollarCreditEligible: false,
@@ -147,6 +151,8 @@ export function AdminProductsPage() {
       isProPackage: p.isProPackage,
       commissionRate: String(p.commissionRate),
       cv: String(p.cv ?? 0),
+      shippingFee: String(p.shippingFee ?? "9.99"),
+      handlingFee: String(p.handlingFee ?? "5.00"),
       ingredients: "",
       benefits: "",
       dollarCreditEligible: p.dollarCreditEligible ?? false,
@@ -189,6 +195,8 @@ export function AdminProductsPage() {
         isProPackage: form.isProPackage,
         commissionRate: parseFloat(form.commissionRate) || 10,
         cv: parseInt(form.cv) || 0,
+        shippingFee: parseFloat(form.shippingFee) || 9.99,
+        handlingFee: parseFloat(form.handlingFee) || 5.00,
         ingredients: form.ingredients || null,
         benefits: form.benefits || null,
         dollarCreditEligible: form.dollarCreditEligible,
@@ -592,6 +600,38 @@ export function AdminProductsPage() {
                   placeholder="10"
                 />
                 <p className="text-xs text-muted-foreground">Percentage paid to the referring member on sale of this product.</p>
+              </div>
+            </div>
+
+            {/* Shipping & Handling */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2 mb-1">
+                <p className="text-sm font-semibold">Shipping &amp; Pick-up Fees</p>
+                <p className="text-xs text-muted-foreground">Per-unit fees applied at checkout depending on delivery method chosen.</p>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Shipping Fee (per unit, delivery)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.shippingFee}
+                  onChange={e => setForm(f => ({ ...f, shippingFee: e.target.value }))}
+                  placeholder="9.99"
+                />
+                <p className="text-xs text-muted-foreground">Charged per unit when customer selects delivery. Free shipping threshold still applies.</p>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Handling Fee (per unit, pick-up)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.handlingFee}
+                  onChange={e => setForm(f => ({ ...f, handlingFee: e.target.value }))}
+                  placeholder="5.00"
+                />
+                <p className="text-xs text-muted-foreground">Charged per unit when customer selects in-store pick-up. Shipping is waived.</p>
               </div>
             </div>
 

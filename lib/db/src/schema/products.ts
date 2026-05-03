@@ -26,6 +26,10 @@ export const productsTable = pgTable("products", {
   // Refund policy: 'no_refund' or '7_day_return' (mandatory, admin sets per product)
   refundPolicy: text("refund_policy").notNull().default("no_refund"),
 
+  // Per-product shipping & handling fees (admin adjustable per product)
+  shippingFee: numeric("shipping_fee", { precision: 10, scale: 2 }).notNull().default("9.99"),
+  handlingFee: numeric("handling_fee", { precision: 10, scale: 2 }).notNull().default("5.00"),
+
   // Pro Member discount program (cannot be enabled on Pro Registration Products)
   proMemberDiscountEligible: boolean("pro_member_discount_eligible").notNull().default(false),
   proMemberDiscountPercent: numeric("pro_member_discount_percent", { precision: 5, scale: 2 }).notNull().default("0"),

@@ -149,6 +149,8 @@ export function AdminProductsPage() {
   const [location] = useLocation();
   const isDigitalView = location === "/admin/products/digital";
   const isSportsView = location === "/admin/products/sports";
+  const isNonProfitView = location === "/admin/products/nonprofit";
+  const isWeddingView = location === "/admin/products/wedding";
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -347,6 +349,8 @@ export function AdminProductsPage() {
   const filtered = products.filter(p => {
     if (isDigitalView && !p.isDownloadable) return false;
     if (isSportsView && !p.isSports) return false;
+    if (isNonProfitView && !p.isNonProfit) return false;
+    if (isWeddingView && !p.isWeddingRegistry) return false;
     return (
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.slug.toLowerCase().includes(search.toLowerCase())
@@ -368,6 +372,18 @@ export function AdminProductsPage() {
   const openCreateSports = () => {
     setEditProduct(null);
     setForm({ ...EMPTY_FORM, isSports: true });
+    setDialogOpen(true);
+  };
+
+  const openCreateNonProfit = () => {
+    setEditProduct(null);
+    setForm({ ...EMPTY_FORM, isNonProfit: true });
+    setDialogOpen(true);
+  };
+
+  const openCreateWedding = () => {
+    setEditProduct(null);
+    setForm({ ...EMPTY_FORM, isWeddingRegistry: true });
     setDialogOpen(true);
   };
 
@@ -397,6 +413,28 @@ export function AdminProductsPage() {
                 🏆 Showing NFGN Sports products only · These appear under the Sports section in the Shop
               </div>
             </>
+          ) : isNonProfitView ? (
+            <>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-2xl">🤝</span>
+                <h1 className="text-3xl font-serif font-bold text-primary">Non-Profit Organizations</h1>
+              </div>
+              <p className="text-muted-foreground">Manage fundraisers, donation drives, charity campaigns, and non-profit products.</p>
+              <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full" style={{ background: "rgba(99,102,241,0.12)", color: "#6366f1", border: "1px solid rgba(99,102,241,0.3)" }}>
+                🤝 Showing Non-Profit products only · These appear under the Non-Profit section in the Shop
+              </div>
+            </>
+          ) : isWeddingView ? (
+            <>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-2xl">💍</span>
+                <h1 className="text-3xl font-serif font-bold text-primary">Wedding Registry</h1>
+              </div>
+              <p className="text-muted-foreground">Manage wedding registry items — gifts, experiences, honeymoon funds, and custom registry products.</p>
+              <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full" style={{ background: "rgba(244,114,182,0.12)", color: "#ec4899", border: "1px solid rgba(244,114,182,0.3)" }}>
+                💍 Showing Wedding Registry products only · These appear under the Registry section in the Shop
+              </div>
+            </>
           ) : (
             <>
               <h1 className="text-3xl font-serif font-bold text-primary">Product Management</h1>
@@ -409,9 +447,9 @@ export function AdminProductsPage() {
             <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
-          <Button size="sm" onClick={isSportsView ? openCreateSports : isDigitalView ? openCreateDigital : openCreate}>
+          <Button size="sm" onClick={isNonProfitView ? openCreateNonProfit : isWeddingView ? openCreateWedding : isSportsView ? openCreateSports : isDigitalView ? openCreateDigital : openCreate}>
             <Plus className="h-4 w-4 mr-1" />
-            {isSportsView ? "Add Sports Product" : isDigitalView ? "Add Digital Product" : "Add Product"}
+            {isNonProfitView ? "Add Non-Profit Product" : isWeddingView ? "Add Registry Item" : isSportsView ? "Add Sports Product" : isDigitalView ? "Add Digital Product" : "Add Product"}
           </Button>
         </div>
       </div>
@@ -454,7 +492,9 @@ export function AdminProductsPage() {
           <CardTitle className="text-base flex items-center gap-2">
             {isDigitalView && <Download className="h-4 w-4 text-primary" />}
             {isSportsView && <span>🏆</span>}
-            {isDigitalView ? `Digital Products (${filtered.length})` : isSportsView ? `NFGN Sports Products (${filtered.length})` : `All Products (${filtered.length})`}
+            {isNonProfitView && <span>🤝</span>}
+            {isWeddingView && <span>💍</span>}
+            {isDigitalView ? `Digital Products (${filtered.length})` : isSportsView ? `NFGN Sports Products (${filtered.length})` : isNonProfitView ? `Non-Profit Products (${filtered.length})` : isWeddingView ? `Wedding Registry Items (${filtered.length})` : `All Products (${filtered.length})`}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -490,6 +530,10 @@ export function AdminProductsPage() {
                         ? "No digital products yet. Click \"Add Digital Product\" to upload your first e-book, PDF, music file, or course."
                         : isSportsView
                         ? "No NFGN Sports products yet. Click \"Add Sports Product\" to add tournament tickets, entry fees, concessions, and more."
+                        : isNonProfitView
+                        ? "No non-profit products yet. Click \"Add Non-Profit Product\" to add fundraisers, donation drives, and charity campaigns."
+                        : isWeddingView
+                        ? "No wedding registry items yet. Click \"Add Registry Item\" to add gifts, experiences, honeymoon funds, and more."
                         : "No products found. Click \"Add Product\" to get started."
                       }
                     </TableCell>
@@ -535,6 +579,8 @@ export function AdminProductsPage() {
                           {p.isProPackage && <Badge variant="secondary" className="text-xs px-1.5 py-0">Pro Pkg</Badge>}
                           {p.isSports && <Badge className="text-xs px-1.5 py-0 gap-0.5" style={{ background: "#C9A84C", color: "#000" }}>🏆 Sports</Badge>}
                           {p.isDownloadable && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-blue-700 border-blue-200"><Download className="h-2.5 w-2.5" />Digital</Badge>}
+                          {p.isNonProfit && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-indigo-700 border-indigo-200">🤝 Non-Profit</Badge>}
+                          {p.isWeddingRegistry && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-pink-600 border-pink-200">💍 Registry</Badge>}
                           {p.dollarCreditEligible && (
                             <Badge className="text-xs px-1.5 py-0" style={{ background: "#C9A84C", color: "#000" }}>$-Credit</Badge>
                           )}

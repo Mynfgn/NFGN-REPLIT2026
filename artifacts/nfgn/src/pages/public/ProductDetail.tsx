@@ -69,7 +69,7 @@ export function ProductDetail() {
   const addToCart = useAddToCart({
     mutation: {
       onSuccess: () => {
-        qc.invalidateQueries({ queryKey: ["getCart"] });
+        qc.invalidateQueries({ queryKey: ["/api/cart"] });
         setCartOpen(true);
         setAdding(false);
       },

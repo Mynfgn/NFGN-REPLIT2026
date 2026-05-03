@@ -1652,7 +1652,7 @@ export function CartDrawer() {
             <div className="rounded-lg p-3 text-xs space-y-1" style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.25)" }}>
               <p className="font-bold uppercase tracking-wide" style={{ color: "#C9A84C" }}>Important — Please Read</p>
               <p style={{ color: "#a0a0a0" }}>
-                Your signature serves as legal confirmation that you personally authorised this purchase. It is recorded with a timestamp and linked to your order as proof of presence at the time of purchase.
+                Your signature serves as legal confirmation that you personally authorised this purchase. It is recorded with a timestamp and linked to your order as proof of presence at the time of purchase. All sales are final — this product is non-refundable and cannot be returned.
               </p>
             </div>
 
@@ -1767,7 +1767,7 @@ export function CartDrawer() {
                 style={{ accentColor: "#C9A84C" }}
               />
               <span className="text-xs leading-relaxed" style={{ color: "#a0a0a0" }}>
-                I confirm that I personally authorised this purchase and am the account holder. I understand this digital signature is timestamped and serves as my official proof of purchase.
+                I confirm that I personally authorised this purchase and am the account holder. I understand this digital signature is timestamped and serves as my official proof of purchase. I acknowledge that all sales are final — this product is non-refundable and cannot be returned.
               </span>
             </label>
 
@@ -1850,7 +1850,7 @@ export function CartDrawer() {
                 <div className="px-4 pb-3">
                   <p className="text-xs rounded-lg px-3 py-2 leading-relaxed" style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.25)", color: "#666" }}>
                     <span className="font-bold" style={{ color: "#C9A84C" }}>Agreement confirmed: </span>
-                    I confirm that I personally authorised this purchase and am the account holder. I understand this digital signature is timestamped and serves as my official proof of purchase.
+                    I confirm that I personally authorised this purchase and am the account holder. I understand this digital signature is timestamped and serves as my official proof of purchase. I acknowledge that all sales are final — this product is non-refundable and cannot be returned.
                   </p>
                 </div>
               </div>

@@ -371,7 +371,7 @@ export function ReceiptModal({ order, open, onClose, isProMember, currentMonthPv
               <div className="px-4 pb-3">
                 <p className="text-[10px] rounded px-2 py-1.5 leading-relaxed" style={{ background: "rgba(201,168,76,0.07)", border: "1px solid rgba(201,168,76,0.2)", color: "#666" }}>
                   <span className="font-bold" style={{ color: "#C9A84C" }}>Agreement: </span>
-                  I confirm that I personally authorised this purchase and am the account holder. I understand this digital signature is timestamped and serves as my official proof of purchase.
+                  I confirm that I personally authorised this purchase and am the account holder. I understand this digital signature is timestamped and serves as my official proof of purchase. I acknowledge that all sales are final — this product is non-refundable and cannot be returned.
                 </p>
               </div>
             </div>

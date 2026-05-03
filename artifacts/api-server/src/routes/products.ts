@@ -39,6 +39,12 @@ function formatProduct(p: typeof productsTable.$inferSelect, categoryName?: stri
     downloadUrl: p.downloadUrl ?? null,
     downloadFileName: p.downloadFileName ?? null,
     downloadFileSize: p.downloadFileSize ?? null,
+    isDonation: p.isDonation,
+    donationRecipientType: p.donationRecipientType ?? null,
+    donationRecipientName: p.donationRecipientName ?? null,
+    donationMinAmount: parseFloat(p.donationMinAmount ?? "1.00"),
+    isChurchDonation: p.isChurchDonation,
+    churchName: p.churchName ?? null,
     createdAt: p.createdAt.toISOString(),
   };
 }
@@ -91,7 +97,7 @@ router.get("/products/admin-all", requireAdmin, async (req, res): Promise<void> 
 });
 
 router.post("/products", requireAdmin, async (req, res): Promise<void> => {
-  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize } = req.body;
+  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize, isDonation, donationRecipientType, donationRecipientName, donationMinAmount, isChurchDonation, churchName } = req.body;
   if (!name || !slug || !description || price == null) {
     res.status(400).json({ error: "Missing required fields" });
     return;
@@ -131,6 +137,12 @@ router.post("/products", requireAdmin, async (req, res): Promise<void> => {
     downloadUrl: downloadUrl ?? undefined,
     downloadFileName: downloadFileName ?? undefined,
     downloadFileSize: downloadFileSize ?? undefined,
+    isDonation: isDonation ?? false,
+    donationRecipientType: isDonation && donationRecipientType ? donationRecipientType : undefined,
+    donationRecipientName: donationRecipientName ?? undefined,
+    donationMinAmount: donationMinAmount != null ? String(donationMinAmount) : undefined,
+    isChurchDonation: (isNonProfit || isDonation) ? (isChurchDonation ?? false) : false,
+    churchName: isChurchDonation ? (churchName ?? undefined) : undefined,
     status: "active",
   }).returning();
 
@@ -195,7 +207,7 @@ router.patch("/products/:id", requireAdmin, async (req, res): Promise<void> => {
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
   const updates: Partial<typeof productsTable.$inferInsert> = {};
-  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize } = req.body;
+  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize, isDonation, donationRecipientType, donationRecipientName, donationMinAmount, isChurchDonation, churchName } = req.body;
   if (name) updates.name = name;
   if (slug) updates.slug = slug;
   if (description) updates.description = description;
@@ -233,6 +245,13 @@ router.patch("/products/:id", requireAdmin, async (req, res): Promise<void> => {
   if (downloadUrl !== undefined) updates.downloadUrl = downloadUrl ?? undefined;
   if (downloadFileName !== undefined) updates.downloadFileName = downloadFileName ?? undefined;
   if (downloadFileSize !== undefined) updates.downloadFileSize = downloadFileSize ?? undefined;
+  if (isDonation !== undefined) updates.isDonation = isDonation;
+  if (donationRecipientType !== undefined) updates.donationRecipientType = isDonation ? (donationRecipientType ?? undefined) : undefined;
+  if (donationRecipientName !== undefined) updates.donationRecipientName = donationRecipientName ?? undefined;
+  if (donationMinAmount != null) updates.donationMinAmount = String(donationMinAmount);
+  const eligibleForChurch = (isNonProfit ?? false) || (isDonation ?? false);
+  if (isChurchDonation !== undefined) updates.isChurchDonation = eligibleForChurch ? isChurchDonation : false;
+  if (churchName !== undefined) updates.churchName = isChurchDonation ? (churchName ?? undefined) : undefined;
 
   const [updated] = await db.update(productsTable).set(updates).where(eq(productsTable.id, id)).returning();
   if (!updated) { res.status(404).json({ error: "Not found" }); return; }

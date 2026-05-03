@@ -59,6 +59,12 @@ interface Product {
   downloadUrl: string | null;
   downloadFileName: string | null;
   downloadFileSize: string | null;
+  isDonation: boolean;
+  donationRecipientType: string | null;
+  donationRecipientName: string | null;
+  donationMinAmount: number;
+  isChurchDonation: boolean;
+  churchName: string | null;
   dollarCreditEligible: boolean;
   refundPolicy: string;
   proMemberDiscountEligible: boolean;
@@ -133,6 +139,12 @@ const EMPTY_FORM = {
   downloadUrl: "",
   downloadFileName: "",
   downloadFileSize: "",
+  isDonation: false,
+  donationRecipientType: "",
+  donationRecipientName: "",
+  donationMinAmount: "1.00",
+  isChurchDonation: false,
+  churchName: "",
   ingredients: "",
   benefits: "",
   dollarCreditEligible: false,
@@ -151,6 +163,7 @@ export function AdminProductsPage() {
   const isSportsView = location === "/admin/products/sports";
   const isNonProfitView = location === "/admin/products/nonprofit";
   const isWeddingView = location === "/admin/products/wedding";
+  const isDonationView = location === "/admin/products/donations";
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -245,6 +258,12 @@ export function AdminProductsPage() {
       downloadUrl: p.downloadUrl ?? "",
       downloadFileName: p.downloadFileName ?? "",
       downloadFileSize: p.downloadFileSize ?? "",
+      isDonation: p.isDonation ?? false,
+      donationRecipientType: p.donationRecipientType ?? "",
+      donationRecipientName: p.donationRecipientName ?? "",
+      donationMinAmount: String(p.donationMinAmount ?? "1.00"),
+      isChurchDonation: p.isChurchDonation ?? false,
+      churchName: p.churchName ?? "",
       ingredients: "",
       benefits: "",
       dollarCreditEligible: p.dollarCreditEligible ?? false,
@@ -300,6 +319,12 @@ export function AdminProductsPage() {
         downloadUrl: form.downloadUrl || null,
         downloadFileName: form.downloadFileName || null,
         downloadFileSize: form.downloadFileSize || null,
+        isDonation: form.isDonation,
+        donationRecipientType: form.isDonation ? (form.donationRecipientType || null) : null,
+        donationRecipientName: form.donationRecipientName || null,
+        donationMinAmount: parseFloat(form.donationMinAmount) || 1.00,
+        isChurchDonation: (form.isNonProfit || form.isDonation) ? form.isChurchDonation : false,
+        churchName: form.isChurchDonation ? (form.churchName || null) : null,
         ingredients: form.ingredients || null,
         benefits: form.benefits || null,
         dollarCreditEligible: form.dollarCreditEligible,
@@ -351,6 +376,7 @@ export function AdminProductsPage() {
     if (isSportsView && !p.isSports) return false;
     if (isNonProfitView && !p.isNonProfit) return false;
     if (isWeddingView && !p.isWeddingRegistry) return false;
+    if (isDonationView && !p.isDonation && !p.isChurchDonation) return false;
     return (
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.slug.toLowerCase().includes(search.toLowerCase())
@@ -384,6 +410,12 @@ export function AdminProductsPage() {
   const openCreateWedding = () => {
     setEditProduct(null);
     setForm({ ...EMPTY_FORM, isWeddingRegistry: true });
+    setDialogOpen(true);
+  };
+
+  const openCreateDonation = () => {
+    setEditProduct(null);
+    setForm({ ...EMPTY_FORM, isDonation: true });
     setDialogOpen(true);
   };
 
@@ -435,6 +467,17 @@ export function AdminProductsPage() {
                 💍 Showing Wedding Registry products only · These appear under the Registry section in the Shop
               </div>
             </>
+          ) : isDonationView ? (
+            <>
+              <div className="flex items-center gap-2 mb-1">
+                <DollarSign className="h-7 w-7" style={{ color: "#C9A84C" }} />
+                <h1 className="text-3xl font-serif font-bold text-primary">Donations & Gifts</h1>
+              </div>
+              <p className="text-muted-foreground">Manage donation products — church giving, general donations, sponsorships, and member-set gift amounts for non-profits.</p>
+              <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full" style={{ background: "rgba(201,168,76,0.12)", color: "#C9A84C", border: "1px solid rgba(201,168,76,0.3)" }}>
+                ⛪ Showing Donation & Church Donation products only · Members choose their own amount at checkout
+              </div>
+            </>
           ) : (
             <>
               <h1 className="text-3xl font-serif font-bold text-primary">Product Management</h1>
@@ -447,9 +490,9 @@ export function AdminProductsPage() {
             <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
-          <Button size="sm" onClick={isNonProfitView ? openCreateNonProfit : isWeddingView ? openCreateWedding : isSportsView ? openCreateSports : isDigitalView ? openCreateDigital : openCreate}>
+          <Button size="sm" onClick={isDonationView ? openCreateDonation : isNonProfitView ? openCreateNonProfit : isWeddingView ? openCreateWedding : isSportsView ? openCreateSports : isDigitalView ? openCreateDigital : openCreate}>
             <Plus className="h-4 w-4 mr-1" />
-            {isNonProfitView ? "Add Non-Profit Product" : isWeddingView ? "Add Registry Item" : isSportsView ? "Add Sports Product" : isDigitalView ? "Add Digital Product" : "Add Product"}
+            {isDonationView ? "Add Donation Product" : isNonProfitView ? "Add Non-Profit Product" : isWeddingView ? "Add Registry Item" : isSportsView ? "Add Sports Product" : isDigitalView ? "Add Digital Product" : "Add Product"}
           </Button>
         </div>
       </div>
@@ -494,7 +537,8 @@ export function AdminProductsPage() {
             {isSportsView && <span>🏆</span>}
             {isNonProfitView && <span>🤝</span>}
             {isWeddingView && <span>💍</span>}
-            {isDigitalView ? `Digital Products (${filtered.length})` : isSportsView ? `NFGN Sports Products (${filtered.length})` : isNonProfitView ? `Non-Profit Products (${filtered.length})` : isWeddingView ? `Wedding Registry Items (${filtered.length})` : `All Products (${filtered.length})`}
+            {isDonationView && <DollarSign className="h-4 w-4" style={{ color: "#C9A84C" }} />}
+            {isDigitalView ? `Digital Products (${filtered.length})` : isSportsView ? `NFGN Sports Products (${filtered.length})` : isNonProfitView ? `Non-Profit Products (${filtered.length})` : isWeddingView ? `Wedding Registry Items (${filtered.length})` : isDonationView ? `Donations & Gifts (${filtered.length})` : `All Products (${filtered.length})`}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -534,6 +578,8 @@ export function AdminProductsPage() {
                         ? "No non-profit products yet. Click \"Add Non-Profit Product\" to add fundraisers, donation drives, and charity campaigns."
                         : isWeddingView
                         ? "No wedding registry items yet. Click \"Add Registry Item\" to add gifts, experiences, honeymoon funds, and more."
+                        : isDonationView
+                        ? "No donation products yet. Click \"Add Donation Product\" to create a church donation, general donation, or sponsorship."
                         : "No products found. Click \"Add Product\" to get started."
                       }
                     </TableCell>
@@ -581,6 +627,8 @@ export function AdminProductsPage() {
                           {p.isDownloadable && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-blue-700 border-blue-200"><Download className="h-2.5 w-2.5" />Digital</Badge>}
                           {p.isNonProfit && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-indigo-700 border-indigo-200">🤝 Non-Profit</Badge>}
                           {p.isWeddingRegistry && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-pink-600 border-pink-200">💍 Registry</Badge>}
+                          {p.isChurchDonation && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-amber-700 border-amber-300">⛪ Church</Badge>}
+                          {p.isDonation && !p.isChurchDonation && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-amber-600 border-amber-200">🎁 Donation</Badge>}
                           {p.dollarCreditEligible && (
                             <Badge className="text-xs px-1.5 py-0" style={{ background: "#C9A84C", color: "#000" }}>$-Credit</Badge>
                           )}
@@ -1078,6 +1126,113 @@ export function AdminProductsPage() {
                 </div>
               )}
             </div>
+
+            {/* Donations & Gifts */}
+            <div className="rounded-lg p-4 border-2 space-y-3" style={{ borderColor: "#C9A84C60", background: "#C9A84C06" }}>
+              <div className="flex items-start gap-3">
+                <Switch
+                  checked={form.isDonation}
+                  onCheckedChange={v => setForm(f => ({ ...f, isDonation: v, donationRecipientType: v ? f.donationRecipientType : "", isChurchDonation: v ? f.isChurchDonation : false, churchName: v ? f.churchName : "" }))}
+                  id="isDonation"
+                />
+                <div>
+                  <Label htmlFor="isDonation" className="cursor-pointer font-semibold flex items-center gap-1.5">
+                    <DollarSign className="h-4 w-4" style={{ color: "#C9A84C" }} />
+                    Donation / Gift Product
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Members choose any dollar amount at or above the minimum. Use for general donations, sponsorships, memorial gifts, and church giving. Works together with Non-Profit and Sports products.
+                  </p>
+                </div>
+              </div>
+              {form.isDonation && (
+                <div className="space-y-3 pt-1 border-t border-dashed" style={{ borderColor: "rgba(201,168,76,0.3)" }}>
+                  <div className="space-y-1.5">
+                    <Label>Donation Recipient Type</Label>
+                    <Select
+                      value={form.donationRecipientType || "none"}
+                      onValueChange={v => setForm(f => ({ ...f, donationRecipientType: v === "none" ? "" : v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Who is this donation for?" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— Select Recipient Type —</SelectItem>
+                        <SelectItem value="Church">⛪ Church</SelectItem>
+                        <SelectItem value="Non-Profit Organization">🤝 Non-Profit Organization</SelectItem>
+                        <SelectItem value="Sports Player">🏃 Sports Player</SelectItem>
+                        <SelectItem value="Sports Team">🏆 Sports Team</SelectItem>
+                        <SelectItem value="Wedding Party">💍 Wedding Party</SelectItem>
+                        <SelectItem value="Memorial / Tribute">🕯️ Memorial / Tribute</SelectItem>
+                        <SelectItem value="General Donation">🎁 General Donation</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">Shown to members in the shop so they know who receives their donation.</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Recipient Name</Label>
+                    <Input
+                      value={form.donationRecipientName}
+                      onChange={e => setForm(f => ({ ...f, donationRecipientName: e.target.value }))}
+                      placeholder="e.g. New Life Church, Eastside Tigers, American Red Cross"
+                    />
+                    <p className="text-xs text-muted-foreground">Specific name of the organization or person receiving the donation.</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Minimum Donation Amount ($)</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      step="0.01"
+                      value={form.donationMinAmount}
+                      onChange={e => setForm(f => ({ ...f, donationMinAmount: e.target.value }))}
+                      placeholder="1.00"
+                    />
+                    <p className="text-xs text-muted-foreground">Members can donate any amount at or above this threshold.</p>
+                  </div>
+                  <div className="text-xs rounded-lg px-3 py-2 font-medium" style={{ background: "rgba(201,168,76,0.10)", color: "#C9A84C", border: "1px solid rgba(201,168,76,0.25)" }}>
+                    🎁 This product will appear in the Donations & Gifts section. Members enter their own contribution amount above the minimum.
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Church Donation — shown when product is NonProfit OR Donation eligible */}
+            {(form.isNonProfit || form.isDonation) && (
+              <div className="rounded-lg p-4 border-2 space-y-3" style={{ borderColor: "#b45309aa", background: "#78350f08" }}>
+                <div className="flex items-start gap-3">
+                  <Switch
+                    checked={form.isChurchDonation}
+                    onCheckedChange={v => setForm(f => ({ ...f, isChurchDonation: v, churchName: v ? f.churchName : "" }))}
+                    id="isChurchDonation"
+                  />
+                  <div>
+                    <Label htmlFor="isChurchDonation" className="cursor-pointer font-semibold flex items-center gap-1.5">
+                      <span>⛪</span> Church Donation Product
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Mark this as a dedicated church donation product. Available only on Non-Profit and Donation products. Church members can give to their church directly through the NFGN shop. The product appears under a special <strong>Church Giving</strong> banner in the Shop.
+                    </p>
+                  </div>
+                </div>
+                {form.isChurchDonation && (
+                  <div className="space-y-3 pt-1 border-t border-dashed" style={{ borderColor: "rgba(180,83,9,0.3)" }}>
+                    <div className="space-y-1.5">
+                      <Label>Church Name <span className="text-destructive">*</span></Label>
+                      <Input
+                        value={form.churchName}
+                        onChange={e => setForm(f => ({ ...f, churchName: e.target.value }))}
+                        placeholder="e.g. New Life Community Church, Grace Fellowship, Mt. Zion Baptist"
+                      />
+                      <p className="text-xs text-muted-foreground">The full name of the church receiving these donations. Displayed prominently on the donation card in the Shop.</p>
+                    </div>
+                    <div className="text-xs rounded-lg px-3 py-2 font-medium" style={{ background: "rgba(180,83,9,0.10)", color: "#b45309", border: "1px solid rgba(180,83,9,0.25)" }}>
+                      ⛪ This product will be featured under the <strong>Church Giving</strong> section in the NFGN Shop — members of this church can make tax-deductible-style donations directly through their NFGN account.
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Shipping & Handling */}
             <div className={`grid grid-cols-2 gap-4 transition-opacity ${form.isDownloadable ? "opacity-40 pointer-events-none" : ""}`}>

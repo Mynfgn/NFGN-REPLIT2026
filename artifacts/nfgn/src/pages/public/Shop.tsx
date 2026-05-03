@@ -40,6 +40,12 @@ type Product = {
   isSports?: boolean | null;
   isNonProfit?: boolean | null;
   isWeddingRegistry?: boolean | null;
+  isDonation?: boolean | null;
+  isChurchDonation?: boolean | null;
+  donationMinAmount?: number | null;
+  donationRecipientType?: string | null;
+  donationRecipientName?: string | null;
+  churchName?: string | null;
   stock?: number | null;
   description?: string | null;
 };
@@ -570,9 +576,10 @@ export function Shop() {
   const products: Product[] = data?.products ?? [];
   const proProducts = products.filter((p) => p.isProPackage);
   const sportsProducts = products.filter((p) => p.isSports && !p.isProPackage);
-  const nonProfitProducts = products.filter((p) => p.isNonProfit && !p.isProPackage && !p.isSports);
+  const nonProfitProducts = products.filter((p) => p.isNonProfit && !p.isProPackage && !p.isSports && !p.isChurchDonation);
   const weddingProducts = products.filter((p) => p.isWeddingRegistry && !p.isProPackage && !p.isSports);
-  const regularProducts = products.filter((p) => !p.isProPackage && !p.isSports && !p.isNonProfit && !p.isWeddingRegistry);
+  const churchDonationProducts = products.filter((p) => p.isChurchDonation && !p.isProPackage);
+  const regularProducts = products.filter((p) => !p.isProPackage && !p.isSports && !p.isNonProfit && !p.isWeddingRegistry && !p.isChurchDonation);
 
   // Resolve which real product to use for a package card's "Add to Cart" button.
   // Prefer the admin-configured direct product link (productId); fall back to
@@ -915,6 +922,51 @@ export function Shop() {
         </div>
       )}
 
+      {/* ── CHURCH GIVING ──────────────────────────────────── */}
+      {churchDonationProducts.length > 0 && (
+        <div style={{ background: "linear-gradient(135deg, #0f0b04 0%, #161208 50%, #120e05 100%)", padding: "72px 0", borderTop: `3px solid ${GOLD}`, borderBottom: `3px solid ${GOLD}`, position: "relative", overflow: "hidden" }}>
+          {/* Cross pattern overlay */}
+          <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(201,168,76,0.04) 39px, rgba(201,168,76,0.04) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(201,168,76,0.04) 39px, rgba(201,168,76,0.04) 40px)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", top: -90, right: "6%", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,168,76,0.12), transparent 70%)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", bottom: -60, left: "8%", width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, rgba(180,83,9,0.10), transparent 70%)", pointerEvents: "none" }} />
+
+          <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto", position: "relative" }}>
+            <div style={{ marginBottom: 48 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 16, background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.35)", padding: "6px 16px", borderRadius: 99 }}>
+                <Church size={13} color={GOLD} />
+                <span style={{ color: GOLD, fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>Church Giving</span>
+              </div>
+              <h2 style={{ color: "#fff", fontSize: "clamp(28px, 5vw, 44px)", fontWeight: 900, margin: "0 0 12px", fontFamily: "serif", lineHeight: 1.1 }}>
+                Give to Your <span style={{ color: GOLD }}>Church.</span>
+              </h2>
+              <p style={{ color: "#9a9a9a", fontSize: 16, maxWidth: 580, margin: 0, lineHeight: 1.6 }}>
+                Support your church community directly through your NFGN account. Choose any amount at or above the minimum — every dollar goes straight to your house of worship.
+              </p>
+              <div style={{ display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
+                {[
+                  { icon: <Church size={11} />, label: "Direct Church Giving" },
+                  { icon: <Heart size={11} />, label: "Community Support" },
+                  { icon: <HandHeart size={11} />, label: "Choose Your Amount" },
+                  { icon: <Shield size={11} />, label: "Members Only" },
+                ].map(tag => (
+                  <span key={tag.label} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(201,168,76,0.10)", border: "1px solid rgba(201,168,76,0.28)", color: GOLD, fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 99, letterSpacing: "0.04em" }}>
+                    {tag.icon} {tag.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {churchDonationProducts.map(p => (
+                <ChurchDonationCard
+                  key={p.id}
+                  product={p}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── WEDDING REGISTRY ──────────────────────────────── */}
       {weddingProducts.length > 0 && (
         <div style={{ background: "linear-gradient(135deg, #fff7fb 0%, #fdf2f8 50%, #fff5fa 100%)", padding: "72px 0", borderTop: "3px solid #e11d7a", borderBottom: "3px solid #e11d7a", position: "relative", overflow: "hidden" }}>
@@ -1150,6 +1202,96 @@ export function Shop() {
         </div>
       </div>
     </div>
+  );
+}
+
+function ChurchDonationCard({
+  product,
+}: {
+  product: Product;
+}) {
+  const [hover, setHover] = useState(false);
+  const img = resolveImageSrc(product.image);
+  const AMBER = "#b45309";
+  const AMBER_LIGHT = "#C9A84C";
+  const minAmount = product.donationMinAmount ?? 1;
+
+  return (
+    <Link href={`/product/${product.slug}`}>
+      <div
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        style={{
+          background: hover ? "#1c1509" : "#161208",
+          border: `1.5px solid ${hover ? AMBER_LIGHT : "rgba(201,168,76,0.30)"}`,
+          borderRadius: 14,
+          overflow: "hidden",
+          boxShadow: hover ? `0 14px 40px rgba(180,83,9,0.28)` : "0 2px 14px rgba(0,0,0,0.45)",
+          transition: "all 0.24s ease",
+          cursor: "pointer",
+          transform: hover ? "translateY(-5px)" : "none",
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+        }}
+      >
+        {/* Image area */}
+        <div style={{ background: img ? "#1a1a1a" : `linear-gradient(135deg, rgba(180,83,9,0.18), rgba(201,168,76,0.08))`, height: 170, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+          {img ? (
+            <img src={img} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease", transform: hover ? "scale(1.07)" : "scale(1)" }} />
+          ) : (
+            <Church size={48} color={AMBER_LIGHT} style={{ opacity: 0.45 }} />
+          )}
+          {/* Church badge */}
+          <span style={{ position: "absolute", top: 10, left: 10, background: AMBER_LIGHT, color: "#000", fontSize: 9, fontWeight: 900, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.13em", textTransform: "uppercase" }}>
+            ⛪ Church Giving
+          </span>
+          {/* Min donation pill */}
+          <span style={{ position: "absolute", bottom: 10, right: 10, background: "rgba(0,0,0,0.72)", color: AMBER_LIGHT, fontSize: 10, fontWeight: 800, padding: "3px 9px", borderRadius: 99, border: `1px solid rgba(201,168,76,0.4)`, backdropFilter: "blur(4px)" }}>
+            Min ${minAmount.toFixed(2)}
+          </span>
+        </div>
+
+        {/* Info */}
+        <div style={{ padding: "16px 16px 18px", flex: 1, display: "flex", flexDirection: "column", gap: 7 }}>
+          <p style={{ fontSize: 10, fontWeight: 800, color: AMBER_LIGHT, letterSpacing: "0.15em", textTransform: "uppercase", margin: 0 }}>
+            {product.churchName || product.donationRecipientName || "Church Donation"}
+          </p>
+          <h4 style={{ fontSize: 15, fontWeight: 800, color: "#fff", lineHeight: 1.3, flex: 1, margin: 0 }}>
+            {product.name}
+          </h4>
+          <p style={{ fontSize: 12, color: "#9a9a9a", margin: 0, lineHeight: 1.45 }}>
+            Give any amount at or above the minimum — your generosity goes directly to the church.
+          </p>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2 }}>
+            <span style={{ fontSize: 13, color: "#9a9a9a" }}>Starting at</span>
+            <span style={{ fontSize: 20, fontWeight: 900, color: AMBER_LIGHT }}>${minAmount.toFixed(2)}</span>
+          </div>
+          {/* Donate CTA */}
+          <div
+            style={{
+              marginTop: 8,
+              width: "100%",
+              padding: "10px 0",
+              background: hover ? AMBER_LIGHT : "transparent",
+              color: hover ? "#000" : AMBER_LIGHT,
+              border: `1.5px solid ${AMBER_LIGHT}`,
+              borderRadius: 8,
+              fontWeight: 800,
+              fontSize: 13,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              transition: "all 0.18s ease",
+            }}
+          >
+            <Church size={14} /> Give Now
+          </div>
+        </div>
+      </div>
+    </Link>
   );
 }
 

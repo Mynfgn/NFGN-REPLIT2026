@@ -64,12 +64,18 @@ export const productsTable = pgTable("products", {
 
   // Donation / Gift product — member enters any dollar amount they choose
   isDonation: boolean("is_donation").notNull().default(false),
-  // Who the donation is for: "Wedding Party" | "Non-Profit Organization" | "Sports Player" | "Sports Team" | "General Donation" | custom text
+  // Who the donation is for: "Wedding Party" | "Non-Profit Organization" | "Sports Player" | "Sports Team" | "Church" | "General Donation"
   donationRecipientType: text("donation_recipient_type"),
-  // Specific name of recipient (e.g. "Eastside Tigers", "Jane & John Smith", "American Red Cross")
+  // Specific name of recipient (e.g. "Eastside Tigers", "New Life Church", "American Red Cross")
   donationRecipientName: text("donation_recipient_name"),
   // Minimum donation amount — members can give any amount at or above this
   donationMinAmount: numeric("donation_min_amount", { precision: 10, scale: 2 }).notNull().default("1.00"),
+
+  // Church Donation — special product for church members to donate to their church
+  // Only valid on isNonProfit or isDonation products
+  isChurchDonation: boolean("is_church_donation").notNull().default(false),
+  // Name of the church this donation product is for
+  churchName: text("church_name"),
 
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),

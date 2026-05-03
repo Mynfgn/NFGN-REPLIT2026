@@ -28,6 +28,10 @@ function formatProduct(p: typeof productsTable.$inferSelect, categoryName?: stri
     proMemberDiscountPercent: parseFloat(p.proMemberDiscountPercent ?? "0"),
     shippingFee: parseFloat(p.shippingFee ?? "9.99"),
     handlingFee: parseFloat(p.handlingFee ?? "5.00"),
+    isDownloadable: p.isDownloadable,
+    downloadUrl: p.downloadUrl ?? null,
+    downloadFileName: p.downloadFileName ?? null,
+    downloadFileSize: p.downloadFileSize ?? null,
     createdAt: p.createdAt.toISOString(),
   };
 }
@@ -109,6 +113,10 @@ router.post("/products", requireAdmin, async (req, res): Promise<void> => {
     proMemberDiscountPercent: isProPackage ? "0" : String(proMemberDiscountPercent ?? 0),
     shippingFee: shippingFee != null ? String(shippingFee) : undefined,
     handlingFee: handlingFee != null ? String(handlingFee) : undefined,
+    isDownloadable: isDownloadable ?? false,
+    downloadUrl: downloadUrl ?? undefined,
+    downloadFileName: downloadFileName ?? undefined,
+    downloadFileSize: downloadFileSize ?? undefined,
     status: "active",
   }).returning();
 
@@ -200,6 +208,10 @@ router.patch("/products/:id", requireAdmin, async (req, res): Promise<void> => {
   if (!isProPackage && proMemberDiscountPercent != null) updates.proMemberDiscountPercent = String(proMemberDiscountPercent);
   if (shippingFee != null) updates.shippingFee = String(shippingFee);
   if (handlingFee != null) updates.handlingFee = String(handlingFee);
+  if (isDownloadable !== undefined) updates.isDownloadable = isDownloadable;
+  if (downloadUrl !== undefined) updates.downloadUrl = downloadUrl ?? undefined;
+  if (downloadFileName !== undefined) updates.downloadFileName = downloadFileName ?? undefined;
+  if (downloadFileSize !== undefined) updates.downloadFileSize = downloadFileSize ?? undefined;
 
   const [updated] = await db.update(productsTable).set(updates).where(eq(productsTable.id, id)).returning();
   if (!updated) { res.status(404).json({ error: "Not found" }); return; }

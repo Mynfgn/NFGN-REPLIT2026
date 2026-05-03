@@ -7,17 +7,21 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Printer, Share2, Check, Zap, Star, AlertCircle } from "lucide-react";
+import { Printer, Share2, Check, Zap, Star, AlertCircle, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface OrderItem {
   id: number;
+  productId: number;
   productName: string;
   productImage?: string | null;
   price: number;
   quantity: number;
   total: number;
   cvTotal?: number;
+  isDownloadable?: boolean;
+  downloadUrl?: string | null;
+  downloadFileName?: string | null;
 }
 
 interface Order {
@@ -284,6 +288,11 @@ export function ReceiptModal({ order, open, onClose, isProMember, currentMonthPv
                   <tr key={item.id} className="border-b border-muted/50">
                     <td className="py-2.5 pr-2">
                       <p className="font-semibold">{item.productName}</p>
+                      {item.isDownloadable && (
+                        <span className="inline-flex items-center gap-1 text-[10px] mt-0.5 px-1.5 py-0.5 rounded-full font-medium" style={{ background: "#C9A84C20", color: "#C9A84C" }}>
+                          <Download className="h-2.5 w-2.5" /> Digital Download
+                        </span>
+                      )}
                     </td>
                     <td className="py-2.5 text-right text-muted-foreground">{item.quantity}</td>
                     <td className="py-2.5 text-right text-muted-foreground">${fmt(item.price)}</td>
@@ -370,6 +379,41 @@ export function ReceiptModal({ order, open, onClose, isProMember, currentMonthPv
               </div>
             )}
           </div>
+
+          {/* Digital Downloads — shown when order contains downloadable items and is paid */}
+          {o.items.some(i => i.isDownloadable && i.downloadUrl) && ["paid", "demo_paid", "completed"].includes(o.paymentStatus) && (
+            <div className="mt-5 rounded-lg overflow-hidden border-2" style={{ borderColor: "#C9A84C" }}>
+              <div className="px-4 py-2.5" style={{ background: "linear-gradient(135deg, #faf8f3, #f5f0e8)", borderBottom: "1px solid #e8dfc8" }}>
+                <p className="text-[10px] font-bold uppercase tracking-[1.5px] flex items-center gap-1.5" style={{ color: "#C9A84C" }}>
+                  <Download className="h-3.5 w-3.5" /> Your Digital Downloads
+                </p>
+                <p className="text-[10px] mt-0.5 text-muted-foreground">Click a button below to download your purchased file(s). Links are tied to your account.</p>
+              </div>
+              <div className="px-4 py-3 space-y-2 bg-white">
+                {o.items
+                  .filter(i => i.isDownloadable && i.downloadUrl)
+                  .map(item => (
+                    <div key={item.id} className="flex items-center justify-between gap-3 p-2.5 rounded-lg border" style={{ borderColor: "#e8dfc8", background: "#faf8f3" }}>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold truncate">{item.productName}</p>
+                        {item.downloadFileName && (
+                          <p className="text-[10px] text-muted-foreground truncate">{item.downloadFileName}</p>
+                        )}
+                      </div>
+                      <a
+                        href={`/api/orders/${o.id}/download/${item.productId}`}
+                        download={item.downloadFileName || item.productName}
+                        className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold no-underline transition-all"
+                        style={{ background: "#C9A84C", color: "#000" }}
+                      >
+                        <Download className="h-3.5 w-3.5" /> Download
+                      </a>
+                    </div>
+                  ))
+                }
+              </div>
+            </div>
+          )}
 
           {/* Digital Signature — always shown; image only when signature was captured */}
           <div className="mt-5 rounded-lg overflow-hidden" style={{ border: "1.5px solid #C9A84C" }}>

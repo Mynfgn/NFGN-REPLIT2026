@@ -176,6 +176,9 @@ function formatOrder(order: typeof ordersTable.$inferSelect, userName: string, i
       quantity: i.quantity,
       total: parseFloat(i.total),
       cvTotal: i.cvTotal ?? 0,
+      isDownloadable: i.isDownloadable,
+      downloadUrl: i.downloadUrl ?? null,
+      downloadFileName: i.downloadFileName ?? null,
     })),
   };
 }
@@ -332,10 +335,11 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
   const tax = afterDiscount * taxRate;
 
   // ── Per-product shipping (delivery) or handling (pickup) ──────────────────
+  // Downloadable products have no physical fulfillment — no shipping or handling fee
   let shippingTotal = 0;
   let handlingTotal = 0;
   for (const { cart, product } of cartItems) {
-    if (!product) continue;
+    if (!product || product.isDownloadable) continue;
     if (isPickup) {
       handlingTotal += parseFloat(product.handlingFee ?? "5.00") * cart.quantity;
     } else {
@@ -438,6 +442,9 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
       quantity: cart.quantity,
       total: String(lineTotal),
       cvTotal: (product.cv ?? 0) * cart.quantity,
+      isDownloadable: product.isDownloadable,
+      downloadUrl: product.downloadUrl ?? undefined,
+      downloadFileName: product.downloadFileName ?? undefined,
     });
 
     commissionItems.push({
@@ -446,7 +453,10 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
       commissionRate: product.commissionRate ?? "10",
     });
 
-    await db.update(productsTable).set({ stock: Math.max(0, product.stock - cart.quantity) }).where(eq(productsTable.id, product.id));
+    // Downloadable products have unlimited stock — don't decrement
+    if (!product.isDownloadable) {
+      await db.update(productsTable).set({ stock: Math.max(0, product.stock - cart.quantity) }).where(eq(productsTable.id, product.id));
+    }
 
     if (product.isProPackage) {
       containsProPackage = true;
@@ -633,10 +643,11 @@ router.post("/orders/estimate", requireAuth, async (req, res): Promise<void> => 
   const tax = afterDiscount * taxRate;
 
   // Per-product shipping (delivery) or handling (pickup)
+  // Downloadable products have no physical fulfillment — no shipping or handling fee
   let shippingTotal = 0;
   let handlingTotal = 0;
   for (const { cart, product } of cartItems) {
-    if (!product) continue;
+    if (!product || product.isDownloadable) continue;
     if (isPickup) {
       handlingTotal += parseFloat(product.handlingFee ?? "5.00") * cart.quantity;
     } else {
@@ -672,6 +683,35 @@ router.post("/orders/estimate", requireAuth, async (req, res): Promise<void> => 
     isFreeShipping,
     isPickup: !!isPickup,
   });
+});
+
+// GET /api/orders/:orderId/download/:productId — secure download for paid downloadable items
+router.get("/:orderId/download/:productId", requireAuth, async (req, res): Promise<void> => {
+  const userId = (req as any).user?.id;
+  const orderId = parseInt(req.params.orderId);
+  const productId = parseInt(req.params.productId);
+
+  const [order] = await db.select().from(ordersTable).where(eq(ordersTable.id, orderId));
+  if (!order) { res.status(404).json({ error: "Order not found" }); return; }
+  if (order.userId !== userId) { res.status(403).json({ error: "Forbidden" }); return; }
+
+  const isPaid = ["paid", "demo_paid", "completed"].includes(order.paymentStatus) || order.status === "completed";
+  if (!isPaid) { res.status(402).json({ error: "Order not yet paid. Downloads are available after payment is confirmed." }); return; }
+
+  const items = await db.select().from(orderItemsTable)
+    .where(eq(orderItemsTable.orderId, orderId));
+
+  const item = items.find(i => i.productId === productId);
+  if (!item) { res.status(404).json({ error: "Item not found in this order" }); return; }
+  if (!item.isDownloadable || !item.downloadUrl) {
+    res.status(400).json({ error: "This item is not a downloadable product" }); return;
+  }
+
+  const storageUrl = item.downloadUrl.startsWith("/objects/")
+    ? `/api/storage${item.downloadUrl}`
+    : item.downloadUrl;
+
+  res.redirect(302, storageUrl);
 });
 
 // POST /api/orders/:id/sign — member submits digital signature at time of purchase

@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, RefreshCw, Package, DollarSign, BarChart2, Layers, Upload, X, Loader2, QrCode, ExternalLink, Copy, Check } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, Package, DollarSign, BarChart2, Layers, Upload, X, Loader2, QrCode, ExternalLink, Copy, Check, Download, FileText, Music, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 
 function getImageSrc(image: string | null | undefined): string | null {
@@ -47,6 +47,10 @@ interface Product {
   cv: number;
   shippingFee: number;
   handlingFee: number;
+  isDownloadable: boolean;
+  downloadUrl: string | null;
+  downloadFileName: string | null;
+  downloadFileSize: string | null;
   dollarCreditEligible: boolean;
   refundPolicy: string;
   proMemberDiscountEligible: boolean;
@@ -69,6 +73,10 @@ const EMPTY_FORM = {
   cv: "0",
   shippingFee: "9.99",
   handlingFee: "5.00",
+  isDownloadable: false,
+  downloadUrl: "",
+  downloadFileName: "",
+  downloadFileSize: "",
   ingredients: "",
   benefits: "",
   dollarCreditEligible: false,
@@ -102,6 +110,17 @@ export function AdminProductsPage() {
     onSuccess: (response: any) => {
       setForm(f => ({ ...f, image: response.objectPath }));
       toast.success("Image uploaded successfully!");
+    },
+    onError: (err: any) => {
+      toast.error(`Upload failed: ${err.message}`);
+    },
+  });
+
+  const downloadFileInputRef = useRef<HTMLInputElement>(null);
+  const { uploadFile: uploadDownloadFile, isUploading: isUploadingDownload } = useUpload({
+    onSuccess: (response: any) => {
+      setForm(f => ({ ...f, downloadUrl: response.objectPath }));
+      toast.success("Download file uploaded!");
     },
     onError: (err: any) => {
       toast.error(`Upload failed: ${err.message}`);
@@ -153,6 +172,10 @@ export function AdminProductsPage() {
       cv: String(p.cv ?? 0),
       shippingFee: String(p.shippingFee ?? "9.99"),
       handlingFee: String(p.handlingFee ?? "5.00"),
+      isDownloadable: p.isDownloadable ?? false,
+      downloadUrl: p.downloadUrl ?? "",
+      downloadFileName: p.downloadFileName ?? "",
+      downloadFileSize: p.downloadFileSize ?? "",
       ingredients: "",
       benefits: "",
       dollarCreditEligible: p.dollarCreditEligible ?? false,
@@ -197,6 +220,10 @@ export function AdminProductsPage() {
         cv: parseInt(form.cv) || 0,
         shippingFee: parseFloat(form.shippingFee) || 9.99,
         handlingFee: parseFloat(form.handlingFee) || 5.00,
+        isDownloadable: form.isDownloadable,
+        downloadUrl: form.downloadUrl || null,
+        downloadFileName: form.downloadFileName || null,
+        downloadFileSize: form.downloadFileSize || null,
         ingredients: form.ingredients || null,
         benefits: form.benefits || null,
         dollarCreditEligible: form.dollarCreditEligible,
@@ -603,11 +630,141 @@ export function AdminProductsPage() {
               </div>
             </div>
 
+            {/* Downloadable Product */}
+            <div className={`rounded-lg p-4 border-2 space-y-4 transition-all`} style={{ borderColor: "#C9A84C60", background: "#C9A84C06" }}>
+              <div className="flex items-start gap-3">
+                <Switch
+                  checked={form.isDownloadable}
+                  onCheckedChange={v => setForm(f => ({ ...f, isDownloadable: v }))}
+                  id="isDownloadable"
+                />
+                <div>
+                  <Label htmlFor="isDownloadable" className="cursor-pointer font-semibold flex items-center gap-1.5">
+                    <Download className="h-4 w-4" style={{ color: "#C9A84C" }} />
+                    Downloadable Product
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    E-books, music, images, PDFs, and any digital file. No shipping or handling fee is charged. Stock is not decremented — customers receive a download link after payment.
+                  </p>
+                </div>
+              </div>
+
+              {form.isDownloadable && (
+                <div className="space-y-4 pt-1 border-t border-dashed">
+                  {/* File type hint icons */}
+                  <div className="flex gap-3 text-xs text-muted-foreground items-center">
+                    <FileText className="h-4 w-4" /> PDF / E-book
+                    <Music className="h-4 w-4" /> Music / Audio
+                    <ImageIcon className="h-4 w-4" /> Image / Artwork
+                    <span className="text-muted-foreground">— any file type supported</span>
+                  </div>
+
+                  {/* Upload */}
+                  <div className="space-y-1.5">
+                    <Label>Download File *</Label>
+                    <div className="flex gap-2 items-start">
+                      <div className="flex-1 space-y-1">
+                        <Input
+                          value={form.downloadUrl}
+                          onChange={e => setForm(f => ({ ...f, downloadUrl: e.target.value }))}
+                          placeholder="Upload a file → or paste a URL"
+                          disabled={isUploadingDownload}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Upload the file customers will receive after purchase (PDF, MP3, ZIP, etc.)
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <input
+                          ref={downloadFileInputRef}
+                          type="file"
+                          accept=".pdf,.epub,.mp3,.mp4,.wav,.ogg,.zip,.rar,.png,.jpg,.jpeg,.gif,.webp,.svg,.docx,.txt,.pptx,.xlsx"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              setForm(f => ({
+                                ...f,
+                                downloadFileName: file.name,
+                                downloadFileSize: file.size > 1024 * 1024
+                                  ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
+                                  : `${Math.round(file.size / 1024)} KB`,
+                              }));
+                              await uploadDownloadFile(file);
+                            }
+                            if (downloadFileInputRef.current) downloadFileInputRef.current.value = "";
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => downloadFileInputRef.current?.click()}
+                          disabled={isUploadingDownload || saving}
+                          className="gap-2 whitespace-nowrap"
+                        >
+                          {isUploadingDownload
+                            ? <><Loader2 className="h-4 w-4 animate-spin" />Uploading…</>
+                            : <><Upload className="h-4 w-4" />Upload File</>
+                          }
+                        </Button>
+                        {form.downloadUrl && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setForm(f => ({ ...f, downloadUrl: "", downloadFileName: "", downloadFileSize: "" }))}
+                            className="gap-1 text-muted-foreground hover:text-destructive"
+                          >
+                            <X className="h-3.5 w-3.5" />Clear
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
+                    {form.downloadUrl && (
+                      <div className="flex items-center gap-2 p-2 rounded-lg border bg-muted/30 text-xs">
+                        <Download className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                        <span className="font-medium truncate">{form.downloadFileName || form.downloadUrl}</span>
+                        {form.downloadFileSize && <span className="text-muted-foreground flex-shrink-0">({form.downloadFileSize})</span>}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* File Name Override */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label>Display File Name</Label>
+                      <Input
+                        value={form.downloadFileName}
+                        onChange={e => setForm(f => ({ ...f, downloadFileName: e.target.value }))}
+                        placeholder="e.g., NFGN-Wellness-Guide.pdf"
+                      />
+                      <p className="text-xs text-muted-foreground">Shown to customer on receipt (auto-filled from upload).</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>File Size (display)</Label>
+                      <Input
+                        value={form.downloadFileSize}
+                        onChange={e => setForm(f => ({ ...f, downloadFileSize: e.target.value }))}
+                        placeholder="e.g., 3.2 MB"
+                      />
+                      <p className="text-xs text-muted-foreground">Shown alongside the download button (auto-filled from upload).</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Shipping & Handling */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className={`grid grid-cols-2 gap-4 transition-opacity ${form.isDownloadable ? "opacity-40 pointer-events-none" : ""}`}>
               <div className="col-span-2 mb-1">
                 <p className="text-sm font-semibold">Shipping &amp; Pick-up Fees</p>
-                <p className="text-xs text-muted-foreground">Per-unit fees applied at checkout depending on delivery method chosen.</p>
+                <p className="text-xs text-muted-foreground">
+                  {form.isDownloadable
+                    ? "Not applicable — downloadable products have no shipping or handling fee."
+                    : "Per-unit fees applied at checkout depending on delivery method chosen."}
+                </p>
               </div>
               <div className="space-y-1.5">
                 <Label>Shipping Fee (per unit, delivery)</Label>

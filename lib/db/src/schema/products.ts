@@ -34,6 +34,12 @@ export const productsTable = pgTable("products", {
   proMemberDiscountEligible: boolean("pro_member_discount_eligible").notNull().default(false),
   proMemberDiscountPercent: numeric("pro_member_discount_percent", { precision: 5, scale: 2 }).notNull().default("0"),
 
+  // Downloadable product (e-books, music, images, etc.)
+  isDownloadable: boolean("is_downloadable").notNull().default(false),
+  downloadUrl: text("download_url"),
+  downloadFileName: text("download_file_name"),
+  downloadFileSize: text("download_file_size"),
+
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

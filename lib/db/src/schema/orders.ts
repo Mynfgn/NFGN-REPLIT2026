@@ -40,6 +40,9 @@ export const orderItemsTable = pgTable("order_items", {
   quantity: integer("quantity").notNull(),
   total: numeric("total", { precision: 10, scale: 2 }).notNull(),
   cvTotal: integer("cv_total").notNull().default(0),
+  isDownloadable: boolean("is_downloadable").notNull().default(false),
+  downloadUrl: text("download_url"),
+  downloadFileName: text("download_file_name"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

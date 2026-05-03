@@ -106,7 +106,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     },
     { name: "Payouts", href: "/admin/payouts", icon: Banknote },
     { name: "Bookings", href: "/admin/bookings", icon: Calendar },
-    { name: "Professionals", href: "/admin/professionals", icon: Users },
+    { name: "Book-A-Professional", href: "/admin/professionals", icon: Users },
     { name: "Messages", href: "/admin/messages", icon: MessageSquare },
     { name: "Promos", href: "/admin/promos", icon: Tag },
     { name: "Banner Messages", href: "/admin/banner-messages", icon: Megaphone },

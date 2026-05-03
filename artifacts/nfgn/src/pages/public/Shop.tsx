@@ -7,7 +7,8 @@ import {
   ShoppingCart, Loader2, Leaf, Sparkles, Flame, BookOpen,
   ChevronRight, Package, BadgeCheck, Check, ArrowRight,
   Users, TrendingUp, Star, Gift, Shield, Zap, ArrowLeft,
-  Trophy, Ticket, Award, Utensils, Dumbbell,
+  Trophy, Ticket, Award, Utensils, Dumbbell, Heart, Gem,
+  HandHeart, Coins, Church, Flower2,
 } from "lucide-react";
 import { useCartStore } from "@/hooks/use-cart-store";
 import { useToast } from "@/hooks/use-toast";
@@ -37,6 +38,8 @@ type Product = {
   categoryName?: string | null;
   isProPackage?: boolean | null;
   isSports?: boolean | null;
+  isNonProfit?: boolean | null;
+  isWeddingRegistry?: boolean | null;
   stock?: number | null;
   description?: string | null;
 };
@@ -567,7 +570,9 @@ export function Shop() {
   const products: Product[] = data?.products ?? [];
   const proProducts = products.filter((p) => p.isProPackage);
   const sportsProducts = products.filter((p) => p.isSports && !p.isProPackage);
-  const regularProducts = products.filter((p) => !p.isProPackage && !p.isSports);
+  const nonProfitProducts = products.filter((p) => p.isNonProfit && !p.isProPackage && !p.isSports);
+  const weddingProducts = products.filter((p) => p.isWeddingRegistry && !p.isProPackage && !p.isSports);
+  const regularProducts = products.filter((p) => !p.isProPackage && !p.isSports && !p.isNonProfit && !p.isWeddingRegistry);
 
   // Resolve which real product to use for a package card's "Add to Cart" button.
   // Prefer the admin-configured direct product link (productId); fall back to
@@ -864,6 +869,98 @@ export function Shop() {
         </div>
       )}
 
+      {/* ── NON-PROFIT ORGANIZATIONS ──────────────────────── */}
+      {nonProfitProducts.length > 0 && (
+        <div style={{ background: "linear-gradient(135deg, #0d0d1a 0%, #111128 50%, #0d0d1f 100%)", padding: "72px 0", borderTop: "3px solid #6366f1", borderBottom: "3px solid #6366f1", position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(99,102,241,0.04) 39px, rgba(99,102,241,0.04) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(99,102,241,0.04) 39px, rgba(99,102,241,0.04) 40px)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", top: -80, right: "8%", width: 280, height: 280, borderRadius: "50%", background: "radial-gradient(circle, rgba(99,102,241,0.15), transparent 70%)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", bottom: -60, left: "6%", width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, rgba(99,102,241,0.09), transparent 70%)", pointerEvents: "none" }} />
+
+          <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto", position: "relative" }}>
+            <div style={{ marginBottom: 48 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 16, background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.35)", padding: "6px 16px", borderRadius: 99 }}>
+                <HandHeart size={13} color="#6366f1" />
+                <span style={{ color: "#6366f1", fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>NON-PROFIT ORGANIZATIONS</span>
+              </div>
+              <h2 style={{ color: "#fff", fontSize: "clamp(28px, 5vw, 44px)", fontWeight: 900, margin: "0 0 12px", fontFamily: "serif", lineHeight: 1.1 }}>
+                Give Back. <span style={{ color: "#6366f1" }}>Support. Unite.</span>
+              </h2>
+              <p style={{ color: "#a0a0a0", fontSize: 16, maxWidth: 560, margin: 0 }}>
+                Products, events, and services that support non-profit causes — every purchase makes a difference in the community.
+              </p>
+              <div style={{ display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
+                {[
+                  { icon: <Heart size={11} />, label: "Community Support" },
+                  { icon: <HandHeart size={11} />, label: "Charitable Events" },
+                  { icon: <Users size={11} />, label: "Organization Fundraisers" },
+                  { icon: <Coins size={11} />, label: "Donation Drives" },
+                ].map(tag => (
+                  <span key={tag.label} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(99,102,241,0.10)", border: "1px solid rgba(99,102,241,0.25)", color: "#6366f1", fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 99, letterSpacing: "0.04em" }}>
+                    {tag.icon} {tag.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {nonProfitProducts.map(p => (
+                <NonProfitProductCard
+                  key={p.id}
+                  product={p}
+                  onAdd={handleAddToCart}
+                  adding={addingId === p.id}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── WEDDING REGISTRY ──────────────────────────────── */}
+      {weddingProducts.length > 0 && (
+        <div style={{ background: "linear-gradient(135deg, #fff7fb 0%, #fdf2f8 50%, #fff5fa 100%)", padding: "72px 0", borderTop: "3px solid #e11d7a", borderBottom: "3px solid #e11d7a", position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(225,29,122,0.03) 39px, rgba(225,29,122,0.03) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(225,29,122,0.03) 39px, rgba(225,29,122,0.03) 40px)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", top: -60, left: "12%", width: 260, height: 260, borderRadius: "50%", background: "radial-gradient(circle, rgba(225,29,122,0.10), transparent 70%)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", bottom: -50, right: "10%", width: 180, height: 180, borderRadius: "50%", background: "radial-gradient(circle, rgba(225,29,122,0.07), transparent 70%)", pointerEvents: "none" }} />
+
+          <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto", position: "relative" }}>
+            <div style={{ marginBottom: 48 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 16, background: "rgba(225,29,122,0.09)", border: "1px solid rgba(225,29,122,0.30)", padding: "6px 16px", borderRadius: 99 }}>
+                <Gem size={13} color="#e11d7a" />
+                <span style={{ color: "#e11d7a", fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>WEDDING REGISTRY</span>
+              </div>
+              <h2 style={{ color: "#1a1a1a", fontSize: "clamp(28px, 5vw, 44px)", fontWeight: 900, margin: "0 0 12px", fontFamily: "serif", lineHeight: 1.1 }}>
+                Celebrate Love. <span style={{ color: "#e11d7a" }}>Gift Perfectly.</span>
+              </h2>
+              <p style={{ color: "#6b7280", fontSize: 16, maxWidth: 560, margin: 0 }}>
+                Curated wedding registry products and services — thoughtful gifts and wellness experiences for life's most special day.
+              </p>
+              <div style={{ display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
+                {[
+                  { icon: <Heart size={11} />, label: "Gift Ideas" },
+                  { icon: <Gem size={11} />, label: "Luxury Items" },
+                  { icon: <Flower2 size={11} />, label: "Wellness Gifts" },
+                  { icon: <Church size={11} />, label: "Ceremony Services" },
+                ].map(tag => (
+                  <span key={tag.label} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(225,29,122,0.07)", border: "1px solid rgba(225,29,122,0.22)", color: "#e11d7a", fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 99, letterSpacing: "0.04em" }}>
+                    {tag.icon} {tag.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {weddingProducts.map(p => (
+                <WeddingProductCard
+                  key={p.id}
+                  product={p}
+                  onAdd={handleAddToCart}
+                  adding={addingId === p.id}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── ZONE 2: WHITE — All Products ─────────────────── */}
       <div id="products" style={{ background: GREY_50, padding: "72px 0" }}>
         <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto" }}>
@@ -1053,6 +1150,206 @@ export function Shop() {
         </div>
       </div>
     </div>
+  );
+}
+
+function NonProfitProductCard({
+  product,
+  onAdd,
+  adding,
+}: {
+  product: Product;
+  onAdd: (e: React.MouseEvent, id: number) => void;
+  adding: boolean;
+}) {
+  const [hover, setHover] = useState(false);
+  const img = resolveImageSrc(product.image);
+  const outOfStock = product.stock === 0;
+  const onSale = product.comparePrice && product.comparePrice > product.price;
+  const INDIGO = "#6366f1";
+  const INDIGO_DIM = "rgba(99,102,241,0.18)";
+
+  return (
+    <Link href={`/product/${product.slug}`}>
+      <div
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        style={{
+          background: hover ? "#1a1a2e" : "#13131f",
+          border: `1.5px solid ${hover ? INDIGO : "rgba(99,102,241,0.28)"}`,
+          borderRadius: 12,
+          overflow: "hidden",
+          boxShadow: hover ? `0 12px 36px rgba(99,102,241,0.22)` : "0 2px 12px rgba(0,0,0,0.4)",
+          transition: "all 0.22s ease",
+          cursor: "pointer",
+          transform: hover ? "translateY(-4px)" : "none",
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+        }}
+      >
+        <div style={{ background: img ? "#1a1a1a" : `linear-gradient(135deg, ${INDIGO_DIM}, rgba(99,102,241,0.05))`, height: 160, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+          {img ? (
+            <img src={img} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease", transform: hover ? "scale(1.06)" : "scale(1)" }} />
+          ) : (
+            <HandHeart size={40} color={INDIGO} style={{ opacity: 0.4 }} />
+          )}
+          <span style={{ position: "absolute", top: 10, left: 10, background: INDIGO, color: "#fff", fontSize: 9, fontWeight: 900, padding: "3px 8px", borderRadius: 99, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+            🤝 NON-PROFIT
+          </span>
+          {onSale && !outOfStock && (
+            <span style={{ position: "absolute", top: 10, right: 10, background: "#fff", color: "#000", fontSize: 10, fontWeight: 900, padding: "3px 8px", borderRadius: 99 }}>
+              SALE
+            </span>
+          )}
+          {outOfStock && (
+            <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ color: "rgba(255,255,255,0.7)", fontWeight: 600, fontSize: 13 }}>Sold Out</span>
+            </div>
+          )}
+        </div>
+        <div style={{ padding: "16px 16px 18px", flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+          <p style={{ fontSize: 10, fontWeight: 800, color: INDIGO, letterSpacing: "0.15em", textTransform: "uppercase", margin: 0 }}>
+            {product.categoryName || "Non-Profit"}
+          </p>
+          <h4 style={{ fontSize: 15, fontWeight: 800, color: "#fff", lineHeight: 1.3, flex: 1, margin: 0 }}>
+            {product.name}
+          </h4>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+            <span style={{ fontSize: 18, fontWeight: 900, color: INDIGO }}>${product.price.toFixed(2)}</span>
+            {onSale && (
+              <span style={{ fontSize: 13, color: "#666", textDecoration: "line-through" }}>
+                ${product.comparePrice!.toFixed(2)}
+              </span>
+            )}
+          </div>
+          <button
+            disabled={outOfStock || adding}
+            onClick={(e) => onAdd(e, product.id)}
+            style={{
+              marginTop: 8,
+              width: "100%",
+              padding: "10px 0",
+              background: hover && !outOfStock ? INDIGO : "transparent",
+              color: outOfStock ? "#555" : hover ? "#fff" : INDIGO,
+              border: `1.5px solid ${outOfStock ? "#333" : INDIGO}`,
+              borderRadius: 8,
+              fontWeight: 800,
+              fontSize: 13,
+              cursor: outOfStock ? "not-allowed" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              transition: "all 0.18s ease",
+            }}
+          >
+            {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingCart size={14} />}
+            {outOfStock ? "Sold Out" : "Add to Cart"}
+          </button>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function WeddingProductCard({
+  product,
+  onAdd,
+  adding,
+}: {
+  product: Product;
+  onAdd: (e: React.MouseEvent, id: number) => void;
+  adding: boolean;
+}) {
+  const [hover, setHover] = useState(false);
+  const img = resolveImageSrc(product.image);
+  const outOfStock = product.stock === 0;
+  const onSale = product.comparePrice && product.comparePrice > product.price;
+  const ROSE = "#e11d7a";
+  const ROSE_DIM = "rgba(225,29,122,0.12)";
+
+  return (
+    <Link href={`/product/${product.slug}`}>
+      <div
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        style={{
+          background: hover ? "#fff7fb" : "#fff",
+          border: `1.5px solid ${hover ? ROSE : "rgba(225,29,122,0.22)"}`,
+          borderRadius: 12,
+          overflow: "hidden",
+          boxShadow: hover ? `0 12px 36px rgba(225,29,122,0.14)` : "0 2px 8px rgba(0,0,0,0.07)",
+          transition: "all 0.22s ease",
+          cursor: "pointer",
+          transform: hover ? "translateY(-4px)" : "none",
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+        }}
+      >
+        <div style={{ background: img ? "#fdf2f8" : `linear-gradient(135deg, ${ROSE_DIM}, rgba(225,29,122,0.04))`, height: 160, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+          {img ? (
+            <img src={img} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease", transform: hover ? "scale(1.06)" : "scale(1)" }} />
+          ) : (
+            <Gem size={40} color={ROSE} style={{ opacity: 0.35 }} />
+          )}
+          <span style={{ position: "absolute", top: 10, left: 10, background: ROSE, color: "#fff", fontSize: 9, fontWeight: 900, padding: "3px 8px", borderRadius: 99, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+            💍 REGISTRY
+          </span>
+          {onSale && !outOfStock && (
+            <span style={{ position: "absolute", top: 10, right: 10, background: ROSE, color: "#fff", fontSize: 10, fontWeight: 900, padding: "3px 8px", borderRadius: 99 }}>
+              SALE
+            </span>
+          )}
+          {outOfStock && (
+            <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 600, fontSize: 13 }}>Sold Out</span>
+            </div>
+          )}
+        </div>
+        <div style={{ padding: "16px 16px 18px", flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+          <p style={{ fontSize: 10, fontWeight: 800, color: ROSE, letterSpacing: "0.15em", textTransform: "uppercase", margin: 0 }}>
+            {product.categoryName || "Wedding Registry"}
+          </p>
+          <h4 style={{ fontSize: 15, fontWeight: 800, color: "#1a1a1a", lineHeight: 1.3, flex: 1, margin: 0 }}>
+            {product.name}
+          </h4>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+            <span style={{ fontSize: 18, fontWeight: 900, color: ROSE }}>${product.price.toFixed(2)}</span>
+            {onSale && (
+              <span style={{ fontSize: 13, color: "#aaa", textDecoration: "line-through" }}>
+                ${product.comparePrice!.toFixed(2)}
+              </span>
+            )}
+          </div>
+          <button
+            disabled={outOfStock || adding}
+            onClick={(e) => onAdd(e, product.id)}
+            style={{
+              marginTop: 8,
+              width: "100%",
+              padding: "10px 0",
+              background: hover && !outOfStock ? ROSE : "transparent",
+              color: outOfStock ? "#bbb" : hover ? "#fff" : ROSE,
+              border: `1.5px solid ${outOfStock ? "#e5e7eb" : ROSE}`,
+              borderRadius: 8,
+              fontWeight: 800,
+              fontSize: 13,
+              cursor: outOfStock ? "not-allowed" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              transition: "all 0.18s ease",
+            }}
+          >
+            {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingCart size={14} />}
+            {outOfStock ? "Sold Out" : "Add to Cart"}
+          </button>
+        </div>
+      </div>
+    </Link>
   );
 }
 

@@ -223,6 +223,11 @@ router.post("/auth/register-pro", async (req, res): Promise<void> => {
   const bookAProCategory: string | undefined = req.body.bookAProCategory ?? undefined;
   const bookAProSubServices: string[] = Array.isArray(req.body.bookAProSubServices) ? req.body.bookAProSubServices : [];
   const bookAProBio: string | undefined = req.body.bookAProBio ?? undefined;
+  const isSportsPlayer: boolean = req.body.isSportsPlayer === true || req.body.isSportsPlayer === "true";
+  const sportsDateOfBirth: string | undefined = req.body.sportsDateOfBirth ?? undefined;
+  const sportsSchool: string | undefined = req.body.sportsSchool ?? undefined;
+  const sportsGrade: string | undefined = req.body.sportsGrade ?? undefined;
+  const sportsBirthCertificateUrl: string | undefined = req.body.sportsBirthCertificateUrl ?? undefined;
 
   const [existing] = await db.select().from(usersTable).where(sql`lower(${usersTable.email}) = lower(${email})`);
   if (existing) {
@@ -266,6 +271,11 @@ router.post("/auth/register-pro", async (req, res): Promise<void> => {
     bookAProCategory: isBookAProProvider && bookAProCategory ? bookAProCategory : null,
     bookAProSubServices: isBookAProProvider && bookAProSubServices.length > 0 ? bookAProSubServices : [],
     bookAProBio: isBookAProProvider && bookAProBio ? bookAProBio : null,
+    isSportsPlayer,
+    sportsDateOfBirth: isSportsPlayer && sportsDateOfBirth ? sportsDateOfBirth : undefined,
+    sportsSchool: isSportsPlayer && sportsSchool ? sportsSchool : undefined,
+    sportsGrade: isSportsPlayer && sportsGrade ? sportsGrade : undefined,
+    sportsBirthCertificateUrl: isSportsPlayer && sportsBirthCertificateUrl ? sportsBirthCertificateUrl : undefined,
   }).returning();
 
   await db.insert(walletsTable).values({ userId: newUser.id });

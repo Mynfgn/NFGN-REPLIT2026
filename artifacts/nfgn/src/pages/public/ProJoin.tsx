@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -19,6 +19,7 @@ import {
   CheckCircle, Star, Loader2, UserCircle2, Briefcase,
   CreditCard, Truck, Smartphone, DollarSign, Package,
   ShoppingCart, ArrowRight, LogIn, UserPlus, HelpCircle,
+  Trophy, Upload,
 } from "lucide-react";
 import { BAP_CATEGORIES } from "@/lib/bapCategories";
 import { resolveImageSrc } from "@/lib/image";
@@ -73,6 +74,14 @@ export function ProJoin() {
   const [bapSubServices, setBapSubServices] = useState<string[]>([]);
   const [bapCustomService, setBapCustomService] = useState("");
   const [bapBio, setBapBio] = useState("");
+
+  const [isSportsPlayer, setIsSportsPlayer] = useState(false);
+  const [sportsDateOfBirth, setSportsDateOfBirth] = useState("");
+  const [sportsSchool, setSportsSchool] = useState("");
+  const [sportsGrade, setSportsGrade] = useState("");
+  const [sportsBirthCertUrl, setSportsBirthCertUrl] = useState("");
+  const [uploadingSportsCert, setUploadingSportsCert] = useState(false);
+  const sportsCertInputRef = useRef<HTMLInputElement>(null);
 
   async function lookupSponsor(code: string) {
     if (!code.trim()) { setSponsorInfo(null); return; }
@@ -329,6 +338,13 @@ export function ProJoin() {
         body.bookAProSubServices = bapSubServices;
         if (bapBio.trim()) body.bookAProBio = bapBio.trim();
       }
+      if (isSportsPlayer) {
+        body.isSportsPlayer = true;
+        if (sportsDateOfBirth) body.sportsDateOfBirth = sportsDateOfBirth;
+        if (sportsSchool.trim()) body.sportsSchool = sportsSchool.trim();
+        if (sportsGrade) body.sportsGrade = sportsGrade;
+        if (sportsBirthCertUrl) body.sportsBirthCertificateUrl = sportsBirthCertUrl;
+      }
 
       const res = await fetch("/api/auth/register-pro", {
         method: "POST",
@@ -514,6 +530,127 @@ export function ProJoin() {
                   </FormItem>
                 )} />
 
+                {/* NFGN Sports Player */}
+                <div className="rounded-xl border-2 border-dashed overflow-hidden" style={{ borderColor: "rgba(201,168,76,0.4)" }}>
+                  <div className="flex items-center justify-between px-4 py-3" style={{ background: "rgba(201,168,76,0.06)" }}>
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(201,168,76,0.15)" }}>
+                        <Trophy className="h-4 w-4" style={{ color: "#C9A84C" }} />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm">Are you an NFGN SPORTS Player?</p>
+                        <p className="text-xs text-muted-foreground">Register your player profile for tournaments and eligibility verification</p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={isSportsPlayer}
+                      onCheckedChange={v => { setIsSportsPlayer(v); if (!v) { setSportsDateOfBirth(""); setSportsSchool(""); setSportsGrade(""); setSportsBirthCertUrl(""); } }}
+                    />
+                  </div>
+                  {isSportsPlayer && (
+                    <div className="px-4 pb-4 pt-3 space-y-4 bg-white dark:bg-background">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-sm font-medium">Date of Birth</label>
+                          <Input
+                            type="date"
+                            value={sportsDateOfBirth}
+                            onChange={e => setSportsDateOfBirth(e.target.value)}
+                            max={new Date().toISOString().split("T")[0]}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-sm font-medium">School or College <span className="text-muted-foreground font-normal">(if any)</span></label>
+                          <Input
+                            value={sportsSchool}
+                            onChange={e => setSportsSchool(e.target.value)}
+                            placeholder="e.g. Jefferson High School"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-sm font-medium">Grade or Year</label>
+                        <select
+                          value={sportsGrade}
+                          onChange={e => setSportsGrade(e.target.value)}
+                          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        >
+                          <option value="">— Select grade or year —</option>
+                          <optgroup label="K–12">
+                            {["Kindergarten","1st Grade","2nd Grade","3rd Grade","4th Grade","5th Grade","6th Grade","7th Grade","8th Grade","9th Grade (Freshman)","10th Grade (Sophomore)","11th Grade (Junior)","12th Grade (Senior)"].map(g => (
+                              <option key={g} value={g}>{g}</option>
+                            ))}
+                          </optgroup>
+                          <optgroup label="College / University">
+                            {["College Freshman (Year 1)","College Sophomore (Year 2)","College Junior (Year 3)","College Senior (Year 4)","Graduate Student","Post-Graduate"].map(g => (
+                              <option key={g} value={g}>{g}</option>
+                            ))}
+                          </optgroup>
+                          <optgroup label="Other">
+                            <option value="Not Currently Enrolled">Not Currently Enrolled</option>
+                            <option value="Adult / Community League">Adult / Community League</option>
+                          </optgroup>
+                        </select>
+                        <p className="text-xs text-muted-foreground">Select your current grade in school or year in college.</p>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-sm font-medium flex items-center gap-1.5">
+                          <Upload className="h-3.5 w-3.5" style={{ color: "#C9A84C" }} />
+                          Birth Certificate / Proof of Eligibility <span className="text-muted-foreground font-normal">(optional)</span>
+                        </label>
+                        <p className="text-xs text-muted-foreground mb-1.5">Upload a birth certificate, photo ID, or other document required for tournament eligibility. Accepted: JPG, PNG, PDF.</p>
+                        <input
+                          ref={sportsCertInputRef}
+                          type="file"
+                          accept="image/*,.pdf"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            setUploadingSportsCert(true);
+                            try {
+                              const formData = new FormData();
+                              formData.append("file", file);
+                              const res = await fetch("/api/storage/upload", { method: "POST", body: formData });
+                              if (res.ok) {
+                                const data = await res.json();
+                                setSportsBirthCertUrl(data.objectPath ?? "");
+                                toast({ title: "Document uploaded!", description: "Your eligibility document has been saved." });
+                              } else {
+                                toast({ variant: "destructive", title: "Upload failed", description: "Please try again." });
+                              }
+                            } catch {
+                              toast({ variant: "destructive", title: "Upload failed", description: "Network error." });
+                            } finally {
+                              setUploadingSportsCert(false);
+                              if (sportsCertInputRef.current) sportsCertInputRef.current.value = "";
+                            }
+                          }}
+                        />
+                        <div className="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => sportsCertInputRef.current?.click()}
+                            disabled={uploadingSportsCert}
+                            className="gap-2"
+                          >
+                            {uploadingSportsCert
+                              ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Uploading…</>
+                              : <><Upload className="h-3.5 w-3.5" /> Upload Document</>}
+                          </Button>
+                          {sportsBirthCertUrl && (
+                            <span className="text-xs text-green-600 font-medium flex items-center gap-1">
+                              <CheckCircle className="h-3.5 w-3.5" /> Document uploaded
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 {/* Book-A-Pro */}
                 <div className="rounded-xl border-2 border-dashed border-primary/30 overflow-hidden">
                   <div className="flex items-center justify-between px-4 py-3 bg-primary/5">
@@ -650,7 +787,7 @@ export function ProJoin() {
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>Compensation Volume</span>
-                    <span>{selectedProduct.cv} CV</span>
+                    <span>{(selectedProduct as any).cv} CV</span>
                   </div>
                   <div className="border-t pt-3 flex items-center justify-between">
                     <span className="font-semibold">You receive</span>

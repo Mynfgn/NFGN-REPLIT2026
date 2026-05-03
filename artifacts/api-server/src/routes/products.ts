@@ -29,6 +29,8 @@ function formatProduct(p: typeof productsTable.$inferSelect, categoryName?: stri
     shippingFee: parseFloat(p.shippingFee ?? "9.99"),
     handlingFee: parseFloat(p.handlingFee ?? "5.00"),
     isSports: p.isSports,
+    sportsCategory: p.sportsCategory ?? null,
+    teamOrganizationName: p.teamOrganizationName ?? null,
     isDownloadable: p.isDownloadable,
     downloadUrl: p.downloadUrl ?? null,
     downloadFileName: p.downloadFileName ?? null,
@@ -85,7 +87,7 @@ router.get("/products/admin-all", requireAdmin, async (req, res): Promise<void> 
 });
 
 router.post("/products", requireAdmin, async (req, res): Promise<void> => {
-  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, isDownloadable, downloadUrl, downloadFileName, downloadFileSize } = req.body;
+  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isDownloadable, downloadUrl, downloadFileName, downloadFileSize } = req.body;
   if (!name || !slug || !description || price == null) {
     res.status(400).json({ error: "Missing required fields" });
     return;
@@ -115,6 +117,8 @@ router.post("/products", requireAdmin, async (req, res): Promise<void> => {
     shippingFee: shippingFee != null ? String(shippingFee) : undefined,
     handlingFee: handlingFee != null ? String(handlingFee) : undefined,
     isSports: isSports ?? false,
+    sportsCategory: isSports && sportsCategory ? sportsCategory : undefined,
+    teamOrganizationName: teamOrganizationName ?? undefined,
     isDownloadable: isDownloadable ?? false,
     downloadUrl: downloadUrl ?? undefined,
     downloadFileName: downloadFileName ?? undefined,
@@ -183,7 +187,7 @@ router.patch("/products/:id", requireAdmin, async (req, res): Promise<void> => {
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
   const updates: Partial<typeof productsTable.$inferInsert> = {};
-  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, isDownloadable, downloadUrl, downloadFileName, downloadFileSize } = req.body;
+  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isDownloadable, downloadUrl, downloadFileName, downloadFileSize } = req.body;
   if (name) updates.name = name;
   if (slug) updates.slug = slug;
   if (description) updates.description = description;
@@ -211,6 +215,8 @@ router.patch("/products/:id", requireAdmin, async (req, res): Promise<void> => {
   if (shippingFee != null) updates.shippingFee = String(shippingFee);
   if (handlingFee != null) updates.handlingFee = String(handlingFee);
   if (isSports !== undefined) updates.isSports = isSports;
+  if (sportsCategory !== undefined) updates.sportsCategory = sportsCategory ?? undefined;
+  if (teamOrganizationName !== undefined) updates.teamOrganizationName = teamOrganizationName ?? undefined;
   if (isDownloadable !== undefined) updates.isDownloadable = isDownloadable;
   if (downloadUrl !== undefined) updates.downloadUrl = downloadUrl ?? undefined;
   if (downloadFileName !== undefined) updates.downloadFileName = downloadFileName ?? undefined;

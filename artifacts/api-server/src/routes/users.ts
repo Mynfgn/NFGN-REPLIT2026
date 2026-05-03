@@ -38,6 +38,11 @@ function formatUser(user: typeof usersTable.$inferSelect, sponsorName?: string) 
     bookAProCategory: user.bookAProCategory ?? null,
     bookAProSubServices: (user.bookAProSubServices as string[] | null) ?? [],
     bookAProBio: user.bookAProBio ?? null,
+    isSportsPlayer: user.isSportsPlayer ?? false,
+    sportsDateOfBirth: user.sportsDateOfBirth ?? null,
+    sportsSchool: user.sportsSchool ?? null,
+    sportsGrade: user.sportsGrade ?? null,
+    sportsBirthCertificateUrl: user.sportsBirthCertificateUrl ?? null,
   };
 }
 
@@ -101,6 +106,7 @@ router.patch("/users/:id", requireAuth, async (req, res): Promise<void> => {
     bankName, bankAccountNumber, bankRoutingNumber, bankAccountType,
     payoutMethod, payoutPaypalEmail, payoutCashAppHandle,
     referralCode,
+    isSportsPlayer, sportsDateOfBirth, sportsSchool, sportsGrade, sportsBirthCertificateUrl,
   } = req.body;
   const currentUser = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
 
@@ -127,6 +133,11 @@ router.patch("/users/:id", requireAuth, async (req, res): Promise<void> => {
   if (payoutMethod !== undefined) updateData.payoutMethod = payoutMethod;
   if (payoutPaypalEmail !== undefined) updateData.payoutPaypalEmail = payoutPaypalEmail;
   if (payoutCashAppHandle !== undefined) updateData.payoutCashAppHandle = payoutCashAppHandle;
+  if (isSportsPlayer !== undefined) updateData.isSportsPlayer = isSportsPlayer;
+  if (sportsDateOfBirth !== undefined) updateData.sportsDateOfBirth = sportsDateOfBirth;
+  if (sportsSchool !== undefined) updateData.sportsSchool = sportsSchool;
+  if (sportsGrade !== undefined) updateData.sportsGrade = sportsGrade;
+  if (sportsBirthCertificateUrl !== undefined) updateData.sportsBirthCertificateUrl = sportsBirthCertificateUrl;
 
   const [updated] = await db.update(usersTable).set(updateData).where(eq(usersTable.id, id)).returning();
   if (!updated) { res.status(404).json({ error: "Not found" }); return; }

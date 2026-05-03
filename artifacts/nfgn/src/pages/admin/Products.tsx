@@ -49,6 +49,8 @@ interface Product {
   shippingFee: number;
   handlingFee: number;
   isSports: boolean;
+  sportsCategory: string | null;
+  teamOrganizationName: string | null;
   isDownloadable: boolean;
   downloadUrl: string | null;
   downloadFileName: string | null;
@@ -59,6 +61,18 @@ interface Product {
   proMemberDiscountPercent: number;
   createdAt: string;
 }
+
+const SPORTS_CATEGORIES = [
+  "Team Tournament Fees & Registration",
+  "Player Fees & Registration",
+  "Tournament Admission Ticket",
+  "Referee Fee",
+  "Jersey / Apparel",
+  "Concessions / Food / Beverage",
+  "Special Seating",
+  "Fundraiser",
+  "Sponsorships & Donations",
+] as const;
 
 const EMPTY_FORM = {
   name: "",
@@ -76,6 +90,8 @@ const EMPTY_FORM = {
   shippingFee: "9.99",
   handlingFee: "5.00",
   isSports: false,
+  sportsCategory: "",
+  teamOrganizationName: "",
   isDownloadable: false,
   downloadUrl: "",
   downloadFileName: "",
@@ -180,6 +196,8 @@ export function AdminProductsPage() {
       shippingFee: String(p.shippingFee ?? "9.99"),
       handlingFee: String(p.handlingFee ?? "5.00"),
       isSports: p.isSports ?? false,
+      sportsCategory: (p as any).sportsCategory ?? "",
+      teamOrganizationName: (p as any).teamOrganizationName ?? "",
       isDownloadable: p.isDownloadable ?? false,
       downloadUrl: p.downloadUrl ?? "",
       downloadFileName: p.downloadFileName ?? "",
@@ -229,6 +247,8 @@ export function AdminProductsPage() {
         shippingFee: parseFloat(form.shippingFee) || 9.99,
         handlingFee: parseFloat(form.handlingFee) || 5.00,
         isSports: form.isSports,
+        sportsCategory: form.isSports ? (form.sportsCategory || null) : null,
+        teamOrganizationName: form.teamOrganizationName || null,
         isDownloadable: form.isDownloadable,
         downloadUrl: form.downloadUrl || null,
         downloadFileName: form.downloadFileName || null,
@@ -693,11 +713,11 @@ export function AdminProductsPage() {
             </div>
 
             {/* NFGN Sports Product */}
-            <div className="rounded-lg p-4 border-2 space-y-2" style={{ borderColor: "#C9A84C60", background: "#C9A84C06" }}>
+            <div className="rounded-lg p-4 border-2 space-y-3" style={{ borderColor: "#C9A84C60", background: "#C9A84C06" }}>
               <div className="flex items-start gap-3">
                 <Switch
                   checked={form.isSports}
-                  onCheckedChange={v => setForm(f => ({ ...f, isSports: v }))}
+                  onCheckedChange={v => setForm(f => ({ ...f, isSports: v, sportsCategory: v ? f.sportsCategory : "" }))}
                   id="isSports"
                 />
                 <div>
@@ -710,8 +730,37 @@ export function AdminProductsPage() {
                 </div>
               </div>
               {form.isSports && (
-                <div className="text-xs rounded-lg px-3 py-2 font-medium" style={{ background: "rgba(201,168,76,0.10)", color: "#C9A84C", border: "1px solid rgba(201,168,76,0.25)" }}>
-                  🏆 This product will be showcased under the NFGN SPORTS banner on the public Shop page.
+                <div className="space-y-3 pt-1 border-t border-dashed" style={{ borderColor: "rgba(201,168,76,0.3)" }}>
+                  <div className="space-y-1.5">
+                    <Label>Sports Category <span className="text-destructive">*</span></Label>
+                    <Select
+                      value={form.sportsCategory || "none"}
+                      onValueChange={v => setForm(f => ({ ...f, sportsCategory: v === "none" ? "" : v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a sports category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— Select Category —</SelectItem>
+                        {SPORTS_CATEGORIES.map(cat => (
+                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">Select the type of sports product or service.</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Name of Team / Organization / Player</Label>
+                    <Input
+                      value={form.teamOrganizationName}
+                      onChange={e => setForm(f => ({ ...f, teamOrganizationName: e.target.value }))}
+                      placeholder="e.g. Eastside Lions U12, Coach Rivera, Atlanta United FC"
+                    />
+                    <p className="text-xs text-muted-foreground">The team, organization, or player this product is associated with (optional).</p>
+                  </div>
+                  <div className="text-xs rounded-lg px-3 py-2 font-medium" style={{ background: "rgba(201,168,76,0.10)", color: "#C9A84C", border: "1px solid rgba(201,168,76,0.25)" }}>
+                    🏆 This product will be showcased under the NFGN SPORTS banner on the public Shop page.
+                  </div>
                 </div>
               )}
             </div>

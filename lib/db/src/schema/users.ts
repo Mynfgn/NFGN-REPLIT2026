@@ -55,6 +55,13 @@ export const usersTable = pgTable("users", {
   // When true, this member is approved to collect Cash on Delivery payments.
   // Only admins can toggle this. COD is hidden in checkout for all others.
   canAcceptCod: boolean("can_accept_cod").notNull().default(false),
+
+  // NFGN Sports player profile (member self-reports; shown on profile)
+  isSportsPlayer: boolean("is_sports_player").notNull().default(false),
+  sportsDateOfBirth: date("sports_date_of_birth"),
+  sportsSchool: text("sports_school"),
+  sportsGrade: text("sports_grade"),
+  sportsBirthCertificateUrl: text("sports_birth_certificate_url"),
 });
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({ id: true, createdAt: true, updatedAt: true });

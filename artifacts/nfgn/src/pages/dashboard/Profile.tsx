@@ -12,7 +12,7 @@ import {
   AlertCircle, CheckCircle2, Star, Calendar, Phone, Mail,
   Building2, CreditCard, Wallet, Users, Award, ChevronRight,
   Eye, EyeOff, Sparkles, ArrowRight, Crown, Zap, TrendingUp, Lock, Camera,
-  Briefcase, QrCode, ExternalLink, Smartphone,
+  Briefcase, QrCode, ExternalLink, Smartphone, Trophy, Upload,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -245,6 +245,17 @@ export function ProfilePage() {
   const [avatarSaving, setAvatarSaving] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
+  // NFGN Sports Player state
+  const [isSportsPlayer, setIsSportsPlayer] = useState(false);
+  const [sportsDateOfBirth, setSportsDateOfBirth] = useState("");
+  const [sportsSchool, setSportsSchool] = useState("");
+  const [sportsGrade, setSportsGrade] = useState("");
+  const [sportsBirthCertUrl, setSportsBirthCertUrl] = useState("");
+  const [sportsSaving, setSportsSaving] = useState(false);
+  const [sportsMsg, setSportsMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [uploadingSportsCert, setUploadingSportsCert] = useState(false);
+  const sportsCertInputRef = useRef<HTMLInputElement>(null);
+
   // Book-A-Pro state
   const [bapEnabled, setBapEnabled] = useState(false);
   const [bapCategory, setBapCategory] = useState("");
@@ -280,6 +291,11 @@ export function ProfilePage() {
       setBapCategory((user as any).bookAProCategory ?? "");
       setBapSubServices((user as any).bookAProSubServices ?? []);
       setBapBio((user as any).bookAProBio ?? "");
+      setIsSportsPlayer((user as any).isSportsPlayer ?? false);
+      setSportsDateOfBirth((user as any).sportsDateOfBirth ?? "");
+      setSportsSchool((user as any).sportsSchool ?? "");
+      setSportsGrade((user as any).sportsGrade ?? "");
+      setSportsBirthCertUrl((user as any).sportsBirthCertificateUrl ?? "");
     }
   }, [user]);
 
@@ -325,6 +341,22 @@ export function ProfilePage() {
     } catch (e: any) {
       setPayoutMsg({ type: "error", text: e.message });
     } finally { setPayoutSaving(false); }
+  }
+
+  async function handleSaveSports() {
+    setSportsSaving(true); setSportsMsg(null);
+    try {
+      await patchUser({
+        isSportsPlayer,
+        sportsDateOfBirth: isSportsPlayer ? (sportsDateOfBirth || null) : null,
+        sportsSchool: isSportsPlayer ? (sportsSchool || null) : null,
+        sportsGrade: isSportsPlayer ? (sportsGrade || null) : null,
+        sportsBirthCertificateUrl: isSportsPlayer ? (sportsBirthCertUrl || null) : null,
+      });
+      setSportsMsg({ type: "success", text: isSportsPlayer ? "NFGN Sports player profile saved!" : "Sports player profile deactivated." });
+    } catch (e: any) {
+      setSportsMsg({ type: "error", text: e.message });
+    } finally { setSportsSaving(false); }
   }
 
   async function handleSaveBAP() {
@@ -885,6 +917,154 @@ export function ProfilePage() {
           <Button onClick={handleSavePayout} disabled={payoutSaving} className="gap-2">
             {payoutSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             Save Payout Preferences
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* NFGN Sports Player Profile */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-primary" />
+                NFGN SPORTS Player Profile
+              </CardTitle>
+              <CardDescription className="mt-1">
+                Register as an NFGN Sports player for tournament eligibility and league participation. Your profile is visible to team administrators.
+              </CardDescription>
+            </div>
+            <Switch
+              checked={isSportsPlayer}
+              onCheckedChange={v => { setIsSportsPlayer(v); if (!v) { setSportsDateOfBirth(""); setSportsSchool(""); setSportsGrade(""); } }}
+            />
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {isSportsPlayer ? (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="flex items-center gap-1.5">
+                    <Calendar className="h-3.5 w-3.5" /> Date of Birth
+                  </Label>
+                  <Input
+                    type="date"
+                    value={sportsDateOfBirth}
+                    onChange={e => setSportsDateOfBirth(e.target.value)}
+                    max={new Date().toISOString().split("T")[0]}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>School or College <span className="text-muted-foreground font-normal text-xs">(if any)</span></Label>
+                  <Input
+                    value={sportsSchool}
+                    onChange={e => setSportsSchool(e.target.value)}
+                    placeholder="e.g. Jefferson High School"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Grade in School or Year in College</Label>
+                <select
+                  value={sportsGrade}
+                  onChange={e => setSportsGrade(e.target.value)}
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  <option value="">— Select grade or year —</option>
+                  <optgroup label="K–12">
+                    {["Kindergarten","1st Grade","2nd Grade","3rd Grade","4th Grade","5th Grade","6th Grade","7th Grade","8th Grade","9th Grade (Freshman)","10th Grade (Sophomore)","11th Grade (Junior)","12th Grade (Senior)"].map(g => (
+                      <option key={g} value={g}>{g}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="College / University">
+                    {["College Freshman (Year 1)","College Sophomore (Year 2)","College Junior (Year 3)","College Senior (Year 4)","Graduate Student","Post-Graduate"].map(g => (
+                      <option key={g} value={g}>{g}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Other">
+                    <option value="Not Currently Enrolled">Not Currently Enrolled</option>
+                    <option value="Adult / Community League">Adult / Community League</option>
+                  </optgroup>
+                </select>
+              </div>
+
+              <Separator />
+
+              {/* Birth Certificate Upload */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1.5">
+                  <Upload className="h-3.5 w-3.5 text-primary" />
+                  Birth Certificate / Proof of Eligibility
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Upload a birth certificate, photo ID, or other eligibility document required for tournament entry. Accepted: JPG, PNG, PDF.
+                </p>
+                <input
+                  ref={sportsCertInputRef}
+                  type="file"
+                  accept="image/*,.pdf"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setUploadingSportsCert(true);
+                    try {
+                      const formData = new FormData();
+                      formData.append("file", file);
+                      const res = await customFetch("/api/storage/upload", { method: "POST", body: formData });
+                      if (res.ok) {
+                        const data = await res.json();
+                        setSportsBirthCertUrl(data.objectPath ?? "");
+                      }
+                    } catch { /* ignore */ }
+                    finally {
+                      setUploadingSportsCert(false);
+                      if (sportsCertInputRef.current) sportsCertInputRef.current.value = "";
+                    }
+                  }}
+                />
+                <div className="flex items-center gap-3 flex-wrap">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => sportsCertInputRef.current?.click()}
+                    disabled={uploadingSportsCert}
+                    className="gap-2"
+                  >
+                    {uploadingSportsCert
+                      ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Uploading…</>
+                      : <><Upload className="h-3.5 w-3.5" /> Upload Document</>}
+                  </Button>
+                  {sportsBirthCertUrl && (
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <span className="text-xs text-green-700 font-medium">Document uploaded</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs text-muted-foreground"
+                        onClick={() => window.open(`/api/storage${sportsBirthCertUrl}`, "_blank")}
+                      >
+                        View
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/20 border border-dashed text-sm text-muted-foreground">
+              <Trophy className="h-8 w-8 opacity-30 flex-shrink-0" />
+              <span>Toggle the switch above to register as an NFGN Sports player. Your player profile will be visible to tournament administrators.</span>
+            </div>
+          )}
+          <StatusMessage msg={sportsMsg} />
+          <Button onClick={handleSaveSports} disabled={sportsSaving} className="gap-2">
+            {sportsSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            Save Sports Profile
           </Button>
         </CardContent>
       </Card>

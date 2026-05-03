@@ -41,6 +41,10 @@ export const productsTable = pgTable("products", {
 
   // NFGN Sports product (tournament tickets, entry fees, sponsorships, concessions, etc.)
   isSports: boolean("is_sports").notNull().default(false),
+  // Sports-specific sub-category (one of 9 options, only relevant when isSports = true)
+  sportsCategory: text("sports_category"),
+  // Name of the team, organization, or player this sports product is for
+  teamOrganizationName: text("team_organization_name"),
 
   // Downloadable product (e-books, music, images, etc.)
   isDownloadable: boolean("is_downloadable").notNull().default(false),

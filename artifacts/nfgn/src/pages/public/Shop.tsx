@@ -40,6 +40,7 @@ type Product = {
   isSports?: boolean | null;
   isNonProfit?: boolean | null;
   isWeddingRegistry?: boolean | null;
+  weddingRegistryCategory?: string | null;
   isDonation?: boolean | null;
   isChurchDonation?: boolean | null;
   donationMinAmount?: number | null;
@@ -978,20 +979,22 @@ export function Shop() {
             <div style={{ marginBottom: 48 }}>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 16, background: "rgba(225,29,122,0.09)", border: "1px solid rgba(225,29,122,0.30)", padding: "6px 16px", borderRadius: 99 }}>
                 <Gem size={13} color="#e11d7a" />
-                <span style={{ color: "#e11d7a", fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>WEDDING REGISTRY</span>
+                <span style={{ color: "#e11d7a", fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>SPECIAL EVENTS REGISTRY</span>
               </div>
               <h2 style={{ color: "#1a1a1a", fontSize: "clamp(28px, 5vw, 44px)", fontWeight: 900, margin: "0 0 12px", fontFamily: "serif", lineHeight: 1.1 }}>
-                Celebrate Love. <span style={{ color: "#e11d7a" }}>Gift Perfectly.</span>
+                Celebrate Every Milestone. <span style={{ color: "#e11d7a" }}>Gift Meaningfully.</span>
               </h2>
-              <p style={{ color: "#6b7280", fontSize: 16, maxWidth: 560, margin: 0 }}>
-                Curated wedding registry products and services — thoughtful gifts and wellness experiences for life's most special day.
+              <p style={{ color: "#6b7280", fontSize: 16, maxWidth: 620, margin: 0 }}>
+                Gift, sponsor, or donate toward someone's special occasion — weddings, birthdays, graduations, Sweet 16s, baby showers, family reunions, and every life milestone worth celebrating. Members can cover the cake, the DJ, the flights, the photographer, or simply send a heartfelt gift.
               </p>
               <div style={{ display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
                 {[
-                  { icon: <Heart size={11} />, label: "Gift Ideas" },
-                  { icon: <Gem size={11} />, label: "Luxury Items" },
-                  { icon: <Flower2 size={11} />, label: "Wellness Gifts" },
-                  { icon: <Church size={11} />, label: "Ceremony Services" },
+                  { icon: <Heart size={11} />, label: "Weddings & Honeymoons" },
+                  { icon: <Gem size={11} />, label: "Birthdays & Anniversaries" },
+                  { icon: <Flower2 size={11} />, label: "Graduations & Milestones" },
+                  { icon: <Church size={11} />, label: "Baptisms & Sweet 16s" },
+                  { icon: <Heart size={11} />, label: "Baby Showers & Gender Reveals" },
+                  { icon: <Gem size={11} />, label: "Retreats & Family Reunions" },
                 ].map(tag => (
                   <span key={tag.label} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(225,29,122,0.07)", border: "1px solid rgba(225,29,122,0.22)", color: "#e11d7a", fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 99, letterSpacing: "0.04em" }}>
                     {tag.icon} {tag.label}
@@ -1437,7 +1440,7 @@ function WeddingProductCard({
             <Gem size={40} color={ROSE} style={{ opacity: 0.35 }} />
           )}
           <span style={{ position: "absolute", top: 10, left: 10, background: ROSE, color: "#fff", fontSize: 9, fontWeight: 900, padding: "3px 8px", borderRadius: 99, letterSpacing: "0.12em", textTransform: "uppercase" }}>
-            💍 REGISTRY
+            🎉 REGISTRY
           </span>
           {onSale && !outOfStock && (
             <span style={{ position: "absolute", top: 10, right: 10, background: ROSE, color: "#fff", fontSize: 10, fontWeight: 900, padding: "3px 8px", borderRadius: 99 }}>
@@ -1452,7 +1455,7 @@ function WeddingProductCard({
         </div>
         <div style={{ padding: "16px 16px 18px", flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
           <p style={{ fontSize: 10, fontWeight: 800, color: ROSE, letterSpacing: "0.15em", textTransform: "uppercase", margin: 0 }}>
-            {product.categoryName || "Wedding Registry"}
+            {product.weddingRegistryCategory || product.categoryName || "Special Events Registry"}
           </p>
           <h4 style={{ fontSize: 15, fontWeight: 800, color: "#1a1a1a", lineHeight: 1.3, flex: 1, margin: 0 }}>
             {product.name}

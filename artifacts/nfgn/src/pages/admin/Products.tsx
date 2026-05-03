@@ -86,18 +86,22 @@ const NON_PROFIT_CATEGORIES = [
   "General Donation",
 ] as const;
 
-const WEDDING_REGISTRY_CATEGORIES = [
-  "Kitchen & Dining",
-  "Bedroom & Bath",
-  "Home Décor & Furnishings",
-  "Outdoor & Garden",
-  "Electronics & Tech",
-  "Travel & Experiences",
-  "Health & Wellness",
-  "Entertainment & Leisure",
-  "Baby & Nursery",
-  "Gift Cards & Cash Fund",
-  "Honeymoon Fund",
+const SPECIAL_EVENTS_CATEGORIES = [
+  "Wedding & Honeymoon",
+  "Birthday Celebration",
+  "Anniversary",
+  "Sweet 16 & Quinceañera",
+  "Graduation",
+  "Going Away to College",
+  "Baby Shower & Gender Reveal",
+  "Baptism & Christening",
+  "Bridal Shower & Bachelorette",
+  "Family Reunion",
+  "Retreat & Getaway",
+  "Bar / Bat Mitzvah",
+  "Memorial & Celebration of Life",
+  "Holiday Celebration",
+  "General Gift Fund",
   "Custom Gift Item",
 ] as const;
 
@@ -459,12 +463,12 @@ export function AdminProductsPage() {
           ) : isWeddingView ? (
             <>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-2xl">💍</span>
-                <h1 className="text-3xl font-serif font-bold text-primary">Wedding Registry</h1>
+                <span className="text-2xl">🎉</span>
+                <h1 className="text-3xl font-serif font-bold text-primary">Special Events Registry</h1>
               </div>
-              <p className="text-muted-foreground">Manage wedding registry items — gifts, experiences, honeymoon funds, and custom registry products.</p>
+              <p className="text-muted-foreground">Manage special events registry items — gifts, experiences, funds, and custom products for weddings, birthdays, graduations, and every life milestone.</p>
               <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full" style={{ background: "rgba(244,114,182,0.12)", color: "#ec4899", border: "1px solid rgba(244,114,182,0.3)" }}>
-                💍 Showing Wedding Registry products only · These appear under the Registry section in the Shop
+                🎉 Showing Special Events Registry products only · These appear under the Special Events section in the Shop
               </div>
             </>
           ) : isDonationView ? (
@@ -538,7 +542,7 @@ export function AdminProductsPage() {
             {isNonProfitView && <span>🤝</span>}
             {isWeddingView && <span>💍</span>}
             {isDonationView && <DollarSign className="h-4 w-4" style={{ color: "#C9A84C" }} />}
-            {isDigitalView ? `Digital Products (${filtered.length})` : isSportsView ? `NFGN Sports Products (${filtered.length})` : isNonProfitView ? `Non-Profit Products (${filtered.length})` : isWeddingView ? `Wedding Registry Items (${filtered.length})` : isDonationView ? `Donations & Gifts (${filtered.length})` : `All Products (${filtered.length})`}
+            {isDigitalView ? `Digital Products (${filtered.length})` : isSportsView ? `NFGN Sports Products (${filtered.length})` : isNonProfitView ? `Non-Profit Products (${filtered.length})` : isWeddingView ? `Special Events Registry Items (${filtered.length})` : isDonationView ? `Donations & Gifts (${filtered.length})` : `All Products (${filtered.length})`}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -626,7 +630,7 @@ export function AdminProductsPage() {
                           {p.isSports && <Badge className="text-xs px-1.5 py-0 gap-0.5" style={{ background: "#C9A84C", color: "#000" }}>🏆 Sports</Badge>}
                           {p.isDownloadable && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-blue-700 border-blue-200"><Download className="h-2.5 w-2.5" />Digital</Badge>}
                           {p.isNonProfit && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-indigo-700 border-indigo-200">🤝 Non-Profit</Badge>}
-                          {p.isWeddingRegistry && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-pink-600 border-pink-200">💍 Registry</Badge>}
+                          {p.isWeddingRegistry && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-pink-600 border-pink-200">🎉 Special Events</Badge>}
                           {p.isChurchDonation && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-amber-700 border-amber-300">⛪ Church</Badge>}
                           {p.isDonation && !p.isChurchDonation && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-amber-600 border-amber-200">🎁 Donation</Badge>}
                           {p.dollarCreditEligible && (
@@ -957,7 +961,7 @@ export function AdminProductsPage() {
               )}
             </div>
 
-            {/* Wedding Registry */}
+            {/* Special Events Registry */}
             <div className="rounded-lg p-4 border-2 space-y-3" style={{ borderColor: "#ec489960", background: "#ec489906" }}>
               <div className="flex items-start gap-3">
                 <Switch
@@ -967,35 +971,35 @@ export function AdminProductsPage() {
                 />
                 <div>
                   <Label htmlFor="isWeddingRegistry" className="cursor-pointer font-semibold flex items-center gap-1.5">
-                    <span>💍</span> Wedding Registry
+                    <span>🎉</span> Special Events Registry
                   </Label>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Kitchen & dining, bedroom & bath, home décor, honeymoon funds, gift cards, and other wedding gift items. This product will appear in the dedicated <strong>Wedding Registry</strong> section of the Shop.
+                    Gifts, experiences, and funds for weddings, birthdays, graduations, Sweet 16s, baby showers, and every life milestone. This product will appear in the dedicated <strong>Special Events Registry</strong> section of the Shop.
                   </p>
                 </div>
               </div>
               {form.isWeddingRegistry && (
                 <div className="space-y-3 pt-1 border-t border-dashed" style={{ borderColor: "rgba(236,72,153,0.3)" }}>
                   <div className="space-y-1.5">
-                    <Label>Wedding Registry Category <span className="text-destructive">*</span></Label>
+                    <Label>Event Type <span className="text-destructive">*</span></Label>
                     <Select
                       value={form.weddingRegistryCategory || "none"}
                       onValueChange={v => setForm(f => ({ ...f, weddingRegistryCategory: v === "none" ? "" : v }))}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a wedding registry category" />
+                        <SelectValue placeholder="Select the occasion / event type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">— Select Category —</SelectItem>
-                        {WEDDING_REGISTRY_CATEGORIES.map(cat => (
+                        <SelectItem value="none">— Select Event Type —</SelectItem>
+                        {SPECIAL_EVENTS_CATEGORIES.map(cat => (
                           <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-muted-foreground">Select the type of wedding registry item.</p>
+                    <p className="text-xs text-muted-foreground">Choose the occasion this gift or fund is intended for.</p>
                   </div>
                   <div className="text-xs rounded-lg px-3 py-2 font-medium" style={{ background: "rgba(236,72,153,0.10)", color: "#ec4899", border: "1px solid rgba(236,72,153,0.25)" }}>
-                    💍 This product will be showcased under the Wedding Registry banner on the public Shop page.
+                    🎉 This product will be showcased under the Special Events Registry banner on the public Shop page.
                   </div>
                 </div>
               )}

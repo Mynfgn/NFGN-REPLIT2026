@@ -51,6 +51,8 @@ interface Product {
   isSports: boolean;
   sportsCategory: string | null;
   teamOrganizationName: string | null;
+  isNonProfit: boolean;
+  nonProfitCategory: string | null;
   isDownloadable: boolean;
   downloadUrl: string | null;
   downloadFileName: string | null;
@@ -61,6 +63,20 @@ interface Product {
   proMemberDiscountPercent: number;
   createdAt: string;
 }
+
+const NON_PROFIT_CATEGORIES = [
+  "Fundraiser / Donation Drive",
+  "Charity Auction Item",
+  "Community Outreach Event",
+  "Sponsorship",
+  "Membership / Annual Dues",
+  "Event Ticket / Admission",
+  "Food / Concessions",
+  "Merchandise / Apparel",
+  "Volunteer Registration",
+  "Grant / Scholarship",
+  "General Donation",
+] as const;
 
 const SPORTS_CATEGORIES = [
   "Team Tournament Fees & Registration",
@@ -92,6 +108,8 @@ const EMPTY_FORM = {
   isSports: false,
   sportsCategory: "",
   teamOrganizationName: "",
+  isNonProfit: false,
+  nonProfitCategory: "",
   isDownloadable: false,
   downloadUrl: "",
   downloadFileName: "",
@@ -198,6 +216,8 @@ export function AdminProductsPage() {
       isSports: p.isSports ?? false,
       sportsCategory: (p as any).sportsCategory ?? "",
       teamOrganizationName: (p as any).teamOrganizationName ?? "",
+      isNonProfit: p.isNonProfit ?? false,
+      nonProfitCategory: p.nonProfitCategory ?? "",
       isDownloadable: p.isDownloadable ?? false,
       downloadUrl: p.downloadUrl ?? "",
       downloadFileName: p.downloadFileName ?? "",
@@ -249,6 +269,8 @@ export function AdminProductsPage() {
         isSports: form.isSports,
         sportsCategory: form.isSports ? (form.sportsCategory || null) : null,
         teamOrganizationName: form.teamOrganizationName || null,
+        isNonProfit: form.isNonProfit,
+        nonProfitCategory: form.isNonProfit ? (form.nonProfitCategory || null) : null,
         isDownloadable: form.isDownloadable,
         downloadUrl: form.downloadUrl || null,
         downloadFileName: form.downloadFileName || null,
@@ -760,6 +782,59 @@ export function AdminProductsPage() {
                   </div>
                   <div className="text-xs rounded-lg px-3 py-2 font-medium" style={{ background: "rgba(201,168,76,0.10)", color: "#C9A84C", border: "1px solid rgba(201,168,76,0.25)" }}>
                     🏆 This product will be showcased under the NFGN SPORTS banner on the public Shop page.
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Non-Profit Organizations */}
+            <div className="rounded-lg p-4 border-2 space-y-3" style={{ borderColor: "#6366f160", background: "#6366f106" }}>
+              <div className="flex items-start gap-3">
+                <Switch
+                  checked={form.isNonProfit}
+                  onCheckedChange={v => setForm(f => ({ ...f, isNonProfit: v, nonProfitCategory: v ? f.nonProfitCategory : "" }))}
+                  id="isNonProfit"
+                />
+                <div>
+                  <Label htmlFor="isNonProfit" className="cursor-pointer font-semibold flex items-center gap-1.5">
+                    <span>🤝</span> Non-Profit Organization Product
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Fundraisers, charity events, donation drives, community outreach, memberships, sponsorships, and other non-profit offerings. This product will appear in the dedicated <strong>Non-Profit Organizations</strong> section of the Shop.
+                  </p>
+                </div>
+              </div>
+              {form.isNonProfit && (
+                <div className="space-y-3 pt-1 border-t border-dashed" style={{ borderColor: "rgba(99,102,241,0.3)" }}>
+                  <div className="space-y-1.5">
+                    <Label>Non-Profit Category <span className="text-destructive">*</span></Label>
+                    <Select
+                      value={form.nonProfitCategory || "none"}
+                      onValueChange={v => setForm(f => ({ ...f, nonProfitCategory: v === "none" ? "" : v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a non-profit category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— Select Category —</SelectItem>
+                        {NON_PROFIT_CATEGORIES.map(cat => (
+                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">Select the type of non-profit product or service.</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Organization Name</Label>
+                    <Input
+                      value={form.teamOrganizationName}
+                      onChange={e => setForm(f => ({ ...f, teamOrganizationName: e.target.value }))}
+                      placeholder="e.g. Boys & Girls Club of Atlanta, NFGN Cares Foundation"
+                    />
+                    <p className="text-xs text-muted-foreground">The non-profit organization this product is associated with (optional).</p>
+                  </div>
+                  <div className="text-xs rounded-lg px-3 py-2 font-medium" style={{ background: "rgba(99,102,241,0.10)", color: "#6366f1", border: "1px solid rgba(99,102,241,0.25)" }}>
+                    🤝 This product will be showcased under the Non-Profit Organizations banner on the public Shop page.
                   </div>
                 </div>
               )}

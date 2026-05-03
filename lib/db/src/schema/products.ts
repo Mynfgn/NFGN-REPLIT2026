@@ -46,6 +46,11 @@ export const productsTable = pgTable("products", {
   // Name of the team, organization, or player this sports product is for
   teamOrganizationName: text("team_organization_name"),
 
+  // Non-Profit Organizations product
+  isNonProfit: boolean("is_non_profit").notNull().default(false),
+  // Non-profit sub-category (only relevant when isNonProfit = true)
+  nonProfitCategory: text("non_profit_category"),
+
   // Downloadable product (e-books, music, images, etc.)
   isDownloadable: boolean("is_downloadable").notNull().default(false),
   downloadUrl: text("download_url"),

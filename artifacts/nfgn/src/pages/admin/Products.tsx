@@ -1268,41 +1268,47 @@ export function AdminProductsPage() {
               </div>
             )}
 
-            {/* Shipping & Handling */}
-            <div className={`grid grid-cols-2 gap-4 transition-opacity ${form.isDownloadable ? "opacity-40 pointer-events-none" : ""}`}>
-              <div className="col-span-2 mb-1">
-                <p className="text-sm font-semibold">Shipping &amp; Pick-up Fees</p>
-                <p className="text-xs text-muted-foreground">
-                  {form.isDownloadable
-                    ? "Not applicable — downloadable products have no shipping or handling fee."
-                    : "Per-unit fees applied at checkout depending on delivery method chosen."}
-                </p>
+            {/* Shipping & Handling — hidden for donation/church products */}
+            {(form.isDonation || form.isChurchDonation) ? (
+              <div className="rounded-lg px-3 py-2 text-xs font-medium" style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.22)", color: "#9a9a9a" }}>
+                🎁 <strong style={{ color: "#C9A84C" }}>No Shipping or Handling fees</strong> — monetary gift and donation products are delivered electronically. S&amp;H does not apply and will not be charged at checkout.
               </div>
-              <div className="space-y-1.5">
-                <Label>Shipping Fee (per unit, delivery)</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={form.shippingFee}
-                  onChange={e => setForm(f => ({ ...f, shippingFee: e.target.value }))}
-                  placeholder="9.99"
-                />
-                <p className="text-xs text-muted-foreground">Charged per unit when customer selects delivery. Free shipping threshold still applies.</p>
+            ) : (
+              <div className={`grid grid-cols-2 gap-4 transition-opacity ${form.isDownloadable ? "opacity-40 pointer-events-none" : ""}`}>
+                <div className="col-span-2 mb-1">
+                  <p className="text-sm font-semibold">Shipping &amp; Pick-up Fees</p>
+                  <p className="text-xs text-muted-foreground">
+                    {form.isDownloadable
+                      ? "Not applicable — downloadable products have no shipping or handling fee."
+                      : "Per-unit fees applied at checkout depending on delivery method chosen."}
+                  </p>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Shipping Fee (per unit, delivery)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.shippingFee}
+                    onChange={e => setForm(f => ({ ...f, shippingFee: e.target.value }))}
+                    placeholder="9.99"
+                  />
+                  <p className="text-xs text-muted-foreground">Charged per unit when customer selects delivery. Free shipping threshold still applies.</p>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Handling Fee (per unit, pick-up)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.handlingFee}
+                    onChange={e => setForm(f => ({ ...f, handlingFee: e.target.value }))}
+                    placeholder="5.00"
+                  />
+                  <p className="text-xs text-muted-foreground">Charged per unit when customer selects in-store pick-up. Shipping is waived.</p>
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <Label>Handling Fee (per unit, pick-up)</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={form.handlingFee}
-                  onChange={e => setForm(f => ({ ...f, handlingFee: e.target.value }))}
-                  placeholder="5.00"
-                />
-                <p className="text-xs text-muted-foreground">Charged per unit when customer selects in-store pick-up. Shipping is waived.</p>
-              </div>
-            </div>
+            )}
 
             {/* Stock */}
             <div className="space-y-1.5">

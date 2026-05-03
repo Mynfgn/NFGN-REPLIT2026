@@ -336,11 +336,12 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
   const tax = afterDiscount * taxRate;
 
   // ── Per-product shipping (delivery) or handling (pickup) ──────────────────
-  // Downloadable products have no physical fulfillment — no shipping or handling fee
+  // Downloadable products have no physical fulfillment — no shipping or handling fee.
+  // Donation / church-giving products are monetary gifts and also carry no S&H fees.
   let shippingTotal = 0;
   let handlingTotal = 0;
   for (const { cart, product } of cartItems) {
-    if (!product || product.isDownloadable) continue;
+    if (!product || product.isDownloadable || product.isDonation || product.isChurchDonation) continue;
     if (isPickup) {
       handlingTotal += parseFloat(product.handlingFee ?? "5.00") * cart.quantity;
     } else {
@@ -720,11 +721,12 @@ router.post("/orders/estimate", requireAuth, async (req, res): Promise<void> => 
   const tax = afterDiscount * taxRate;
 
   // Per-product shipping (delivery) or handling (pickup)
-  // Downloadable products have no physical fulfillment — no shipping or handling fee
+  // Downloadable products have no physical fulfillment — no shipping or handling fee.
+  // Donation / church-giving products are monetary gifts and also carry no S&H fees.
   let shippingTotal = 0;
   let handlingTotal = 0;
   for (const { cart, product } of cartItems) {
-    if (!product || product.isDownloadable) continue;
+    if (!product || product.isDownloadable || product.isDonation || product.isChurchDonation) continue;
     if (isPickup) {
       handlingTotal += parseFloat(product.handlingFee ?? "5.00") * cart.quantity;
     } else {

@@ -62,6 +62,15 @@ export const productsTable = pgTable("products", {
   downloadFileName: text("download_file_name"),
   downloadFileSize: text("download_file_size"),
 
+  // Donation / Gift product — member enters any dollar amount they choose
+  isDonation: boolean("is_donation").notNull().default(false),
+  // Who the donation is for: "Wedding Party" | "Non-Profit Organization" | "Sports Player" | "Sports Team" | "General Donation" | custom text
+  donationRecipientType: text("donation_recipient_type"),
+  // Specific name of recipient (e.g. "Eastside Tigers", "Jane & John Smith", "American Red Cross")
+  donationRecipientName: text("donation_recipient_name"),
+  // Minimum donation amount — members can give any amount at or above this
+  donationMinAmount: numeric("donation_min_amount", { precision: 10, scale: 2 }).notNull().default("1.00"),
+
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

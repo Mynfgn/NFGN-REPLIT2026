@@ -53,6 +53,8 @@ interface Product {
   teamOrganizationName: string | null;
   isNonProfit: boolean;
   nonProfitCategory: string | null;
+  isWeddingRegistry: boolean;
+  weddingRegistryCategory: string | null;
   isDownloadable: boolean;
   downloadUrl: string | null;
   downloadFileName: string | null;
@@ -76,6 +78,21 @@ const NON_PROFIT_CATEGORIES = [
   "Volunteer Registration",
   "Grant / Scholarship",
   "General Donation",
+] as const;
+
+const WEDDING_REGISTRY_CATEGORIES = [
+  "Kitchen & Dining",
+  "Bedroom & Bath",
+  "Home Décor & Furnishings",
+  "Outdoor & Garden",
+  "Electronics & Tech",
+  "Travel & Experiences",
+  "Health & Wellness",
+  "Entertainment & Leisure",
+  "Baby & Nursery",
+  "Gift Cards & Cash Fund",
+  "Honeymoon Fund",
+  "Custom Gift Item",
 ] as const;
 
 const SPORTS_CATEGORIES = [
@@ -110,6 +127,8 @@ const EMPTY_FORM = {
   teamOrganizationName: "",
   isNonProfit: false,
   nonProfitCategory: "",
+  isWeddingRegistry: false,
+  weddingRegistryCategory: "",
   isDownloadable: false,
   downloadUrl: "",
   downloadFileName: "",
@@ -218,6 +237,8 @@ export function AdminProductsPage() {
       teamOrganizationName: (p as any).teamOrganizationName ?? "",
       isNonProfit: p.isNonProfit ?? false,
       nonProfitCategory: p.nonProfitCategory ?? "",
+      isWeddingRegistry: p.isWeddingRegistry ?? false,
+      weddingRegistryCategory: p.weddingRegistryCategory ?? "",
       isDownloadable: p.isDownloadable ?? false,
       downloadUrl: p.downloadUrl ?? "",
       downloadFileName: p.downloadFileName ?? "",
@@ -271,6 +292,8 @@ export function AdminProductsPage() {
         teamOrganizationName: form.teamOrganizationName || null,
         isNonProfit: form.isNonProfit,
         nonProfitCategory: form.isNonProfit ? (form.nonProfitCategory || null) : null,
+        isWeddingRegistry: form.isWeddingRegistry,
+        weddingRegistryCategory: form.isWeddingRegistry ? (form.weddingRegistryCategory || null) : null,
         isDownloadable: form.isDownloadable,
         downloadUrl: form.downloadUrl || null,
         downloadFileName: form.downloadFileName || null,
@@ -835,6 +858,50 @@ export function AdminProductsPage() {
                   </div>
                   <div className="text-xs rounded-lg px-3 py-2 font-medium" style={{ background: "rgba(99,102,241,0.10)", color: "#6366f1", border: "1px solid rgba(99,102,241,0.25)" }}>
                     🤝 This product will be showcased under the Non-Profit Organizations banner on the public Shop page.
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Wedding Registry */}
+            <div className="rounded-lg p-4 border-2 space-y-3" style={{ borderColor: "#ec489960", background: "#ec489906" }}>
+              <div className="flex items-start gap-3">
+                <Switch
+                  checked={form.isWeddingRegistry}
+                  onCheckedChange={v => setForm(f => ({ ...f, isWeddingRegistry: v, weddingRegistryCategory: v ? f.weddingRegistryCategory : "" }))}
+                  id="isWeddingRegistry"
+                />
+                <div>
+                  <Label htmlFor="isWeddingRegistry" className="cursor-pointer font-semibold flex items-center gap-1.5">
+                    <span>💍</span> Wedding Registry
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Kitchen & dining, bedroom & bath, home décor, honeymoon funds, gift cards, and other wedding gift items. This product will appear in the dedicated <strong>Wedding Registry</strong> section of the Shop.
+                  </p>
+                </div>
+              </div>
+              {form.isWeddingRegistry && (
+                <div className="space-y-3 pt-1 border-t border-dashed" style={{ borderColor: "rgba(236,72,153,0.3)" }}>
+                  <div className="space-y-1.5">
+                    <Label>Wedding Registry Category <span className="text-destructive">*</span></Label>
+                    <Select
+                      value={form.weddingRegistryCategory || "none"}
+                      onValueChange={v => setForm(f => ({ ...f, weddingRegistryCategory: v === "none" ? "" : v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a wedding registry category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— Select Category —</SelectItem>
+                        {WEDDING_REGISTRY_CATEGORIES.map(cat => (
+                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">Select the type of wedding registry item.</p>
+                  </div>
+                  <div className="text-xs rounded-lg px-3 py-2 font-medium" style={{ background: "rgba(236,72,153,0.10)", color: "#ec4899", border: "1px solid rgba(236,72,153,0.25)" }}>
+                    💍 This product will be showcased under the Wedding Registry banner on the public Shop page.
                   </div>
                 </div>
               )}

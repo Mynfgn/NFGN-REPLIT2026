@@ -51,6 +51,11 @@ export const productsTable = pgTable("products", {
   // Non-profit sub-category (only relevant when isNonProfit = true)
   nonProfitCategory: text("non_profit_category"),
 
+  // Wedding Registry product
+  isWeddingRegistry: boolean("is_wedding_registry").notNull().default(false),
+  // Wedding registry sub-category (only relevant when isWeddingRegistry = true)
+  weddingRegistryCategory: text("wedding_registry_category"),
+
   // Downloadable product (e-books, music, images, etc.)
   isDownloadable: boolean("is_downloadable").notNull().default(false),
   downloadUrl: text("download_url"),

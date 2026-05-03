@@ -33,6 +33,8 @@ function formatProduct(p: typeof productsTable.$inferSelect, categoryName?: stri
     teamOrganizationName: p.teamOrganizationName ?? null,
     isNonProfit: p.isNonProfit,
     nonProfitCategory: p.nonProfitCategory ?? null,
+    isWeddingRegistry: p.isWeddingRegistry,
+    weddingRegistryCategory: p.weddingRegistryCategory ?? null,
     isDownloadable: p.isDownloadable,
     downloadUrl: p.downloadUrl ?? null,
     downloadFileName: p.downloadFileName ?? null,
@@ -89,7 +91,7 @@ router.get("/products/admin-all", requireAdmin, async (req, res): Promise<void> 
 });
 
 router.post("/products", requireAdmin, async (req, res): Promise<void> => {
-  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize } = req.body;
+  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize } = req.body;
   if (!name || !slug || !description || price == null) {
     res.status(400).json({ error: "Missing required fields" });
     return;
@@ -123,6 +125,8 @@ router.post("/products", requireAdmin, async (req, res): Promise<void> => {
     teamOrganizationName: teamOrganizationName ?? undefined,
     isNonProfit: isNonProfit ?? false,
     nonProfitCategory: isNonProfit && nonProfitCategory ? nonProfitCategory : undefined,
+    isWeddingRegistry: isWeddingRegistry ?? false,
+    weddingRegistryCategory: isWeddingRegistry && weddingRegistryCategory ? weddingRegistryCategory : undefined,
     isDownloadable: isDownloadable ?? false,
     downloadUrl: downloadUrl ?? undefined,
     downloadFileName: downloadFileName ?? undefined,
@@ -191,7 +195,7 @@ router.patch("/products/:id", requireAdmin, async (req, res): Promise<void> => {
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
   const updates: Partial<typeof productsTable.$inferInsert> = {};
-  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize } = req.body;
+  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize } = req.body;
   if (name) updates.name = name;
   if (slug) updates.slug = slug;
   if (description) updates.description = description;
@@ -223,6 +227,8 @@ router.patch("/products/:id", requireAdmin, async (req, res): Promise<void> => {
   if (teamOrganizationName !== undefined) updates.teamOrganizationName = teamOrganizationName ?? undefined;
   if (isNonProfit !== undefined) updates.isNonProfit = isNonProfit;
   if (nonProfitCategory !== undefined) updates.nonProfitCategory = isNonProfit ? (nonProfitCategory ?? undefined) : undefined;
+  if (isWeddingRegistry !== undefined) updates.isWeddingRegistry = isWeddingRegistry;
+  if (weddingRegistryCategory !== undefined) updates.weddingRegistryCategory = isWeddingRegistry ? (weddingRegistryCategory ?? undefined) : undefined;
   if (isDownloadable !== undefined) updates.isDownloadable = isDownloadable;
   if (downloadUrl !== undefined) updates.downloadUrl = downloadUrl ?? undefined;
   if (downloadFileName !== undefined) updates.downloadFileName = downloadFileName ?? undefined;

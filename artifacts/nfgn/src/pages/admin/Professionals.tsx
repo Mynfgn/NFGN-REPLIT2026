@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 
 import { BAP_CATEGORIES } from "@/lib/bapCategories";
-export { BAP_CATEGORIES };
 
 const BRAND_GOLD = "#C9A84C";
 const BRAND_GREEN = "#2D6A4F";

@@ -1,4 +1,18 @@
 export const BAP_CATEGORIES: Record<string, string[]> = {
+  "NFGN SPORTS Professionals": [
+    "Personal Trainer",
+    "Guest Speaker",
+    "Coach",
+    "Ast Coach",
+    "Medical Sports Professional",
+    "Skills Camp Trainer",
+    "Athletic Performance Coach",
+    "Sports Nutritionist",
+    "Youth Sports Director",
+    "Tournament Coordinator",
+    "Strength & Conditioning Coach",
+    "Sports Therapist / Rehab",
+  ],
   "Beauty & Hair": ["Braiding", "Locs", "Shampoo & Style", "Color & Highlights", "Cut & Style", "Natural Hair Care", "Weaves & Extensions", "Relaxers", "Protective Styles"],
   "Barbering": ["Cuts & Fades", "Beard Grooming", "Line Ups", "Kids Cuts", "Hot Towel Shave", "Hair Color"],
   "Mental Health": ["Life Coaching", "Licensed Counseling", "Stress Management", "Mindfulness Coaching", "Grief Support", "Addiction Coaching"],
@@ -11,3 +25,5 @@ export const BAP_CATEGORIES: Record<string, string[]> = {
   "Photography & Media": ["Portrait Photography", "Event Photography", "Videography", "Content Creation", "Editing & Retouching", "Product Photography"],
   "Other Services": ["Consulting", "Virtual Assistance", "Event Planning", "Interior Design", "Notary Services", "Translation Services"],
 };
+
+export const SPORTS_CATEGORY_KEY = "NFGN SPORTS Professionals";

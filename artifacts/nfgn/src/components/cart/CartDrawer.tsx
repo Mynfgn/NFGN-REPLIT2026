@@ -864,7 +864,7 @@ export function CartDrawer() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             sourceId: result.token,
-            amount: estimatedBreakdown?.finalDue ?? finalDue,
+            amount: realFinalDue,
             note: `NFGN Order — ${shipping.fullName}`,
           }),
         });
@@ -908,9 +908,10 @@ export function CartDrawer() {
   const rawWalletInput = parseFloat(walletInput) || 0;
   const walletApplied = Math.min(walletBalance, Math.max(0, rawWalletInput), discountedTotal);
   const finalDue = Math.max(0, discountedTotal - walletApplied);
-  const walletCoversAll = walletApplied >= discountedTotal;
+  const walletCoversAll = estimatedBreakdown ? estimatedBreakdown.finalDue <= 0 : walletApplied >= discountedTotal;
+  const realFinalDue = estimatedBreakdown?.finalDue ?? finalDue;
 
-  discountedTotalRef.current = estimatedBreakdown?.finalDue ?? finalDue;
+  discountedTotalRef.current = realFinalDue;
 
   return (
     <Sheet open={cartOpen} onOpenChange={handleOpenChange}>
@@ -1133,7 +1134,7 @@ export function CartDrawer() {
                   <span className="h-4 w-1 rounded-full inline-block" style={{ background: "#C9A84C" }} />
                   <CreditCard className="h-3.5 w-3.5" /> Payment Method
                   {walletApplied > 0 && !walletCoversAll && (
-                    <span className="ml-1 normal-case font-normal" style={{ color: "#C9A84C" }}>(remaining ${finalDue.toFixed(2)})</span>
+                    <span className="ml-1 normal-case font-normal" style={{ color: "#C9A84C" }}>(remaining ${realFinalDue.toFixed(2)})</span>
                   )}
                 </h3>
                 {walletCoversAll && (
@@ -1258,7 +1259,7 @@ export function CartDrawer() {
                       <div className="rounded-lg p-3 space-y-1" style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)" }}>
                         <p className="text-xs font-semibold" style={{ color: "#C9A84C" }}>How it works:</p>
                         <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>1. Tap the button — Cash App opens on your device.</p>
-                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>2. Approve <strong style={{ color: "#C9A84C" }}>${finalDue.toFixed(2)}</strong> in your Cash App.</p>
+                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>2. Approve <strong style={{ color: "#C9A84C" }}>${realFinalDue.toFixed(2)}</strong> in your Cash App.</p>
                         <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>3. Return here — your order confirms automatically, no waiting.</p>
                       </div>
                       <p className="text-center text-xs" style={{ color: "rgba(201,168,76,0.6)" }}>
@@ -1274,12 +1275,12 @@ export function CartDrawer() {
                       <div className="rounded-xl p-4 text-center" style={{ background: "rgba(201,168,76,0.06)", border: "2px solid #C9A84C" }}>
                         <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: "rgba(201,168,76,0.7)" }}>NFGN Official Cash App</p>
                         <p className="text-2xl font-black" style={{ color: "#C9A84C" }}>$NewFaceGlobalNetwork</p>
-                        <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.5)" }}>Send exactly <strong style={{ color: "#fff" }}>${finalDue.toFixed(2)}</strong> to this $cashtag</p>
+                        <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.5)" }}>Send exactly <strong style={{ color: "#fff" }}>${realFinalDue.toFixed(2)}</strong> to this $cashtag</p>
                       </div>
                       <div className="rounded-lg p-3 space-y-1.5" style={{ background: "rgba(201,168,76,0.06)", border: "1px solid rgba(201,168,76,0.2)" }}>
                         <p className="text-xs font-bold flex items-center gap-1" style={{ color: "#C9A84C" }}><Info className="h-3 w-3" /> How to send via Cash App:</p>
                         <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>1. Open Cash App and tap the <strong>$</strong> icon.</p>
-                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>2. Type amount: <strong style={{ color: "#fff" }}>${finalDue.toFixed(2)}</strong></p>
+                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>2. Type amount: <strong style={{ color: "#fff" }}>${realFinalDue.toFixed(2)}</strong></p>
                         <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>3. Tap <strong>"Pay"</strong>, search <strong>$NewFaceGlobalNetwork</strong>.</p>
                         <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>4. Add your name and order info in the <strong>For</strong> field.</p>
                         <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>5. Confirm & send — then click <strong>"Place Order"</strong> below.</p>
@@ -1350,14 +1351,14 @@ export function CartDrawer() {
                       <div className="rounded-xl p-4 text-center" style={{ background: "rgba(201,168,76,0.06)", border: "2px solid #C9A84C" }}>
                         <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: "rgba(201,168,76,0.7)" }}>NFGN Official PayPal</p>
                         <p className="text-lg font-bold" style={{ color: "#C9A84C" }}>newfaceglobalnetwork@gmail.com</p>
-                        <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.5)" }}>Send exactly <strong style={{ color: "#fff" }}>${finalDue.toFixed(2)}</strong> to this PayPal account</p>
+                        <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.5)" }}>Send exactly <strong style={{ color: "#fff" }}>${realFinalDue.toFixed(2)}</strong> to this PayPal account</p>
                       </div>
                       <div className="rounded-lg p-3 space-y-1.5" style={{ background: "rgba(201,168,76,0.06)", border: "1px solid rgba(201,168,76,0.2)" }}>
                         <p className="text-xs font-bold flex items-center gap-1" style={{ color: "#C9A84C" }}><Info className="h-3 w-3" /> How to send via PayPal:</p>
                         <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>1. Log into <strong>PayPal.com</strong> or open the PayPal app.</p>
                         <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>2. Click <strong>"Send & Request"</strong> → <strong>"Send Money"</strong>.</p>
                         <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>3. Enter <strong>newfaceglobalnetwork@gmail.com</strong> as the recipient.</p>
-                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>4. Amount: <strong style={{ color: "#fff" }}>${finalDue.toFixed(2)}</strong></p>
+                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>4. Amount: <strong style={{ color: "#fff" }}>${realFinalDue.toFixed(2)}</strong></p>
                         <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>5. Choose <strong>"Friends & Family"</strong> to avoid extra fees.</p>
                         <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>6. Add your name and order info, confirm & send.</p>
                         <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>7. Click <strong>"Place Order"</strong> below — we confirm within <strong>24 hours</strong>.</p>
@@ -1537,7 +1538,7 @@ export function CartDrawer() {
                         <div className="flex justify-between text-sm font-bold">
                           <span>Remaining due</span>
                           <span style={{ color: "#C9A84C" }}>
-                            {walletCoversAll ? "✓ $0.00 — Fully covered!" : `$${finalDue.toFixed(2)}`}
+                            {walletCoversAll ? "✓ $0.00 — Fully covered!" : `$${realFinalDue.toFixed(2)}`}
                           </span>
                         </div>
                       </div>
@@ -1623,7 +1624,7 @@ export function CartDrawer() {
                     ? <><Loader2 className="h-4 w-4 animate-spin" /> {paymentProcessing ? "Processing Payment…" : "Placing Order…"}</>
                     : walletCoversAll
                       ? <>Place Order · Covered by Wallet <ArrowRight className="h-4 w-4" /></>
-                      : <>Place Order · ${(estimatedBreakdown?.finalDue ?? finalDue).toFixed(2)} <ArrowRight className="h-4 w-4" /></>
+                      : <>Place Order · ${realFinalDue.toFixed(2)} <ArrowRight className="h-4 w-4" /></>
                   }
                 </Button>
               )}
@@ -1862,10 +1863,10 @@ export function CartDrawer() {
                   <AlertTriangle className="h-4 w-4 flex-shrink-0" /> Action Required — Send Payment Now
                 </p>
                 {paymentMethod === "cash_app" && (
-                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.75)" }}>Send <strong style={{ color: "#C9A84C" }}>${finalDue.toFixed(2)}</strong> to <strong style={{ color: "#fff" }}>$NewFaceGlobalNetwork</strong> on Cash App. Include your order number in the note.</p>
+                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.75)" }}>Send <strong style={{ color: "#C9A84C" }}>${realFinalDue.toFixed(2)}</strong> to <strong style={{ color: "#fff" }}>$NewFaceGlobalNetwork</strong> on Cash App. Include your order number in the note.</p>
                 )}
                 {paymentMethod === "paypal" && (
-                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.75)" }}>Send <strong style={{ color: "#C9A84C" }}>${finalDue.toFixed(2)}</strong> via PayPal Friends & Family to <strong style={{ color: "#fff" }}>newfaceglobalnetwork@gmail.com</strong>. Include your order number in the note.</p>
+                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.75)" }}>Send <strong style={{ color: "#C9A84C" }}>${realFinalDue.toFixed(2)}</strong> via PayPal Friends & Family to <strong style={{ color: "#fff" }}>newfaceglobalnetwork@gmail.com</strong>. Include your order number in the note.</p>
                 )}
               </div>
             )}

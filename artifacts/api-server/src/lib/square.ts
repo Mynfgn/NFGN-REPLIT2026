@@ -44,8 +44,8 @@ export async function createSquarePaymentLink(opts: {
       return null;
     }
 
-    const data = await res.json();
-    const url = data?.payment_link?.url ?? null;
+    const data = await res.json() as Record<string, any>;
+    const url = (data?.payment_link as any)?.url ?? null;
     if (url) {
       console.log(`[SQUARE] Payment link generated: ${url}`);
     } else {

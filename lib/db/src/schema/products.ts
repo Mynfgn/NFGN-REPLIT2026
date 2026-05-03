@@ -26,6 +26,11 @@ export const productsTable = pgTable("products", {
   // Refund policy: 'no_refund' or '7_day_return' (mandatory, admin sets per product)
   refundPolicy: text("refund_policy").notNull().default("no_refund"),
 
+  // Referral commission mode: "flat" = fixed dollar amount (default), "percent" = % of product price
+  commissionType: text("commission_type").notNull().default("flat"),
+  // Flat dollar referral commission paid to sponsor per unit sold (used when commissionType = "flat")
+  commissionAmount: numeric("commission_amount", { precision: 10, scale: 2 }).notNull().default("0"),
+
   // Per-product shipping & handling fees (admin adjustable per product)
   shippingFee: numeric("shipping_fee", { precision: 10, scale: 2 }).notNull().default("9.99"),
   handlingFee: numeric("handling_fee", { precision: 10, scale: 2 }).notNull().default("5.00"),

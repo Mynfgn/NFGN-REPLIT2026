@@ -688,8 +688,8 @@ router.post("/orders/estimate", requireAuth, async (req, res): Promise<void> => 
 // GET /api/orders/:orderId/download/:productId — secure download for paid downloadable items
 router.get("/:orderId/download/:productId", requireAuth, async (req, res): Promise<void> => {
   const userId = (req as any).user?.id;
-  const orderId = parseInt(req.params.orderId);
-  const productId = parseInt(req.params.productId);
+  const orderId = parseInt(Array.isArray(req.params.orderId) ? req.params.orderId[0] : req.params.orderId);
+  const productId = parseInt(Array.isArray(req.params.productId) ? req.params.productId[0] : req.params.productId);
 
   const [order] = await db.select().from(ordersTable).where(eq(ordersTable.id, orderId));
   if (!order) { res.status(404).json({ error: "Order not found" }); return; }
@@ -716,7 +716,7 @@ router.get("/:orderId/download/:productId", requireAuth, async (req, res): Promi
 
 // POST /api/orders/:id/sign — member submits digital signature at time of purchase
 router.post("/:id/sign", requireAuth, async (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
   const userId = (req as any).user?.id;
   const { signature } = req.body as { signature?: string };
 

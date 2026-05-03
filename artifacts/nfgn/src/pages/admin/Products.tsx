@@ -48,6 +48,7 @@ interface Product {
   cv: number;
   shippingFee: number;
   handlingFee: number;
+  isSports: boolean;
   isDownloadable: boolean;
   downloadUrl: string | null;
   downloadFileName: string | null;
@@ -74,6 +75,7 @@ const EMPTY_FORM = {
   cv: "0",
   shippingFee: "9.99",
   handlingFee: "5.00",
+  isSports: false,
   isDownloadable: false,
   downloadUrl: "",
   downloadFileName: "",
@@ -93,6 +95,7 @@ function slugify(str: string) {
 export function AdminProductsPage() {
   const [location] = useLocation();
   const isDigitalView = location === "/admin/products/digital";
+  const isSportsView = location === "/admin/products/sports";
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -176,6 +179,7 @@ export function AdminProductsPage() {
       cv: String(p.cv ?? 0),
       shippingFee: String(p.shippingFee ?? "9.99"),
       handlingFee: String(p.handlingFee ?? "5.00"),
+      isSports: p.isSports ?? false,
       isDownloadable: p.isDownloadable ?? false,
       downloadUrl: p.downloadUrl ?? "",
       downloadFileName: p.downloadFileName ?? "",
@@ -224,6 +228,7 @@ export function AdminProductsPage() {
         cv: parseInt(form.cv) || 0,
         shippingFee: parseFloat(form.shippingFee) || 9.99,
         handlingFee: parseFloat(form.handlingFee) || 5.00,
+        isSports: form.isSports,
         isDownloadable: form.isDownloadable,
         downloadUrl: form.downloadUrl || null,
         downloadFileName: form.downloadFileName || null,
@@ -276,6 +281,7 @@ export function AdminProductsPage() {
 
   const filtered = products.filter(p => {
     if (isDigitalView && !p.isDownloadable) return false;
+    if (isSportsView && !p.isSports) return false;
     return (
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.slug.toLowerCase().includes(search.toLowerCase())
@@ -294,6 +300,12 @@ export function AdminProductsPage() {
     setDialogOpen(true);
   };
 
+  const openCreateSports = () => {
+    setEditProduct(null);
+    setForm({ ...EMPTY_FORM, isSports: true });
+    setDialogOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -309,6 +321,17 @@ export function AdminProductsPage() {
                 <Download className="h-3 w-3" /> Showing downloadable products only · No shipping or handling fees
               </div>
             </>
+          ) : isSportsView ? (
+            <>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-2xl">🏆</span>
+                <h1 className="text-3xl font-serif font-bold text-primary">NFGN Sports</h1>
+              </div>
+              <p className="text-muted-foreground">Manage NFGN Sports products — tournament tickets, entry fees, sponsorships, concessions, skills camps, and more.</p>
+              <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full" style={{ background: "rgba(201,168,76,0.12)", color: "#C9A84C", border: "1px solid rgba(201,168,76,0.3)" }}>
+                🏆 Showing NFGN Sports products only · These appear under the Sports section in the Shop
+              </div>
+            </>
           ) : (
             <>
               <h1 className="text-3xl font-serif font-bold text-primary">Product Management</h1>
@@ -321,9 +344,9 @@ export function AdminProductsPage() {
             <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
-          <Button size="sm" onClick={isDigitalView ? openCreateDigital : openCreate}>
+          <Button size="sm" onClick={isSportsView ? openCreateSports : isDigitalView ? openCreateDigital : openCreate}>
             <Plus className="h-4 w-4 mr-1" />
-            {isDigitalView ? "Add Digital Product" : "Add Product"}
+            {isSportsView ? "Add Sports Product" : isDigitalView ? "Add Digital Product" : "Add Product"}
           </Button>
         </div>
       </div>
@@ -365,7 +388,8 @@ export function AdminProductsPage() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             {isDigitalView && <Download className="h-4 w-4 text-primary" />}
-            {isDigitalView ? `Digital Products (${filtered.length})` : `All Products (${filtered.length})`}
+            {isSportsView && <span>🏆</span>}
+            {isDigitalView ? `Digital Products (${filtered.length})` : isSportsView ? `NFGN Sports Products (${filtered.length})` : `All Products (${filtered.length})`}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -399,6 +423,8 @@ export function AdminProductsPage() {
                     <TableCell colSpan={10} className="text-center py-12 text-muted-foreground">
                       {isDigitalView
                         ? "No digital products yet. Click \"Add Digital Product\" to upload your first e-book, PDF, music file, or course."
+                        : isSportsView
+                        ? "No NFGN Sports products yet. Click \"Add Sports Product\" to add tournament tickets, entry fees, concessions, and more."
                         : "No products found. Click \"Add Product\" to get started."
                       }
                     </TableCell>
@@ -442,6 +468,8 @@ export function AdminProductsPage() {
                         <div className="flex flex-wrap gap-1">
                           {p.featured && <Badge className="text-xs px-1.5 py-0">Featured</Badge>}
                           {p.isProPackage && <Badge variant="secondary" className="text-xs px-1.5 py-0">Pro Pkg</Badge>}
+                          {p.isSports && <Badge className="text-xs px-1.5 py-0 gap-0.5" style={{ background: "#C9A84C", color: "#000" }}>🏆 Sports</Badge>}
+                          {p.isDownloadable && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-blue-700 border-blue-200"><Download className="h-2.5 w-2.5" />Digital</Badge>}
                           {p.dollarCreditEligible && (
                             <Badge className="text-xs px-1.5 py-0" style={{ background: "#C9A84C", color: "#000" }}>$-Credit</Badge>
                           )}
@@ -662,6 +690,30 @@ export function AdminProductsPage() {
                 />
                 <p className="text-xs text-muted-foreground">Percentage paid to the referring member on sale of this product.</p>
               </div>
+            </div>
+
+            {/* NFGN Sports Product */}
+            <div className="rounded-lg p-4 border-2 space-y-2" style={{ borderColor: "#C9A84C60", background: "#C9A84C06" }}>
+              <div className="flex items-start gap-3">
+                <Switch
+                  checked={form.isSports}
+                  onCheckedChange={v => setForm(f => ({ ...f, isSports: v }))}
+                  id="isSports"
+                />
+                <div>
+                  <Label htmlFor="isSports" className="cursor-pointer font-semibold flex items-center gap-1.5">
+                    <span>🏆</span> NFGN Sports Product
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Tournament tickets, entry fees, sponsorships, concessions, food truck meals, skills camps, personal trainer sessions, and other sports-related offerings. This product will appear in the dedicated <strong>NFGN SPORTS</strong> section of the Shop.
+                  </p>
+                </div>
+              </div>
+              {form.isSports && (
+                <div className="text-xs rounded-lg px-3 py-2 font-medium" style={{ background: "rgba(201,168,76,0.10)", color: "#C9A84C", border: "1px solid rgba(201,168,76,0.25)" }}>
+                  🏆 This product will be showcased under the NFGN SPORTS banner on the public Shop page.
+                </div>
+              )}
             </div>
 
             {/* Downloadable Product */}

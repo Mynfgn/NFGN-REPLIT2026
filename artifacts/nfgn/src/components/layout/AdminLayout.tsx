@@ -9,7 +9,7 @@ import {
   MessageSquare, Tag, BarChart, LogOut, Menu, X,
   ShieldCheck, Network, Star, Percent, Gift, Home, Clock, UserCircle,
   ChevronDown, ChevronRight, Briefcase, PackageCheck, Store, Megaphone,
-  FileDown, List,
+  FileDown, List, Trophy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -74,6 +74,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       children: [
         { name: "All Products", href: "/admin/products", icon: List },
         { name: "Digital Products", href: "/admin/products/digital", icon: FileDown },
+        { name: "NFGN Sports", href: "/admin/products/sports", icon: Trophy },
       ],
     },
     {

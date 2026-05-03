@@ -7,6 +7,7 @@ import {
   ShoppingCart, Loader2, Leaf, Sparkles, Flame, BookOpen,
   ChevronRight, Package, BadgeCheck, Check, ArrowRight,
   Users, TrendingUp, Star, Gift, Shield, Zap, ArrowLeft,
+  Trophy, Ticket, Award, Utensils, Dumbbell,
 } from "lucide-react";
 import { useCartStore } from "@/hooks/use-cart-store";
 import { useToast } from "@/hooks/use-toast";
@@ -35,6 +36,7 @@ type Product = {
   images?: string[] | null;
   categoryName?: string | null;
   isProPackage?: boolean | null;
+  isSports?: boolean | null;
   stock?: number | null;
   description?: string | null;
 };
@@ -564,7 +566,8 @@ export function Shop() {
 
   const products: Product[] = data?.products ?? [];
   const proProducts = products.filter((p) => p.isProPackage);
-  const regularProducts = products.filter((p) => !p.isProPackage);
+  const sportsProducts = products.filter((p) => p.isSports && !p.isProPackage);
+  const regularProducts = products.filter((p) => !p.isProPackage && !p.isSports);
 
   // Resolve which real product to use for a package card's "Add to Cart" button.
   // Prefer the admin-configured direct product link (productId); fall back to
@@ -808,6 +811,59 @@ export function Shop() {
         </div>
       )}
 
+      {/* ── NFGN SPORTS ───────────────────────────────────── */}
+      {sportsProducts.length > 0 && (
+        <div style={{ background: "linear-gradient(135deg, #0a0a0a 0%, #111 50%, #0d0d0d 100%)", padding: "72px 0", borderTop: "3px solid #C9A84C", borderBottom: "3px solid #C9A84C", position: "relative", overflow: "hidden" }}>
+          {/* Background field pattern */}
+          <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(201,168,76,0.04) 39px, rgba(201,168,76,0.04) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(201,168,76,0.04) 39px, rgba(201,168,76,0.04) 40px)", pointerEvents: "none" }} />
+          {/* Glow orbs */}
+          <div style={{ position: "absolute", top: -80, left: "10%", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,168,76,0.12), transparent 70%)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", bottom: -60, right: "8%", width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,168,76,0.08), transparent 70%)", pointerEvents: "none" }} />
+
+          <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto", position: "relative" }}>
+            {/* Section header */}
+            <div style={{ marginBottom: 48 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 16, background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.35)", padding: "6px 16px", borderRadius: 99 }}>
+                <Trophy size={13} color={GOLD} />
+                <span style={{ color: GOLD, fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>NFGN SPORTS</span>
+              </div>
+              <h2 style={{ color: "#fff", fontSize: "clamp(30px, 5vw, 46px)", fontWeight: 900, margin: "0 0 12px", fontFamily: "serif", lineHeight: 1.1 }}>
+                Game On. <span style={{ color: GOLD }}>Compete. Win.</span>
+              </h2>
+              <p style={{ color: "#a0a0a0", fontSize: 16, maxWidth: 560, margin: 0 }}>
+                Tournaments, entry fees, sponsorships, concessions, skills camps, personal training, and more — all powered by NFGN.
+              </p>
+              {/* Sports category pills */}
+              <div style={{ display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
+                {[
+                  { icon: <Ticket size={11} />, label: "Tournament Tickets" },
+                  { icon: <Trophy size={11} />, label: "Entry Fees" },
+                  { icon: <Award size={11} />, label: "Sponsorships" },
+                  { icon: <Utensils size={11} />, label: "Concessions & Food" },
+                  { icon: <Dumbbell size={11} />, label: "Skills & Training" },
+                ].map(tag => (
+                  <span key={tag.label} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)", color: GOLD, fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 99, letterSpacing: "0.04em" }}>
+                    {tag.icon} {tag.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Sports product grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {sportsProducts.map(p => (
+                <SportsProductCard
+                  key={p.id}
+                  product={p}
+                  onAdd={handleAddToCart}
+                  adding={addingId === p.id}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── ZONE 2: WHITE — All Products ─────────────────── */}
       <div id="products" style={{ background: GREY_50, padding: "72px 0" }}>
         <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto" }}>
@@ -997,6 +1053,108 @@ export function Shop() {
         </div>
       </div>
     </div>
+  );
+}
+
+function SportsProductCard({
+  product,
+  onAdd,
+  adding,
+}: {
+  product: Product;
+  onAdd: (e: React.MouseEvent, id: number) => void;
+  adding: boolean;
+}) {
+  const [hover, setHover] = useState(false);
+  const img = resolveImageSrc(product.image);
+  const outOfStock = product.stock === 0;
+  const onSale = product.comparePrice && product.comparePrice > product.price;
+
+  return (
+    <Link href={`/product/${product.slug}`}>
+      <div
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        style={{
+          background: hover ? "#1c1c1c" : "#141414",
+          border: `1.5px solid ${hover ? GOLD : "rgba(201,168,76,0.25)"}`,
+          borderRadius: 12,
+          overflow: "hidden",
+          boxShadow: hover ? `0 12px 36px rgba(201,168,76,0.18)` : "0 2px 12px rgba(0,0,0,0.4)",
+          transition: "all 0.22s ease",
+          cursor: "pointer",
+          transform: hover ? "translateY(-4px)" : "none",
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+        }}
+      >
+        {/* Image */}
+        <div style={{ background: img ? "#1a1a1a" : "linear-gradient(135deg, rgba(201,168,76,0.15), rgba(201,168,76,0.05))", height: 160, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+          {img ? (
+            <img src={img} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease", transform: hover ? "scale(1.06)" : "scale(1)" }} />
+          ) : (
+            <Trophy size={40} color={GOLD} style={{ opacity: 0.35 }} />
+          )}
+          {/* Gold SPORTS badge */}
+          <span style={{ position: "absolute", top: 10, left: 10, background: GOLD, color: "#000", fontSize: 9, fontWeight: 900, padding: "3px 8px", borderRadius: 99, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+            🏆 SPORTS
+          </span>
+          {onSale && !outOfStock && (
+            <span style={{ position: "absolute", top: 10, right: 10, background: "#fff", color: "#000", fontSize: 10, fontWeight: 900, padding: "3px 8px", borderRadius: 99 }}>
+              SALE
+            </span>
+          )}
+          {outOfStock && (
+            <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ color: "rgba(255,255,255,0.7)", fontWeight: 600, fontSize: 13 }}>Sold Out</span>
+            </div>
+          )}
+        </div>
+
+        {/* Info */}
+        <div style={{ padding: "16px 16px 18px", flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+          <p style={{ fontSize: 10, fontWeight: 800, color: GOLD, letterSpacing: "0.15em", textTransform: "uppercase", margin: 0 }}>
+            {product.categoryName || "NFGN Sports"}
+          </p>
+          <h4 style={{ fontSize: 15, fontWeight: 800, color: "#fff", lineHeight: 1.3, flex: 1, margin: 0 }}>
+            {product.name}
+          </h4>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+            <span style={{ fontSize: 18, fontWeight: 900, color: GOLD }}>${product.price.toFixed(2)}</span>
+            {onSale && (
+              <span style={{ fontSize: 13, color: "#666", textDecoration: "line-through" }}>
+                ${product.comparePrice!.toFixed(2)}
+              </span>
+            )}
+          </div>
+          <button
+            disabled={outOfStock || adding}
+            onClick={(e) => onAdd(e, product.id)}
+            style={{
+              marginTop: 8,
+              width: "100%",
+              padding: "10px 0",
+              background: hover && !outOfStock ? GOLD : "transparent",
+              color: outOfStock ? "#555" : hover ? "#000" : GOLD,
+              border: `1.5px solid ${outOfStock ? "#333" : GOLD}`,
+              borderRadius: 8,
+              fontWeight: 800,
+              fontSize: 13,
+              cursor: outOfStock ? "not-allowed" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              transition: "all 0.18s ease",
+            }}
+          >
+            {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingCart size={14} />}
+            {outOfStock ? "Sold Out" : "Add to Cart"}
+          </button>
+        </div>
+      </div>
+    </Link>
   );
 }
 

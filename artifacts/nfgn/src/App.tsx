@@ -340,6 +340,11 @@ function Router() {
           <AdminLayout><AdminProductsPage /></AdminLayout>
         </RequireAuth>
       </Route>
+      <Route path="/admin/products/sports">
+        <RequireAuth requireAdmin>
+          <AdminLayout><AdminProductsPage /></AdminLayout>
+        </RequireAuth>
+      </Route>
       <Route path="/admin/products">
         <RequireAuth requireAdmin>
           <AdminLayout><AdminProductsPage /></AdminLayout>

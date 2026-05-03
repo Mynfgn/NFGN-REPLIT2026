@@ -34,6 +34,9 @@ export const productsTable = pgTable("products", {
   proMemberDiscountEligible: boolean("pro_member_discount_eligible").notNull().default(false),
   proMemberDiscountPercent: numeric("pro_member_discount_percent", { precision: 5, scale: 2 }).notNull().default("0"),
 
+  // NFGN Sports product (tournament tickets, entry fees, sponsorships, concessions, etc.)
+  isSports: boolean("is_sports").notNull().default(false),
+
   // Downloadable product (e-books, music, images, etc.)
   isDownloadable: boolean("is_downloadable").notNull().default(false),
   downloadUrl: text("download_url"),

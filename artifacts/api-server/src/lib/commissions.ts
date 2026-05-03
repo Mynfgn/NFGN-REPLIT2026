@@ -411,10 +411,16 @@ export interface OrderItemForCommission {
   price: string;
   quantity: number;
   commissionRate: string;
-  /** True for isDonation, isChurchDonation, or isSports products.
-   *  In per_product mode, these items always use the full line total
-   *  with the global referral rate — not the product's commissionRate. */
+  /** True for isDonation, isChurchDonation, or isSports products. */
   isDonationOrSponsorship?: boolean;
+  /**
+   * For monetary gift/donation products (isDonation=true): the % of the
+   * donated amount that goes directly to the organisation (default 80).
+   * The remaining (100 - giftCharityPercent)% is the commissionable pool
+   * distributed through the referral compensation plan.
+   * Undefined for non-donation products — full line total is commissionable.
+   */
+  giftCharityPercent?: number;
 }
 
 /**
@@ -466,25 +472,49 @@ export async function processCommissions(
     //    In "global" mode: apply the single platform rate to the full order total.
     //    In "per_product" mode: compute the referral commission per line item using
     //    each product's individual commission rate, then sum the results.
+    // ── Effective commissionable sale amount ──────────────────────────────
+    //    For monetary gift/donation items the commissionable base is only the
+    //    MEMBER PORTION (default 20%) of the donated amount.  The charity
+    //    portion (default 80%) flows directly to the organisation and is never
+    //    included in the commission calculation.
+    let effectiveSaleAmount = saleAmount;
+    if (orderItems.length > 0) {
+      const hasGiftSplit = orderItems.some(i => i.isDonationOrSponsorship && i.giftCharityPercent != null);
+      if (hasGiftSplit) {
+        let adjusted = 0;
+        for (const item of orderItems) {
+          const lineTotal = parseFloat(item.price) * item.quantity;
+          if (item.isDonationOrSponsorship && item.giftCharityPercent != null) {
+            const memberPct = 100 - item.giftCharityPercent;
+            adjusted += lineTotal * memberPct / 100;
+          } else {
+            adjusted += lineTotal;
+          }
+        }
+        effectiveSaleAmount = parseFloat(adjusted.toFixed(2));
+      }
+    }
+
     if (rules.referralRateMode === "per_product" && orderItems.length > 0) {
-      // Per-product: fire one RC record per line, using the product's own rate.
-      // Exception: donation and sponsorship products always use the full line total
-      // with the global referral rate — never the per-product commissionRate — so
-      // sponsors earn commissions on the actual dollar amount given, not a
-      // reduced rate that might be set differently on the product.
+      // Per-product referral commissions.
+      // Monetary gift items: commissionable base = lineTotal × memberPercent (20% default).
+      // Sports/sponsorship items without giftCharityPercent: use full line total.
+      // Regular items: use the product's own commissionRate.
       let totalReferralCommission = 0;
       for (const item of orderItems) {
         const lineTotal = parseFloat(item.price) * item.quantity;
         if (item.isDonationOrSponsorship) {
-          // Full line total × global referral rate
-          totalReferralCommission += parseFloat(((lineTotal * rules.referralRate) / 100).toFixed(2));
+          const charityPct = item.giftCharityPercent ?? 0; // 0 = full line if no split set
+          const memberPct = 100 - charityPct;
+          const memberBase = lineTotal * memberPct / 100;
+          totalReferralCommission += parseFloat(((memberBase * rules.referralRate) / 100).toFixed(2));
         } else {
           const rate = parseFloat(item.commissionRate) || 0;
           totalReferralCommission += parseFloat(((lineTotal * rate) / 100).toFixed(2));
         }
       }
-      if (saleAmount > 0 && totalReferralCommission > 0) {
-        const effectiveRate = parseFloat(((totalReferralCommission / saleAmount) * 100).toFixed(4));
+      if (effectiveSaleAmount > 0 && totalReferralCommission > 0) {
+        const effectiveRate = parseFloat(((totalReferralCommission / effectiveSaleAmount) * 100).toFixed(4));
         await recordCommission(
           directSponsor.id,
           buyerId,
@@ -492,22 +522,24 @@ export async function processCommissions(
           orderNumber,
           1,
           effectiveRate,
-          saleAmount,
+          effectiveSaleAmount,
           "referral",
         );
       }
     } else {
-      // Global mode: single flat rate applied to the full order total.
-      await recordCommission(
-        directSponsor.id,
-        buyerId,
-        orderId,
-        orderNumber,
-        1,
-        rules.referralRate,
-        saleAmount,
-        "referral",
-      );
+      // Global mode: single flat rate applied to the effective (adjusted) sale amount.
+      if (effectiveSaleAmount > 0) {
+        await recordCommission(
+          directSponsor.id,
+          buyerId,
+          orderId,
+          orderNumber,
+          1,
+          rules.referralRate,
+          effectiveSaleAmount,
+          "referral",
+        );
+      }
     }
 
     if (containsProPackage) {
@@ -558,7 +590,7 @@ export async function processCommissions(
           orderNumber,
           levelConfig.level,
           levelConfig.rate,
-          saleAmount,
+          effectiveSaleAmount,
           "sales",
         );
       }

@@ -65,6 +65,7 @@ interface Product {
   donationMinAmount: number;
   isChurchDonation: boolean;
   churchName: string | null;
+  giftCharityPercent?: string | number | null;
   dollarCreditEligible: boolean;
   refundPolicy: string;
   proMemberDiscountEligible: boolean;
@@ -149,6 +150,7 @@ const EMPTY_FORM = {
   donationMinAmount: "1.00",
   isChurchDonation: false,
   churchName: "",
+  giftCharityPercent: "80",
   ingredients: "",
   benefits: "",
   dollarCreditEligible: false,
@@ -268,6 +270,7 @@ export function AdminProductsPage() {
       donationMinAmount: String(p.donationMinAmount ?? "1.00"),
       isChurchDonation: p.isChurchDonation ?? false,
       churchName: p.churchName ?? "",
+      giftCharityPercent: String(p.giftCharityPercent ?? "80"),
       ingredients: "",
       benefits: "",
       dollarCreditEligible: p.dollarCreditEligible ?? false,
@@ -329,6 +332,7 @@ export function AdminProductsPage() {
         donationMinAmount: parseFloat(form.donationMinAmount) || 1.00,
         isChurchDonation: (form.isNonProfit || form.isDonation) ? form.isChurchDonation : false,
         churchName: form.isChurchDonation ? (form.churchName || null) : null,
+        giftCharityPercent: (form.isDonation || form.isChurchDonation) ? (parseFloat(form.giftCharityPercent) || 80) : undefined,
         ingredients: form.ingredients || null,
         benefits: form.benefits || null,
         dollarCreditEligible: form.dollarCreditEligible,
@@ -1193,6 +1197,32 @@ export function AdminProductsPage() {
                       placeholder="1.00"
                     />
                     <p className="text-xs text-muted-foreground">Members can donate any amount at or above this threshold.</p>
+                  </div>
+                  {/* Gift Split Control */}
+                  <div className="space-y-2 rounded-lg p-3 border" style={{ background: "rgba(201,168,76,0.06)", borderColor: "rgba(201,168,76,0.25)" }}>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-semibold" style={{ color: "#C9A84C" }}>Gift Split — Charity %</Label>
+                      <span className="text-xs font-bold" style={{ color: "#C9A84C" }}>{form.giftCharityPercent ?? 80}% → Charity / {100 - (parseFloat(form.giftCharityPercent ?? "80") || 80)}% → Network</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={50}
+                      max={95}
+                      step={5}
+                      value={parseFloat(form.giftCharityPercent ?? "80") || 80}
+                      onChange={e => setForm(f => ({ ...f, giftCharityPercent: e.target.value }))}
+                      className="w-full accent-yellow-500"
+                    />
+                    {/* Visual bar */}
+                    <div className="flex rounded-full overflow-hidden h-3 border" style={{ borderColor: "rgba(201,168,76,0.3)" }}>
+                      <div style={{ width: `${parseFloat(form.giftCharityPercent ?? "80") || 80}%`, background: "#C9A84C", transition: "width 0.2s" }} />
+                      <div style={{ flex: 1, background: "rgba(255,255,255,0.08)" }} />
+                    </div>
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>⛪ Charity / Org ({form.giftCharityPercent ?? 80}%)</span>
+                      <span>🔗 NFGN Network ({100 - (parseFloat(form.giftCharityPercent ?? "80") || 80)}%)</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">The charity portion goes directly to the recipient. The network portion funds referral commissions and NFGN operations. Default: 80/20.</p>
                   </div>
                   <div className="text-xs rounded-lg px-3 py-2 font-medium" style={{ background: "rgba(201,168,76,0.10)", color: "#C9A84C", border: "1px solid rgba(201,168,76,0.25)" }}>
                     🎁 This product will appear in the Donations & Gifts section. Members enter their own contribution amount above the minimum.

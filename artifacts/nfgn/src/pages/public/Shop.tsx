@@ -47,6 +47,7 @@ type Product = {
   donationRecipientType?: string | null;
   donationRecipientName?: string | null;
   churchName?: string | null;
+  giftCharityPercent?: string | number | null;
   stock?: number | null;
   description?: string | null;
 };
@@ -896,6 +897,15 @@ export function Shop() {
               <p style={{ color: "#a0a0a0", fontSize: 16, maxWidth: 560, margin: 0 }}>
                 Products, events, and services that support non-profit causes — every purchase makes a difference in the community.
               </p>
+              {/* Gift-split info banner — shown for donation products in this section */}
+              {nonProfitProducts.some(p => p.isDonation) && (
+                <div style={{ marginTop: 20, padding: "12px 16px", background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.28)", borderRadius: 10, maxWidth: 560 }}>
+                  <p style={{ color: "#6366f1", fontSize: 12, fontWeight: 700, margin: "0 0 6px", letterSpacing: "0.05em" }}>🎁 HOW MONETARY GIFTS WORK</p>
+                  <p style={{ color: "#a0a0a0", fontSize: 12, margin: 0, lineHeight: 1.55 }}>
+                    When you give a monetary gift, the majority goes <strong style={{ color: "#fff" }}>directly to the organisation</strong>. A small network portion (typically 20%) supports NFGN referral rewards and operations. This is a <strong style={{ color: "#fff" }}>GIFT — not a payment</strong> and is not considered taxable income for recipients.
+                  </p>
+                </div>
+              )}
               <div style={{ display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
                 {[
                   { icon: <Heart size={11} />, label: "Community Support" },
@@ -943,6 +953,13 @@ export function Shop() {
               <p style={{ color: "#9a9a9a", fontSize: 16, maxWidth: 580, margin: 0, lineHeight: 1.6 }}>
                 Support your church community directly through your NFGN account. Choose any amount at or above the minimum — every dollar goes straight to your house of worship.
               </p>
+              {/* Gift-split info banner for church giving */}
+              <div style={{ marginTop: 20, padding: "12px 16px", background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.28)", borderRadius: 10, maxWidth: 580 }}>
+                <p style={{ color: GOLD, fontSize: 12, fontWeight: 700, margin: "0 0 6px", letterSpacing: "0.05em" }}>🎁 HOW YOUR GIFT IS DISTRIBUTED</p>
+                <p style={{ color: "#9a9a9a", fontSize: 12, margin: 0, lineHeight: 1.55 }}>
+                  The majority of every gift goes <strong style={{ color: "#fff" }}>directly to your church</strong>. A small network portion (typically 20%) supports NFGN referral rewards and platform operations. Your gift is a <strong style={{ color: "#fff" }}>GIFT — not a purchase</strong> and is not subject to sales tax.
+                </p>
+              </div>
               <div style={{ display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
                 {[
                   { icon: <Church size={11} />, label: "Direct Church Giving" },
@@ -1266,6 +1283,23 @@ function ChurchDonationCard({
           <p style={{ fontSize: 12, color: "#9a9a9a", margin: 0, lineHeight: 1.45 }}>
             Give any amount at or above the minimum — your generosity goes directly to the church.
           </p>
+          {/* Gift split mini-bar */}
+          {(() => {
+            const charityPct = Math.round(parseFloat(String(product.giftCharityPercent ?? "80")) || 80);
+            const memberPct  = 100 - charityPct;
+            return (
+              <div style={{ marginTop: 4 }}>
+                <div style={{ display: "flex", borderRadius: 99, overflow: "hidden", height: 6, background: "rgba(255,255,255,0.08)" }}>
+                  <div style={{ width: `${charityPct}%`, background: AMBER_LIGHT, transition: "width 0.2s" }} />
+                  <div style={{ flex: 1, background: "rgba(255,255,255,0.15)" }} />
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 3, fontSize: 9, color: "#7a7a7a", fontWeight: 700, letterSpacing: "0.05em" }}>
+                  <span style={{ color: AMBER_LIGHT }}>⛪ {charityPct}% → Church</span>
+                  <span>🔗 {memberPct}% → Network</span>
+                </div>
+              </div>
+            );
+          })()}
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2 }}>
             <span style={{ fontSize: 13, color: "#9a9a9a" }}>Starting at</span>
             <span style={{ fontSize: 20, fontWeight: 900, color: AMBER_LIGHT }}>${minAmount.toFixed(2)}</span>

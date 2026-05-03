@@ -77,6 +77,13 @@ export const productsTable = pgTable("products", {
   // Name of the church this donation product is for
   churchName: text("church_name"),
 
+  // Gift Split — for monetary gift / donation products (isDonation = true)
+  // charityPercent % goes directly to the org; (100 - charityPercent) % is distributed
+  // through the referral compensation plan (referring member, upline sponsors, NFGN fees).
+  // Default: 80% to charity, 20% to members / NFGN.
+  // Admin-adjustable per product. Does NOT apply to physical non-profit products.
+  giftCharityPercent: numeric("gift_charity_percent", { precision: 5, scale: 2 }).notNull().default("80"),
+
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

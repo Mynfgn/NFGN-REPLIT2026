@@ -3,6 +3,7 @@ import { db, ordersTable, orderItemsTable, cartItemsTable, productsTable, usersT
 import { eq, and, desc, count, sql, inArray, gte } from "drizzle-orm";
 import { requireAuth, requireAdmin } from "../lib/auth";
 import { processCommissions, type OrderItemForCommission } from "../lib/commissions";
+import { sendEmail, giftNotificationHtml } from "../lib/mailer";
 
 /**
  * Check and update a sponsor's APM status based on their active Level 1 Pro Members.
@@ -452,6 +453,11 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
       quantity: cart.quantity,
       commissionRate: product.commissionRate ?? "10",
       isDonationOrSponsorship: !!(product.isDonation || product.isChurchDonation || product.isSports),
+      // Monetary gifts: pass the charity split % so the engine uses only the
+      // member portion as the commissionable base.
+      giftCharityPercent: (product.isDonation || product.isChurchDonation)
+        ? parseFloat(product.giftCharityPercent ?? "80")
+        : undefined,
     });
 
     // Downloadable products have unlimited stock — don't decrement
@@ -484,6 +490,76 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
 
   const items = await db.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, order.id));
   const userName = `${currentUser.firstName} ${currentUser.lastName}`;
+
+  // ── Gift / Donation notification emails ──────────────────────────────────
+  // Sent for every monetary gift/donation item in the order.
+  // Recipients: giver (member), direct sponsor (referral reward), admin.
+  // Clear "GIFT" language throughout — not a payment, not taxable income.
+  const dashUrl = process.env.APP_URL ?? "https://nfgn.com/dashboard";
+  const adminEmail = process.env.ADMIN_EMAIL ?? "Mynfgn@gmail.com";
+
+  const giftItems = cartItems.filter(({ product: p }) => p && (p.isDonation || p.isChurchDonation));
+  if (giftItems.length > 0) {
+    for (const { cart, product: giftProduct } of giftItems) {
+      if (!giftProduct) continue;
+      const giftAmount    = parseFloat(giftProduct.price) * cart.quantity;
+      const charityPct    = parseFloat(giftProduct.giftCharityPercent ?? "80");
+      const memberPct     = 100 - charityPct;
+      const charityAmount = parseFloat((giftAmount * charityPct / 100).toFixed(2));
+      const memberAmount  = parseFloat((giftAmount * memberPct  / 100).toFixed(2));
+      const orgName       = giftProduct.churchName ?? giftProduct.donationRecipientName ?? giftProduct.donationRecipientType ?? "Organisation";
+
+      const baseOpts = {
+        giverName: userName,
+        giverEmail: currentUser.email,
+        productName: giftProduct.name,
+        recipientOrgName: orgName,
+        giftAmount,
+        charityAmount,
+        memberAmount,
+        charityPercent: charityPct,
+        memberPercent: memberPct,
+        orderNumber,
+        dashboardUrl: dashUrl,
+      };
+
+      // Email 1: giver
+      await sendEmail({
+        to: currentUser.email,
+        subject: `Gift Confirmation — Thank you for your generosity! (Order ${orderNumber})`,
+        html: giftNotificationHtml({ role: "giver", recipientName: currentUser.firstName, ...baseOpts }),
+      });
+
+      // Email 2: admin
+      await sendEmail({
+        to: adminEmail,
+        subject: `New Gift Received — ${orgName} — Order ${orderNumber}`,
+        html: giftNotificationHtml({ role: "admin", recipientName: "Admin", ...baseOpts }),
+      });
+
+      // Email 3: direct sponsor (if any) — they earn a referral reward
+      if (currentUser.sponsorId) {
+        const [sponsorUser] = await db.select().from(usersTable).where(eq(usersTable.id, currentUser.sponsorId));
+        if (sponsorUser) {
+          const [sponsorWallet] = await db.select().from(walletsTable).where(eq(walletsTable.userId, sponsorUser.id));
+          const sponsorCommission = sponsorWallet
+            ? parseFloat((memberAmount * 0.1).toFixed(2)) // approx 10% of member pool as indication
+            : undefined;
+          await sendEmail({
+            to: sponsorUser.email,
+            subject: `Gift Reward — Your member ${userName} just gave a gift! (Order ${orderNumber})`,
+            html: giftNotificationHtml({
+              role: "sponsor",
+              recipientName: sponsorUser.firstName,
+              sponsorCommission,
+              ...baseOpts,
+            }),
+          });
+        }
+      }
+    }
+  }
+
   res.status(201).json(formatOrder(order, userName, items));
 });
 

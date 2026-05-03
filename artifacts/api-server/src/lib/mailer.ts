@@ -60,6 +60,110 @@ function wrap(content: string, heading: string): string {
 </html>`;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+//  Gift / Donation Notification Emails
+//  Role: "giver" | "admin" | "sponsor" | "upline"
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface GiftNotificationOpts {
+  role: "giver" | "admin" | "sponsor" | "upline";
+  recipientName: string;
+  giverName: string;
+  giverEmail: string;
+  productName: string;
+  recipientOrgName: string;   // church / non-profit name
+  giftAmount: number;         // full gift amount member gave
+  charityAmount: number;      // 80% (default) → org
+  memberAmount: number;       // 20% (default) → referral chain / NFGN
+  charityPercent: number;     // e.g. 80
+  memberPercent: number;      // e.g. 20
+  orderNumber: string;
+  dashboardUrl: string;
+  sponsorCommission?: number; // only for sponsor / upline emails
+}
+
+export function giftNotificationHtml(opts: GiftNotificationOpts): string {
+  const charityBar = Math.round(opts.charityPercent);
+  const memberBar  = Math.round(opts.memberPercent);
+
+  const splitVisual = `
+    <div style="margin:20px 0;">
+      <p style="margin:0 0 6px;font-weight:700;font-size:13px;color:#0a0a0a;">How This Gift Is Distributed</p>
+      <div style="background:#f0f0f0;border-radius:99px;height:14px;overflow:hidden;width:100%;">
+        <div style="background:#C9A84C;height:100%;width:${charityBar}%;border-radius:99px 0 0 99px;display:inline-block;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px;">
+        <span style="color:#C9A84C;font-weight:700;">🏛 ${charityBar}% ($${opts.charityAmount.toFixed(2)}) → ${opts.recipientOrgName}</span>
+        <span style="color:#888;font-weight:600;">${memberBar}% ($${opts.memberAmount.toFixed(2)}) → Members / NFGN</span>
+      </div>
+    </div>`;
+
+  const giftBox = `
+    <div class="detail-box">
+      <p><strong>Gift Item:</strong> ${opts.productName}</p>
+      <p><strong>Recipient:</strong> ${opts.recipientOrgName}</p>
+      <p><strong>Total Gift Amount:</strong> $${opts.giftAmount.toFixed(2)}</p>
+      <p><strong>Direct to Organisation:</strong> $${opts.charityAmount.toFixed(2)} (${charityBar}%)</p>
+      <p><strong>Member &amp; NFGN Distribution:</strong> $${opts.memberAmount.toFixed(2)} (${memberBar}%)</p>
+      <p><strong>Order #:</strong> ${opts.orderNumber}</p>
+    </div>`;
+
+  const giftNotice = `
+    <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:14px 18px;margin:16px 0;font-size:13px;color:#92400e;">
+      <strong>Important — Gift Notice:</strong> This transaction is a <strong>personal gift</strong>, not a payment or purchase.
+      Gifts of this nature are generally not considered taxable income. Neither the giver nor the recipient
+      should treat this as revenue or a business transaction. NFGN facilitates the transfer on behalf of the
+      community — all parties should consult their own tax adviser for specific guidance.
+    </div>`;
+
+  if (opts.role === "giver") {
+    return wrap(`
+      <p>Hi ${opts.recipientName},</p>
+      <p>Thank you for your generous gift! Your contribution has been received and will be distributed as follows:</p>
+      ${giftBox}
+      ${splitVisual}
+      ${giftNotice}
+      <p>Your gift goes a long way toward supporting <strong>${opts.recipientOrgName}</strong> and the NFGN community. Thank you for making a difference!</p>
+      <a class="cta" href="${opts.dashboardUrl}">View My Dashboard</a>
+    `, `Gift Confirmation — Thank You, ${opts.recipientName}!`);
+  }
+
+  if (opts.role === "admin") {
+    return wrap(`
+      <p>A new gift/donation has been submitted through the NFGN platform.</p>
+      <p><strong>Giver:</strong> ${opts.giverName} (${opts.giverEmail})</p>
+      ${giftBox}
+      ${splitVisual}
+      ${giftNotice}
+      <p>Please ensure the charity portion ($${opts.charityAmount.toFixed(2)}) is disbursed to <strong>${opts.recipientOrgName}</strong> according to your disbursement schedule.</p>
+      <a class="cta" href="${opts.dashboardUrl}">View in Admin</a>
+    `, "New Gift Received — Admin Notification");
+  }
+
+  if (opts.role === "sponsor") {
+    return wrap(`
+      <p>Hi ${opts.recipientName},</p>
+      <p>Great news! Your referred member <strong>${opts.giverName}</strong> just made a gift through NFGN, and you've earned a referral reward from the member distribution pool.</p>
+      ${giftBox}
+      ${splitVisual}
+      ${opts.sponsorCommission != null ? `<div class="detail-box" style="border-left:4px solid #C9A84C;"><p style="margin:0;"><strong>Your Referral Reward:</strong> <span style="color:#C9A84C;font-size:18px;font-weight:900;">+$${opts.sponsorCommission.toFixed(2)}</span> (pending approval)</p></div>` : ""}
+      ${giftNotice}
+      <p>This reward is sourced from the ${memberBar}% member distribution portion — not from the charity's funds. The organisation still receives its full ${charityBar}%.</p>
+      <a class="cta" href="${opts.dashboardUrl}">View My Earnings</a>
+    `, "Gift Reward — Your Team is Giving!");
+  }
+
+  // upline
+  return wrap(`
+    <p>Hi ${opts.recipientName},</p>
+    <p>A member in your downline has made a gift through NFGN. Your upline reward has been credited to your pending earnings.</p>
+    ${giftBox}
+    ${opts.sponsorCommission != null ? `<div class="detail-box" style="border-left:4px solid #C9A84C;"><p style="margin:0;"><strong>Your Upline Reward:</strong> <span style="color:#C9A84C;font-size:18px;font-weight:900;">+$${opts.sponsorCommission.toFixed(2)}</span> (pending approval)</p></div>` : ""}
+    ${giftNotice}
+    <a class="cta" href="${opts.dashboardUrl}">View My Dashboard</a>
+  `, "Upline Gift Reward — Downline Activity");
+}
+
 export function codReminderMemberHtml(opts: {
   memberName: string;
   orderNumber: string;

@@ -297,6 +297,18 @@ router.patch("/users/me/book-a-pro", requireAuth, async (req, res): Promise<void
   const currentUser = (req as typeof req & { user: typeof usersTable.$inferSelect }).user;
   const { isBookAProProvider, bookAProCategory, bookAProSubServices, bookAProBio } = req.body;
 
+  // Only Pro Members (and admins) may activate Book-A-Pro provider services
+  if (isBookAProProvider === true) {
+    const isAdmin = ["super_admin", "admin", "store_admin"].includes(currentUser.role);
+    const isProMember = currentUser.role === "pro_member";
+    if (!isAdmin && !isProMember) {
+      res.status(403).json({
+        error: "You must be a Pro Member to activate Book-A-Pro Provider Services. Please purchase a Pro Member Registration Package first.",
+      });
+      return;
+    }
+  }
+
   const updates: Partial<typeof usersTable.$inferInsert> = {};
   if (typeof isBookAProProvider === "boolean") updates.isBookAProProvider = isBookAProProvider;
   if (bookAProCategory !== undefined) updates.bookAProCategory = bookAProCategory || null;

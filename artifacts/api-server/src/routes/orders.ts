@@ -451,6 +451,7 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
       price: product.price,
       quantity: cart.quantity,
       commissionRate: product.commissionRate ?? "10",
+      isDonationOrSponsorship: !!(product.isDonation || product.isChurchDonation || product.isSports),
     });
 
     // Downloadable products have unlimited stock — don't decrement

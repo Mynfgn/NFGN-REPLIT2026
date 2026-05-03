@@ -411,6 +411,10 @@ export interface OrderItemForCommission {
   price: string;
   quantity: number;
   commissionRate: string;
+  /** True for isDonation, isChurchDonation, or isSports products.
+   *  In per_product mode, these items always use the full line total
+   *  with the global referral rate — not the product's commissionRate. */
+  isDonationOrSponsorship?: boolean;
 }
 
 /**
@@ -464,12 +468,20 @@ export async function processCommissions(
     //    each product's individual commission rate, then sum the results.
     if (rules.referralRateMode === "per_product" && orderItems.length > 0) {
       // Per-product: fire one RC record per line, using the product's own rate.
-      // We use a weighted effective rate so a single commission record is created.
+      // Exception: donation and sponsorship products always use the full line total
+      // with the global referral rate — never the per-product commissionRate — so
+      // sponsors earn commissions on the actual dollar amount given, not a
+      // reduced rate that might be set differently on the product.
       let totalReferralCommission = 0;
       for (const item of orderItems) {
         const lineTotal = parseFloat(item.price) * item.quantity;
-        const rate = parseFloat(item.commissionRate) || 0;
-        totalReferralCommission += parseFloat(((lineTotal * rate) / 100).toFixed(2));
+        if (item.isDonationOrSponsorship) {
+          // Full line total × global referral rate
+          totalReferralCommission += parseFloat(((lineTotal * rules.referralRate) / 100).toFixed(2));
+        } else {
+          const rate = parseFloat(item.commissionRate) || 0;
+          totalReferralCommission += parseFloat(((lineTotal * rate) / 100).toFixed(2));
+        }
       }
       if (saleAmount > 0 && totalReferralCommission > 0) {
         const effectiveRate = parseFloat(((totalReferralCommission / saleAmount) * 100).toFixed(4));

@@ -8,15 +8,10 @@ import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { CheckCircle, Star, Users, TrendingUp, Loader2, UserCircle2, Briefcase } from "lucide-react";
-import { BAP_CATEGORIES } from "@/lib/bapCategories";
+import { CheckCircle, Star, Users, TrendingUp, Loader2, UserCircle2 } from "lucide-react";
 
 const registerSchema = z.object({
   firstName: z.string().min(2, "First name is required"),
@@ -48,12 +43,6 @@ export function Join() {
   const [sponsorInfo, setSponsorInfo] = useState<SponsorInfo>(null);
   const [sponsorLoading, setSponsorLoading] = useState(false);
 
-  // Book-A-Pro state
-  const [isBAPProvider, setIsBAPProvider] = useState(false);
-  const [bapCategory, setBapCategory] = useState("");
-  const [bapSubServices, setBapSubServices] = useState<string[]>([]);
-  const [bapCustomService, setBapCustomService] = useState("");
-  const [bapBio, setBapBio] = useState("");
 
   async function lookupSponsor(code: string) {
     if (!code.trim()) { setSponsorInfo(null); return; }
@@ -82,28 +71,11 @@ export function Join() {
     defaultValues: { firstName: "", lastName: "", organizationName: "", email: "", password: "", confirmPassword: "", phone: "", referralCode: refCode },
   });
 
-  const bapCategoryOptions = BAP_CATEGORIES[bapCategory] ?? [];
-  const toggleBapService = (s: string) =>
-    setBapSubServices(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
-  const addBapCustom = () => {
-    const s = bapCustomService.trim();
-    if (s && !bapSubServices.includes(s)) setBapSubServices(prev => [...prev, s]);
-    setBapCustomService("");
-  };
-
   function onSubmit(data: RegisterFormValues) {
-    const extraData: Record<string, any> = {
-      isBookAProProvider: isBAPProvider,
-    };
-    if (isBAPProvider && bapCategory) {
-      extraData.bookAProCategory = bapCategory;
-      extraData.bookAProSubServices = bapSubServices;
-      if (bapBio.trim()) extraData.bookAProBio = bapBio.trim();
-    }
-    registerMutation.mutate({ data: { ...data, ...extraData, role: "customer" } }, {
+    registerMutation.mutate({ data: { ...data, role: "customer" } }, {
       onSuccess: (response) => {
         login(response.token);
-        toast({ title: "Welcome to NFGN!", description: isBAPProvider ? "Your account and Book-A-Pro profile are ready!" : "Your account has been created." });
+        toast({ title: "Welcome to NFGN!", description: "Your account has been created." });
         if (response.user.role === "customer") setLocation("/");
         else setLocation("/dashboard");
       },
@@ -233,97 +205,6 @@ export function Join() {
                     <FormMessage />
                   </FormItem>
                 )} />
-                {/* ── Book-A-Pro Provider Section ── */}
-                <div className="rounded-xl border-2 border-dashed border-primary/30 overflow-hidden">
-                  <div className="flex items-center justify-between px-4 py-3 bg-primary/5">
-                    <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <Briefcase className="h-4 w-4 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-sm">Activate Book-A-Pro Provider Services</p>
-                        <p className="text-xs text-muted-foreground">List your professional services on the NFGN marketplace</p>
-                      </div>
-                    </div>
-                    <Switch
-                      checked={isBAPProvider}
-                      onCheckedChange={v => { setIsBAPProvider(v); if (!v) { setBapCategory(""); setBapSubServices([]); setBapBio(""); } }}
-                    />
-                  </div>
-
-                  {isBAPProvider && (
-                    <div className="px-4 pb-4 pt-3 space-y-4 bg-white dark:bg-background">
-                      {/* Category */}
-                      <div>
-                        <label className="text-sm font-medium">Service Category *</label>
-                        <Select value={bapCategory} onValueChange={v => { setBapCategory(v); setBapSubServices([]); }}>
-                          <SelectTrigger className="mt-1">
-                            <SelectValue placeholder="Select your service category…" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Object.keys(BAP_CATEGORIES).map(cat => (
-                              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Sub-services */}
-                      {bapCategory && (
-                        <div>
-                          <label className="text-sm font-medium">Your Services in <span className="text-primary">{bapCategory}</span></label>
-                          <p className="text-xs text-muted-foreground mb-2">Check all that apply. You can add custom services too.</p>
-                          <div className="grid grid-cols-2 gap-1.5 p-3 border rounded-lg bg-muted/10">
-                            {bapCategoryOptions.map(svc => (
-                              <label key={svc} className="flex items-center gap-2 cursor-pointer py-1 px-1 rounded hover:bg-muted/40 transition-colors">
-                                <Checkbox
-                                  checked={bapSubServices.includes(svc)}
-                                  onCheckedChange={() => toggleBapService(svc)}
-                                  className="h-3.5 w-3.5"
-                                />
-                                <span className="text-xs">{svc}</span>
-                              </label>
-                            ))}
-                          </div>
-                          <div className="flex gap-2 mt-2">
-                            <Input
-                              placeholder="Add a custom service…"
-                              value={bapCustomService}
-                              onChange={e => setBapCustomService(e.target.value)}
-                              onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addBapCustom())}
-                              className="text-sm h-8"
-                            />
-                            <Button type="button" size="sm" variant="outline" onClick={addBapCustom} className="h-8 text-xs">Add</Button>
-                          </div>
-                          {bapSubServices.filter(s => !bapCategoryOptions.includes(s)).length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {bapSubServices.filter(s => !bapCategoryOptions.includes(s)).map(s => (
-                                <Badge key={s} variant="secondary" className="text-xs cursor-pointer" onClick={() => toggleBapService(s)}>{s} ×</Badge>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Bio */}
-                      <div>
-                        <label className="text-sm font-medium">Professional Bio (optional)</label>
-                        <Textarea
-                          className="mt-1 text-sm"
-                          rows={3}
-                          placeholder="Briefly describe your experience, certifications, and what makes you stand out…"
-                          value={bapBio}
-                          onChange={e => setBapBio(e.target.value)}
-                        />
-                      </div>
-
-                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
-                        <strong>What happens next:</strong> Your Book-A-Pro profile will be created automatically. Members can discover and book your services through the NFGN marketplace. You can update your profile anytime from your back office.
-                      </div>
-                    </div>
-                  )}
-                </div>
-
                 <Button type="submit" className="w-full h-12" disabled={registerMutation.isPending}>
                   {registerMutation.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating Account...</> : "Create Free Account"}
                 </Button>

@@ -448,15 +448,16 @@ export function RegisterNewProMemberPage() {
           <section>
             <div className="flex items-center gap-2 mb-4">
               <div className="h-7 w-7 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center flex-shrink-0">5</div>
-              <h2 className="text-xl font-serif font-bold">Book A Pro Provider <span className="text-base font-normal text-muted-foreground">(optional)</span></h2>
+              <h2 className="text-xl font-serif font-bold">Want To Be In Book-A-Pro? <span className="text-base font-normal text-muted-foreground">(optional)</span></h2>
             </div>
             <Card className="border-primary/20">
               <CardContent className="pt-5 pb-5 space-y-4">
+                <p className="text-sm text-muted-foreground">As a Pro Member you can list professional services on the NFGN marketplace and start receiving bookings from members.</p>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-semibold text-sm">Register as a Book A Pro service provider?</p>
+                    <p className="font-semibold text-sm">Activate Book-A-Pro Provider Services</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      If this member offers professional services (wellness, coaching, consulting, etc.), enable this to list them in our directory.
+                      Enable this to list professional services (wellness, coaching, consulting, etc.) in the NFGN directory.
                     </p>
                   </div>
                   <Switch checked={isBAPProvider} onCheckedChange={setIsBAPProvider} />

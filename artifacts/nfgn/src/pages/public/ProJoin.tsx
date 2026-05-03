@@ -653,13 +653,17 @@ export function ProJoin() {
 
                 {/* Book-A-Pro */}
                 <div className="rounded-xl border-2 border-dashed border-primary/30 overflow-hidden">
+                  <div className="px-4 pt-4 pb-1">
+                    <p className="font-bold text-base" style={{ color: "#C9A84C" }}>Want To Be In Book-A-Pro?</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 mb-3">As a Pro Member you can list your professional services on the NFGN marketplace and start receiving bookings.</p>
+                  </div>
                   <div className="flex items-center justify-between px-4 py-3 bg-primary/5">
                     <div className="flex items-center gap-3">
                       <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                         <Briefcase className="h-4 w-4 text-primary" />
                       </div>
                       <div>
-                        <p className="font-semibold text-sm">Are you a Professional? Activate Book-A-Pro</p>
+                        <p className="font-semibold text-sm">Activate Book-A-Pro Provider Services</p>
                         <p className="text-xs text-muted-foreground">List your professional services on the NFGN marketplace</p>
                       </div>
                     </div>

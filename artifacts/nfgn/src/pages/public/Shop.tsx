@@ -535,6 +535,113 @@ function CategorySection({
   );
 }
 
+const PRO_STORE_SECTIONS = [
+  {
+    key: "NFGN Member Trips",
+    slug: "member-trips",
+    emoji: "✈️",
+    label: "Member Trips",
+    color: "#38bdf8",
+    colorDim: "rgba(56,189,248,0.14)",
+    colorBorder: "rgba(56,189,248,0.35)",
+    gradient: "linear-gradient(135deg, #020f1a 0%, #04192a 55%, #020c14 100%)",
+    topBorder: "#38bdf8",
+    description: "Exclusive travel experiences, curated destination retreats, and group excursions organized for NFGN Pro Members. Travel the world with your network.",
+    tags: ["Destination Retreats", "Group Trips", "Member Getaways", "VIP Experiences"],
+  },
+  {
+    key: "Medical Benefits & Packages",
+    slug: "medical-benefits",
+    emoji: "🏥",
+    label: "Medical Benefits",
+    color: "#60a5fa",
+    colorDim: "rgba(96,165,250,0.14)",
+    colorBorder: "rgba(96,165,250,0.35)",
+    gradient: "linear-gradient(135deg, #020918 0%, #041225 55%, #020714 100%)",
+    topBorder: "#60a5fa",
+    description: "Comprehensive medical benefit packages, supplemental health coverage, and doctor-curated wellness programs available exclusively to NFGN Pro Members.",
+    tags: ["Health Coverage", "Medical Packages", "Wellness Programs", "Family Plans"],
+  },
+  {
+    key: "Naturopathic & Herbal",
+    slug: "naturopathic-herbal",
+    emoji: "🌿",
+    label: "Naturopathic",
+    color: "#2dd4bf",
+    colorDim: "rgba(45,212,191,0.14)",
+    colorBorder: "rgba(45,212,191,0.35)",
+    gradient: "linear-gradient(135deg, #020f0e 0%, #04201e 55%, #020c0b 100%)",
+    topBorder: "#2dd4bf",
+    description: "Premium naturopathic remedies, herbal supplements, and holistic health solutions sourced from trusted practitioners — curated for NFGN Pro Members.",
+    tags: ["Herbal Supplements", "Natural Remedies", "Holistic Health", "Pro Formulas"],
+  },
+  {
+    key: "Mental Health & Primary Care",
+    slug: "mental-health",
+    emoji: "🧠",
+    label: "Mental Health",
+    color: "#c084fc",
+    colorDim: "rgba(192,132,252,0.14)",
+    colorBorder: "rgba(192,132,252,0.35)",
+    gradient: "linear-gradient(135deg, #0c0218 0%, #160328 55%, #0a0115 100%)",
+    topBorder: "#c084fc",
+    description: "Mental wellness services, primary care packages, therapy resources, and stress management programs to support your complete health as a Pro Member.",
+    tags: ["Therapy Resources", "Primary Care", "Stress Management", "Wellness Support"],
+  },
+  {
+    key: "Health & Wellness",
+    slug: "health-wellness",
+    emoji: "💊",
+    label: "Health & Wellness",
+    color: "#fb923c",
+    colorDim: "rgba(251,146,60,0.14)",
+    colorBorder: "rgba(251,146,60,0.35)",
+    gradient: "linear-gradient(135deg, #180a02 0%, #271103 55%, #150802 100%)",
+    topBorder: "#fb923c",
+    description: "Curated health products, premium supplements, fitness programs, and lifestyle solutions to help Pro Members live and perform at their absolute best.",
+    tags: ["Premium Supplements", "Fitness Programs", "Lifestyle Products", "Vitality"],
+  },
+  {
+    key: "Exclusive Member Discounts",
+    slug: "member-discounts",
+    emoji: "💸",
+    label: "Discounts",
+    color: "#C9A84C",
+    colorDim: "rgba(201,168,76,0.14)",
+    colorBorder: "rgba(201,168,76,0.35)",
+    gradient: "linear-gradient(135deg, #130d00 0%, #1e1500 55%, #100b00 100%)",
+    topBorder: "#C9A84C",
+    description: "Special pricing, exclusive discounts, and Pro Member-only deals on premium products and services across the NFGN network. Save more. Earn more.",
+    tags: ["Member Pricing", "Exclusive Deals", "VIP Discounts", "Partner Savings"],
+  },
+  {
+    key: "General Exclusive",
+    slug: "general-exclusive",
+    emoji: "🔒",
+    label: "General Exclusive",
+    color: "#a78bfa",
+    colorDim: "rgba(167,139,250,0.14)",
+    colorBorder: "rgba(167,139,250,0.35)",
+    gradient: "linear-gradient(135deg, #0a0412 0%, #0f0820 55%, #080310 100%)",
+    topBorder: "#a78bfa",
+    description: "A curated selection of premium products, limited releases, and exclusive offerings available only to verified NFGN Pro Members.",
+    tags: ["Limited Releases", "Premium Picks", "Pro Only", "Curated Selection"],
+  },
+] as const;
+
+function getProCatIcon(key: string, size = 18): React.ReactNode {
+  const s = { size };
+  switch (key) {
+    case "NFGN Member Trips":           return <Plane {...s} />;
+    case "Medical Benefits & Packages": return <Stethoscope {...s} />;
+    case "Naturopathic & Herbal":       return <Leaf {...s} />;
+    case "Mental Health & Primary Care":return <Brain {...s} />;
+    case "Health & Wellness":           return <Heart {...s} />;
+    case "Exclusive Member Discounts":  return <Tag {...s} />;
+    default:                            return <Crown {...s} />;
+  }
+}
+
 export function Shop() {
   const search = useSearch();
   const fromAdmin = new URLSearchParams(search).get("from") === "admin";
@@ -1169,63 +1276,109 @@ export function Shop() {
       )}
 
       {/* ── PRO MEMBER EXCLUSIVE STORE ────────────────────────── */}
-      {/* Full section — visible to Pro Members when products exist */}
-      {isProMember && proExclusiveProducts.length > 0 && (
-        <div style={{ background: "linear-gradient(135deg, #0a0412 0%, #0f0820 50%, #080310 100%)", padding: "80px 0", borderTop: "3px solid #7c3aed", borderBottom: "3px solid #7c3aed", position: "relative", overflow: "hidden" }}>
-          <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(124,58,237,0.04) 39px, rgba(124,58,237,0.04) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(124,58,237,0.04) 39px, rgba(124,58,237,0.04) 40px)", pointerEvents: "none" }} />
-          <div style={{ position: "absolute", top: -100, right: "5%", width: 350, height: 350, borderRadius: "50%", background: "radial-gradient(circle, rgba(124,58,237,0.18), transparent 70%)", pointerEvents: "none" }} />
-          <div style={{ position: "absolute", bottom: -80, left: "4%", width: 250, height: 250, borderRadius: "50%", background: "radial-gradient(circle, rgba(124,58,237,0.10), transparent 70%)", pointerEvents: "none" }} />
+      {isProMember && (
+        <div id="pro-store">
+          {/* ── HERO / CATEGORY NAV HUB ── */}
+          <div style={{ background: "linear-gradient(160deg, #06020f 0%, #0d0520 50%, #050110 100%)", padding: "72px 0 60px", borderTop: "3px solid #7c3aed", position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(124,58,237,0.04) 39px, rgba(124,58,237,0.04) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(124,58,237,0.04) 39px, rgba(124,58,237,0.04) 40px)", pointerEvents: "none" }} />
+            <div style={{ position: "absolute", top: -120, right: "4%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(124,58,237,0.16), transparent 70%)", pointerEvents: "none" }} />
+            <div style={{ position: "absolute", bottom: -60, left: "6%", width: 240, height: 240, borderRadius: "50%", background: "radial-gradient(circle, rgba(56,189,248,0.08), transparent 70%)", pointerEvents: "none" }} />
 
-          <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto", position: "relative" }}>
-            {/* Header */}
-            <div style={{ marginBottom: 56 }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 16, background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.40)", padding: "6px 18px", borderRadius: 99 }}>
-                <Lock size={12} color="#a78bfa" />
-                <span style={{ color: "#a78bfa", fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>Pro Members Only</span>
+            <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto", position: "relative" }}>
+              {/* Badge + title */}
+              <div style={{ marginBottom: 40 }}>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 18, background: "rgba(124,58,237,0.18)", border: "1px solid rgba(124,58,237,0.45)", padding: "6px 18px", borderRadius: 99 }}>
+                  <Lock size={11} color="#a78bfa" />
+                  <span style={{ color: "#a78bfa", fontSize: 11, fontWeight: 800, letterSpacing: "0.22em", textTransform: "uppercase" }}>Pro Members Only</span>
+                </div>
+                <h2 style={{ color: "#fff", fontSize: "clamp(30px, 5vw, 52px)", fontWeight: 900, margin: "0 0 14px", fontFamily: "serif", lineHeight: 1.08 }}>
+                  Pro Member <span style={{ color: "#a78bfa" }}>Exclusive Store</span>
+                </h2>
+                <p style={{ color: "#9a9a9a", fontSize: 16, maxWidth: 640, margin: 0, lineHeight: 1.65 }}>
+                  Welcome back, <strong style={{ color: "#c4b5fd" }}>{currentUser?.firstName ?? "Pro Member"}</strong>. Your exclusive access unlocks 7 premium benefit categories — trips, medical packages, naturopathic care, mental wellness, and more — available only to verified NFGN Pro Members.
+                </p>
               </div>
-              <h2 style={{ color: "#fff", fontSize: "clamp(28px, 5vw, 48px)", fontWeight: 900, margin: "0 0 12px", fontFamily: "serif", lineHeight: 1.1 }}>
-                Pro Member <span style={{ color: "#a78bfa" }}>Exclusive Store</span>
-              </h2>
-              <p style={{ color: "#9a9a9a", fontSize: 16, maxWidth: 600, margin: 0, lineHeight: 1.6 }}>
-                Welcome, {currentUser?.firstName ?? "Pro Member"}. These premium benefits — trips, medical packages, naturopathic services, and exclusive discounts — are reserved exclusively for verified NFGN Pro Members.
-              </p>
-              <div style={{ display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
-                {[
-                  { icon: <Plane size={11} />, label: "Member Trips" },
-                  { icon: <Stethoscope size={11} />, label: "Medical Benefits" },
-                  { icon: <Pill size={11} />, label: "Naturopathic & Herbal" },
-                  { icon: <Brain size={11} />, label: "Mental Health" },
-                  { icon: <Tag size={11} />, label: "Exclusive Discounts" },
-                  { icon: <Crown size={11} />, label: "Pro Perks" },
-                ].map(tag => (
-                  <span key={tag.label} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.30)", color: "#a78bfa", fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 99, letterSpacing: "0.04em" }}>
-                    {tag.icon} {tag.label}
-                  </span>
+
+              {/* 7 category nav cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+                {PRO_STORE_SECTIONS.map(cat => (
+                  <a
+                    key={cat.key}
+                    href={`#pro-${cat.slug}`}
+                    onClick={e => { e.preventDefault(); document.getElementById(`pro-${cat.slug}`)?.scrollIntoView({ behavior: "smooth", block: "start" }); }}
+                    style={{ textDecoration: "none" }}
+                  >
+                    <div style={{
+                      background: cat.colorDim,
+                      border: `1.5px solid ${cat.colorBorder}`,
+                      borderRadius: 14,
+                      padding: "18px 12px",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: 10,
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      textAlign: "center",
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = cat.colorDim.replace("0.14", "0.24"); (e.currentTarget as HTMLDivElement).style.transform = "translateY(-3px)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = cat.colorDim; (e.currentTarget as HTMLDivElement).style.transform = "none"; }}
+                    >
+                      <div style={{ width: 44, height: 44, borderRadius: "50%", background: `rgba(${cat.color.replace("#","").match(/.{2}/g)?.map(h=>parseInt(h,16)).join(",")},0.18)`, display: "flex", alignItems: "center", justifyContent: "center", border: `1.5px solid ${cat.colorBorder}` }}>
+                        <span style={{ color: cat.color, display: "flex" }}>{getProCatIcon(cat.key, 20)}</span>
+                      </div>
+                      <span style={{ fontSize: 9, fontWeight: 800, color: cat.color, letterSpacing: "0.10em", textTransform: "uppercase", lineHeight: 1.3 }}>{cat.emoji} {cat.label}</span>
+                    </div>
+                  </a>
                 ))}
               </div>
             </div>
+          </div>
 
-            {/* Group products by proExclusiveCategory */}
-            {(() => {
-              const categories = Array.from(new Set(proExclusiveProducts.map(p => p.proExclusiveCategory ?? "General Exclusive")));
-              const catIcons: Record<string, React.ReactNode> = {
-                "NFGN Member Trips": <Plane size={15} />,
-                "Medical Benefits & Packages": <Stethoscope size={15} />,
-                "Naturopathic & Herbal": <Pill size={15} />,
-                "Mental Health & Primary Care": <Brain size={15} />,
-                "Health & Wellness": <Heart size={15} />,
-                "Exclusive Member Discounts": <Tag size={15} />,
-                "General Exclusive": <Crown size={15} />,
-              };
-              return categories.map(cat => {
-                const catProducts = proExclusiveProducts.filter(p => (p.proExclusiveCategory ?? "General Exclusive") === cat);
-                return (
-                  <div key={cat} style={{ marginBottom: 56 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
-                      <span style={{ color: "#a78bfa", display: "flex" }}>{catIcons[cat] ?? <Crown size={15} />}</span>
-                      <h3 style={{ color: "#a78bfa", fontSize: 13, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", margin: 0 }}>{cat}</h3>
-                      <div style={{ flex: 1, height: 1, background: "rgba(124,58,237,0.25)" }} />
+          {/* ── 7 INDIVIDUAL CATEGORY SECTIONS ── */}
+          {PRO_STORE_SECTIONS.map(cat => {
+            const catProducts = proExclusiveProducts.filter(p => (p.proExclusiveCategory ?? "General Exclusive") === cat.key);
+            return (
+              <div
+                key={cat.key}
+                id={`pro-${cat.slug}`}
+                style={{ background: cat.gradient, padding: "72px 0", borderTop: `2px solid ${cat.colorBorder}`, position: "relative", overflow: "hidden" }}
+              >
+                {/* Grid overlay */}
+                <div style={{ position: "absolute", inset: 0, backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 39px, ${cat.colorBorder.replace("0.35","0.04")} 39px, ${cat.colorBorder.replace("0.35","0.04")} 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, ${cat.colorBorder.replace("0.35","0.04")} 39px, ${cat.colorBorder.replace("0.35","0.04")} 40px)`, pointerEvents: "none" }} />
+                <div style={{ position: "absolute", top: -80, right: "5%", width: 280, height: 280, borderRadius: "50%", background: `radial-gradient(circle, ${cat.colorDim}, transparent 70%)`, pointerEvents: "none" }} />
+
+                <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto", position: "relative" }}>
+                  {/* Section header */}
+                  <div style={{ marginBottom: 44 }}>
+                    <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 16, background: cat.colorDim, border: `1px solid ${cat.colorBorder}`, padding: "6px 16px", borderRadius: 99 }}>
+                      <span style={{ color: cat.color, display: "flex" }}>{getProCatIcon(cat.key, 12)}</span>
+                      <span style={{ color: cat.color, fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>{cat.emoji} {cat.key}</span>
                     </div>
+                    <h3 style={{ color: "#fff", fontSize: "clamp(24px, 4vw, 38px)", fontWeight: 900, margin: "0 0 12px", fontFamily: "serif", lineHeight: 1.15 }}>
+                      {cat.key === "NFGN Member Trips" && <>Travel the World. <span style={{ color: cat.color }}>Together.</span></>}
+                      {cat.key === "Medical Benefits & Packages" && <>Your Health. <span style={{ color: cat.color }}>Covered.</span></>}
+                      {cat.key === "Naturopathic & Herbal" && <>Nature's Best. <span style={{ color: cat.color }}>Curated for You.</span></>}
+                      {cat.key === "Mental Health & Primary Care" && <>Mind & Body. <span style={{ color: cat.color }}>Fully Supported.</span></>}
+                      {cat.key === "Health & Wellness" && <>Live Well. <span style={{ color: cat.color }}>Perform Better.</span></>}
+                      {cat.key === "Exclusive Member Discounts" && <>Save More. <span style={{ color: cat.color }}>Earn More.</span></>}
+                      {cat.key === "General Exclusive" && <>Premium Access. <span style={{ color: cat.color }}>Exclusively Yours.</span></>}
+                    </h3>
+                    <p style={{ color: "#9a9a9a", fontSize: 15, maxWidth: 580, margin: "0 0 20px", lineHeight: 1.65 }}>
+                      {cat.description}
+                    </p>
+                    {/* Tags */}
+                    <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
+                      {cat.tags.map(tag => (
+                        <span key={tag} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: cat.colorDim, border: `1px solid ${cat.colorBorder}`, color: cat.color, fontSize: 11, fontWeight: 700, padding: "4px 11px", borderRadius: 99, letterSpacing: "0.05em" }}>
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Products or Coming Soon */}
+                  {catProducts.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                       {catProducts.map(p => (
                         <ProExclusiveCard
@@ -1236,11 +1389,23 @@ export function Shop() {
                         />
                       ))}
                     </div>
-                  </div>
-                );
-              });
-            })()}
-          </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                      {[0, 1, 2].map(i => (
+                        <div key={i} style={{ borderRadius: 16, height: 220, background: cat.colorDim, border: `1.5px dashed ${cat.colorBorder}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
+                          <div style={{ width: 52, height: 52, borderRadius: "50%", background: `rgba(${cat.color.replace("#","").match(/.{2}/g)?.map(h=>parseInt(h,16)).join(",")},0.12)`, display: "flex", alignItems: "center", justifyContent: "center", border: `1.5px solid ${cat.colorBorder}` }}>
+                            <span style={{ color: cat.color, opacity: 0.5, display: "flex" }}>{getProCatIcon(cat.key, 22)}</span>
+                          </div>
+                          <p style={{ color: cat.color, fontWeight: 800, fontSize: 13, margin: 0, opacity: 0.7, letterSpacing: "0.05em" }}>Coming Soon</p>
+                          <p style={{ color: "#6b7280", fontSize: 11, margin: 0, textAlign: "center", maxWidth: 160, lineHeight: 1.5 }}>Exclusive products are being added to this section.</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 

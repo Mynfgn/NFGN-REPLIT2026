@@ -410,7 +410,7 @@ export function AdminProductsPage() {
     if (isDigitalView && !p.isDownloadable) return false;
     if (isSportsView && !p.isSports) return false;
     if (isNonProfitView && !p.isNonProfit) return false;
-    if (isWeddingView && !p.isWeddingRegistry) return false;
+    if (isWeddingView && !p.isWeddingRegistry && !(p as any).isHolidayRegistry) return false;
     if (isDonationView && !p.isDonation && !p.isChurchDonation) return false;
     return (
       p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -497,9 +497,9 @@ export function AdminProductsPage() {
                 <span className="text-2xl">🎉</span>
                 <h1 className="text-3xl font-serif font-bold text-primary">Special Events Registry</h1>
               </div>
-              <p className="text-muted-foreground">Manage special events registry items — gifts, experiences, funds, and custom products for weddings, birthdays, graduations, and every life milestone.</p>
+              <p className="text-muted-foreground">Manage special events registry items — gifts, experiences, funds, and custom products for weddings, honeymoons, anniversaries, birthdays, graduations, holidays, and every life milestone.</p>
               <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full" style={{ background: "rgba(244,114,182,0.12)", color: "#ec4899", border: "1px solid rgba(244,114,182,0.3)" }}>
-                🎉 Showing Special Events Registry products only · These appear under the Special Events section in the Shop
+                🎉 Showing Special Events Registry products only · Includes wedding, anniversary, holiday &amp; all occasion products
               </div>
             </>
           ) : isDonationView ? (
@@ -612,7 +612,7 @@ export function AdminProductsPage() {
                         : isNonProfitView
                         ? "No non-profit products yet. Click \"Add Non-Profit Product\" to add fundraisers, donation drives, and charity campaigns."
                         : isWeddingView
-                        ? "No wedding registry items yet. Click \"Add Registry Item\" to add gifts, experiences, honeymoon funds, and more."
+                        ? "No special events items yet. Click \"Add Registry Item\" to add gifts, experiences, holiday products, anniversary funds, and more."
                         : isDonationView
                         ? "No donation products yet. Click \"Add Donation Product\" to create a church donation, general donation, or sponsorship."
                         : "No products found. Click \"Add Product\" to get started."

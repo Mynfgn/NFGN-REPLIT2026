@@ -661,7 +661,7 @@ export function AdminProductsPage() {
                           {p.isSports && <Badge className="text-xs px-1.5 py-0 gap-0.5" style={{ background: "#C9A84C", color: "#000" }}>🏆 Sports</Badge>}
                           {p.isDownloadable && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-blue-700 border-blue-200"><Download className="h-2.5 w-2.5" />Digital</Badge>}
                           {p.isNonProfit && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-indigo-700 border-indigo-200">🤝 Non-Profit</Badge>}
-                          {p.isWeddingRegistry && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-pink-600 border-pink-200">💍 Wedding Registry</Badge>}
+                          {p.isWeddingRegistry && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-pink-600 border-pink-200">🎉 Special Events Registry</Badge>}
                           {(p as any).isHolidayRegistry && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-amber-600 border-amber-200">🎄 Holiday</Badge>}
                           {p.isChurchDonation && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-amber-700 border-amber-300">⛪ Church</Badge>}
                           {p.isDonation && !p.isChurchDonation && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-amber-600 border-amber-200">🎁 Donation</Badge>}

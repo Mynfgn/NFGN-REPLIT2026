@@ -97,7 +97,7 @@ router.get("/products/admin-all", requireAdmin, async (req, res): Promise<void> 
 });
 
 router.post("/products", requireAdmin, async (req, res): Promise<void> => {
-  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize, isDonation, donationRecipientType, donationRecipientName, donationMinAmount, isChurchDonation, churchName, giftCharityPercent } = req.body;
+  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isHolidayRegistry, holidayCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize, isDonation, donationRecipientType, donationRecipientName, donationMinAmount, isChurchDonation, churchName, giftCharityPercent } = req.body;
   if (!name || !slug || !description || price == null) {
     res.status(400).json({ error: "Missing required fields" });
     return;
@@ -133,6 +133,8 @@ router.post("/products", requireAdmin, async (req, res): Promise<void> => {
     nonProfitCategory: isNonProfit && nonProfitCategory ? nonProfitCategory : undefined,
     isWeddingRegistry: isWeddingRegistry ?? false,
     weddingRegistryCategory: isWeddingRegistry && weddingRegistryCategory ? weddingRegistryCategory : undefined,
+    isHolidayRegistry: isHolidayRegistry ?? false,
+    holidayCategory: isHolidayRegistry && holidayCategory ? holidayCategory : undefined,
     isDownloadable: isDownloadable ?? false,
     downloadUrl: downloadUrl ?? undefined,
     downloadFileName: downloadFileName ?? undefined,
@@ -208,7 +210,7 @@ router.patch("/products/:id", requireAdmin, async (req, res): Promise<void> => {
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
   const updates: Partial<typeof productsTable.$inferInsert> = {};
-  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize, isDonation, donationRecipientType, donationRecipientName, donationMinAmount, isChurchDonation, churchName, giftCharityPercent } = req.body;
+  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isHolidayRegistry, holidayCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize, isDonation, donationRecipientType, donationRecipientName, donationMinAmount, isChurchDonation, churchName, giftCharityPercent } = req.body;
   if (name) updates.name = name;
   if (slug) updates.slug = slug;
   if (description) updates.description = description;
@@ -242,6 +244,8 @@ router.patch("/products/:id", requireAdmin, async (req, res): Promise<void> => {
   if (nonProfitCategory !== undefined) updates.nonProfitCategory = isNonProfit ? (nonProfitCategory ?? undefined) : undefined;
   if (isWeddingRegistry !== undefined) updates.isWeddingRegistry = isWeddingRegistry;
   if (weddingRegistryCategory !== undefined) updates.weddingRegistryCategory = isWeddingRegistry ? (weddingRegistryCategory ?? undefined) : undefined;
+  if (isHolidayRegistry !== undefined) updates.isHolidayRegistry = isHolidayRegistry;
+  if (holidayCategory !== undefined) updates.holidayCategory = isHolidayRegistry ? (holidayCategory ?? undefined) : undefined;
   if (isDownloadable !== undefined) updates.isDownloadable = isDownloadable;
   if (downloadUrl !== undefined) updates.downloadUrl = downloadUrl ?? undefined;
   if (downloadFileName !== undefined) updates.downloadFileName = downloadFileName ?? undefined;

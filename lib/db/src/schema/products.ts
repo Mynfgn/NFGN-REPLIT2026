@@ -51,10 +51,15 @@ export const productsTable = pgTable("products", {
   // Non-profit sub-category (only relevant when isNonProfit = true)
   nonProfitCategory: text("non_profit_category"),
 
-  // Wedding Registry product
+  // Wedding & Honeymoon Registry product
   isWeddingRegistry: boolean("is_wedding_registry").notNull().default(false),
-  // Wedding registry sub-category (only relevant when isWeddingRegistry = true)
+  // Wedding & Honeymoon registry sub-category (only relevant when isWeddingRegistry = true)
   weddingRegistryCategory: text("wedding_registry_category"),
+
+  // Holiday & Special Occasions product
+  isHolidayRegistry: boolean("is_holiday_registry").notNull().default(false),
+  // Holiday / special-occasion sub-category (only relevant when isHolidayRegistry = true)
+  holidayCategory: text("holiday_category"),
 
   // Downloadable product (e-books, music, images, etc.)
   isDownloadable: boolean("is_downloadable").notNull().default(false),

@@ -55,6 +55,8 @@ interface Product {
   nonProfitCategory: string | null;
   isWeddingRegistry: boolean;
   weddingRegistryCategory: string | null;
+  isHolidayRegistry: boolean;
+  holidayCategory: string | null;
   isDownloadable: boolean;
   downloadUrl: string | null;
   downloadFileName: string | null;
@@ -101,9 +103,28 @@ const SPECIAL_EVENTS_CATEGORIES = [
   "Retreat & Getaway",
   "Bar / Bat Mitzvah",
   "Memorial & Celebration of Life",
-  "Holiday Celebration",
   "General Gift Fund",
   "Custom Gift Item",
+] as const;
+
+const HOLIDAY_OCCASIONS_CATEGORIES = [
+  "Christmas",
+  "Hanukkah",
+  "Kwanzaa",
+  "New Year's Celebration",
+  "Valentine's Day",
+  "Mother's Day",
+  "Father's Day",
+  "Easter",
+  "Thanksgiving",
+  "Halloween",
+  "Eid Celebration",
+  "Diwali",
+  "Independence Day / 4th of July",
+  "St. Patrick's Day",
+  "General Holiday Gift",
+  "Special Occasion",
+  "Seasonal Gift Basket",
 ] as const;
 
 const SPORTS_CATEGORIES = [
@@ -140,6 +161,8 @@ const EMPTY_FORM = {
   nonProfitCategory: "",
   isWeddingRegistry: false,
   weddingRegistryCategory: "",
+  isHolidayRegistry: false,
+  holidayCategory: "",
   isDownloadable: false,
   downloadUrl: "",
   downloadFileName: "",
@@ -260,6 +283,8 @@ export function AdminProductsPage() {
       nonProfitCategory: p.nonProfitCategory ?? "",
       isWeddingRegistry: p.isWeddingRegistry ?? false,
       weddingRegistryCategory: p.weddingRegistryCategory ?? "",
+      isHolidayRegistry: (p as any).isHolidayRegistry ?? false,
+      holidayCategory: (p as any).holidayCategory ?? "",
       isDownloadable: p.isDownloadable ?? false,
       downloadUrl: p.downloadUrl ?? "",
       downloadFileName: p.downloadFileName ?? "",
@@ -322,6 +347,8 @@ export function AdminProductsPage() {
         nonProfitCategory: form.isNonProfit ? (form.nonProfitCategory || null) : null,
         isWeddingRegistry: form.isWeddingRegistry,
         weddingRegistryCategory: form.isWeddingRegistry ? (form.weddingRegistryCategory || null) : null,
+        isHolidayRegistry: form.isHolidayRegistry,
+        holidayCategory: form.isHolidayRegistry ? (form.holidayCategory || null) : null,
         isDownloadable: form.isDownloadable,
         downloadUrl: form.downloadUrl || null,
         downloadFileName: form.downloadFileName || null,
@@ -634,7 +661,8 @@ export function AdminProductsPage() {
                           {p.isSports && <Badge className="text-xs px-1.5 py-0 gap-0.5" style={{ background: "#C9A84C", color: "#000" }}>🏆 Sports</Badge>}
                           {p.isDownloadable && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-blue-700 border-blue-200"><Download className="h-2.5 w-2.5" />Digital</Badge>}
                           {p.isNonProfit && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-indigo-700 border-indigo-200">🤝 Non-Profit</Badge>}
-                          {p.isWeddingRegistry && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-pink-600 border-pink-200">🎉 Special Events</Badge>}
+                          {p.isWeddingRegistry && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-pink-600 border-pink-200">💍 Wedding Registry</Badge>}
+                          {(p as any).isHolidayRegistry && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-amber-600 border-amber-200">🎄 Holiday</Badge>}
                           {p.isChurchDonation && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-amber-700 border-amber-300">⛪ Church</Badge>}
                           {p.isDonation && !p.isChurchDonation && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-amber-600 border-amber-200">🎁 Donation</Badge>}
                           {p.dollarCreditEligible && (
@@ -965,7 +993,7 @@ export function AdminProductsPage() {
               )}
             </div>
 
-            {/* Special Events Registry */}
+            {/* Wedding & Honeymoon Registry */}
             <div className="rounded-lg p-4 border-2 space-y-3" style={{ borderColor: "#ec489960", background: "#ec489906" }}>
               <div className="flex items-start gap-3">
                 <Switch
@@ -975,10 +1003,10 @@ export function AdminProductsPage() {
                 />
                 <div>
                   <Label htmlFor="isWeddingRegistry" className="cursor-pointer font-semibold flex items-center gap-1.5">
-                    <span>🎉</span> Special Events Registry
+                    <span>💍</span> Wedding &amp; Honeymoon Registry
                   </Label>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Gifts, experiences, and funds for weddings, birthdays, graduations, Sweet 16s, baby showers, and every life milestone. This product will appear in the dedicated <strong>Special Events Registry</strong> section of the Shop.
+                    Gifts, experiences, and funds for weddings, honeymoons, birthdays, graduations, Sweet 16s, baby showers, and every life milestone. Appears in the <strong>Special Events Registry</strong> section of the Shop.
                   </p>
                 </div>
               </div>
@@ -1003,7 +1031,51 @@ export function AdminProductsPage() {
                     <p className="text-xs text-muted-foreground">Choose the occasion this gift or fund is intended for.</p>
                   </div>
                   <div className="text-xs rounded-lg px-3 py-2 font-medium" style={{ background: "rgba(236,72,153,0.10)", color: "#ec4899", border: "1px solid rgba(236,72,153,0.25)" }}>
-                    🎉 This product will be showcased under the Special Events Registry banner on the public Shop page.
+                    💍 This product will be showcased under the <strong>Wedding &amp; Honeymoon Registry</strong> banner on the public Shop page.
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Holiday & Special Occasions */}
+            <div className="rounded-lg p-4 border-2 space-y-3" style={{ borderColor: "#f59e0b60", background: "#f59e0b06" }}>
+              <div className="flex items-start gap-3">
+                <Switch
+                  checked={form.isHolidayRegistry}
+                  onCheckedChange={v => setForm(f => ({ ...f, isHolidayRegistry: v, holidayCategory: v ? f.holidayCategory : "" }))}
+                  id="isHolidayRegistry"
+                />
+                <div>
+                  <Label htmlFor="isHolidayRegistry" className="cursor-pointer font-semibold flex items-center gap-1.5">
+                    <span>🎄</span> Holiday &amp; Special Occasions
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Seasonal gifts, holiday bundles, and special-occasion products — Christmas, Hanukkah, Kwanzaa, Valentine's Day, Mother's Day, Eid, Diwali, and more. Appears in the <strong>Holiday &amp; Special Occasions</strong> section of the Shop.
+                  </p>
+                </div>
+              </div>
+              {form.isHolidayRegistry && (
+                <div className="space-y-3 pt-1 border-t border-dashed" style={{ borderColor: "rgba(245,158,11,0.3)" }}>
+                  <div className="space-y-1.5">
+                    <Label>Holiday / Occasion Type <span className="text-destructive">*</span></Label>
+                    <Select
+                      value={form.holidayCategory || "none"}
+                      onValueChange={v => setForm(f => ({ ...f, holidayCategory: v === "none" ? "" : v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select the holiday or occasion" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— Select Holiday / Occasion —</SelectItem>
+                        {HOLIDAY_OCCASIONS_CATEGORIES.map(cat => (
+                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">Choose the holiday or special occasion this product is for.</p>
+                  </div>
+                  <div className="text-xs rounded-lg px-3 py-2 font-medium" style={{ background: "rgba(245,158,11,0.10)", color: "#d97706", border: "1px solid rgba(245,158,11,0.30)" }}>
+                    🎄 This product will be showcased under the <strong>Holiday &amp; Special Occasions</strong> banner on the public Shop page.
                   </div>
                 </div>
               )}

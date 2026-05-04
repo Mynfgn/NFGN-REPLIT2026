@@ -1036,54 +1036,6 @@ export function Shop() {
         </div>
       )}
 
-      {/* ── HOLIDAY & SPECIAL OCCASIONS ───────────────────── */}
-      {holidayProducts.length > 0 && (
-        <div style={{ background: "linear-gradient(135deg, #fffbeb 0%, #fef3c7 50%, #fffbeb 100%)", padding: "72px 0", borderTop: "3px solid #d97706", borderBottom: "3px solid #d97706", position: "relative", overflow: "hidden" }}>
-          <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(217,119,6,0.03) 39px, rgba(217,119,6,0.03) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(217,119,6,0.03) 39px, rgba(217,119,6,0.03) 40px)", pointerEvents: "none" }} />
-          <div style={{ position: "absolute", top: -60, right: "10%", width: 260, height: 260, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,168,76,0.15), transparent 70%)", pointerEvents: "none" }} />
-          <div style={{ position: "absolute", bottom: -50, left: "8%", width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, rgba(217,119,6,0.10), transparent 70%)", pointerEvents: "none" }} />
-
-          <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto", position: "relative" }}>
-            <div style={{ marginBottom: 48 }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 16, background: "rgba(217,119,6,0.10)", border: "1px solid rgba(217,119,6,0.35)", padding: "6px 16px", borderRadius: 99 }}>
-                <Star size={13} color="#d97706" />
-                <span style={{ color: "#d97706", fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>HOLIDAY &amp; SPECIAL OCCASIONS</span>
-              </div>
-              <h2 style={{ color: "#1a1a1a", fontSize: "clamp(28px, 5vw, 44px)", fontWeight: 900, margin: "0 0 12px", fontFamily: "serif", lineHeight: 1.1 }}>
-                Season of Giving. <span style={{ color: "#d97706" }}>Shop the Holidays.</span>
-              </h2>
-              <p style={{ color: "#6b7280", fontSize: 16, maxWidth: 620, margin: 0 }}>
-                Curated gifts, bundles, and seasonal products for every holiday and special occasion — Christmas, Hanukkah, Kwanzaa, Valentine's Day, Mother's Day, Eid, Diwali, and more. The perfect gift is always in season.
-              </p>
-              <div style={{ display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
-                {[
-                  { icon: <Snowflake size={11} />, label: "Christmas & Hanukkah" },
-                  { icon: <Sun size={11} />, label: "Eid & Diwali" },
-                  { icon: <Heart size={11} />, label: "Valentine's & Mother's Day" },
-                  { icon: <Flower2 size={11} />, label: "Easter & Thanksgiving" },
-                  { icon: <PartyPopper size={11} />, label: "Kwanzaa & New Year's" },
-                  { icon: <Gift size={11} />, label: "Seasonal Gift Baskets" },
-                ].map(tag => (
-                  <span key={tag.label} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(217,119,6,0.08)", border: "1px solid rgba(217,119,6,0.25)", color: "#d97706", fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 99, letterSpacing: "0.04em" }}>
-                    {tag.icon} {tag.label}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {holidayProducts.map(p => (
-                <HolidayProductCard
-                  key={p.id}
-                  product={p}
-                  onAdd={handleAddToCart}
-                  adding={addingId === p.id}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* ── ZONE 2: WHITE — All Products ─────────────────── */}
       <div id="products" style={{ background: GREY_50, padding: "72px 0" }}>
         <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto" }}>
@@ -1151,6 +1103,54 @@ export function Shop() {
           )}
         </div>
       </div>
+
+      {/* ── HOLIDAY & SPECIAL OCCASIONS ───────────────────── */}
+      {holidayProducts.length > 0 && (
+        <div style={{ background: "linear-gradient(135deg, #fffbeb 0%, #fef3c7 50%, #fffbeb 100%)", padding: "72px 0", borderTop: "3px solid #d97706", borderBottom: "3px solid #d97706", position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(217,119,6,0.03) 39px, rgba(217,119,6,0.03) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(217,119,6,0.03) 39px, rgba(217,119,6,0.03) 40px)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", top: -60, right: "10%", width: 260, height: 260, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,168,76,0.15), transparent 70%)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", bottom: -50, left: "8%", width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, rgba(217,119,6,0.10), transparent 70%)", pointerEvents: "none" }} />
+
+          <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto", position: "relative" }}>
+            <div style={{ marginBottom: 48 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 16, background: "rgba(217,119,6,0.10)", border: "1px solid rgba(217,119,6,0.35)", padding: "6px 16px", borderRadius: 99 }}>
+                <Star size={13} color="#d97706" />
+                <span style={{ color: "#d97706", fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>HOLIDAY &amp; SPECIAL OCCASIONS</span>
+              </div>
+              <h2 style={{ color: "#1a1a1a", fontSize: "clamp(28px, 5vw, 44px)", fontWeight: 900, margin: "0 0 12px", fontFamily: "serif", lineHeight: 1.1 }}>
+                Season of Giving. <span style={{ color: "#d97706" }}>Shop the Holidays.</span>
+              </h2>
+              <p style={{ color: "#6b7280", fontSize: 16, maxWidth: 620, margin: 0 }}>
+                Curated gifts, bundles, and seasonal products for every holiday and special occasion — Christmas, Hanukkah, Kwanzaa, Valentine's Day, Mother's Day, Eid, Diwali, and more. The perfect gift is always in season.
+              </p>
+              <div style={{ display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
+                {[
+                  { icon: <Snowflake size={11} />, label: "Christmas & Hanukkah" },
+                  { icon: <Sun size={11} />, label: "Eid & Diwali" },
+                  { icon: <Heart size={11} />, label: "Valentine's & Mother's Day" },
+                  { icon: <Flower2 size={11} />, label: "Easter & Thanksgiving" },
+                  { icon: <PartyPopper size={11} />, label: "Kwanzaa & New Year's" },
+                  { icon: <Gift size={11} />, label: "Seasonal Gift Baskets" },
+                ].map(tag => (
+                  <span key={tag.label} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(217,119,6,0.08)", border: "1px solid rgba(217,119,6,0.25)", color: "#d97706", fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 99, letterSpacing: "0.04em" }}>
+                    {tag.icon} {tag.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {holidayProducts.map(p => (
+                <HolidayProductCard
+                  key={p.id}
+                  product={p}
+                  onAdd={handleAddToCart}
+                  adding={addingId === p.id}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── ZONE 3: BLACK/GOLD — Become a Member CTA ─────────── */}
       <div

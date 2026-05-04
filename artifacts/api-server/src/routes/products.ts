@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, productsTable, categoriesTable, orderItemsTable } from "@workspace/db";
+import { db, productsTable, categoriesTable, orderItemsTable, usersTable } from "@workspace/db";
 import { eq, like, and, sql, count, desc, ne } from "drizzle-orm";
 import { requireAdmin } from "../lib/auth";
 
@@ -37,6 +37,8 @@ function formatProduct(p: typeof productsTable.$inferSelect, categoryName?: stri
     weddingRegistryCategory: p.weddingRegistryCategory ?? null,
     isHolidayRegistry: p.isHolidayRegistry,
     holidayCategory: p.holidayCategory ?? null,
+    isProExclusive: p.isProExclusive,
+    proExclusiveCategory: p.proExclusiveCategory ?? null,
     isDownloadable: p.isDownloadable,
     downloadUrl: p.downloadUrl ?? null,
     downloadFileName: p.downloadFileName ?? null,
@@ -59,6 +61,21 @@ router.get("/products", async (req, res): Promise<void> => {
   const search = req.query.search as string | undefined;
   const featured = req.query.featured === "true" ? true : req.query.featured === "false" ? false : undefined;
 
+  // Determine if the caller is a Pro Member or admin so we can include Pro-exclusive products
+  let callerIsProOrAdmin = false;
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith("Bearer ")) {
+    const { verifyToken } = await import("../lib/auth.js");
+    const payload = verifyToken(authHeader.slice(7));
+    if (payload) {
+      const [caller] = await db.select({ role: usersTable.role, isProMember: usersTable.isProMember })
+        .from(usersTable).where(eq(usersTable.id, payload.userId));
+      if (caller && (caller.isProMember || ["pro_member", "admin", "super_admin", "store_admin"].includes(caller.role))) {
+        callerIsProOrAdmin = true;
+      }
+    }
+  }
+
   const products = await db.select({
     product: productsTable,
     categoryName: categoriesTable.name,
@@ -66,6 +83,7 @@ router.get("/products", async (req, res): Promise<void> => {
     .leftJoin(categoriesTable, eq(productsTable.categoryId, categoriesTable.id))
     .where(and(
       eq(productsTable.status, "active"),
+      callerIsProOrAdmin ? undefined : eq(productsTable.isProExclusive, false),
       category ? eq(categoriesTable.slug, category) : undefined,
       search ? like(productsTable.name, `%${search}%`) : undefined,
       featured !== undefined ? eq(productsTable.featured, featured) : undefined,
@@ -74,7 +92,10 @@ router.get("/products", async (req, res): Promise<void> => {
     .offset(offset)
     .orderBy(desc(productsTable.featured), productsTable.name);
 
-  const [{ value: total }] = await db.select({ value: count() }).from(productsTable).where(eq(productsTable.status, "active"));
+  const [{ value: total }] = await db.select({ value: count() }).from(productsTable).where(and(
+    eq(productsTable.status, "active"),
+    callerIsProOrAdmin ? undefined : eq(productsTable.isProExclusive, false),
+  ));
 
   res.json({
     products: products.map(r => formatProduct(r.product, r.categoryName)),
@@ -99,7 +120,7 @@ router.get("/products/admin-all", requireAdmin, async (req, res): Promise<void> 
 });
 
 router.post("/products", requireAdmin, async (req, res): Promise<void> => {
-  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isHolidayRegistry, holidayCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize, isDonation, donationRecipientType, donationRecipientName, donationMinAmount, isChurchDonation, churchName, giftCharityPercent } = req.body;
+  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isHolidayRegistry, holidayCategory, isProExclusive, proExclusiveCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize, isDonation, donationRecipientType, donationRecipientName, donationMinAmount, isChurchDonation, churchName, giftCharityPercent } = req.body;
   if (!name || !slug || !description || price == null) {
     res.status(400).json({ error: "Missing required fields" });
     return;
@@ -137,6 +158,8 @@ router.post("/products", requireAdmin, async (req, res): Promise<void> => {
     weddingRegistryCategory: isWeddingRegistry && weddingRegistryCategory ? weddingRegistryCategory : undefined,
     isHolidayRegistry: isHolidayRegistry ?? false,
     holidayCategory: isHolidayRegistry && holidayCategory ? holidayCategory : undefined,
+    isProExclusive: isProExclusive ?? false,
+    proExclusiveCategory: isProExclusive && proExclusiveCategory ? proExclusiveCategory : undefined,
     isDownloadable: isDownloadable ?? false,
     downloadUrl: downloadUrl ?? undefined,
     downloadFileName: downloadFileName ?? undefined,
@@ -212,7 +235,7 @@ router.patch("/products/:id", requireAdmin, async (req, res): Promise<void> => {
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
   const updates: Partial<typeof productsTable.$inferInsert> = {};
-  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isHolidayRegistry, holidayCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize, isDonation, donationRecipientType, donationRecipientName, donationMinAmount, isChurchDonation, churchName, giftCharityPercent } = req.body;
+  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isHolidayRegistry, holidayCategory, isProExclusive, proExclusiveCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize, isDonation, donationRecipientType, donationRecipientName, donationMinAmount, isChurchDonation, churchName, giftCharityPercent } = req.body;
   if (name) updates.name = name;
   if (slug) updates.slug = slug;
   if (description) updates.description = description;
@@ -248,6 +271,8 @@ router.patch("/products/:id", requireAdmin, async (req, res): Promise<void> => {
   if (weddingRegistryCategory !== undefined) updates.weddingRegistryCategory = isWeddingRegistry ? (weddingRegistryCategory ?? undefined) : undefined;
   if (isHolidayRegistry !== undefined) updates.isHolidayRegistry = isHolidayRegistry;
   if (holidayCategory !== undefined) updates.holidayCategory = isHolidayRegistry ? (holidayCategory ?? undefined) : undefined;
+  if (isProExclusive !== undefined) updates.isProExclusive = isProExclusive;
+  if (proExclusiveCategory !== undefined) updates.proExclusiveCategory = isProExclusive ? (proExclusiveCategory ?? undefined) : undefined;
   if (isDownloadable !== undefined) updates.isDownloadable = isDownloadable;
   if (downloadUrl !== undefined) updates.downloadUrl = downloadUrl ?? undefined;
   if (downloadFileName !== undefined) updates.downloadFileName = downloadFileName ?? undefined;

@@ -89,6 +89,11 @@ export const productsTable = pgTable("products", {
   // Admin-adjustable per product. Does NOT apply to physical non-profit products.
   giftCharityPercent: numeric("gift_charity_percent", { precision: 5, scale: 2 }).notNull().default("80"),
 
+  // Pro Member Exclusive product — hidden from public; only visible/purchasable by Pro Members
+  isProExclusive: boolean("is_pro_exclusive").notNull().default(false),
+  // Sub-section within the Pro Member Exclusive store
+  proExclusiveCategory: text("pro_exclusive_category"),
+
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

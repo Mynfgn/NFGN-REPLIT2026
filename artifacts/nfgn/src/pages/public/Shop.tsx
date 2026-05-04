@@ -9,6 +9,7 @@ import {
   Users, TrendingUp, Star, Gift, Shield, Zap, ArrowLeft,
   Trophy, Ticket, Award, Utensils, Dumbbell, Heart, Gem,
   HandHeart, Coins, Church, Flower2, Sun, Snowflake, PartyPopper,
+  Lock, Plane, Stethoscope, Brain, Pill, Tag, Crown,
 } from "lucide-react";
 import { useCartStore } from "@/hooks/use-cart-store";
 import { useToast } from "@/hooks/use-toast";
@@ -43,6 +44,8 @@ type Product = {
   weddingRegistryCategory?: string | null;
   isHolidayRegistry?: boolean | null;
   holidayCategory?: string | null;
+  isProExclusive?: boolean | null;
+  proExclusiveCategory?: string | null;
   isDonation?: boolean | null;
   isChurchDonation?: boolean | null;
   donationMinAmount?: number | null;
@@ -539,9 +542,21 @@ export function Shop() {
   const { data, isLoading } = useListProducts({ limit: 100 });
   const { setCartOpen } = useCartStore();
   const { toast } = useToast();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, token } = useAuth();
   const qc = useQueryClient();
   const [addingId, setAddingId] = useState<number | null>(null);
+
+  // Fetch current user to know if they are a Pro Member
+  const { data: currentUser } = useQuery<{ role: string; isProMember: boolean; firstName: string }>({
+    queryKey: ["/api/auth/me"],
+    queryFn: () => customFetch("/api/auth/me").then(r => r.json()),
+    enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000,
+  });
+  const isProMember = isAuthenticated && !!currentUser && (
+    currentUser.isProMember || currentUser.role === "pro_member" ||
+    ["admin", "super_admin", "store_admin"].includes(currentUser.role)
+  );
   const [proPackages, setProPackages] = useState<ProPackage[]>([]);
   const [proPackagesLoading, setProPackagesLoading] = useState(true);
 
@@ -583,8 +598,9 @@ export function Shop() {
   const nonProfitProducts = products.filter((p) => p.isNonProfit && !p.isProPackage && !p.isSports && !p.isChurchDonation);
   const weddingProducts = products.filter((p) => p.isWeddingRegistry && !p.isProPackage && !p.isSports);
   const holidayProducts = products.filter((p) => p.isHolidayRegistry && !p.isProPackage && !p.isSports);
+  const proExclusiveProducts = products.filter((p) => p.isProExclusive && !p.isProPackage);
   const churchDonationProducts = products.filter((p) => p.isChurchDonation && !p.isProPackage);
-  const regularProducts = products.filter((p) => !p.isProPackage && !p.isSports && !p.isNonProfit && !p.isWeddingRegistry && !p.isHolidayRegistry && !p.isChurchDonation);
+  const regularProducts = products.filter((p) => !p.isProPackage && !p.isSports && !p.isNonProfit && !p.isWeddingRegistry && !p.isHolidayRegistry && !p.isProExclusive && !p.isChurchDonation);
 
   // Resolve which real product to use for a package card's "Add to Cart" button.
   // Prefer the admin-configured direct product link (productId); fall back to
@@ -1152,6 +1168,127 @@ export function Shop() {
         </div>
       )}
 
+      {/* ── PRO MEMBER EXCLUSIVE STORE ────────────────────────── */}
+      {/* Full section — visible to Pro Members when products exist */}
+      {isProMember && proExclusiveProducts.length > 0 && (
+        <div style={{ background: "linear-gradient(135deg, #0a0412 0%, #0f0820 50%, #080310 100%)", padding: "80px 0", borderTop: "3px solid #7c3aed", borderBottom: "3px solid #7c3aed", position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(124,58,237,0.04) 39px, rgba(124,58,237,0.04) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(124,58,237,0.04) 39px, rgba(124,58,237,0.04) 40px)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", top: -100, right: "5%", width: 350, height: 350, borderRadius: "50%", background: "radial-gradient(circle, rgba(124,58,237,0.18), transparent 70%)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", bottom: -80, left: "4%", width: 250, height: 250, borderRadius: "50%", background: "radial-gradient(circle, rgba(124,58,237,0.10), transparent 70%)", pointerEvents: "none" }} />
+
+          <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto", position: "relative" }}>
+            {/* Header */}
+            <div style={{ marginBottom: 56 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 16, background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.40)", padding: "6px 18px", borderRadius: 99 }}>
+                <Lock size={12} color="#a78bfa" />
+                <span style={{ color: "#a78bfa", fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>Pro Members Only</span>
+              </div>
+              <h2 style={{ color: "#fff", fontSize: "clamp(28px, 5vw, 48px)", fontWeight: 900, margin: "0 0 12px", fontFamily: "serif", lineHeight: 1.1 }}>
+                Pro Member <span style={{ color: "#a78bfa" }}>Exclusive Store</span>
+              </h2>
+              <p style={{ color: "#9a9a9a", fontSize: 16, maxWidth: 600, margin: 0, lineHeight: 1.6 }}>
+                Welcome, {currentUser?.firstName ?? "Pro Member"}. These premium benefits — trips, medical packages, naturopathic services, and exclusive discounts — are reserved exclusively for verified NFGN Pro Members.
+              </p>
+              <div style={{ display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
+                {[
+                  { icon: <Plane size={11} />, label: "Member Trips" },
+                  { icon: <Stethoscope size={11} />, label: "Medical Benefits" },
+                  { icon: <Pill size={11} />, label: "Naturopathic & Herbal" },
+                  { icon: <Brain size={11} />, label: "Mental Health" },
+                  { icon: <Tag size={11} />, label: "Exclusive Discounts" },
+                  { icon: <Crown size={11} />, label: "Pro Perks" },
+                ].map(tag => (
+                  <span key={tag.label} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.30)", color: "#a78bfa", fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 99, letterSpacing: "0.04em" }}>
+                    {tag.icon} {tag.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Group products by proExclusiveCategory */}
+            {(() => {
+              const categories = Array.from(new Set(proExclusiveProducts.map(p => p.proExclusiveCategory ?? "General Exclusive")));
+              const catIcons: Record<string, React.ReactNode> = {
+                "NFGN Member Trips": <Plane size={15} />,
+                "Medical Benefits & Packages": <Stethoscope size={15} />,
+                "Naturopathic & Herbal": <Pill size={15} />,
+                "Mental Health & Primary Care": <Brain size={15} />,
+                "Health & Wellness": <Heart size={15} />,
+                "Exclusive Member Discounts": <Tag size={15} />,
+                "General Exclusive": <Crown size={15} />,
+              };
+              return categories.map(cat => {
+                const catProducts = proExclusiveProducts.filter(p => (p.proExclusiveCategory ?? "General Exclusive") === cat);
+                return (
+                  <div key={cat} style={{ marginBottom: 56 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
+                      <span style={{ color: "#a78bfa", display: "flex" }}>{catIcons[cat] ?? <Crown size={15} />}</span>
+                      <h3 style={{ color: "#a78bfa", fontSize: 13, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", margin: 0 }}>{cat}</h3>
+                      <div style={{ flex: 1, height: 1, background: "rgba(124,58,237,0.25)" }} />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                      {catProducts.map(p => (
+                        <ProExclusiveCard
+                          key={p.id}
+                          product={p}
+                          onAdd={handleAddToCart}
+                          adding={addingId === p.id}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              });
+            })()}
+          </div>
+        </div>
+      )}
+
+      {/* Pro Member Exclusive — teaser for non-Pro visitors */}
+      {!isProMember && (
+        <div style={{ background: "linear-gradient(135deg, #0a0412 0%, #0f0820 60%, #080310 100%)", padding: "72px 0", borderTop: "2px solid rgba(124,58,237,0.40)", borderBottom: "2px solid rgba(124,58,237,0.40)", position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.35)", backdropFilter: "blur(2px)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", top: -80, right: "8%", width: 280, height: 280, borderRadius: "50%", background: "radial-gradient(circle, rgba(124,58,237,0.12), transparent 70%)", pointerEvents: "none" }} />
+          <div className="px-4 md:px-8" style={{ maxWidth: 680, margin: "0 auto", textAlign: "center", position: "relative" }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 20, background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.40)", padding: "7px 18px", borderRadius: 99 }}>
+              <Lock size={12} color="#a78bfa" />
+              <span style={{ color: "#a78bfa", fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>Members Only</span>
+            </div>
+            <h2 style={{ color: "#fff", fontSize: "clamp(26px, 4vw, 42px)", fontWeight: 900, margin: "0 0 16px", fontFamily: "serif", lineHeight: 1.15 }}>
+              Pro Member <span style={{ color: "#a78bfa" }}>Exclusive Store</span>
+            </h2>
+            <p style={{ color: "#9a9a9a", fontSize: 15, margin: "0 auto 28px", lineHeight: 1.65, maxWidth: 520 }}>
+              Pro Members unlock a private store with exclusive access to member trips, medical benefit packages, naturopathic & herbal products, mental health care, exclusive discounts, and premium health & wellness services — not available anywhere else.
+            </p>
+            {/* Lock icon grid */}
+            <div style={{ display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap", marginBottom: 32 }}>
+              {[
+                { icon: <Plane size={14} />, label: "Member Trips" },
+                { icon: <Stethoscope size={14} />, label: "Medical Packages" },
+                { icon: <Pill size={14} />, label: "Naturopathic" },
+                { icon: <Brain size={14} />, label: "Mental Health" },
+                { icon: <Tag size={14} />, label: "Exclusive Discounts" },
+                { icon: <Crown size={14} />, label: "Pro Perks" },
+              ].map(item => (
+                <div key={item.label} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, background: "rgba(124,58,237,0.10)", border: "1px solid rgba(124,58,237,0.22)", borderRadius: 12, padding: "12px 16px", minWidth: 80 }}>
+                  <span style={{ color: "#a78bfa", opacity: 0.55 }}>{item.icon}</span>
+                  <Lock size={9} color="rgba(124,58,237,0.5)" />
+                  <span style={{ color: "#665577", fontSize: 9, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>{item.label}</span>
+                </div>
+              ))}
+            </div>
+            <Link href="/pro-member">
+              <button style={{ background: "#7c3aed", color: "#fff", border: "none", padding: "14px 36px", borderRadius: 8, fontWeight: 800, fontSize: 15, cursor: "pointer", letterSpacing: "0.04em" }}>
+                Become a Pro Member
+              </button>
+            </Link>
+            <p style={{ color: "#554466", fontSize: 12, marginTop: 14 }}>
+              Already a Pro Member? <Link href="/login"><span style={{ color: "#a78bfa", cursor: "pointer" }}>Log in</span></Link> to unlock your exclusive store.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* ── ZONE 3: BLACK/GOLD — Become a Member CTA ─────────── */}
       <div
         style={{
@@ -1273,6 +1410,106 @@ export function Shop() {
         </div>
       </div>
     </div>
+  );
+}
+
+function ProExclusiveCard({
+  product,
+  onAdd,
+  adding,
+}: {
+  product: Product;
+  onAdd: (e: React.MouseEvent, id: number) => void;
+  adding: boolean;
+}) {
+  const [hover, setHover] = useState(false);
+  const img = resolveImageSrc(product.image);
+  const outOfStock = product.stock === 0;
+  const onSale = product.comparePrice && product.comparePrice > product.price;
+  const PURPLE = "#7c3aed";
+  const PURPLE_LIGHT = "#a78bfa";
+
+  return (
+    <Link href={`/product/${product.slug}`}>
+      <div
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        style={{
+          background: hover ? "#140d22" : "#0f0820",
+          border: `1.5px solid ${hover ? PURPLE_LIGHT : "rgba(124,58,237,0.35)"}`,
+          borderRadius: 14,
+          overflow: "hidden",
+          boxShadow: hover ? `0 16px 48px rgba(124,58,237,0.30)` : "0 2px 16px rgba(0,0,0,0.50)",
+          transition: "all 0.24s ease",
+          cursor: "pointer",
+          transform: hover ? "translateY(-5px)" : "none",
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+        }}
+      >
+        {/* Image */}
+        <div style={{ background: img ? "#1a1a1a" : `linear-gradient(135deg, rgba(124,58,237,0.20), rgba(124,58,237,0.06))`, height: 170, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+          {img ? (
+            <img src={img} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease", transform: hover ? "scale(1.08)" : "scale(1)" }} />
+          ) : (
+            <Crown size={44} color={PURPLE_LIGHT} style={{ opacity: 0.38 }} />
+          )}
+          <span style={{ position: "absolute", top: 10, left: 10, background: PURPLE, color: "#fff", fontSize: 9, fontWeight: 900, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.12em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 4 }}>
+            <Lock size={8} /> Pro Exclusive
+          </span>
+          {onSale && !outOfStock && (
+            <span style={{ position: "absolute", top: 10, right: 10, background: PURPLE_LIGHT, color: "#000", fontSize: 9, fontWeight: 900, padding: "3px 8px", borderRadius: 99 }}>SALE</span>
+          )}
+          {outOfStock && (
+            <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ color: "rgba(255,255,255,0.7)", fontWeight: 600, fontSize: 13 }}>Sold Out</span>
+            </div>
+          )}
+        </div>
+        {/* Info */}
+        <div style={{ padding: "16px 16px 18px", flex: 1, display: "flex", flexDirection: "column", gap: 7 }}>
+          <p style={{ fontSize: 10, fontWeight: 800, color: PURPLE_LIGHT, letterSpacing: "0.15em", textTransform: "uppercase", margin: 0 }}>
+            {product.proExclusiveCategory || "Exclusive"}
+          </p>
+          <h4 style={{ fontSize: 15, fontWeight: 800, color: "#fff", lineHeight: 1.3, flex: 1, margin: 0 }}>
+            {product.name}
+          </h4>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+            <span style={{ fontSize: 20, fontWeight: 900, color: PURPLE_LIGHT }}>${product.price.toFixed(2)}</span>
+            {onSale && (
+              <span style={{ fontSize: 13, color: "#666", textDecoration: "line-through" }}>
+                ${product.comparePrice!.toFixed(2)}
+              </span>
+            )}
+          </div>
+          <button
+            disabled={outOfStock || adding}
+            onClick={(e) => onAdd(e, product.id)}
+            style={{
+              marginTop: 8,
+              width: "100%",
+              padding: "10px 0",
+              background: hover && !outOfStock ? PURPLE : "transparent",
+              color: outOfStock ? "#555" : hover ? "#fff" : PURPLE_LIGHT,
+              border: `1.5px solid ${outOfStock ? "#333" : PURPLE}`,
+              borderRadius: 8,
+              fontWeight: 800,
+              fontSize: 13,
+              cursor: outOfStock ? "not-allowed" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              transition: "all 0.18s ease",
+            }}
+          >
+            {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingCart size={14} />}
+            {outOfStock ? "Sold Out" : "Add to Cart"}
+          </button>
+        </div>
+      </div>
+    </Link>
   );
 }
 
@@ -1453,6 +1690,23 @@ function NonProfitProductCard({
               </span>
             )}
           </div>
+          {/* Gift split mini-bar — only for monetary gift/donation products */}
+          {product.isDonation && (() => {
+            const charityPct = Math.round(parseFloat(String(product.giftCharityPercent ?? "80")) || 80);
+            const memberPct  = 100 - charityPct;
+            return (
+              <div style={{ marginTop: 4 }}>
+                <div style={{ display: "flex", borderRadius: 99, overflow: "hidden", height: 5, background: "rgba(255,255,255,0.08)" }}>
+                  <div style={{ width: `${charityPct}%`, background: INDIGO, transition: "width 0.2s" }} />
+                  <div style={{ flex: 1, background: "rgba(255,255,255,0.12)" }} />
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 3, fontSize: 9, color: "#7a7a7a", fontWeight: 700, letterSpacing: "0.05em" }}>
+                  <span style={{ color: INDIGO }}>🤝 {charityPct}% → Org</span>
+                  <span>🔗 {memberPct}% → Network</span>
+                </div>
+              </div>
+            );
+          })()}
           <button
             disabled={outOfStock || adding}
             onClick={(e) => onAdd(e, product.id)}

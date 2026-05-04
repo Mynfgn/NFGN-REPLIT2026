@@ -57,6 +57,8 @@ interface Product {
   weddingRegistryCategory: string | null;
   isHolidayRegistry: boolean;
   holidayCategory: string | null;
+  isProExclusive: boolean;
+  proExclusiveCategory: string | null;
   isDownloadable: boolean;
   downloadUrl: string | null;
   downloadFileName: string | null;
@@ -105,6 +107,16 @@ const SPECIAL_EVENTS_CATEGORIES = [
   "Memorial & Celebration of Life",
   "General Gift Fund",
   "Custom Gift Item",
+] as const;
+
+const PRO_EXCLUSIVE_CATEGORIES = [
+  "NFGN Member Trips",
+  "Medical Benefits & Packages",
+  "Naturopathic & Herbal",
+  "Mental Health & Primary Care",
+  "Health & Wellness",
+  "Exclusive Member Discounts",
+  "General Exclusive",
 ] as const;
 
 const HOLIDAY_OCCASIONS_CATEGORIES = [
@@ -163,6 +175,8 @@ const EMPTY_FORM = {
   weddingRegistryCategory: "",
   isHolidayRegistry: false,
   holidayCategory: "",
+  isProExclusive: false,
+  proExclusiveCategory: "",
   isDownloadable: false,
   downloadUrl: "",
   downloadFileName: "",
@@ -285,6 +299,8 @@ export function AdminProductsPage() {
       weddingRegistryCategory: p.weddingRegistryCategory ?? "",
       isHolidayRegistry: (p as any).isHolidayRegistry ?? false,
       holidayCategory: (p as any).holidayCategory ?? "",
+      isProExclusive: (p as any).isProExclusive ?? false,
+      proExclusiveCategory: (p as any).proExclusiveCategory ?? "",
       isDownloadable: p.isDownloadable ?? false,
       downloadUrl: p.downloadUrl ?? "",
       downloadFileName: p.downloadFileName ?? "",
@@ -349,6 +365,8 @@ export function AdminProductsPage() {
         weddingRegistryCategory: form.isWeddingRegistry ? (form.weddingRegistryCategory || null) : null,
         isHolidayRegistry: form.isHolidayRegistry,
         holidayCategory: form.isHolidayRegistry ? (form.holidayCategory || null) : null,
+        isProExclusive: form.isProExclusive,
+        proExclusiveCategory: form.isProExclusive ? (form.proExclusiveCategory || null) : null,
         isDownloadable: form.isDownloadable,
         downloadUrl: form.downloadUrl || null,
         downloadFileName: form.downloadFileName || null,
@@ -663,6 +681,7 @@ export function AdminProductsPage() {
                           {p.isNonProfit && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-indigo-700 border-indigo-200">🤝 Non-Profit</Badge>}
                           {p.isWeddingRegistry && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-pink-600 border-pink-200">🎉 Special Events Registry</Badge>}
                           {(p as any).isHolidayRegistry && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-amber-600 border-amber-200">🎄 Holiday</Badge>}
+                          {(p as any).isProExclusive && <Badge className="text-xs px-1.5 py-0 gap-0.5" style={{ background: "#7c3aed", color: "#fff" }}>🔒 Pro Exclusive</Badge>}
                           {p.isChurchDonation && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-amber-700 border-amber-300">⛪ Church</Badge>}
                           {p.isDonation && !p.isChurchDonation && <Badge variant="outline" className="text-xs px-1.5 py-0 gap-0.5 text-amber-600 border-amber-200">🎁 Donation</Badge>}
                           {p.dollarCreditEligible && (
@@ -1076,6 +1095,50 @@ export function AdminProductsPage() {
                   </div>
                   <div className="text-xs rounded-lg px-3 py-2 font-medium" style={{ background: "rgba(245,158,11,0.10)", color: "#d97706", border: "1px solid rgba(245,158,11,0.30)" }}>
                     🎄 This product will be showcased under the <strong>Holiday &amp; Special Occasions</strong> banner on the public Shop page.
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Pro Member Exclusive */}
+            <div className="rounded-lg p-4 border-2 space-y-3" style={{ borderColor: "#7c3aed60", background: "#7c3aed06" }}>
+              <div className="flex items-start gap-3">
+                <Switch
+                  checked={form.isProExclusive}
+                  onCheckedChange={v => setForm(f => ({ ...f, isProExclusive: v, proExclusiveCategory: v ? f.proExclusiveCategory : "" }))}
+                  id="isProExclusive"
+                />
+                <div>
+                  <Label htmlFor="isProExclusive" className="cursor-pointer font-semibold flex items-center gap-1.5">
+                    <span>🔒</span> Pro Member Exclusive
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    This product is <strong>hidden from the public</strong> and only visible to logged-in Pro Members. Use for member trips, medical benefits, discounted services, naturopathic products, and other exclusive offerings.
+                  </p>
+                </div>
+              </div>
+              {form.isProExclusive && (
+                <div className="space-y-3 pt-1 border-t border-dashed" style={{ borderColor: "rgba(124,58,237,0.3)" }}>
+                  <div className="space-y-1.5">
+                    <Label>Pro Store Section <span className="text-destructive">*</span></Label>
+                    <Select
+                      value={form.proExclusiveCategory || "none"}
+                      onValueChange={v => setForm(f => ({ ...f, proExclusiveCategory: v === "none" ? "" : v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select the Pro Member section" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— Select Section —</SelectItem>
+                        {PRO_EXCLUSIVE_CATEGORIES.map(cat => (
+                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">Choose which section of the Pro Member Exclusive store this product belongs to.</p>
+                  </div>
+                  <div className="text-xs rounded-lg px-3 py-2 font-medium" style={{ background: "rgba(124,58,237,0.10)", color: "#7c3aed", border: "1px solid rgba(124,58,237,0.25)" }}>
+                    🔒 This product is <strong>invisible to non-Pro Members</strong>. It will only appear in the <strong>Pro Member Exclusive</strong> store section for verified Pro Members.
                   </div>
                 </div>
               )}

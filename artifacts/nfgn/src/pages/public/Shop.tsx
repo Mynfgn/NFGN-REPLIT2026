@@ -8,7 +8,7 @@ import {
   ChevronRight, Package, BadgeCheck, Check, ArrowRight,
   Users, TrendingUp, Star, Gift, Shield, Zap, ArrowLeft,
   Trophy, Ticket, Award, Utensils, Dumbbell, Heart, Gem,
-  HandHeart, Coins, Church, Flower2,
+  HandHeart, Coins, Church, Flower2, Sun, Snowflake, PartyPopper,
 } from "lucide-react";
 import { useCartStore } from "@/hooks/use-cart-store";
 import { useToast } from "@/hooks/use-toast";
@@ -41,6 +41,8 @@ type Product = {
   isNonProfit?: boolean | null;
   isWeddingRegistry?: boolean | null;
   weddingRegistryCategory?: string | null;
+  isHolidayRegistry?: boolean | null;
+  holidayCategory?: string | null;
   isDonation?: boolean | null;
   isChurchDonation?: boolean | null;
   donationMinAmount?: number | null;
@@ -580,8 +582,9 @@ export function Shop() {
   const sportsProducts = products.filter((p) => p.isSports && !p.isProPackage);
   const nonProfitProducts = products.filter((p) => p.isNonProfit && !p.isProPackage && !p.isSports && !p.isChurchDonation);
   const weddingProducts = products.filter((p) => p.isWeddingRegistry && !p.isProPackage && !p.isSports);
+  const holidayProducts = products.filter((p) => p.isHolidayRegistry && !p.isProPackage && !p.isSports);
   const churchDonationProducts = products.filter((p) => p.isChurchDonation && !p.isProPackage);
-  const regularProducts = products.filter((p) => !p.isProPackage && !p.isSports && !p.isNonProfit && !p.isWeddingRegistry && !p.isChurchDonation);
+  const regularProducts = products.filter((p) => !p.isProPackage && !p.isSports && !p.isNonProfit && !p.isWeddingRegistry && !p.isHolidayRegistry && !p.isChurchDonation);
 
   // Resolve which real product to use for a package card's "Add to Cart" button.
   // Prefer the admin-configured direct product link (productId); fall back to
@@ -1022,6 +1025,54 @@ export function Shop() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {weddingProducts.map(p => (
                 <WeddingProductCard
+                  key={p.id}
+                  product={p}
+                  onAdd={handleAddToCart}
+                  adding={addingId === p.id}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── HOLIDAY & SPECIAL OCCASIONS ───────────────────── */}
+      {holidayProducts.length > 0 && (
+        <div style={{ background: "linear-gradient(135deg, #fffbeb 0%, #fef3c7 50%, #fffbeb 100%)", padding: "72px 0", borderTop: "3px solid #d97706", borderBottom: "3px solid #d97706", position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(217,119,6,0.03) 39px, rgba(217,119,6,0.03) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(217,119,6,0.03) 39px, rgba(217,119,6,0.03) 40px)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", top: -60, right: "10%", width: 260, height: 260, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,168,76,0.15), transparent 70%)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", bottom: -50, left: "8%", width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, rgba(217,119,6,0.10), transparent 70%)", pointerEvents: "none" }} />
+
+          <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto", position: "relative" }}>
+            <div style={{ marginBottom: 48 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 16, background: "rgba(217,119,6,0.10)", border: "1px solid rgba(217,119,6,0.35)", padding: "6px 16px", borderRadius: 99 }}>
+                <Star size={13} color="#d97706" />
+                <span style={{ color: "#d97706", fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>HOLIDAY &amp; SPECIAL OCCASIONS</span>
+              </div>
+              <h2 style={{ color: "#1a1a1a", fontSize: "clamp(28px, 5vw, 44px)", fontWeight: 900, margin: "0 0 12px", fontFamily: "serif", lineHeight: 1.1 }}>
+                Season of Giving. <span style={{ color: "#d97706" }}>Shop the Holidays.</span>
+              </h2>
+              <p style={{ color: "#6b7280", fontSize: 16, maxWidth: 620, margin: 0 }}>
+                Curated gifts, bundles, and seasonal products for every holiday and special occasion — Christmas, Hanukkah, Kwanzaa, Valentine's Day, Mother's Day, Eid, Diwali, and more. The perfect gift is always in season.
+              </p>
+              <div style={{ display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
+                {[
+                  { icon: <Snowflake size={11} />, label: "Christmas & Hanukkah" },
+                  { icon: <Sun size={11} />, label: "Eid & Diwali" },
+                  { icon: <Heart size={11} />, label: "Valentine's & Mother's Day" },
+                  { icon: <Flower2 size={11} />, label: "Easter & Thanksgiving" },
+                  { icon: <PartyPopper size={11} />, label: "Kwanzaa & New Year's" },
+                  { icon: <Gift size={11} />, label: "Seasonal Gift Baskets" },
+                ].map(tag => (
+                  <span key={tag.label} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(217,119,6,0.08)", border: "1px solid rgba(217,119,6,0.25)", color: "#d97706", fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 99, letterSpacing: "0.04em" }}>
+                    {tag.icon} {tag.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {holidayProducts.map(p => (
+                <HolidayProductCard
                   key={p.id}
                   product={p}
                   onAdd={handleAddToCart}
@@ -1512,6 +1563,106 @@ function WeddingProductCard({
               background: hover && !outOfStock ? ROSE : "transparent",
               color: outOfStock ? "#bbb" : hover ? "#fff" : ROSE,
               border: `1.5px solid ${outOfStock ? "#e5e7eb" : ROSE}`,
+              borderRadius: 8,
+              fontWeight: 800,
+              fontSize: 13,
+              cursor: outOfStock ? "not-allowed" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              transition: "all 0.18s ease",
+            }}
+          >
+            {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingCart size={14} />}
+            {outOfStock ? "Sold Out" : "Add to Cart"}
+          </button>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function HolidayProductCard({
+  product,
+  onAdd,
+  adding,
+}: {
+  product: Product;
+  onAdd: (e: React.MouseEvent, id: number) => void;
+  adding: boolean;
+}) {
+  const [hover, setHover] = useState(false);
+  const img = resolveImageSrc(product.image);
+  const outOfStock = product.stock === 0;
+  const onSale = product.comparePrice && product.comparePrice > product.price;
+  const AMBER = "#d97706";
+  const AMBER_DIM = "rgba(217,119,6,0.12)";
+
+  return (
+    <Link href={`/product/${product.slug}`}>
+      <div
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        style={{
+          background: hover ? "#fffbeb" : "#fff",
+          border: `1.5px solid ${hover ? AMBER : "rgba(217,119,6,0.25)"}`,
+          borderRadius: 12,
+          overflow: "hidden",
+          boxShadow: hover ? `0 12px 36px rgba(217,119,6,0.15)` : "0 2px 8px rgba(0,0,0,0.07)",
+          transition: "all 0.22s ease",
+          cursor: "pointer",
+          transform: hover ? "translateY(-4px)" : "none",
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+        }}
+      >
+        <div style={{ background: img ? "#fef3c7" : `linear-gradient(135deg, ${AMBER_DIM}, rgba(217,119,6,0.04))`, height: 160, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+          {img ? (
+            <img src={img} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease", transform: hover ? "scale(1.06)" : "scale(1)" }} />
+          ) : (
+            <Star size={40} color={AMBER} style={{ opacity: 0.35 }} />
+          )}
+          <span style={{ position: "absolute", top: 10, left: 10, background: AMBER, color: "#fff", fontSize: 9, fontWeight: 900, padding: "3px 8px", borderRadius: 99, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+            🎄 HOLIDAY
+          </span>
+          {onSale && !outOfStock && (
+            <span style={{ position: "absolute", top: 10, right: 10, background: AMBER, color: "#fff", fontSize: 10, fontWeight: 900, padding: "3px 8px", borderRadius: 99 }}>
+              SALE
+            </span>
+          )}
+          {outOfStock && (
+            <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 600, fontSize: 13 }}>Sold Out</span>
+            </div>
+          )}
+        </div>
+        <div style={{ padding: "16px 16px 18px", flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+          <p style={{ fontSize: 10, fontWeight: 800, color: AMBER, letterSpacing: "0.15em", textTransform: "uppercase", margin: 0 }}>
+            {(product as any).holidayCategory || product.categoryName || "Holiday & Special Occasions"}
+          </p>
+          <h4 style={{ fontSize: 15, fontWeight: 800, color: "#1a1a1a", lineHeight: 1.3, flex: 1, margin: 0 }}>
+            {product.name}
+          </h4>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+            <span style={{ fontSize: 18, fontWeight: 900, color: AMBER }}>${product.price.toFixed(2)}</span>
+            {onSale && (
+              <span style={{ fontSize: 13, color: "#aaa", textDecoration: "line-through" }}>
+                ${product.comparePrice!.toFixed(2)}
+              </span>
+            )}
+          </div>
+          <button
+            disabled={outOfStock || adding}
+            onClick={(e) => onAdd(e, product.id)}
+            style={{
+              marginTop: 8,
+              width: "100%",
+              padding: "10px 0",
+              background: hover && !outOfStock ? AMBER : "transparent",
+              color: outOfStock ? "#bbb" : hover ? "#fff" : AMBER,
+              border: `1.5px solid ${outOfStock ? "#e5e7eb" : AMBER}`,
               borderRadius: 8,
               fontWeight: 800,
               fontSize: 13,

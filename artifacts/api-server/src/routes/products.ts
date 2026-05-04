@@ -35,6 +35,8 @@ function formatProduct(p: typeof productsTable.$inferSelect, categoryName?: stri
     nonProfitCategory: p.nonProfitCategory ?? null,
     isWeddingRegistry: p.isWeddingRegistry,
     weddingRegistryCategory: p.weddingRegistryCategory ?? null,
+    isHolidayRegistry: p.isHolidayRegistry,
+    holidayCategory: p.holidayCategory ?? null,
     isDownloadable: p.isDownloadable,
     downloadUrl: p.downloadUrl ?? null,
     downloadFileName: p.downloadFileName ?? null,

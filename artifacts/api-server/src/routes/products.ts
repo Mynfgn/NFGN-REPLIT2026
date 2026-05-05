@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, productsTable, categoriesTable, orderItemsTable, usersTable } from "@workspace/db";
-import { eq, like, and, sql, count, desc, ne } from "drizzle-orm";
+import { eq, like, and, sql, count, desc, ne, asc } from "drizzle-orm";
 import { requireAdmin } from "../lib/auth";
 
 const router: IRouter = Router();
@@ -49,6 +49,8 @@ function formatProduct(p: typeof productsTable.$inferSelect, categoryName?: stri
     donationMinAmount: parseFloat(p.donationMinAmount ?? "1.00"),
     isChurchDonation: p.isChurchDonation,
     churchName: p.churchName ?? null,
+    giftCharityPercent: p.giftCharityPercent ?? "80",
+    sortOrder: p.sortOrder ?? 0,
     createdAt: p.createdAt.toISOString(),
   };
 }
@@ -90,7 +92,7 @@ router.get("/products", async (req, res): Promise<void> => {
     ))
     .limit(limit)
     .offset(offset)
-    .orderBy(desc(productsTable.featured), productsTable.name);
+    .orderBy(asc(productsTable.sortOrder), desc(productsTable.featured), productsTable.name);
 
   const [{ value: total }] = await db.select({ value: count() }).from(productsTable).where(and(
     eq(productsTable.status, "active"),
@@ -111,7 +113,7 @@ router.get("/products/admin-all", requireAdmin, async (req, res): Promise<void> 
     categoryName: categoriesTable.name,
   }).from(productsTable)
     .leftJoin(categoriesTable, eq(productsTable.categoryId, categoriesTable.id))
-    .orderBy(desc(productsTable.createdAt));
+    .orderBy(asc(productsTable.sortOrder), desc(productsTable.createdAt));
 
   res.json({
     products: rows.map(r => ({ ...formatProduct(r.product, r.categoryName), status: r.product.status })),
@@ -120,7 +122,7 @@ router.get("/products/admin-all", requireAdmin, async (req, res): Promise<void> 
 });
 
 router.post("/products", requireAdmin, async (req, res): Promise<void> => {
-  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isHolidayRegistry, holidayCategory, isProExclusive, proExclusiveCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize, isDonation, donationRecipientType, donationRecipientName, donationMinAmount, isChurchDonation, churchName, giftCharityPercent } = req.body;
+  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isHolidayRegistry, holidayCategory, isProExclusive, proExclusiveCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize, isDonation, donationRecipientType, donationRecipientName, donationMinAmount, isChurchDonation, churchName, giftCharityPercent, sortOrder } = req.body;
   if (!name || !slug || !description || price == null) {
     res.status(400).json({ error: "Missing required fields" });
     return;
@@ -171,6 +173,7 @@ router.post("/products", requireAdmin, async (req, res): Promise<void> => {
     isChurchDonation: (isNonProfit || isDonation) ? (isChurchDonation ?? false) : false,
     churchName: isChurchDonation ? (churchName ?? undefined) : undefined,
     giftCharityPercent: (isDonation || isChurchDonation) && giftCharityPercent != null ? String(giftCharityPercent) : "80",
+    sortOrder: sortOrder != null ? Number(sortOrder) : 0,
     status: "active",
   }).returning();
 
@@ -230,12 +233,43 @@ router.get("/products/:id", async (req, res): Promise<void> => {
   });
 });
 
+// Duplicate a product (POST /api/products/:id/duplicate)
+router.post("/products/:id/duplicate", requireAdmin, async (req, res): Promise<void> => {
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const [row] = await db.select().from(productsTable).where(eq(productsTable.id, id));
+  if (!row) { res.status(404).json({ error: "Product not found" }); return; }
+
+  // Generate unique slug
+  const baseSlug = `${row.slug}-copy`;
+  let newSlug = baseSlug;
+  let attempt = 0;
+  while (true) {
+    const [existing] = await db.select({ id: productsTable.id }).from(productsTable).where(eq(productsTable.slug, newSlug));
+    if (!existing) break;
+    attempt++;
+    newSlug = `${baseSlug}-${attempt}`;
+  }
+
+  const { id: _id, createdAt: _c, updatedAt: _u, ...rest } = row;
+  const [copy] = await db.insert(productsTable).values({
+    ...rest,
+    name: `${row.name} (Copy)`,
+    slug: newSlug,
+    status: "inactive",
+    sortOrder: (row.sortOrder ?? 0) + 1,
+  }).returning();
+
+  res.status(201).json(formatProduct(copy));
+});
+
 router.patch("/products/:id", requireAdmin, async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
   const updates: Partial<typeof productsTable.$inferInsert> = {};
-  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isHolidayRegistry, holidayCategory, isProExclusive, proExclusiveCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize, isDonation, donationRecipientType, donationRecipientName, donationMinAmount, isChurchDonation, churchName, giftCharityPercent } = req.body;
+  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isHolidayRegistry, holidayCategory, isProExclusive, proExclusiveCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize, isDonation, donationRecipientType, donationRecipientName, donationMinAmount, isChurchDonation, churchName, giftCharityPercent, status, sortOrder } = req.body;
   if (name) updates.name = name;
   if (slug) updates.slug = slug;
   if (description) updates.description = description;
@@ -245,6 +279,8 @@ router.patch("/products/:id", requireAdmin, async (req, res): Promise<void> => {
   if (categoryId !== undefined) updates.categoryId = categoryId;
   if (stock != null) updates.stock = stock;
   if (featured !== undefined) updates.featured = featured;
+  if (status !== undefined && ["active", "inactive"].includes(status)) updates.status = status;
+  if (sortOrder != null) updates.sortOrder = Number(sortOrder);
   if (isProPackage !== undefined) {
     updates.isProPackage = isProPackage;
     if (isProPackage) {
@@ -292,11 +328,12 @@ router.patch("/products/:id", requireAdmin, async (req, res): Promise<void> => {
   res.json(formatProduct(updated));
 });
 
+// Permanent hard delete
 router.delete("/products/:id", requireAdmin, async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
-  await db.update(productsTable).set({ status: "inactive" }).where(eq(productsTable.id, id));
+  await db.delete(productsTable).where(eq(productsTable.id, id));
   res.sendStatus(204);
 });
 

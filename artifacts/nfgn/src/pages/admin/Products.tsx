@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, RefreshCw, Package, DollarSign, BarChart2, Layers, Upload, X, Loader2, QrCode, ExternalLink, Copy, Check, Download, FileText, Music, ImageIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, Package, DollarSign, BarChart2, Layers, Upload, X, Loader2, QrCode, ExternalLink, Copy, Check, Download, FileText, Music, ImageIcon, CopyPlus, Eye, EyeOff, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 
 function getImageSrc(image: string | null | undefined): string | null {
@@ -74,6 +74,7 @@ interface Product {
   refundPolicy: string;
   proMemberDiscountEligible: boolean;
   proMemberDiscountPercent: number;
+  sortOrder: number;
   createdAt: string;
 }
 
@@ -194,6 +195,7 @@ const EMPTY_FORM = {
   refundPolicy: "",        // empty = not yet selected (required)
   proMemberDiscountEligible: false,
   proMemberDiscountPercent: "0",
+  sortOrder: "0",
 };
 
 function slugify(str: string) {
@@ -219,6 +221,9 @@ export function AdminProductsPage() {
 
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [duplicating, setDuplicating] = useState<number | null>(null);
+  const [togglingStatus, setTogglingStatus] = useState<number | null>(null);
+  const [sortingId, setSortingId] = useState<number | null>(null);
 
   const [qrProduct, setQrProduct] = useState<Product | null>(null);
   const [qrCopied, setQrCopied] = useState(false);
@@ -318,6 +323,7 @@ export function AdminProductsPage() {
       refundPolicy: p.refundPolicy ?? "no_refund",
       proMemberDiscountEligible: p.proMemberDiscountEligible ?? false,
       proMemberDiscountPercent: String(p.proMemberDiscountPercent ?? "0"),
+      sortOrder: String(p.sortOrder ?? 0),
     });
     setDialogOpen(true);
   };
@@ -384,6 +390,7 @@ export function AdminProductsPage() {
         refundPolicy: form.refundPolicy,
         proMemberDiscountEligible: form.isProPackage ? false : form.proMemberDiscountEligible,
         proMemberDiscountPercent: form.isProPackage ? 0 : parseFloat(form.proMemberDiscountPercent) || 0,
+        sortOrder: parseInt((form as any).sortOrder) || 0,
       };
 
       const res = editProduct
@@ -411,16 +418,73 @@ export function AdminProductsPage() {
     try {
       const res = await customFetch(`/api/products/${deleteTarget.id}`, { method: "DELETE" });
       if (res.ok || res.status === 204) {
-        toast.success(`"${deleteTarget.name}" has been deactivated.`);
+        toast.success(`"${deleteTarget.name}" has been permanently deleted.`);
         setDeleteTarget(null);
         fetchProducts();
       } else {
-        toast.error("Failed to deactivate product");
+        toast.error("Failed to delete product");
       }
     } catch {
       toast.error("Network error");
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleDuplicate = async (p: Product) => {
+    setDuplicating(p.id);
+    try {
+      const res = await customFetch(`/api/products/${p.id}/duplicate`, { method: "POST" });
+      if (res.ok) {
+        toast.success(`"${p.name}" duplicated as a draft. Edit and activate when ready.`);
+        fetchProducts();
+      } else {
+        toast.error("Failed to duplicate product");
+      }
+    } catch {
+      toast.error("Network error");
+    } finally {
+      setDuplicating(null);
+    }
+  };
+
+  const handleToggleStatus = async (p: Product) => {
+    setTogglingStatus(p.id);
+    const newStatus = p.status === "active" ? "inactive" : "active";
+    try {
+      const res = await customFetch(`/api/products/${p.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (res.ok) {
+        toast.success(`"${p.name}" ${newStatus === "active" ? "activated — now visible in the Store" : "deactivated — hidden from the Store"}.`);
+        fetchProducts();
+      } else {
+        toast.error("Failed to update status");
+      }
+    } catch {
+      toast.error("Network error");
+    } finally {
+      setTogglingStatus(null);
+    }
+  };
+
+  const handleUpdateSortOrder = async (p: Product, value: string) => {
+    const parsed = parseInt(value);
+    if (isNaN(parsed) || parsed === p.sortOrder) return;
+    setSortingId(p.id);
+    try {
+      await customFetch(`/api/products/${p.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sortOrder: parsed }),
+      });
+      setProducts(prev => prev.map(x => x.id === p.id ? { ...x, sortOrder: parsed } : x));
+    } catch {
+      toast.error("Failed to update sort order");
+    } finally {
+      setSortingId(null);
     }
   };
 
@@ -606,6 +670,7 @@ export function AdminProductsPage() {
                   <TableHead>Commission</TableHead>
                   <TableHead>Stock</TableHead>
                   <TableHead>Category</TableHead>
+                  <TableHead className="w-20 text-center">Order</TableHead>
                   <TableHead>Flags</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -672,6 +737,20 @@ export function AdminProductsPage() {
                       <TableCell>
                         <span className="text-xs text-muted-foreground">{p.categoryName ?? "—"}</span>
                       </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <GripVertical className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+                          <input
+                            type="number"
+                            defaultValue={p.sortOrder ?? 0}
+                            onBlur={e => handleUpdateSortOrder(p, e.target.value)}
+                            onKeyDown={e => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                            disabled={sortingId === p.id}
+                            className="w-12 text-center text-xs border rounded px-1 py-0.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                            min={0}
+                          />
+                        </div>
+                      </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
                           {p.featured && <Badge className="text-xs px-1.5 py-0">Featured</Badge>}
@@ -700,18 +779,50 @@ export function AdminProductsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
+                        <div className="flex justify-end gap-1 flex-wrap">
+                          {/* QR Code */}
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" title="View QR Code" onClick={() => { setQrProduct(p); setQrCopied(false); }}>
                             <QrCode className="h-3.5 w-3.5" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(p)}>
+                          {/* Edit */}
+                          <Button variant="ghost" size="icon" className="h-8 w-8" title="Edit product" onClick={() => openEdit(p)}>
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
-                          {p.status === "active" && (
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteTarget(p)}>
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          )}
+                          {/* Duplicate */}
+                          <Button
+                            variant="ghost" size="icon"
+                            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            title="Duplicate product"
+                            disabled={duplicating === p.id}
+                            onClick={() => handleDuplicate(p)}
+                          >
+                            {duplicating === p.id
+                              ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              : <CopyPlus className="h-3.5 w-3.5" />}
+                          </Button>
+                          {/* Activate / Deactivate */}
+                          <Button
+                            variant="ghost" size="icon"
+                            className={`h-8 w-8 ${p.status === "active" ? "text-amber-500 hover:text-amber-600 hover:bg-amber-50" : "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"}`}
+                            title={p.status === "active" ? "Deactivate (hide from Store)" : "Activate (show in Store)"}
+                            disabled={togglingStatus === p.id}
+                            onClick={() => handleToggleStatus(p)}
+                          >
+                            {togglingStatus === p.id
+                              ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              : p.status === "active"
+                                ? <EyeOff className="h-3.5 w-3.5" />
+                                : <Eye className="h-3.5 w-3.5" />}
+                          </Button>
+                          {/* Permanent Delete */}
+                          <Button
+                            variant="ghost" size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            title="Permanently delete product"
+                            onClick={() => setDeleteTarget(p)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -1705,16 +1816,16 @@ export function AdminProductsPage() {
       <AlertDialog open={!!deleteTarget} onOpenChange={open => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Deactivate Product?</AlertDialogTitle>
+            <AlertDialogTitle>Permanently Delete Product?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will deactivate <strong>"{deleteTarget?.name}"</strong> and hide it from the shop and all listings. 
-              The product record is preserved and can be reactivated later.
+              This will <strong>permanently remove</strong> <strong>"{deleteTarget?.name}"</strong> from the database. This action cannot be undone.
+              If you only want to hide it from the Store temporarily, use the <strong>Deactivate</strong> button instead.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-destructive hover:bg-destructive/90">
-              {deleting ? "Deactivating..." : "Yes, Deactivate"}
+              {deleting ? "Deleting..." : "Yes, Permanently Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

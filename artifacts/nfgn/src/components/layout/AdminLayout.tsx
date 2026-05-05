@@ -65,7 +65,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   const navItems: NavItem[] = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { name: "Users", href: "/admin/users", icon: Users },
-    { name: "Shop", href: "/shop?from=admin", icon: Store },
+    { name: "Store", href: "/shop?from=admin", icon: Store },
     {
       name: "Products",
       href: "/admin/products",

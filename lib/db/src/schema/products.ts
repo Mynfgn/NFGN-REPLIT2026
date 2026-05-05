@@ -94,6 +94,9 @@ export const productsTable = pgTable("products", {
   // Sub-section within the Pro Member Exclusive store
   proExclusiveCategory: text("pro_exclusive_category"),
 
+  // Display sort order within a category/group — lower numbers appear first
+  sortOrder: integer("sort_order").notNull().default(0),
+
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

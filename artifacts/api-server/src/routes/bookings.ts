@@ -385,9 +385,8 @@ router.patch("/bookings/:id", requireAuth, async (req, res): Promise<void> => {
   res.json(formatBooking(updated, user ? `${user.firstName} ${user.lastName}` : "Unknown", pro?.name ?? "Unknown"));
 });
 
-router.get("/professionals", async (req, res): Promise<void> => {
-  const professionals = await db.select().from(professionalsTable).orderBy(professionalsTable.name);
-  res.json(professionals.map(p => ({
+function serializePro(p: typeof professionalsTable.$inferSelect) {
+  return {
     id: p.id,
     userId: p.userId ?? null,
     name: p.name,
@@ -398,57 +397,57 @@ router.get("/professionals", async (req, res): Promise<void> => {
     reviewCount: p.reviewCount,
     isAvailable: p.isAvailable,
     hourlyRate: parseFloat(p.hourlyRate),
+    cv: p.cv ?? 0,
     services: p.services ?? [],
     createdAt: p.createdAt.toISOString(),
-  })));
+  };
+}
+
+router.get("/professionals", async (req, res): Promise<void> => {
+  const professionals = await db.select().from(professionalsTable).orderBy(professionalsTable.name);
+  res.json(professionals.map(serializePro));
 });
 
 router.post("/professionals", requireAdmin, async (req, res): Promise<void> => {
-  const { userId, name, bio, specialty, avatar, hourlyRate, services, isAvailable } = req.body;
+  const { userId, name, bio, specialty, avatar, hourlyRate, cv, services, isAvailable } = req.body;
   const [pro] = await db.insert(professionalsTable).values({
     userId: userId ?? undefined,
     name, bio, specialty,
     avatar: avatar ?? undefined,
     hourlyRate: String(hourlyRate),
+    cv: cv != null ? parseInt(String(cv)) : 0,
     services: services ?? [],
     isAvailable: isAvailable ?? true,
   }).returning();
 
-  res.status(201).json({
-    id: pro.id,
-    userId: pro.userId ?? null,
-    name: pro.name,
-    bio: pro.bio,
-    specialty: pro.specialty,
-    avatar: pro.avatar ?? null,
-    rating: parseFloat(pro.rating),
-    reviewCount: pro.reviewCount,
-    isAvailable: pro.isAvailable,
-    hourlyRate: parseFloat(pro.hourlyRate),
-    services: pro.services ?? [],
-    createdAt: pro.createdAt.toISOString(),
-  });
+  res.status(201).json(serializePro(pro));
+});
+
+router.patch("/professionals/:id", requireAdmin, async (req, res): Promise<void> => {
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const { name, bio, specialty, avatar, hourlyRate, cv, services, isAvailable } = req.body;
+  const updates: Partial<typeof professionalsTable.$inferInsert> = {};
+  if (name !== undefined) updates.name = name;
+  if (bio !== undefined) updates.bio = bio;
+  if (specialty !== undefined) updates.specialty = specialty;
+  if (avatar !== undefined) updates.avatar = avatar || undefined;
+  if (hourlyRate !== undefined) updates.hourlyRate = String(hourlyRate);
+  if (cv !== undefined) updates.cv = parseInt(String(cv)) || 0;
+  if (services !== undefined) updates.services = services;
+  if (isAvailable !== undefined) updates.isAvailable = isAvailable;
+
+  const [pro] = await db.update(professionalsTable).set(updates).where(eq(professionalsTable.id, id)).returning();
+  if (!pro) { res.status(404).json({ error: "Not found" }); return; }
+  res.json(serializePro(pro));
 });
 
 router.get("/professionals/:id", async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
   const [pro] = await db.select().from(professionalsTable).where(eq(professionalsTable.id, id));
   if (!pro) { res.status(404).json({ error: "Not found" }); return; }
-
-  res.json({
-    id: pro.id,
-    userId: pro.userId ?? null,
-    name: pro.name,
-    bio: pro.bio,
-    specialty: pro.specialty,
-    avatar: pro.avatar ?? null,
-    rating: parseFloat(pro.rating),
-    reviewCount: pro.reviewCount,
-    isAvailable: pro.isAvailable,
-    hourlyRate: parseFloat(pro.hourlyRate),
-    services: pro.services ?? [],
-    createdAt: pro.createdAt.toISOString(),
-  });
+  res.json(serializePro(pro));
 });
 
 // ── Professional availability management ──────────────────────────────────

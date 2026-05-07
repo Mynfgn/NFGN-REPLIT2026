@@ -30,6 +30,7 @@ interface Professional {
   reviewCount: number;
   isAvailable: boolean;
   hourlyRate: number;
+  cv: number;
   services: string[];
   createdAt: string;
 }
@@ -52,6 +53,7 @@ function ProModal({
     bio: initial?.bio ?? "",
     avatar: initial?.avatar ?? "",
     hourlyRate: String(initial?.hourlyRate ?? ""),
+    cv: String(initial?.cv ?? "0"),
     isAvailable: initial?.isAvailable ?? true,
   });
   const [saving, setSaving] = useState(false);
@@ -81,6 +83,7 @@ function ProModal({
       specialty: category,
       avatar: form.avatar.trim() || undefined,
       hourlyRate: rate,
+      cv: parseInt(form.cv) || 0,
       services: selectedServices,
       isAvailable: form.isAvailable,
     };
@@ -169,10 +172,15 @@ function ProModal({
                   <Input className="pl-8" type="number" min={0} value={form.hourlyRate} onChange={e => setForm(f => ({ ...f, hourlyRate: e.target.value }))} placeholder="150" />
                 </div>
               </div>
-              <div className="flex items-center gap-3 pt-6">
-                <Switch checked={form.isAvailable} onCheckedChange={v => setForm(f => ({ ...f, isAvailable: v }))} />
-                <Label className="text-sm">Available</Label>
+              <div>
+                <Label>CV (Commissionable Volume)</Label>
+                <Input className="mt-1" type="number" min={0} step={1} value={form.cv} onChange={e => setForm(f => ({ ...f, cv: e.target.value }))} placeholder="0" />
+                <p className="text-xs text-muted-foreground mt-1">CV credited to the member per booking session.</p>
               </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Switch checked={form.isAvailable} onCheckedChange={v => setForm(f => ({ ...f, isAvailable: v }))} />
+              <Label className="text-sm">Available for Bookings</Label>
             </div>
 
             <div>
@@ -308,7 +316,14 @@ export function AdminProfessionalsPage() {
                       </div>
                       <span className="text-xs text-muted-foreground">{pro.reviewCount} reviews</span>
                     </div>
-                    <p className="text-sm font-bold mt-1" style={{ color: BRAND_GOLD }}>${pro.hourlyRate}/hr</p>
+                    <div className="flex items-center gap-3 mt-1">
+                      <p className="text-sm font-bold" style={{ color: BRAND_GOLD }}>${pro.hourlyRate}/hr</p>
+                      {pro.cv > 0 && (
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(201,168,76,0.12)", color: BRAND_GOLD, border: "1px solid rgba(201,168,76,0.3)" }}>
+                          {pro.cv} CV
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 

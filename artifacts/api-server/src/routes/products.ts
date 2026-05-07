@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
-import { db, productsTable, categoriesTable, orderItemsTable, usersTable } from "@workspace/db";
-import { eq, like, and, sql, count, desc, ne, asc } from "drizzle-orm";
-import { requireAdmin } from "../lib/auth";
+import { db, productsTable, categoriesTable, orderItemsTable, usersTable, productReviewsTable } from "@workspace/db";
+import { eq, like, and, sql, count, desc, ne, asc, avg } from "drizzle-orm";
+import { requireAdmin, requireAuth } from "../lib/auth";
 
 const router: IRouter = Router();
 
@@ -14,6 +14,7 @@ function formatProduct(p: typeof productsTable.$inferSelect, categoryName?: stri
     price: parseFloat(p.price),
     comparePrice: p.comparePrice ? parseFloat(p.comparePrice) : null,
     image: p.image ?? null,
+    images: p.images?.length ? p.images : (p.image ? [p.image] : []),
     categoryId: p.categoryId ?? null,
     categoryName: categoryName ?? null,
     stock: p.stock,
@@ -122,7 +123,7 @@ router.get("/products/admin-all", requireAdmin, async (req, res): Promise<void> 
 });
 
 router.post("/products", requireAdmin, async (req, res): Promise<void> => {
-  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isHolidayRegistry, holidayCategory, isProExclusive, proExclusiveCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize, isDonation, donationRecipientType, donationRecipientName, donationMinAmount, isChurchDonation, churchName, giftCharityPercent, sortOrder } = req.body;
+  const { name, slug, description, price, comparePrice, image, images, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isHolidayRegistry, holidayCategory, isProExclusive, proExclusiveCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize, isDonation, donationRecipientType, donationRecipientName, donationMinAmount, isChurchDonation, churchName, giftCharityPercent, sortOrder } = req.body;
   if (!name || !slug || !description || price == null) {
     res.status(400).json({ error: "Missing required fields" });
     return;
@@ -137,6 +138,7 @@ router.post("/products", requireAdmin, async (req, res): Promise<void> => {
     price: String(price),
     comparePrice: comparePrice != null ? String(comparePrice) : undefined,
     image: image ?? undefined,
+    images: Array.isArray(images) ? images.filter(Boolean) : [],
     categoryId: categoryId ?? undefined,
     stock: stock ?? 0,
     featured: featured ?? false,
@@ -269,13 +271,14 @@ router.patch("/products/:id", requireAdmin, async (req, res): Promise<void> => {
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
   const updates: Partial<typeof productsTable.$inferInsert> = {};
-  const { name, slug, description, price, comparePrice, image, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isHolidayRegistry, holidayCategory, isProExclusive, proExclusiveCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize, isDonation, donationRecipientType, donationRecipientName, donationMinAmount, isChurchDonation, churchName, giftCharityPercent, status, sortOrder } = req.body;
+  const { name, slug, description, price, comparePrice, image, images, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isHolidayRegistry, holidayCategory, isProExclusive, proExclusiveCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize, isDonation, donationRecipientType, donationRecipientName, donationMinAmount, isChurchDonation, churchName, giftCharityPercent, status, sortOrder } = req.body;
   if (name) updates.name = name;
   if (slug) updates.slug = slug;
   if (description) updates.description = description;
   if (price != null) updates.price = String(price);
   if (comparePrice !== undefined) updates.comparePrice = comparePrice != null ? String(comparePrice) : undefined;
   if (image !== undefined) updates.image = image;
+  if (Array.isArray(images)) updates.images = images.filter(Boolean);
   if (categoryId !== undefined) updates.categoryId = categoryId;
   if (stock != null) updates.stock = stock;
   if (featured !== undefined) updates.featured = featured;
@@ -335,6 +338,62 @@ router.delete("/products/:id", requireAdmin, async (req, res): Promise<void> => 
 
   await db.delete(productsTable).where(eq(productsTable.id, id));
   res.sendStatus(204);
+});
+
+// ── Reviews ───────────────────────────────────────────────────────────────────
+
+// GET /api/products/:id/reviews — public
+router.get("/products/:id/reviews", async (req, res): Promise<void> => {
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const reviews = await db
+    .select()
+    .from(productReviewsTable)
+    .where(eq(productReviewsTable.productId, id))
+    .orderBy(desc(productReviewsTable.createdAt));
+
+  const [agg] = await db
+    .select({ avg: avg(productReviewsTable.rating), total: count() })
+    .from(productReviewsTable)
+    .where(eq(productReviewsTable.productId, id));
+
+  res.json({
+    reviews: reviews.map(r => ({
+      id: r.id,
+      name: r.name,
+      rating: parseFloat(String(r.rating)),
+      title: r.title,
+      body: r.body,
+      isVerified: r.isVerified,
+      createdAt: r.createdAt.toISOString(),
+    })),
+    avgRating: agg?.avg ? parseFloat(Number(agg.avg).toFixed(1)) : null,
+    totalReviews: Number(agg?.total ?? 0),
+  });
+});
+
+// POST /api/products/:id/reviews — admin only (seed/manual)
+router.post("/products/:id/reviews", requireAdmin, async (req, res): Promise<void> => {
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const { name, rating, title, body, isVerified } = req.body;
+  if (!name || !rating || !title || !body) {
+    res.status(400).json({ error: "name, rating, title, body required" });
+    return;
+  }
+
+  const [review] = await db.insert(productReviewsTable).values({
+    productId: id,
+    name,
+    rating: String(rating),
+    title,
+    body,
+    isVerified: isVerified ?? false,
+  }).returning();
+
+  res.status(201).json({ id: review.id, name: review.name, rating: parseFloat(String(review.rating)), title: review.title, body: review.body, isVerified: review.isVerified, createdAt: review.createdAt.toISOString() });
 });
 
 export default router;

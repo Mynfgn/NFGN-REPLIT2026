@@ -12,7 +12,8 @@ import { customFetch } from "@/lib/custom-fetch";
 import { resolveImageSrc } from "@/lib/image";
 import {
   ShoppingCart, ArrowLeft, Star, Package, Leaf,
-  CheckCircle2, Loader2, ChevronRight,
+  CheckCircle2, Loader2, ChevronRight, ThumbsUp,
+  Church, Heart, HandHeart,
 } from "lucide-react";
 
 interface Product {
@@ -36,6 +37,24 @@ interface Product {
   benefits: string | null;
   relatedProducts: Product[];
   createdAt: string;
+  // Donation / church giving fields
+  isDonation: boolean;
+  isChurchDonation: boolean;
+  donationRecipientType: string | null;
+  donationRecipientName: string | null;
+  donationMinAmount: number;
+  churchName: string | null;
+  giftCharityPercent: string | null;
+}
+
+interface Review {
+  id: number;
+  name: string;
+  rating: number;
+  title: string;
+  body: string;
+  isVerified: boolean;
+  createdAt: string;
 }
 
 export function ProductDetail() {
@@ -51,6 +70,11 @@ export function ProductDetail() {
   const [activeImage, setActiveImage] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
 
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [avgRating, setAvgRating] = useState<number | null>(null);
+  const [totalReviews, setTotalReviews] = useState(0);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+
   useEffect(() => {
     setLoading(true);
     setError(null);
@@ -65,6 +89,21 @@ export function ProductDetail() {
       .catch(e => setError(e.message ?? "Could not load product"))
       .finally(() => setLoading(false));
   }, [slug]);
+
+  useEffect(() => {
+    if (!product) return;
+    setReviewsLoading(true);
+    customFetch(`/api/products/${product.id}/reviews`)
+      .then(async res => {
+        if (!res.ok) return;
+        const data = await res.json();
+        setReviews(data.reviews ?? []);
+        setAvgRating(data.avgRating ?? null);
+        setTotalReviews(data.totalReviews ?? 0);
+      })
+      .catch(() => {})
+      .finally(() => setReviewsLoading(false));
+  }, [product?.id]);
 
   const addToCart = useAddToCart({
     mutation: {
@@ -133,12 +172,20 @@ export function ProductDetail() {
     ? Math.round((savings / product.comparePrice) * 100)
     : null;
 
+  const isGiftProduct = !!(product.isDonation || product.isChurchDonation);
+  const orgName = product.churchName ?? product.donationRecipientName ?? product.donationRecipientType ?? "Organisation";
+  const charityPct = isGiftProduct ? Math.round(parseFloat(String(product.giftCharityPercent ?? "80")) || 80) : 0;
+  const memberPct = 100 - charityPct;
+
   const benefitsList = product.benefits
     ? product.benefits.split(/\n|;/).map(b => b.trim()).filter(Boolean)
     : [];
   const ingredientsList = product.ingredients
     ? product.ingredients.split(/\n|;|,/).map(i => i.trim()).filter(Boolean)
     : [];
+
+  const displayRating = avgRating ?? 4.9;
+  const displayCount = totalReviews > 0 ? totalReviews : null;
 
   return (
     <div className="container mx-auto px-4 py-10 max-w-6xl">
@@ -172,8 +219,14 @@ export function ProductDetail() {
                 PRO PACKAGE
               </div>
             )}
-            {savingsPct && (
-              <div className="absolute top-3 left-3 bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+            {isGiftProduct && (
+              <div className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                {product.isChurchDonation ? <Church className="h-3 w-3" /> : <Heart className="h-3 w-3" />}
+                {product.isChurchDonation ? "Church Giving" : "Gift / Donation"}
+              </div>
+            )}
+            {!isGiftProduct && savingsPct && (
+              <div className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
                 SAVE {savingsPct}%
               </div>
             )}
@@ -213,32 +266,75 @@ export function ProductDetail() {
           {/* Name */}
           <h1 className="text-3xl md:text-4xl font-serif font-bold leading-tight">{product.name}</h1>
 
-          {/* Ratings placeholder */}
+          {/* Ratings */}
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            {[1,2,3,4,5].map(s => <Star key={s} className="h-4 w-4 fill-primary text-primary" />)}
-            <span className="font-medium ml-1 text-foreground">4.9</span>
-            <span>· Premium Formula</span>
-          </div>
-
-          {/* Price */}
-          <div className="flex items-baseline gap-3">
-            <span className="text-3xl font-bold text-foreground">${product.price.toFixed(2)}</span>
-            {product.comparePrice && product.comparePrice > product.price && (
-              <>
-                <span className="text-xl text-muted-foreground line-through">${product.comparePrice.toFixed(2)}</span>
-                {savings && (
-                  <Badge className="bg-green-100 text-green-700 border-green-200 text-sm px-2">
-                    Save ${savings.toFixed(2)}
-                  </Badge>
-                )}
-              </>
+            {[1,2,3,4,5].map(s => (
+              <Star
+                key={s}
+                className={`h-4 w-4 ${s <= Math.round(displayRating) ? "fill-primary text-primary" : "fill-muted text-muted-foreground"}`}
+              />
+            ))}
+            <span className="font-medium ml-1 text-foreground">{displayRating.toFixed(1)}</span>
+            {displayCount !== null && (
+              <span>· {displayCount} {displayCount === 1 ? "review" : "reviews"}</span>
             )}
           </div>
 
+          {/* Price / Donation Amount */}
+          {isGiftProduct ? (
+            <div className="space-y-3">
+              <div className="flex items-baseline gap-3">
+                <span className="text-sm text-muted-foreground">Starting at</span>
+                <span className="text-3xl font-bold text-foreground">${product.donationMinAmount.toFixed(2)}</span>
+              </div>
+
+              {/* Org name */}
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                {product.isChurchDonation ? <Church className="h-4 w-4 text-primary" /> : <HandHeart className="h-4 w-4 text-primary" />}
+                <span className="text-foreground">Recipient: <strong>{orgName}</strong></span>
+              </div>
+
+              {/* Gift split bar */}
+              <div className="rounded-xl border p-4 space-y-2" style={{ background: "rgba(201,168,76,0.05)", borderColor: "rgba(201,168,76,0.25)" }}>
+                <p className="text-xs font-bold tracking-wide text-primary">🎁 HOW YOUR GIFT IS DISTRIBUTED</p>
+                <div className="flex rounded-full overflow-hidden h-3.5 border" style={{ borderColor: "rgba(201,168,76,0.3)" }}>
+                  <div style={{ width: `${charityPct}%`, background: "#C9A84C", transition: "width 0.2s" }} />
+                  <div style={{ flex: 1, background: "rgba(255,255,255,0.08)" }} />
+                </div>
+                <div className="flex justify-between text-xs font-semibold text-muted-foreground">
+                  <span className="text-primary">{product.isChurchDonation ? "⛪" : "🤝"} {charityPct}% → {orgName}</span>
+                  <span>🔗 {memberPct}% → Network</span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  The <strong className="text-foreground">{charityPct}%</strong> goes directly to {orgName}. The remaining {memberPct}% funds NFGN referral rewards and platform operations.
+                </p>
+              </div>
+
+              {/* Gift notice */}
+              <div className="rounded-lg border px-4 py-3 text-xs leading-relaxed" style={{ background: "rgba(253,224,71,0.06)", borderColor: "rgba(253,224,71,0.25)", color: "#92400e" }}>
+                <strong>Gift Notice:</strong> This is a <strong>personal gift</strong> — not a purchase or taxable transaction. Gifts are generally not considered taxable income for recipients. Consult your tax adviser for specific guidance.
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-baseline gap-3">
+              <span className="text-3xl font-bold text-foreground">${product.price.toFixed(2)}</span>
+              {product.comparePrice && product.comparePrice > product.price && (
+                <>
+                  <span className="text-xl text-muted-foreground line-through">${product.comparePrice.toFixed(2)}</span>
+                  {savings && (
+                    <Badge className="bg-primary/10 text-primary border-primary/20 text-sm px-2">
+                      Save ${savings.toFixed(2)}
+                    </Badge>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
           {/* CV */}
-          {product.cv > 0 && (
+          {!isGiftProduct && product.cv > 0 && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Leaf className="h-4 w-4 text-green-600" />
+              <Leaf className="h-4 w-4 text-primary" />
               <span><strong className="text-foreground">{product.cv} CV</strong> earned with this purchase</span>
             </div>
           )}
@@ -255,7 +351,7 @@ export function ProductDetail() {
               <ul className="space-y-1.5">
                 {benefitsList.map((b, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
                     <span>{b}</span>
                   </li>
                 ))}
@@ -263,7 +359,7 @@ export function ProductDetail() {
             </div>
           )}
 
-          {/* Add to Cart */}
+          {/* Add to Cart / Give Now */}
           <div className="pt-2 space-y-3">
             {product.stock === 0 ? (
               <Button className="w-full" size="lg" disabled>Out of Stock</Button>
@@ -276,7 +372,9 @@ export function ProductDetail() {
               >
                 {adding
                   ? <><Loader2 className="h-5 w-5 animate-spin" /> Adding…</>
-                  : <><ShoppingCart className="h-5 w-5" /> Add to Cart</>
+                  : isGiftProduct
+                    ? <>{product.isChurchDonation ? <Church className="h-5 w-5" /> : <Heart className="h-5 w-5" />} Give Now</>
+                    : <><ShoppingCart className="h-5 w-5" /> Add to Cart</>
                 }
               </Button>
             )}
@@ -287,21 +385,38 @@ export function ProductDetail() {
             </Link>
           </div>
 
-          {/* Trust badges */}
-          <div className="grid grid-cols-3 gap-3 pt-2 border-t text-center text-xs text-muted-foreground">
-            <div className="flex flex-col items-center gap-1">
-              <Leaf className="h-5 w-5 text-green-600" />
-              <span>All Natural</span>
+          {/* Trust badges — vary by product type */}
+          {isGiftProduct ? (
+            <div className="grid grid-cols-3 gap-3 pt-2 border-t text-center text-xs text-muted-foreground">
+              <div className="flex flex-col items-center gap-1">
+                <CheckCircle2 className="h-5 w-5 text-primary" />
+                <span>Gift — Not Taxable</span>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <Heart className="h-5 w-5 text-primary" />
+                <span>{charityPct}% to Org</span>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <HandHeart className="h-5 w-5 text-primary" />
+                <span>Community Impact</span>
+              </div>
             </div>
-            <div className="flex flex-col items-center gap-1">
-              <CheckCircle2 className="h-5 w-5 text-primary" />
-              <span>Quality Tested</span>
+          ) : (
+            <div className="grid grid-cols-3 gap-3 pt-2 border-t text-center text-xs text-muted-foreground">
+              <div className="flex flex-col items-center gap-1">
+                <Leaf className="h-5 w-5 text-primary" />
+                <span>All Natural</span>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <CheckCircle2 className="h-5 w-5 text-primary" />
+                <span>Quality Tested</span>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <Package className="h-5 w-5 text-primary" />
+                <span>Fast Shipping</span>
+              </div>
             </div>
-            <div className="flex flex-col items-center gap-1">
-              <Package className="h-5 w-5 text-blue-500" />
-              <span>Fast Shipping</span>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -312,12 +427,69 @@ export function ProductDetail() {
           <div className="flex flex-wrap gap-2">
             {ingredientsList.map((ing, i) => (
               <Badge key={i} variant="secondary" className="text-sm px-3 py-1">
-                <Leaf className="h-3 w-3 mr-1.5 text-green-600" />{ing}
+                <Leaf className="h-3 w-3 mr-1.5 text-primary" />{ing}
               </Badge>
             ))}
           </div>
         </div>
       )}
+
+      {/* Reviews Section */}
+      <div className="mt-14">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-serif font-bold">Customer Reviews</h2>
+          {totalReviews > 0 && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="flex">
+                {[1,2,3,4,5].map(s => (
+                  <Star key={s} className={`h-4 w-4 ${s <= Math.round(displayRating) ? "fill-primary text-primary" : "fill-muted text-muted"}`} />
+                ))}
+              </div>
+              <span className="font-semibold text-foreground">{displayRating.toFixed(1)}</span>
+              <span>out of 5 · {totalReviews} {totalReviews === 1 ? "review" : "reviews"}</span>
+            </div>
+          )}
+        </div>
+
+        {reviewsLoading ? (
+          <div className="space-y-4">
+            {[1,2,3].map(i => <Skeleton key={i} className="h-28 rounded-xl" />)}
+          </div>
+        ) : reviews.length === 0 ? (
+          <div className="text-center py-10 text-muted-foreground border rounded-xl bg-muted/20">
+            <ThumbsUp className="h-8 w-8 mx-auto mb-2 opacity-40" />
+            <p className="text-sm">No reviews yet. Be the first!</p>
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2">
+            {reviews.map(review => (
+              <div key={review.id} className="rounded-xl border bg-card p-5 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="flex gap-0.5 mb-1">
+                      {[1,2,3,4,5].map(s => (
+                        <Star key={s} className={`h-3.5 w-3.5 ${s <= review.rating ? "fill-primary text-primary" : "fill-muted text-muted"}`} />
+                      ))}
+                    </div>
+                    <p className="font-semibold text-sm leading-tight">{review.title}</p>
+                  </div>
+                  {review.isVerified && (
+                    <Badge variant="outline" className="text-xs whitespace-nowrap border-primary/30 text-primary flex-shrink-0">
+                      ✓ Verified
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed">{review.body}</p>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground pt-1 border-t">
+                  <span className="font-medium text-foreground">{review.name}</span>
+                  <span>·</span>
+                  <span>{new Date(review.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Related Products */}
       {product.relatedProducts?.length > 0 && (

@@ -159,6 +159,8 @@ const EMPTY_FORM = {
   price: "",
   comparePrice: "",
   image: "",
+  image2: "",
+  image3: "",
   categoryId: "",
   stock: "0",
   featured: false,
@@ -200,6 +202,80 @@ const EMPTY_FORM = {
 
 function slugify(str: string) {
   return str.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+
+function ImageSlot({ label, value, onChange, slotKey }: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  slotKey: string;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const { uploadFile, isUploading } = useUpload({
+    onSuccess: (response: any) => {
+      onChange(response.objectPath);
+      toast.success("Image uploaded!");
+    },
+    onError: (err: any) => {
+      toast.error(`Upload failed: ${err.message}`);
+    },
+  });
+
+  return (
+    <div className="space-y-2 rounded-lg border bg-muted/20 p-3">
+      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+      <div className="flex gap-2 items-center">
+        <Input
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder="Paste URL or click Upload →"
+          disabled={isUploading}
+          className="flex-1 text-xs h-8"
+        />
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (file) await uploadFile(file);
+            if (fileRef.current) fileRef.current.value = "";
+          }}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1.5 text-xs whitespace-nowrap"
+          onClick={() => fileRef.current?.click()}
+          disabled={isUploading}
+        >
+          {isUploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+          Upload
+        </Button>
+        {value && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+            onClick={() => onChange("")}
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        )}
+      </div>
+      {value && (
+        <img
+          src={getImageSrc(value) ?? ""}
+          alt={`${slotKey} preview`}
+          className="h-16 w-16 rounded object-cover border"
+          onError={e => (e.currentTarget.style.display = "none")}
+        />
+      )}
+    </div>
+  );
 }
 
 export function AdminProductsPage() {
@@ -287,6 +363,8 @@ export function AdminProductsPage() {
       price: String(p.price),
       comparePrice: p.comparePrice != null ? String(p.comparePrice) : "",
       image: p.image ?? "",
+      image2: (p as any).images?.[1] ?? "",
+      image3: (p as any).images?.[2] ?? "",
       categoryId: p.categoryId ? String(p.categoryId) : "",
       stock: String(p.stock),
       featured: p.featured,
@@ -354,6 +432,7 @@ export function AdminProductsPage() {
         price: parseFloat(form.price),
         comparePrice: form.comparePrice ? parseFloat(form.comparePrice) : null,
         image: form.image || null,
+        images: [form.image2, form.image3].filter(Boolean),
         categoryId: form.categoryId ? parseInt(form.categoryId) : null,
         stock: parseInt(form.stock) || 0,
         featured: form.featured,
@@ -886,74 +965,36 @@ export function AdminProductsPage() {
               </div>
             </div>
 
-            {/* Product Image */}
-            <div className="space-y-2">
-              <Label>Product Image</Label>
-              <div className="flex gap-2 items-start">
-                <div className="flex-1 space-y-1.5">
-                  <Input
-                    value={form.image}
-                    onChange={e => setForm(f => ({ ...f, image: e.target.value }))}
-                    placeholder="https://example.com/image.jpg or upload →"
-                    disabled={isUploading}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Paste a URL or click "Upload" to select a file from your computer.
-                  </p>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (file) await uploadFile(file);
-                      if (fileInputRef.current) fileInputRef.current.value = "";
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading || saving}
-                    className="gap-2 whitespace-nowrap"
-                  >
-                    {isUploading ? (
-                      <><Loader2 className="h-4 w-4 animate-spin" />Uploading…</>
-                    ) : (
-                      <><Upload className="h-4 w-4" />Upload Image</>
-                    )}
-                  </Button>
-                  {form.image && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setForm(f => ({ ...f, image: "" }))}
-                      className="gap-1 text-muted-foreground hover:text-destructive"
-                    >
-                      <X className="h-3.5 w-3.5" />Clear
-                    </Button>
-                  )}
-                </div>
+            {/* Product Images */}
+            <div className="space-y-4">
+              <div>
+                <Label className="text-sm font-semibold">Product Photos</Label>
+                <p className="text-xs text-muted-foreground mt-0.5">Add up to 3 photos. The first is the main display image shown in the store listing.</p>
               </div>
-              {form.image && (
-                <div className="flex items-center gap-3 p-2 rounded-lg border bg-muted/30">
-                  <img
-                    src={getImageSrc(form.image) ?? ""}
-                    alt="preview"
-                    className="h-20 w-20 rounded object-cover border flex-shrink-0"
-                    onError={e => (e.currentTarget.style.display = "none")}
-                  />
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium text-muted-foreground mb-0.5">Image Preview</p>
-                    <p className="text-xs text-muted-foreground break-all line-clamp-2">{form.image}</p>
-                  </div>
-                </div>
-              )}
+
+              {/* Image 1 — Primary */}
+              <ImageSlot
+                label="Photo 1 — Main (required)"
+                value={form.image}
+                onChange={v => setForm(f => ({ ...f, image: v }))}
+                slotKey="image1"
+              />
+
+              {/* Image 2 — Secondary */}
+              <ImageSlot
+                label="Photo 2 — Secondary (optional)"
+                value={form.image2}
+                onChange={v => setForm(f => ({ ...f, image2: v }))}
+                slotKey="image2"
+              />
+
+              {/* Image 3 — Tertiary */}
+              <ImageSlot
+                label="Photo 3 — Tertiary (optional)"
+                value={form.image3}
+                onChange={v => setForm(f => ({ ...f, image3: v }))}
+                slotKey="image3"
+              />
             </div>
 
             {/* Pricing */}

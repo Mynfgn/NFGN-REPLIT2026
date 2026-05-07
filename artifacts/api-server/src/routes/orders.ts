@@ -557,6 +557,30 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
             }),
           });
         }
+
+        // Emails 4-11: upline levels 2-9 — traverse the sponsorId chain upward
+        // Each upline member who earned a residual reward gets a clear "Gift — not taxable" notification.
+        let prevUplineId: number = currentUser.sponsorId;
+        for (let level = 2; level <= 9; level++) {
+          const [prevUser] = await db
+            .select({ sponsorId: usersTable.sponsorId })
+            .from(usersTable)
+            .where(eq(usersTable.id, prevUplineId));
+          if (!prevUser?.sponsorId) break;
+          const nextUplineId = prevUser.sponsorId;
+          const [uplineUser] = await db.select().from(usersTable).where(eq(usersTable.id, nextUplineId));
+          if (!uplineUser) break;
+          await sendEmail({
+            to: uplineUser.email,
+            subject: `Upline Gift Reward — Your Network is Giving! (Order ${orderNumber})`,
+            html: giftNotificationHtml({
+              role: "upline",
+              recipientName: uplineUser.firstName,
+              ...baseOpts,
+            }),
+          });
+          prevUplineId = nextUplineId;
+        }
       }
     }
   }

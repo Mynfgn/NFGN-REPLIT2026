@@ -197,7 +197,7 @@ export function Join() {
                       />
                     </FormControl>
                     {sponsorInfo && (
-                      <p className="text-xs text-green-600 font-medium flex items-center gap-1">
+                      <p className="text-xs text-primary font-medium flex items-center gap-1">
                         <CheckCircle className="h-3 w-3" /> Sponsored by {sponsorInfo.name} · {sponsorInfo.label}
                       </p>
                     )}

@@ -33,7 +33,7 @@ export const ordersTable = pgTable("orders", {
 export const orderItemsTable = pgTable("order_items", {
   id: serial("id").primaryKey(),
   orderId: integer("order_id").notNull(),
-  productId: integer("product_id").notNull(),
+  productId: integer("product_id"),
   productName: text("product_name").notNull(),
   productImage: text("product_image"),
   price: numeric("price", { precision: 10, scale: 2 }).notNull(),

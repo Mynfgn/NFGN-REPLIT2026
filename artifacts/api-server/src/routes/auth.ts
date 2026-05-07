@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, usersTable, walletsTable, genealogyNodesTable, notificationsTable, professionalsTable, ordersTable, orderItemsTable, productsTable, appSettingsTable } from "@workspace/db";
+import { db, usersTable, walletsTable, genealogyNodesTable, notificationsTable, professionalsTable, ordersTable, orderItemsTable, productsTable, proPackagesTable, appSettingsTable } from "@workspace/db";
 import { eq, count, sql } from "drizzle-orm";
 import { hashPassword, verifyPassword, generateToken, generateReferralCode, requireAuth } from "../lib/auth";
 import { LoginBody, RegisterBody } from "@workspace/api-zod";
@@ -207,9 +207,9 @@ router.post("/auth/register", async (req, res): Promise<void> => {
 });
 
 router.post("/auth/register-pro", async (req, res): Promise<void> => {
-  const { email, password, firstName, lastName, phone, referralCode, selectedProductId, paymentMethod, shippingAddress } = req.body;
+  const { email, password, firstName, lastName, phone, referralCode, selectedProductId, selectedProPackageId, paymentMethod, shippingAddress } = req.body;
 
-  if (!email || !password || !firstName || !lastName || !referralCode || !selectedProductId || !paymentMethod || !shippingAddress) {
+  if (!email || !password || !firstName || !lastName || !referralCode || (!selectedProductId && !selectedProPackageId) || !paymentMethod || !shippingAddress) {
     res.status(400).json({ error: "All fields are required including sponsor referral code, selected package, payment method, and shipping address." });
     return;
   }
@@ -245,10 +245,37 @@ router.post("/auth/register-pro", async (req, res): Promise<void> => {
     sponsorId = sponsor.id;
   }
 
-  const [product] = await db.select().from(productsTable).where(eq(productsTable.id, parseInt(selectedProductId)));
-  if (!product || !product.isProPackage) {
-    res.status(400).json({ error: "Selected product is not a valid Pro Registration Package." });
-    return;
+  // Resolve package details — supports both new (selectedProPackageId) and legacy (selectedProductId) flows
+  let pkgName: string;
+  let pkgPrice: number;
+  let pkgCv: number;
+  let pkgImage: string | null = null;
+  let orderProductId: number | null = null;
+
+  if (selectedProPackageId) {
+    const [proPkg] = await db.select().from(proPackagesTable).where(eq(proPackagesTable.id, parseInt(selectedProPackageId)));
+    if (!proPkg) {
+      res.status(400).json({ error: "Selected package not found." });
+      return;
+    }
+    pkgName = proPkg.name;
+    pkgPrice = parseFloat(proPkg.price);
+    pkgCv = proPkg.cv;
+    if (proPkg.productId) {
+      const [linked] = await db.select().from(productsTable).where(eq(productsTable.id, proPkg.productId));
+      if (linked) { orderProductId = linked.id; pkgImage = linked.image ?? null; }
+    }
+  } else {
+    const [product] = await db.select().from(productsTable).where(eq(productsTable.id, parseInt(selectedProductId)));
+    if (!product || !product.isProPackage) {
+      res.status(400).json({ error: "Selected product is not a valid Pro Registration Package." });
+      return;
+    }
+    pkgName = product.name;
+    pkgPrice = parseFloat(product.price);
+    pkgCv = product.cv ?? 0;
+    pkgImage = product.image ?? null;
+    orderProductId = product.id;
   }
 
   const passwordHash = await hashPassword(password);
@@ -329,10 +356,9 @@ router.post("/auth/register-pro", async (req, res): Promise<void> => {
   const taxRate = parseFloat(settings?.taxRate ?? "8.5") / 100;
   const shippingRate = parseFloat(settings?.shippingRate ?? "9.99");
   const freeShippingThreshold = parseFloat(settings?.freeShippingThreshold ?? "75");
-  const productPrice = parseFloat(product.price);
-  const tax = productPrice * taxRate;
-  const shipping = productPrice >= freeShippingThreshold ? 0 : shippingRate;
-  const total = productPrice + tax + shipping;
+  const tax = pkgPrice * taxRate;
+  const shipping = pkgPrice >= freeShippingThreshold ? 0 : shippingRate;
+  const total = pkgPrice + tax + shipping;
   const orderNumber = `NFGN-PRO-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
   const [order] = await db.insert(ordersTable).values({
@@ -341,7 +367,7 @@ router.post("/auth/register-pro", async (req, res): Promise<void> => {
     status: "pending",
     paymentMethod,
     paymentStatus: paymentMethod === "cod" ? "pending" : "demo_paid",
-    subtotal: String(productPrice),
+    subtotal: String(pkgPrice),
     tax: String(tax),
     shipping: String(shipping),
     discount: "0",
@@ -352,13 +378,13 @@ router.post("/auth/register-pro", async (req, res): Promise<void> => {
 
   await db.insert(orderItemsTable).values({
     orderId: order.id,
-    productId: product.id,
-    productName: product.name,
-    productImage: product.image ?? undefined,
-    price: product.price,
+    productId: orderProductId ?? undefined,
+    productName: pkgName,
+    productImage: pkgImage ?? undefined,
+    price: String(pkgPrice),
     quantity: 1,
-    total: String(productPrice),
-    cvTotal: product.cv ?? 0,
+    total: String(pkgPrice),
+    cvTotal: pkgCv,
   });
 
   // Mark user as pending Pro Member — full activation happens when admin approves the order

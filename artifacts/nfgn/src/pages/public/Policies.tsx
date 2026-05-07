@@ -2,7 +2,7 @@ import { PublicLayout } from "@/components/layout/PublicLayout";
 import { Badge } from "@/components/ui/badge";
 import {
   FileText, ShieldCheck, CreditCard, RefreshCw,
-  Users, Star, AlertTriangle, ChevronDown, ChevronRight,
+  Users, Star, AlertTriangle, ChevronDown, ChevronRight, Heart, Ban, ThumbsUp,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -104,6 +104,7 @@ export function PoliciesPage() {
             { href: "#refund-policy", label: "Refund Policy" },
             { href: "#cashout", label: "Cash-Out Policy" },
             { href: "#comp-plan", label: "Compensation Plan" },
+            { href: "#donations", label: "Gifts & Donations" },
             { href: "#general", label: "General Terms" },
           ].map(link => (
             <a
@@ -341,6 +342,98 @@ export function PoliciesPage() {
           </div>
           <p className="text-xs text-muted-foreground mt-3">
             Commission rates, volume requirements, and specific terms are detailed in the full Compensation Plan document available in the Pro Member dashboard.
+          </p>
+        </Section>
+
+        {/* ── Gifts & Donations Compliance ── */}
+        <Section id="donations" icon={Heart} title="Gifts, Donations & Charitable Giving — Compliance Policy" badge="All Members">
+
+          {/* Required Notice */}
+          <div className="rounded-xl border-2 border-red-300 bg-red-50 p-5 space-y-2 not-prose">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0" />
+              <p className="font-bold text-red-800 text-sm">Required Compliance Notice — Effective Immediately</p>
+            </div>
+            <p className="text-sm text-red-900 leading-relaxed">
+              Funds received from NFGN donation and charitable giving programs (Church Giving, Non-Profit Giving, Fundraiser Campaigns) are classified as <strong>GIFT ACKNOWLEDGMENTS</strong> under NFGN policy and applicable law. These funds are <strong>NOT</strong> commissions, bonuses, earned income, or compensation for services rendered. By accepting any gift distribution from NFGN, you confirm full understanding of and agreement with this policy. NFGN makes no representation regarding the tax treatment of these funds. Consult a qualified tax professional.
+            </p>
+          </div>
+
+          <h3 className="font-bold text-foreground text-sm mt-4 mb-2">What Are NFGN Giving Programs?</h3>
+          <p>NFGN facilitates three types of charitable giving: <strong>Church Giving</strong>, <strong>Non-Profit Giving</strong>, and <strong>Fundraiser Campaigns</strong>. When a supporter makes a donation through the NFGN platform, the funds are split between the designated recipient and the member network that facilitated the fundraiser.</p>
+          <ul className="space-y-1.5 not-prose mt-2">
+            <Rule><strong>Charity / Recipient Share (default 80%):</strong> Disbursed directly to the designated church, non-profit, or cause. This is the primary and intended purpose of the donation.</Rule>
+            <Rule><strong>Facilitation Gift Share (default 20%):</strong> Distributed to participating members as a voluntary Gift Acknowledgment for their role in facilitating the fundraiser. Split percentages are configurable per campaign by NFGN administration.</Rule>
+          </ul>
+
+          <h3 className="font-bold text-foreground text-sm mt-4 mb-2">This Is NOT a Commission</h3>
+          <p>The word "commission" implies payment earned from a for-profit commercial transaction. A gift acknowledgment is fundamentally different — it is a voluntary expression of gratitude, not compensation for a sale. Misrepresenting a gift acknowledgment as a commission or bonus is a <strong>violation of NFGN policy</strong> and may expose members to regulatory and legal risk.</p>
+
+          <h3 className="font-bold text-foreground text-sm mt-4 mb-2">Approved Language — What You Can and Cannot Say</h3>
+          <div className="grid sm:grid-cols-2 gap-4 not-prose">
+            <div className="rounded-xl border border-green-200 bg-green-50 p-4 space-y-2">
+              <p className="text-xs font-bold text-green-800 uppercase flex items-center gap-1.5"><ThumbsUp className="h-3.5 w-3.5" /> Approved Language</p>
+              <ul className="space-y-1.5">
+                {[
+                  "\"A portion of every donation is shared with participating members as a gift acknowledgment.\"",
+                  "\"Members receive a gift share for facilitating this charitable giving program.\"",
+                  "\"Donation activity counts toward your Group Volume.\"",
+                  "\"The gift share appears in your wallet as a Gift Distribution, separate from commission earnings.\"",
+                ].map(s => <Rule key={s}><em>{s}</em></Rule>)}
+              </ul>
+            </div>
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4 space-y-2">
+              <p className="text-xs font-bold text-red-800 uppercase flex items-center gap-1.5"><Ban className="h-3.5 w-3.5" /> Prohibited Language</p>
+              <ul className="space-y-1.5">
+                {[
+                  "\"I earn commissions when donations are made to churches.\"",
+                  "\"My church fundraiser pays me a bonus.\"",
+                  "\"I get a commission on every donation in my downline.\"",
+                  "\"Our giving program is a commission-generating income stream.\"",
+                  "\"I get paid when people donate through my link.\"",
+                ].map(s => <Rule key={s}><em>{s}</em></Rule>)}
+              </ul>
+            </div>
+          </div>
+
+          <h3 className="font-bold text-foreground text-sm mt-4 mb-2">Does It Count Toward GV / PV?</h3>
+          <ul className="space-y-1.5 not-prose">
+            <Rule><strong>YES — volume counts.</strong> Each donation product has a CV value assigned by administration. That CV is credited toward the facilitating member's Personal Volume (PV) and flows through the downline for Group Volume (GV) — supporting Pro Member maintenance and BPP qualification.</Rule>
+            <Rule>The <em>volume</em> (CV/PV/GV) counts toward qualifications. The <em>monetary distribution</em> is a Gift — these are separate concepts. Volume helps you qualify; the gift share is a separate, non-commission distribution.</Rule>
+          </ul>
+
+          <h3 className="font-bold text-foreground text-sm mt-4 mb-2">Where Do Funds Go & How Long Does It Take?</h3>
+          <ul className="space-y-1.5 not-prose">
+            <Rule><strong>Charity/Church/Non-Profit Share:</strong> Held by NFGN and disbursed directly to the organization per the payout arrangement established at enrollment. Typical disbursement: 5–10 business days from donation clearing.</Rule>
+            <Rule><strong>Your Gift Distribution:</strong> Appears in your NFGN E-Wallet as a PENDING "Gift Distribution" transaction within 24–72 hours of the donation being processed.</Rule>
+            <Rule><strong>Admin Review:</strong> NFGN administration reviews all gift distributions. Typical review period: 3–5 business days.</Rule>
+            <Rule><strong>Checking Status:</strong> Go to Dashboard → Wallet → Transaction History. Look for "Gift Distribution" entries. Pending = under review; Available = cleared and withdrawable.</Rule>
+            <Rule><strong>Withdrawing Funds:</strong> Once cleared, gift distributions are part of your available wallet balance. Request payout via Dashboard → Wallet → Request Payout, subject to the standard cash-out policy.</Rule>
+          </ul>
+
+          <h3 className="font-bold text-foreground text-sm mt-4 mb-2">Basic Tax Information — US Members</h3>
+          <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 not-prose space-y-3">
+            <p className="text-sm font-bold text-blue-800">⚠ NFGN is NOT a tax advisor. This information is general in nature. Always consult a qualified tax professional for advice specific to your situation.</p>
+            <ul className="space-y-2">
+              {[
+                { q: "Are gift distributions I receive taxable?", a: "Under US tax law, gifts received are generally not taxable income to the recipient, subject to IRS annual gift exclusion thresholds. Whether this applies to your specific gift distributions depends on the nature of the transaction, total amounts received, and your individual circumstances. Consult a tax professional." },
+                { q: "Will NFGN issue me a 1099?", a: "If your total payments from NFGN (commissions + gift distributions + all wallet earnings combined) exceed IRS reporting thresholds in a calendar year, NFGN may be required to issue a Form 1099-NEC or 1099-MISC. NFGN will comply with all applicable IRS reporting requirements. You are responsible for tracking and properly reporting all receipts." },
+                { q: "Are donations I MAKE through NFGN tax-deductible?", a: "Only if the recipient organization holds IRS 501(c)(3) status. NFGN cannot guarantee the tax-exempt status of any church or non-profit on the platform. Independently verify the status of any organization you donate to and obtain a tax receipt directly from that organization. NFGN does not issue donation receipts." },
+                { q: "What records should I keep?", a: "Maintain records of all gift distributions received (available in your Wallet transaction history), all donations made, and all commission earnings. Your tax professional will advise on specific record-keeping requirements for your situation." },
+              ].map(item => (
+                <li key={item.q} className="rounded-lg bg-white border border-blue-100 p-3 space-y-1">
+                  <p className="font-semibold text-xs text-blue-900">{item.q}</p>
+                  <p className="text-xs text-blue-800 leading-relaxed">{item.a}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <h3 className="font-bold text-foreground text-sm mt-4 mb-2">How Is This Different From Book-A-Professional?</h3>
+          <p>Book-A-Professional involves payment for a professional service — a for-profit commercial transaction. The professional's share is service income; the facilitation pool is a standard commission. Both are ordinary income for tax purposes. Charitable giving programs are fundamentally different: the donor is making a gift, not a purchase. The member share is a gift acknowledgment, not a commission. These must be treated and described separately at all times.</p>
+
+          <p className="text-xs text-muted-foreground mt-3">
+            For full compliance documentation including the approved Language Guide, GV/PV rules, and detailed tax information, see the <strong>Gifts & Donations</strong> section of the Comp Plan (Dashboard → Comp Plan → Gifts & Donations) and the NFGN Basic Training (Dashboard → Training → Gifts & Donations).
           </p>
         </Section>
 

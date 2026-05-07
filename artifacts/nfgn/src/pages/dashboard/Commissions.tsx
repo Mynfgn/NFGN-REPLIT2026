@@ -2,8 +2,10 @@ import { useListCommissions, useGetCommissionRules, useGetMe } from "@workspace/
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, DollarSign, TrendingUp, Users, Gift } from "lucide-react";
+import { Loader2, DollarSign, TrendingUp, Users, Gift, Heart, AlertTriangle } from "lucide-react";
 import { commissionTypeLabel, commissionTypeBadgeClass, commissionStatusBadgeVariant } from "@/lib/labels";
+
+const GOLD = "#C9A84C";
 
 function CommissionRow({ c }: { c: any }) {
   return (
@@ -63,6 +65,17 @@ export function CommissionsPage() {
       <div>
         <h1 className="text-3xl font-serif font-bold">Commissions</h1>
         <p className="text-muted-foreground">Your referral, PSC, PMRC, and PMB earnings</p>
+      </div>
+
+      {/* Gift Distribution Compliance Notice */}
+      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 flex gap-3">
+        <Heart className="h-5 w-5 text-pink-600 flex-shrink-0 mt-0.5" />
+        <div className="space-y-1">
+          <p className="font-semibold text-amber-900 text-sm">Note: Gifts & Donations Are Not Commissions</p>
+          <p className="text-xs text-amber-800 leading-relaxed">
+            If you participate in NFGN Church Giving, Non-Profit Giving, or Fundraiser campaigns, the funds you receive from those programs are <strong>Gift Acknowledgments</strong> — not commissions or bonuses. They appear in your <strong>Wallet</strong> as "Gift Distributions," not on this commissions page. Gift distributions count toward your GV/PV volume but are classified separately from earned commission income for legal and tax compliance. <a href="/dashboard/comp-plan?s=donations" className="underline font-semibold" style={{ color: GOLD }}>Read the full policy →</a>
+          </p>
+        </div>
       </div>
 
       {/* Summary cards */}

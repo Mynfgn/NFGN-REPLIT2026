@@ -7,6 +7,7 @@ import {
   DollarSign, TrendingUp, Users, Star, Award, Home,
   ChevronRight, CheckCircle2, Info, Zap, ArrowRight, BookOpen,
   Leaf, CalendarDays, Sparkles, Trophy, Shield, CreditCard,
+  Heart, AlertTriangle, Ban, ThumbsUp,
 } from "lucide-react";
 
 const GOLD = "#C9A84C";
@@ -21,6 +22,7 @@ const SECTIONS = [
   { id: "pmrc",        label: "Multi-Level Retail",     icon: Users },
   { id: "psb",         label: "Power Squad Bonuses",    icon: Star },
   { id: "bpp",         label: "Bill Payer Program",     icon: Home },
+  { id: "donations",   label: "Gifts & Donations",      icon: Heart },
 ];
 
 function SectionNav({ active, onChange }: { active: string; onChange: (s: string) => void }) {
@@ -1142,6 +1144,270 @@ function BPPSection() {
   );
 }
 
+// ── GIFTS & DONATIONS COMPLIANCE ─────────────────────────────────────────────
+function DonationsComplianceSection() {
+  return (
+    <div className="space-y-6">
+
+      {/* Hero */}
+      <div className="rounded-2xl p-6 text-white space-y-4" style={{ background: "linear-gradient(135deg, #1a0a00, #0a0a0a)", border: `1px solid ${GOLD}30` }}>
+        <div className="flex items-start gap-3">
+          <div className="h-10 w-10 rounded-xl flex-shrink-0 flex items-center justify-center" style={{ background: `${GOLD}25`, border: `1px solid ${GOLD}50` }}>
+            <Heart className="h-5 w-5" style={{ color: GOLD }} />
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-widest font-bold mb-0.5" style={{ color: GOLD }}>Compliance & Education</p>
+            <h2 className="text-xl font-serif font-bold">Gifts, Donations & Charitable Giving</h2>
+            <p className="text-white/50 text-xs mt-0.5">What they are, how they work, and the language you must use</p>
+          </div>
+        </div>
+        <p className="text-sm text-white/75 leading-relaxed">
+          NFGN facilitates charitable fundraising for churches, non-profits, and community causes. When a donation flows through the NFGN platform,
+          a portion is distributed to participating members — but this distribution is classified as a <strong className="text-white">Gift Acknowledgment</strong>,
+          not a commission or bonus. Understanding this distinction is both a legal and ethical requirement for all NFGN members.
+        </p>
+      </div>
+
+      {/* Critical Compliance Notice */}
+      <div className="rounded-2xl border-2 border-red-300 bg-red-50 p-5 space-y-3">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0" />
+          <p className="font-bold text-red-800 text-sm uppercase tracking-wide">Required Compliance Notice — Read Before Receiving Any Gift Distribution</p>
+        </div>
+        <div className="rounded-xl bg-white border border-red-200 p-4 text-sm text-red-900 space-y-2 leading-relaxed">
+          <p><strong>IMPORTANT:</strong> Funds received from donation and charitable giving programs through NFGN are classified as <strong>GIFT ACKNOWLEDGMENTS</strong> under NFGN policy and applicable law.</p>
+          <p>These funds are <strong>NOT</strong> commissions, bonuses, compensation, or payment for services rendered. They are a voluntary distribution of gratitude extended to participating members who facilitated a charitable giving program.</p>
+          <p>NFGN makes <strong>no representation</strong> regarding the tax treatment of gift acknowledgment funds. Members are solely responsible for understanding and complying with all applicable federal, state, and local tax laws. <strong>Consult a qualified tax professional.</strong></p>
+          <p className="font-semibold text-red-800">By accepting any gift distribution, you confirm your understanding and agreement with this notice in full.</p>
+        </div>
+      </div>
+
+      {/* What It Is */}
+      <div className="rounded-2xl border p-6 space-y-4" style={{ background: `${GOLD}06`, borderColor: `${GOLD}25` }}>
+        <p className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: GOLD }}>What Are Gifts & Donations in NFGN?</p>
+        <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+          <p>NFGN hosts three types of giving programs: <strong className="text-foreground">Church Giving</strong>, <strong className="text-foreground">Non-Profit Giving</strong>, and <strong className="text-foreground">Fundraiser Campaigns</strong>. In each case, a supporter makes a donation through the NFGN platform in support of a designated recipient (a church, a non-profit, an individual, or a cause).</p>
+          <p>When the donation is processed, the funds are split between:</p>
+          <div className="grid sm:grid-cols-2 gap-3 not-prose">
+            <div className="rounded-xl border p-4" style={{ borderLeft: `3px solid ${GOLD}` }}>
+              <p className="font-bold text-sm text-foreground">Charity / Recipient Share</p>
+              <p className="text-xs mt-1">The configured percentage (default 80%) goes directly to the designated church, non-profit, or cause. This is the primary purpose of the donation.</p>
+            </div>
+            <div className="rounded-xl border p-4" style={{ borderLeft: "3px solid #6b7280" }}>
+              <p className="font-bold text-sm text-foreground">Facilitation Gift Share</p>
+              <p className="text-xs mt-1">The remaining percentage (default 20%) is distributed through the participating member network as a gift acknowledgment for facilitating the fundraiser.</p>
+            </div>
+          </div>
+          <p>The split percentage is configurable per campaign by NFGN administration. The default is <strong className="text-foreground">80% to the recipient / 20% to the facilitation network</strong>.</p>
+        </div>
+      </div>
+
+      {/* What It Is NOT */}
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 space-y-3">
+        <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-amber-800">This Is NOT a Commission — Critical Distinction</p>
+        <div className="space-y-2 text-sm text-amber-900 leading-relaxed">
+          <p>The word <strong>"commission"</strong> implies payment earned in exchange for a sale or service. A gift acknowledgment is fundamentally different:</p>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div className="rounded-lg bg-red-50 border border-red-200 p-3">
+              <p className="font-bold text-xs text-red-800 mb-1.5 flex items-center gap-1.5"><Ban className="h-3.5 w-3.5" /> A Commission is:</p>
+              <ul className="text-xs text-red-700 space-y-1">
+                <li>• Earned income from a sale or service</li>
+                <li>• Taxable ordinary income</li>
+                <li>• Triggered by a commercial transaction</li>
+                <li>• Part of a for-profit compensation plan</li>
+              </ul>
+            </div>
+            <div className="rounded-lg bg-green-50 border border-green-200 p-3">
+              <p className="font-bold text-xs text-green-800 mb-1.5 flex items-center gap-1.5"><ThumbsUp className="h-3.5 w-3.5" /> A Gift Acknowledgment is:</p>
+              <ul className="text-xs text-green-700 space-y-1">
+                <li>• A voluntary expression of gratitude</li>
+                <li>• Not payment for a sale</li>
+                <li>• Not part of a for-profit compensation plan</li>
+                <li>• Not a bonus or earned reward</li>
+              </ul>
+            </div>
+          </div>
+          <p className="text-xs text-amber-800">Misrepresenting a gift acknowledgment as a "commission" or "bonus" is a violation of NFGN policy and may expose members to legal and regulatory risk. Use the correct language at all times.</p>
+        </div>
+      </div>
+
+      {/* Language Guide */}
+      <div className="rounded-2xl border p-6 space-y-4">
+        <p className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: GOLD }}>Approved Language Guide — What You Can & Cannot Say</p>
+        <p className="text-sm text-muted-foreground">When discussing NFGN donation programs with prospects, church partners, or the public, you must use the correct language. Below is your guide.</p>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <p className="text-xs font-bold text-green-700 uppercase tracking-wide flex items-center gap-1.5"><ThumbsUp className="h-3.5 w-3.5" /> You CAN Say</p>
+            {[
+              "\"A portion of every donation is shared with participating members as a gift acknowledgment for facilitating the fundraiser.\"",
+              "\"When someone donates through our network, the member who helped make it happen receives a gift share — not a commission.\"",
+              "\"Our giving programs count toward your Group Volume for qualification purposes.\"",
+              "\"NFGN's donation programs support churches and non-profits while gifting participating members for their facilitation role.\"",
+              "\"The gift share from donations appears in your wallet as a Gift Distribution, separate from your commission earnings.\"",
+            ].map((s, i) => (
+              <div key={i} className="flex gap-2 items-start text-xs text-muted-foreground">
+                <CheckCircle2 className="h-3.5 w-3.5 text-green-600 flex-shrink-0 mt-0.5" />
+                <span className="italic">{s}</span>
+              </div>
+            ))}
+          </div>
+          <div className="space-y-2">
+            <p className="text-xs font-bold text-red-700 uppercase tracking-wide flex items-center gap-1.5"><Ban className="h-3.5 w-3.5" /> You CANNOT Say</p>
+            {[
+              "\"I earn commissions when donations are made to churches.\"",
+              "\"My church fundraiser pays me a bonus.\"",
+              "\"I get a commission on every donation in my downline.\"",
+              "\"Our giving program is a commission-generating income stream.\"",
+              "\"Donations to non-profits are commissionable.\"",
+              "\"I get paid when people donate to charity through my link.\"",
+            ].map((s, i) => (
+              <div key={i} className="flex gap-2 items-start text-xs text-muted-foreground">
+                <div className="h-3.5 w-3.5 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-white text-[8px] font-bold">✕</span>
+                </div>
+                <span className="italic">{s}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* GV/PV Impact */}
+      <div className="rounded-2xl border p-6 space-y-3" style={{ background: `${GOLD}06`, borderColor: `${GOLD}25` }}>
+        <p className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: GOLD }}>Does It Count Toward GV / PV?</p>
+        <div className="rounded-xl bg-white border p-4 flex items-start gap-3">
+          <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+          <div className="space-y-1.5">
+            <p className="font-bold text-sm text-foreground">Yes — Donations Count Toward Group Volume and Personal Volume</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">Each donation product has a CV (Commissionable Volume) value assigned by administration. When a donation is processed, the CV associated with that product is credited toward the facilitating member's PV and flows through the downline for GV calculation purposes.</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">This means donation activity can help members maintain Pro Member qualification thresholds and contribute to BPP Group Volume targets — even though the monetary distribution from that activity is classified as a Gift, not a Commission.</p>
+          </div>
+        </div>
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <p className="text-xs font-bold text-amber-800 mb-1">Important Distinction</p>
+          <p className="text-xs text-amber-700 leading-relaxed">The <em>volume</em> (CV/PV/GV) counts. The <em>money</em> received is a Gift Distribution, not commission income. These are separate concepts. The volume helps you qualify; the gift share is a separate, non-commission distribution.</p>
+        </div>
+      </div>
+
+      {/* Where Funds Go & Timeline */}
+      <div className="rounded-2xl border p-6 space-y-4">
+        <p className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: GOLD }}>Where Do the Funds Go & How Long Does It Take?</p>
+        <div className="space-y-3">
+          {[
+            {
+              label: "Charity / Church / Non-Profit Share",
+              color: GOLD,
+              steps: [
+                "The designated recipient's share (default 80%) is held by NFGN and disbursed directly to the organization per the payout arrangement established at enrollment.",
+                "Recipients can check their disbursement status by contacting NFGN Support or through their designated organizational account.",
+                "Disbursement timing: typically within 5–10 business days of the donation clearing.",
+              ],
+            },
+            {
+              label: "Your Gift Distribution (Facilitation Share)",
+              color: "#6b7280",
+              steps: [
+                "Your gift share appears in your NFGN E-Wallet as a PENDING \"Gift Distribution\" transaction within 24–72 hours of the donation being processed.",
+                "NFGN administration reviews all gift distributions. Typical review period: 3–5 business days.",
+                "Once cleared, the gift distribution becomes part of your available wallet balance.",
+                "You can check the status in your dashboard under Wallet → Transaction History. Look for the \"Gift Distribution\" transaction type.",
+                "Once available, funds can be withdrawn via the standard payout request process: Dashboard → Wallet → Request Payout.",
+              ],
+            },
+          ].map(item => (
+            <div key={item.label} className="rounded-xl border p-4 space-y-2" style={{ borderLeft: `3px solid ${item.color}` }}>
+              <p className="font-bold text-sm text-foreground">{item.label}</p>
+              {item.steps.map((s, i) => (
+                <div key={i} className="flex gap-2 items-start text-xs text-muted-foreground">
+                  <span className="font-bold flex-shrink-0 mt-0.5" style={{ color: item.color }}>{i + 1}.</span>
+                  <span>{s}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Tax Information */}
+      <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 space-y-4">
+        <div className="flex items-center gap-2">
+          <Shield className="h-5 w-5 text-blue-700 flex-shrink-0" />
+          <p className="font-bold text-blue-900 text-sm uppercase tracking-wide">Tax Information — For US Members</p>
+        </div>
+        <div className="rounded-xl bg-white border border-blue-200 p-4 text-xs text-blue-900 space-y-2">
+          <p className="font-bold text-blue-800 text-sm">⚠ NFGN is NOT a tax advisor. The following is for general informational purposes only. Always consult a qualified tax professional.</p>
+        </div>
+        <div className="space-y-3 text-sm text-blue-900">
+          {[
+            {
+              q: "Are gift distributions I receive taxable?",
+              a: "Under US tax law, gifts received are generally NOT taxable income to the recipient, provided they fall within IRS annual gift exclusion thresholds (currently $18,000 per donor per year as of 2024). However, whether your specific gift distribution qualifies for this exclusion depends on the nature of the transaction, the total amount received, and other factors specific to your situation. Consult a tax professional.",
+            },
+            {
+              q: "Will NFGN issue me a 1099 for gift distributions?",
+              a: "If your total payments (commissions, gift distributions, and other wallet earnings combined) exceed IRS reporting thresholds in a calendar year, NFGN may be required to issue a Form 1099-NEC or 1099-MISC. NFGN will comply with all applicable IRS reporting requirements. It is your responsibility to track and report all income and receipts appropriately.",
+            },
+            {
+              q: "Are donations I MAKE through NFGN tax-deductible?",
+              a: "Donations to registered IRS 501(c)(3) organizations are generally tax-deductible for the donor. However, NFGN cannot guarantee the 501(c)(3) status of any specific church or non-profit on the platform. Members and donors should independently verify the tax-exempt status of any organization they donate to. NFGN does not provide donation tax receipts — donors should obtain receipts directly from the recipient organization.",
+            },
+            {
+              q: "What records should I keep?",
+              a: "Keep records of all gift distributions received (visible in your Wallet transaction history), all donations made, and all commission earnings. NFGN's dashboard provides a transaction history you can export. Your tax professional will advise on specific record-keeping requirements.",
+            },
+          ].map((item, i) => (
+            <div key={i} className="rounded-xl bg-white border border-blue-100 p-4 space-y-1.5">
+              <p className="font-semibold text-blue-900 text-xs">{item.q}</p>
+              <p className="text-blue-800 text-xs leading-relaxed">{item.a}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Book-A-Pro Distinction */}
+      <div className="rounded-2xl border p-5 space-y-3 bg-muted/20">
+        <p className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: GOLD }}>How Is This Different From Book-A-Professional?</p>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Book-A-Professional operates on a similar payout split structure, but the nature of the transaction is entirely different. When a member books a professional, they are paying for a <strong className="text-foreground">service rendered</strong>. The professional's share is <strong className="text-foreground">service income</strong>; the facilitation pool is a standard commission arrangement. Both are for-profit and subject to standard income tax treatment.
+        </p>
+        <div className="grid sm:grid-cols-2 gap-3">
+          <div className="rounded-xl border p-4" style={{ borderLeft: `3px solid ${GOLD}` }}>
+            <p className="font-bold text-xs text-foreground mb-1">Book-A-Professional</p>
+            <p className="text-xs text-muted-foreground">Payment for a professional service. The member split is a service commission. Fully taxable as ordinary income. Say: "I earn a commission when clients book wellness professionals through my network."</p>
+          </div>
+          <div className="rounded-xl border p-4" style={{ borderLeft: "3px solid #ec4899" }}>
+            <p className="font-bold text-xs text-foreground mb-1">Church / Non-Profit / Fundraiser Giving</p>
+            <p className="text-xs text-muted-foreground">A charitable donation. The member share is a gift acknowledgment, not a commission. Consult a tax professional for treatment. Say: "I receive a gift acknowledgment for helping facilitate this giving program."</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Summary Box */}
+      <div className="rounded-2xl border p-5 space-y-3" style={{ background: `${GOLD}08`, borderColor: `${GOLD}30` }}>
+        <p className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: GOLD }}>Quick Reference Summary</p>
+        <div className="grid sm:grid-cols-2 gap-2 text-xs">
+          {[
+            ["Is it a commission?", "NO — it is a Gift Acknowledgment"],
+            ["Does it count toward GV/PV?", "YES — CV is applied per donation"],
+            ["Where does it appear?", "Wallet → Gift Distribution (Pending)"],
+            ["When does it clear?", "3–5 business days after admin review"],
+            ["Is it taxable?", "Consult your tax professional"],
+            ["Can I withdraw it?", "Yes — via standard Payout Request once cleared"],
+            ["Do I need to report it?", "Consult your tax professional"],
+            ["Can I say I earn commissions on donations?", "NO — this is a policy violation"],
+          ].map(([q, a]) => (
+            <div key={q} className="rounded-lg border bg-white p-3 space-y-0.5">
+              <p className="font-semibold text-foreground">{q}</p>
+              <p className="text-muted-foreground">{a}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
 // ── MAIN PAGE ────────────────────────────────────────────────────────────────
 export function CompPlanPage() {
   const [loc] = useLocation();
@@ -1202,6 +1468,7 @@ export function CompPlanPage() {
           {active === "pmrc"        && <PMRCSection />}
           {active === "psb"         && <PSBSection />}
           {active === "bpp"         && <BPPSection />}
+          {active === "donations"   && <DonationsComplianceSection />}
         </div>
       </div>
     </div>

@@ -108,6 +108,7 @@ const SECTIONS = [
   { id: "big-bonuses",      label: "Earn Big Bonuses",       icon: Award },
   { id: "additional",       label: "Additional Training",    icon: Lightbulb },
   { id: "app-setup",        label: "Add App to Phone",       icon: Phone },
+  { id: "donations",        label: "Gifts & Donations",      icon: Heart },
   { id: "policies",         label: "Policies & Terms",       icon: FileText },
 ];
 
@@ -1615,6 +1616,145 @@ export function BasicTrainingPage() {
                     increases how often they log in and take action.
                   </p>
                 </div>
+
+              </CardContent>
+            </Card>
+          )}
+
+          {/* ── GIFTS & DONATIONS ────────────────────────────── */}
+          {activeSection === "donations" && (
+            <Card>
+              <CardContent className="pt-6 space-y-6">
+                <SectionHeader icon={Heart} title="Gifts, Donations & Charitable Giving" subtitle="What every NFGN member must know — compliance, language, and how it works" color="#ec4899" />
+
+                {/* Compliance Notice */}
+                <div className="rounded-xl border-2 border-red-300 bg-red-50 p-5 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0" />
+                    <p className="font-bold text-red-800 text-sm">Required Compliance Notice</p>
+                  </div>
+                  <p className="text-sm text-red-900 leading-relaxed">
+                    Funds received from NFGN donation and charitable giving programs are classified as <strong>GIFT ACKNOWLEDGMENTS</strong> — not commissions, not bonuses, not compensation for sales. Before receiving or discussing any gift distribution, you must understand and accept this notice. NFGN makes no representation regarding tax treatment. <strong>Always consult a qualified tax professional.</strong>
+                  </p>
+                </div>
+
+                {/* What it is */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-0.5 w-5 rounded" style={{ background: GOLD }} />
+                    <h3 className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: GOLD }}>What Are NFGN Giving Programs?</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">NFGN facilitates three types of charitable giving: <strong className="text-foreground">Church Giving</strong>, <strong className="text-foreground">Non-Profit Giving</strong>, and <strong className="text-foreground">Fundraiser Campaigns</strong>. When someone donates through the NFGN platform, the funds are split between the designated recipient and the member network that facilitated the fundraiser.</p>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <div className="rounded-xl border p-4" style={{ borderLeft: `3px solid ${GOLD}` }}>
+                      <p className="font-bold text-sm">Charity Share (Default: 80%)</p>
+                      <p className="text-xs text-muted-foreground mt-1">Goes directly to the church, non-profit, or designated cause. This is the primary purpose of the donation.</p>
+                    </div>
+                    <div className="rounded-xl border p-4" style={{ borderLeft: "3px solid #6b7280" }}>
+                      <p className="font-bold text-sm">Facilitation Gift Share (Default: 20%)</p>
+                      <p className="text-xs text-muted-foreground mt-1">Distributed to participating members as a Gift Acknowledgment for their role in facilitating the fundraiser. This is NOT a commission.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Language Guide */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-0.5 w-5 rounded" style={{ background: GREEN }} />
+                    <h3 className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: GREEN }}>Language You Must Use (And Avoid)</h3>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <p className="text-xs font-bold text-green-700 uppercase">✓ Say This</p>
+                      {[
+                        "\"A portion of every donation is shared with facilitating members as a gift acknowledgment.\"",
+                        "\"Members receive a gift share for helping facilitate this charitable program.\"",
+                        "\"Donation activity counts toward your Group Volume.\"",
+                        "\"The gift share appears in your wallet as a Gift Distribution.\"",
+                      ].map((s, i) => <Tip key={i}>{s}</Tip>)}
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-xs font-bold text-red-700 uppercase">✗ Never Say This</p>
+                      {[
+                        "\"I earn commissions when donations are made to churches.\"",
+                        "\"My church fundraiser pays me a bonus.\"",
+                        "\"Donations are commissionable in my downline.\"",
+                        "\"I get paid when people donate through my link.\"",
+                      ].map((s, i) => (
+                        <div key={i} className="flex gap-2 items-start text-sm text-muted-foreground">
+                          <div className="h-4 w-4 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span className="text-white text-[9px] font-bold">✕</span>
+                          </div>
+                          <span className="italic">{s}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* GV/PV & Timeline */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-0.5 w-5 rounded" style={{ background: GOLD }} />
+                    <h3 className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: GOLD }}>GV / PV, Wallet & Timeline</h3>
+                  </div>
+                  <div className="space-y-3">
+                    {[
+                      { title: "Does donation activity count toward GV/PV?", body: "YES. Each donation product has a CV value. That CV counts toward your Personal Volume (PV) and flows through the downline for Group Volume (GV) — helping with Pro Member maintenance and BPP qualification. The volume counts; the monetary distribution is a Gift, not a Commission." },
+                      { title: "Where does my gift share go?", body: "Your gift share appears in your NFGN E-Wallet as a PENDING \"Gift Distribution\" transaction within 24–72 hours of the donation being processed. It is labeled separately from your commission earnings." },
+                      { title: "How long until I can access it?", body: "NFGN administration reviews all gift distributions within 3–5 business days. Once cleared, the funds are part of your available wallet balance and can be withdrawn via Dashboard → Wallet → Request Payout." },
+                      { title: "How do I check the status?", body: "Go to Dashboard → Wallet → Transaction History. Filter or look for \"Gift Distribution\" entries. Pending entries are under review; cleared entries are available for withdrawal." },
+                    ].map((item, i) => (
+                      <div key={i} className="rounded-xl border p-4 space-y-1.5">
+                        <p className="font-semibold text-sm text-foreground">{item.title}</p>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{item.body}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tax */}
+                <div className="rounded-xl border border-blue-200 bg-blue-50 p-5 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="h-5 w-5 text-blue-700" />
+                    <p className="font-bold text-blue-900 text-sm">Basic Tax Information (US Members)</p>
+                  </div>
+                  <p className="text-xs text-blue-800 font-semibold">NFGN is NOT a tax advisor. This is general information only. Consult a qualified tax professional for advice specific to your situation.</p>
+                  <div className="space-y-2">
+                    {[
+                      { q: "Is my gift distribution taxable?", a: "Gifts received are generally not taxable income under US tax law, subject to IRS annual gift exclusion limits. Whether this applies to your situation depends on many factors. Consult a tax professional." },
+                      { q: "Will I get a 1099?", a: "If your total payments from NFGN (commissions + gift distributions + all wallet earnings) exceed IRS reporting thresholds, NFGN may issue a 1099. It is your responsibility to track and report all receipts." },
+                      { q: "Can I deduct donations I make through NFGN?", a: "Only if the recipient is a registered 501(c)(3) organization. NFGN cannot guarantee the tax-exempt status of any church or non-profit. Verify independently and obtain a receipt directly from the organization." },
+                    ].map((item, i) => (
+                      <div key={i} className="rounded-lg bg-white border border-blue-100 p-3 space-y-1">
+                        <p className="font-semibold text-xs text-blue-900">{item.q}</p>
+                        <p className="text-xs text-blue-800">{item.a}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Summary */}
+                <Card className="bg-gradient-to-br from-amber-50 to-amber-100/50 border-amber-200">
+                  <CardContent className="pt-5 space-y-2">
+                    <p className="font-semibold text-amber-900 text-sm">Quick Reference Summary</p>
+                    <div className="grid sm:grid-cols-2 gap-2 text-xs">
+                      {[
+                        ["Is it a commission?", "NO — Gift Acknowledgment only"],
+                        ["Counts toward GV/PV?", "YES — CV applies per donation"],
+                        ["Appears in wallet as?", "\"Gift Distribution\" (Pending)"],
+                        ["Clearance time?", "3–5 business days"],
+                        ["Tax treatment?", "Consult your tax professional"],
+                        ["Can I say I earn commissions on donations?", "NO — policy violation"],
+                      ].map(([q, a]) => (
+                        <div key={q} className="rounded-lg bg-white border border-amber-200 p-2.5">
+                          <p className="font-semibold text-amber-900">{q}</p>
+                          <p className="text-amber-800 mt-0.5">{a}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
 
               </CardContent>
             </Card>

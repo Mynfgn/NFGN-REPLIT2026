@@ -1120,6 +1120,96 @@ export function Shop() {
         </div>
       )}
 
+      {/* ── CHURCH GIVING ─────────────────────────────────────── */}
+      {churchDonationProducts.length > 0 && (
+        <div style={{ background: "linear-gradient(135deg, #0d0900 0%, #110b00 50%, #0a0800 100%)", padding: "72px 0", borderTop: "3px solid #C9A84C", borderBottom: "1px solid rgba(201,168,76,0.15)", position: "relative", overflow: "hidden" }}>
+          {/* Subtle grid overlay */}
+          <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(201,168,76,0.03) 39px, rgba(201,168,76,0.03) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(201,168,76,0.03) 39px, rgba(201,168,76,0.03) 40px)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", top: -80, right: "8%", width: 320, height: 320, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,168,76,0.10), transparent 70%)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", bottom: -60, left: "5%", width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,168,76,0.06), transparent 70%)", pointerEvents: "none" }} />
+
+          <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto", position: "relative" }}>
+            {/* Section header */}
+            <div style={{ marginBottom: 48 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 16, background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.35)", padding: "6px 16px", borderRadius: 99 }}>
+                <Church size={13} color={GOLD} />
+                <span style={{ color: GOLD, fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>Church Giving</span>
+              </div>
+              <h2 style={{ color: "#fff", fontSize: "clamp(28px, 5vw, 44px)", fontWeight: 900, margin: "0 0 12px", fontFamily: "serif", lineHeight: 1.1 }}>
+                Give to Your Church. <span style={{ color: GOLD }}>Bless Your Community.</span>
+              </h2>
+              <p style={{ color: "#a0a0a0", fontSize: 16, maxWidth: 580, margin: "0 0 20px", lineHeight: 1.65 }}>
+                Support your church directly through NFGN. Every gift goes where it's meant to — and your generosity rewards your referral network too.
+              </p>
+              {/* 80/20 split explainer */}
+              <div style={{ display: "inline-flex", alignItems: "stretch", gap: 0, background: "rgba(201,168,76,0.07)", border: "1px solid rgba(201,168,76,0.25)", borderRadius: 12, overflow: "hidden", maxWidth: 480 }}>
+                <div style={{ padding: "14px 18px", flex: "0 0 auto", borderRight: "1px solid rgba(201,168,76,0.18)" }}>
+                  <div style={{ fontSize: 24, fontWeight: 900, color: GOLD, lineHeight: 1 }}>80%</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: "#8a8a8a", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 3 }}>⛪ To Church</div>
+                </div>
+                <div style={{ padding: "14px 18px", flex: "0 0 auto", borderRight: "1px solid rgba(201,168,76,0.18)" }}>
+                  <div style={{ fontSize: 24, fontWeight: 900, color: "#fff", lineHeight: 1 }}>20%</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: "#8a8a8a", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 3 }}>🔗 Network Rewards</div>
+                </div>
+                <div style={{ padding: "14px 16px", flex: 1, display: "flex", alignItems: "center" }}>
+                  <span style={{ fontSize: 11, color: "#777", lineHeight: 1.45 }}>Split is admin-adjustable per gift product. The 20% funds your referral compensation plan — <strong style={{ color: "#aaa" }}>not taxable income</strong>.</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {churchDonationProducts.map(p => (
+                <ChurchDonationCard key={p.id} product={p} />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── NON-PROFIT / CHARITY GIVING ───────────────────────── */}
+      {nonProfitProducts.length > 0 && (
+        <div style={{ background: "linear-gradient(135deg, #0a0d08 0%, #0d1009 50%, #090b07 100%)", padding: "72px 0", borderTop: "1px solid rgba(201,168,76,0.15)", borderBottom: "1px solid rgba(201,168,76,0.15)", position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(201,168,76,0.025) 39px, rgba(201,168,76,0.025) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(201,168,76,0.025) 39px, rgba(201,168,76,0.025) 40px)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", top: -60, left: "10%", width: 260, height: 260, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,168,76,0.08), transparent 70%)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", bottom: -80, right: "6%", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,168,76,0.06), transparent 70%)", pointerEvents: "none" }} />
+
+          <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto", position: "relative" }}>
+            <div style={{ marginBottom: 48 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 16, background: "rgba(201,168,76,0.10)", border: "1px solid rgba(201,168,76,0.30)", padding: "6px 16px", borderRadius: 99 }}>
+                <HandHeart size={13} color={GOLD} />
+                <span style={{ color: GOLD, fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>Non-Profit Giving</span>
+              </div>
+              <h2 style={{ color: "#fff", fontSize: "clamp(28px, 5vw, 44px)", fontWeight: 900, margin: "0 0 12px", fontFamily: "serif", lineHeight: 1.1 }}>
+                Support Causes That Matter. <span style={{ color: GOLD }}>Change Lives.</span>
+              </h2>
+              <p style={{ color: "#a0a0a0", fontSize: 16, maxWidth: 580, margin: "0 0 20px", lineHeight: 1.65 }}>
+                Fundraisers, donation drives, and charity campaigns — curated by NFGN. Your purchase supports real organizations and rewards your network.
+              </p>
+              {/* 80/20 split explainer */}
+              <div style={{ display: "inline-flex", alignItems: "stretch", gap: 0, background: "rgba(201,168,76,0.07)", border: "1px solid rgba(201,168,76,0.22)", borderRadius: 12, overflow: "hidden", maxWidth: 480 }}>
+                <div style={{ padding: "14px 18px", flex: "0 0 auto", borderRight: "1px solid rgba(201,168,76,0.16)" }}>
+                  <div style={{ fontSize: 24, fontWeight: 900, color: GOLD, lineHeight: 1 }}>80%</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: "#8a8a8a", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 3 }}>🤝 To Organisation</div>
+                </div>
+                <div style={{ padding: "14px 18px", flex: "0 0 auto", borderRight: "1px solid rgba(201,168,76,0.16)" }}>
+                  <div style={{ fontSize: 24, fontWeight: 900, color: "#fff", lineHeight: 1 }}>20%</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: "#8a8a8a", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 3 }}>🔗 Network Rewards</div>
+                </div>
+                <div style={{ padding: "14px 16px", flex: 1, display: "flex", alignItems: "center" }}>
+                  <span style={{ fontSize: 11, color: "#777", lineHeight: 1.45 }}>Default split — admin-adjustable per product. Your gift is <strong style={{ color: "#aaa" }}>not taxable income</strong> for the member network.</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {nonProfitProducts.map(p => (
+                <NonProfitProductCard key={p.id} product={p} onAdd={handleAddToCart} adding={addingId === p.id} />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── PRO MEMBER EXCLUSIVE STORE ────────────────────────── */}
       {isProMember && (
         <div id="pro-store">

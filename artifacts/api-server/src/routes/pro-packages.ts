@@ -15,6 +15,7 @@ function serializePackage(p: typeof proPackagesTable.$inferSelect) {
     badgeColor: p.badgeColor,
     perks: p.perks,
     sortOrder: p.sortOrder,
+    cv: p.cv ?? 0,
     productId: p.productId ?? null,
   };
 }
@@ -29,7 +30,7 @@ router.get("/pro-packages", async (req, res): Promise<void> => {
 });
 
 router.post("/pro-packages", requireAdmin, async (req, res): Promise<void> => {
-  const { name, price, originalPrice, badge, badgeColor, perks, sortOrder, productId } = req.body;
+  const { name, price, originalPrice, badge, badgeColor, perks, sortOrder, cv, productId } = req.body;
 
   if (!name || price == null || originalPrice == null) {
     res.status(400).json({ error: "name, price, and originalPrice are required" });
@@ -46,6 +47,7 @@ router.post("/pro-packages", requireAdmin, async (req, res): Promise<void> => {
       badgeColor: badgeColor ?? "#C9A84C",
       perks: perks ?? [],
       sortOrder: sortOrder ?? 0,
+      cv: cv != null ? parseInt(String(cv)) : 0,
       productId: productId != null ? Number(productId) : null,
     })
     .returning();
@@ -97,7 +99,7 @@ router.put("/pro-packages/:id", requireAdmin, async (req, res): Promise<void> =>
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
-  const { name, price, originalPrice, badge, badgeColor, perks, sortOrder, productId } = req.body;
+  const { name, price, originalPrice, badge, badgeColor, perks, sortOrder, cv, productId } = req.body;
 
   const [pkg] = await db
     .update(proPackagesTable)
@@ -109,6 +111,7 @@ router.put("/pro-packages/:id", requireAdmin, async (req, res): Promise<void> =>
       ...(badgeColor !== undefined && { badgeColor }),
       ...(perks !== undefined && { perks }),
       ...(sortOrder !== undefined && { sortOrder }),
+      ...(cv !== undefined && { cv: parseInt(String(cv)) || 0 }),
       ...("productId" in req.body && { productId: productId != null ? Number(productId) : null }),
     })
     .where(eq(proPackagesTable.id, id))

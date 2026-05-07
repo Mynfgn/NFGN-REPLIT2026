@@ -44,6 +44,7 @@ interface ProPackage {
   badgeColor: string;
   perks: string[];
   sortOrder: number;
+  cv: number;
   productId: number | null;
 }
 
@@ -62,6 +63,7 @@ const EMPTY_FORM = {
   badgeColor: "#C9A84C",
   perksRaw: "",
   sortOrder: "0",
+  cv: "",
   productId: "",
 };
 
@@ -274,6 +276,7 @@ export function AdminProPackagesPage() {
       badgeColor: pkg.badgeColor,
       perksRaw: pkg.perks.join("\n"),
       sortOrder: String(pkg.sortOrder),
+      cv: String(pkg.cv ?? 0),
       productId: pkg.productId != null ? String(pkg.productId) : "",
     });
     setDialogOpen(true);
@@ -306,6 +309,7 @@ export function AdminProPackagesPage() {
         badgeColor: form.badgeColor,
         perks,
         sortOrder: parseInt(form.sortOrder) || 0,
+        cv: parseInt(form.cv) || 0,
         productId: form.productId !== "" ? parseInt(form.productId) : null,
       };
 
@@ -474,6 +478,20 @@ export function AdminProPackagesPage() {
                   placeholder="249.00"
                 />
               </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>CV (Commissionable Volume)</Label>
+              <Input
+                type="number"
+                min="0"
+                step="1"
+                value={form.cv}
+                onChange={(e) => setForm((f) => ({ ...f, cv: e.target.value }))}
+                placeholder="e.g. 150"
+              />
+              <p className="text-xs text-muted-foreground">
+                The CV earned by the buyer when they purchase this package. Counts toward their Personal Commission Volume (PCV) and UPM qualification threshold.
+              </p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">

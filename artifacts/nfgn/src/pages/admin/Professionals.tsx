@@ -31,6 +31,7 @@ interface Professional {
   isAvailable: boolean;
   hourlyRate: number;
   cv: number;
+  proPayoutPercent: number;
   services: string[];
   createdAt: string;
 }
@@ -54,6 +55,7 @@ function ProModal({
     avatar: initial?.avatar ?? "",
     hourlyRate: String(initial?.hourlyRate ?? ""),
     cv: String(initial?.cv ?? "0"),
+    proPayoutPercent: initial?.proPayoutPercent ?? 80,
     isAvailable: initial?.isAvailable ?? true,
   });
   const [saving, setSaving] = useState(false);
@@ -84,6 +86,7 @@ function ProModal({
       avatar: form.avatar.trim() || undefined,
       hourlyRate: rate,
       cv: parseInt(form.cv) || 0,
+      proPayoutPercent: form.proPayoutPercent,
       services: selectedServices,
       isAvailable: form.isAvailable,
     };
@@ -178,6 +181,31 @@ function ProModal({
                 <p className="text-xs text-muted-foreground mt-1">CV credited to the member per booking session.</p>
               </div>
             </div>
+            {/* Payout Split Slider */}
+            <div className="space-y-2 p-4 rounded-lg border bg-muted/10">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-semibold">Payout Split</Label>
+                <div className="flex gap-3 text-xs font-mono">
+                  <span className="font-bold" style={{ color: BRAND_GOLD }}>{form.proPayoutPercent}% → Pro</span>
+                  <span className="text-muted-foreground">{100 - form.proPayoutPercent}% → Pool</span>
+                </div>
+              </div>
+              <input
+                type="range"
+                min={50}
+                max={95}
+                step={5}
+                value={form.proPayoutPercent}
+                onChange={e => setForm(f => ({ ...f, proPayoutPercent: parseInt(e.target.value) }))}
+                className="w-full accent-[#C9A84C]"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>50% Pro / 50% Pool</span>
+                <span>95% Pro / 5% Pool</span>
+              </div>
+              <p className="text-xs text-muted-foreground">The pool funds member referral commissions &amp; NFGN fees. Default is 80/20.</p>
+            </div>
+
             <div className="flex items-center gap-3">
               <Switch checked={form.isAvailable} onCheckedChange={v => setForm(f => ({ ...f, isAvailable: v }))} />
               <Label className="text-sm">Available for Bookings</Label>
@@ -316,13 +344,16 @@ export function AdminProfessionalsPage() {
                       </div>
                       <span className="text-xs text-muted-foreground">{pro.reviewCount} reviews</span>
                     </div>
-                    <div className="flex items-center gap-3 mt-1">
+                    <div className="flex items-center flex-wrap gap-2 mt-1">
                       <p className="text-sm font-bold" style={{ color: BRAND_GOLD }}>${pro.hourlyRate}/hr</p>
                       {pro.cv > 0 && (
                         <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(201,168,76,0.12)", color: BRAND_GOLD, border: "1px solid rgba(201,168,76,0.3)" }}>
                           {pro.cv} CV
                         </span>
                       )}
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(201,168,76,0.08)", color: BRAND_GOLD, border: "1px solid rgba(201,168,76,0.2)" }}>
+                        {pro.proPayoutPercent ?? 80}% / {100 - (pro.proPayoutPercent ?? 80)}%
+                      </span>
                     </div>
                   </div>
                 </div>

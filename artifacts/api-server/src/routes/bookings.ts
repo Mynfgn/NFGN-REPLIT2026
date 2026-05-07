@@ -163,11 +163,13 @@ router.post("/bookings", requireAuth, async (req, res): Promise<void> => {
   const [member] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
   const [proRow] = await db.select().from(professionalsTable).where(eq(professionalsTable.id, professionalId));
 
-  // ── Book-A-Pro payout split (80/20) ──────────────────────────────────────
+  // ── Book-A-Pro payout split (per-professional configurable) ──────────────
   try {
     const totalAmount = parseFloat(String(amount));
-    const payoutAmount = totalAmount * 0.80;         // 80% → professional
-    const commissionPool = totalAmount * 0.20;       // 20% → commissionable pool
+    const proPercent = (proRow?.proPayoutPercent ?? 80) / 100;
+    const memberPercent = 1 - proPercent;
+    const payoutAmount = totalAmount * proPercent;         // pro's configured % → professional
+    const commissionPool = totalAmount * memberPercent;    // remainder → commissionable pool
     const productSalesCommission = commissionPool * 0.60; // 60% of pool
     const referralCommission = commissionPool * 0.25;     // 25% of pool
     const nfgnFees = commissionPool * 0.15;               // 15% of pool
@@ -398,6 +400,7 @@ function serializePro(p: typeof professionalsTable.$inferSelect) {
     isAvailable: p.isAvailable,
     hourlyRate: parseFloat(p.hourlyRate),
     cv: p.cv ?? 0,
+    proPayoutPercent: p.proPayoutPercent ?? 80,
     services: p.services ?? [],
     createdAt: p.createdAt.toISOString(),
   };
@@ -409,13 +412,14 @@ router.get("/professionals", async (req, res): Promise<void> => {
 });
 
 router.post("/professionals", requireAdmin, async (req, res): Promise<void> => {
-  const { userId, name, bio, specialty, avatar, hourlyRate, cv, services, isAvailable } = req.body;
+  const { userId, name, bio, specialty, avatar, hourlyRate, cv, proPayoutPercent, services, isAvailable } = req.body;
   const [pro] = await db.insert(professionalsTable).values({
     userId: userId ?? undefined,
     name, bio, specialty,
     avatar: avatar ?? undefined,
     hourlyRate: String(hourlyRate),
     cv: cv != null ? parseInt(String(cv)) : 0,
+    proPayoutPercent: proPayoutPercent != null ? Math.min(95, Math.max(50, parseInt(String(proPayoutPercent)))) : 80,
     services: services ?? [],
     isAvailable: isAvailable ?? true,
   }).returning();
@@ -427,7 +431,7 @@ router.patch("/professionals/:id", requireAdmin, async (req, res): Promise<void>
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
-  const { name, bio, specialty, avatar, hourlyRate, cv, services, isAvailable } = req.body;
+  const { name, bio, specialty, avatar, hourlyRate, cv, proPayoutPercent, services, isAvailable } = req.body;
   const updates: Partial<typeof professionalsTable.$inferInsert> = {};
   if (name !== undefined) updates.name = name;
   if (bio !== undefined) updates.bio = bio;
@@ -435,6 +439,7 @@ router.patch("/professionals/:id", requireAdmin, async (req, res): Promise<void>
   if (avatar !== undefined) updates.avatar = avatar || undefined;
   if (hourlyRate !== undefined) updates.hourlyRate = String(hourlyRate);
   if (cv !== undefined) updates.cv = parseInt(String(cv)) || 0;
+  if (proPayoutPercent !== undefined) updates.proPayoutPercent = Math.min(95, Math.max(50, parseInt(String(proPayoutPercent)) || 80));
   if (services !== undefined) updates.services = services;
   if (isAvailable !== undefined) updates.isAvailable = isAvailable;
 

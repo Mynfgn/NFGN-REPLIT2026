@@ -14,6 +14,7 @@ export const professionalsTable = pgTable("professionals", {
   isAvailable: boolean("is_available").notNull().default(true),
   hourlyRate: numeric("hourly_rate", { precision: 10, scale: 2 }).notNull(),
   cv: integer("cv").notNull().default(0),
+  proPayoutPercent: integer("pro_payout_percent").notNull().default(80),
   services: text("services").array().default([]),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),

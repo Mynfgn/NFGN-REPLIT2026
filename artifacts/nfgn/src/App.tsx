@@ -78,6 +78,7 @@ import { AdminMessagesPage } from "@/pages/admin/AdminMessages";
 import { OrdersAwaitingApprovalPage } from "@/pages/admin/OrdersAwaitingApproval";
 import { OrdersForApprovalPage } from "@/pages/admin/OrdersForApproval";
 import { AdminProfilePage } from "@/pages/admin/AdminProfile";
+import { AdminNonprofitRequestsPage } from "@/pages/admin/NonprofitRequests";
 import { AdminProPackagesPage } from "@/pages/admin/ProPackages";
 import { AdminBannerMessagesPage } from "@/pages/admin/BannerMessages";
 
@@ -367,6 +368,11 @@ function Router() {
       <Route path="/admin/products">
         <RequireAuth requireAdmin>
           <AdminLayout><AdminProductsPage /></AdminLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/admin/nonprofit-requests">
+        <RequireAuth requireAdmin>
+          <AdminLayout><AdminNonprofitRequestsPage /></AdminLayout>
         </RequireAuth>
       </Route>
       <Route path="/admin/categories">

@@ -14,3 +14,4 @@ export * from "./dollar_credits";
 export * from "./booking_payouts";
 export * from "./pro_packages";
 export * from "./reviews";
+export * from "./nonprofit_requests";

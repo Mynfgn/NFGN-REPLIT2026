@@ -4,12 +4,13 @@ import { resolveImageSrc } from "@/lib/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Church, HandHeart, Heart, Shield, Coins, Users, ShoppingCart,
-  Loader2, Search, ChevronDown, X,
+  Loader2, Search, ChevronDown, X, QrCode, Download,
 } from "lucide-react";
+import { QRCodeCanvas } from "qrcode.react";
 import { useCartStore } from "@/hooks/use-cart-store";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 
 const GOLD = "#C9A84C";
 
@@ -32,7 +33,7 @@ type Product = {
   description?: string | null;
 };
 
-function ChurchCard({ product, highlight }: { product: Product; highlight?: boolean }) {
+function ChurchCard({ product, highlight, onShowQR }: { product: Product; highlight?: boolean; onShowQR?: (url: string, name: string) => void }) {
   const [hover, setHover] = useState(false);
   const img = resolveImageSrc(product.image);
   const minAmount = product.donationMinAmount ?? 1;
@@ -99,6 +100,16 @@ function ChurchCard({ product, highlight }: { product: Product; highlight?: bool
           <div style={{ marginTop: 8, width: "100%", padding: "10px 0", background: active ? GOLD : "transparent", color: active ? "#000" : GOLD, border: `1.5px solid ${GOLD}`, borderRadius: 8, fontWeight: 800, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, transition: "all 0.18s ease" }}>
             <Church size={14} /> Give Now
           </div>
+          {onShowQR && (
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onShowQR(`${window.location.origin}/product/${product.slug}`, product.churchName || product.donationRecipientName || product.name); }}
+              style={{ marginTop: 6, width: "100%", padding: "7px 0", background: "transparent", color: "#555", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, transition: "color 0.18s" }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = GOLD; (e.currentTarget as HTMLElement).style.borderColor = "rgba(201,168,76,0.3)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "#555"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.08)"; }}
+            >
+              <QrCode size={11} /> Show QR Code
+            </button>
+          )}
         </div>
       </div>
     </Link>
@@ -106,12 +117,13 @@ function ChurchCard({ product, highlight }: { product: Product; highlight?: bool
 }
 
 function NonProfitCard({
-  product, onAdd, adding, highlight,
+  product, onAdd, adding, highlight, onShowQR,
 }: {
   product: Product;
   onAdd: (e: React.MouseEvent, id: number) => void;
   adding: boolean;
   highlight?: boolean;
+  onShowQR?: (url: string, name: string) => void;
 }) {
   const [hover, setHover] = useState(false);
   const img = resolveImageSrc(product.image);
@@ -196,9 +208,68 @@ function NonProfitCard({
               {outOfStock ? "Sold Out" : "Add to Cart"}
             </button>
           )}
+          {onShowQR && product.isDonation && (
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onShowQR(`${window.location.origin}/product/${product.slug}`, product.donationRecipientName || product.name); }}
+              style={{ marginTop: 6, width: "100%", padding: "7px 0", background: "transparent", color: "#555", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, transition: "color 0.18s" }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = GOLD; (e.currentTarget as HTMLElement).style.borderColor = "rgba(201,168,76,0.3)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "#555"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.08)"; }}
+            >
+              <QrCode size={11} /> Show QR Code
+            </button>
+          )}
         </div>
       </div>
     </Link>
+  );
+}
+
+/* ── QR Code Modal ──────────────────────────────────────────── */
+function QRModal({ url, name, onClose }: { url: string; name: string; onClose: () => void }) {
+  const canvasId = "nfgn-qr-canvas";
+
+  function handleDownload() {
+    const canvas = document.querySelector(`#${canvasId} canvas`) as HTMLCanvasElement;
+    if (!canvas) return;
+    const link = document.createElement("a");
+    link.download = `${name.replace(/[^a-z0-9]/gi, "-").toLowerCase()}-qr.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  }
+
+  return (
+    <div
+      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.82)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000, padding: 24 }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div style={{ background: "#111", border: "1px solid rgba(201,168,76,0.35)", borderRadius: 20, padding: "32px 28px", textAlign: "center", maxWidth: 360, width: "100%", boxShadow: "0 24px 80px rgba(0,0,0,0.8)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 8 }}>
+          <QrCode size={18} color={GOLD} />
+          <h3 style={{ color: "#fff", fontSize: 18, fontWeight: 800, margin: 0, fontFamily: "serif" }}>Donation QR Code</h3>
+        </div>
+        <p style={{ color: "#888", fontSize: 13, margin: "0 0 20px", lineHeight: 1.5 }}>
+          Share or print this QR code to let anyone donate to <strong style={{ color: "#ccc" }}>{name}</strong> instantly.
+        </p>
+        <div id={canvasId} style={{ background: "#fff", padding: 16, borderRadius: 14, display: "inline-block", marginBottom: 16 }}>
+          <QRCodeCanvas value={url} size={200} level="M" marginSize={1} />
+        </div>
+        <p style={{ color: "#555", fontSize: 10, wordBreak: "break-all", margin: "0 0 20px", padding: "0 8px" }}>{url}</p>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button
+            onClick={onClose}
+            style={{ flex: 1, padding: "11px 0", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)", color: "#888", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" }}
+          >
+            Close
+          </button>
+          <button
+            onClick={handleDownload}
+            style={{ flex: 2, padding: "11px 0", background: GOLD, color: "#000", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+          >
+            <Download size={14} /> Download PNG
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -317,6 +388,8 @@ export function ChurchesAndNonProfits() {
   const { setCartOpen } = useCartStore();
   const [addingId, setAddingId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
+  const [qrModal, setQrModal] = useState<{ url: string; name: string } | null>(null);
+  const handleShowQR = useCallback((url: string, name: string) => setQrModal({ url, name }), []);
 
   const { data, isLoading } = useListProducts({ limit: 100 } as any);
   const allProducts: Product[] = (data as any)?.products ?? [];
@@ -501,7 +574,7 @@ export function ChurchesAndNonProfits() {
             ) : filteredChurch.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                 {filteredChurch.map(p => (
-                  <ChurchCard key={p.id} product={p} />
+                  <ChurchCard key={p.id} product={p} onShowQR={handleShowQR} />
                 ))}
               </div>
             ) : (
@@ -565,6 +638,7 @@ export function ChurchesAndNonProfits() {
                     product={p}
                     onAdd={handleAdd}
                     adding={addingId === p.id}
+                    onShowQR={handleShowQR}
                   />
                 ))}
               </div>
@@ -591,19 +665,29 @@ export function ChurchesAndNonProfits() {
         </div>
       )}
 
+      {/* ── QR Code Modal ───────────────────────────────────── */}
+      {qrModal && <QRModal url={qrModal.url} name={qrModal.name} onClose={() => setQrModal(null)} />}
+
       {/* ── FOOTER CTA ─────────────────────────────────────── */}
       <div style={{ background: "#0a0a0a", padding: "64px 0", borderTop: "1px solid rgba(201,168,76,0.15)", textAlign: "center" }}>
         <div className="px-4 md:px-8" style={{ maxWidth: 640, margin: "0 auto" }}>
           <HandHeart size={32} color={GOLD} style={{ margin: "0 auto 16px", opacity: 0.7 }} />
           <h3 style={{ color: "#fff", fontSize: 26, fontWeight: 900, fontFamily: "serif", margin: "0 0 12px" }}>Want to add your organization?</h3>
           <p style={{ color: "#777", fontSize: 15, margin: "0 0 28px", lineHeight: 1.6 }}>
-            Reach out to the NFGN team to have your church or non-profit listed on this page. We welcome all faith-based and community organizations.
+            Register a free NFGN account and submit your organization application directly on the Join Us page. We welcome all faith-based and community non-profit organizations. Approval typically takes 24–48 hours.
           </p>
-          <Link href="/contact">
-            <button style={{ background: "transparent", border: `2px solid ${GOLD}`, color: GOLD, borderRadius: 10, padding: "14px 32px", fontWeight: 800, fontSize: 15, cursor: "pointer", transition: "all 0.18s ease", display: "inline-flex", alignItems: "center", gap: 8 }}>
-              Contact Us →
-            </button>
-          </Link>
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+            <Link href="/join">
+              <button style={{ background: GOLD, border: `2px solid ${GOLD}`, color: "#000", borderRadius: 10, padding: "14px 32px", fontWeight: 800, fontSize: 15, cursor: "pointer", transition: "all 0.18s ease", display: "inline-flex", alignItems: "center", gap: 8 }}>
+                Apply via Join Us →
+              </button>
+            </Link>
+            <Link href="/contact">
+              <button style={{ background: "transparent", border: `2px solid rgba(201,168,76,0.4)`, color: GOLD, borderRadius: 10, padding: "14px 32px", fontWeight: 800, fontSize: 15, cursor: "pointer", transition: "all 0.18s ease", display: "inline-flex", alignItems: "center", gap: 8 }}>
+                Contact Us
+              </button>
+            </Link>
+          </div>
         </div>
       </div>
     </div>

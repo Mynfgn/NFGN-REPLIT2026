@@ -11,7 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Star, Users, TrendingUp, Loader2, UserCircle2 } from "lucide-react";
+import { CheckCircle, Star, Users, TrendingUp, Loader2, UserCircle2, Church, HandHeart } from "lucide-react";
+
+const GOLD = "#C9A84C";
 
 const registerSchema = z.object({
   firstName: z.string().min(2, "First name is required"),
@@ -43,6 +45,14 @@ export function Join() {
   const [sponsorInfo, setSponsorInfo] = useState<SponsorInfo>(null);
   const [sponsorLoading, setSponsorLoading] = useState(false);
 
+  // Nonprofit toggle state
+  const [isNonprofit, setIsNonprofit] = useState(false);
+  const [npOrgName, setNpOrgName] = useState("");
+  const [npOrgType, setNpOrgType] = useState<"church" | "nonprofit">("nonprofit");
+  const [npEin, setNpEin] = useState("");
+  const [npWebsite, setNpWebsite] = useState("");
+  const [npDescription, setNpDescription] = useState("");
+  const [npSubmitting, setNpSubmitting] = useState(false);
 
   async function lookupSponsor(code: string) {
     if (!code.trim()) { setSponsorInfo(null); return; }
@@ -71,11 +81,41 @@ export function Join() {
     defaultValues: { firstName: "", lastName: "", organizationName: "", email: "", password: "", confirmPassword: "", phone: "", referralCode: refCode },
   });
 
+  async function submitNonprofitRequest(token: string) {
+    if (!npOrgName.trim()) return;
+    setNpSubmitting(true);
+    try {
+      await fetch("/api/nonprofit-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          orgName: npOrgName.trim(),
+          orgType: npOrgType,
+          ein: npEin.trim() || null,
+          website: npWebsite.trim() || null,
+          description: npDescription.trim() || null,
+        }),
+      });
+    } finally {
+      setNpSubmitting(false);
+    }
+  }
+
   function onSubmit(data: RegisterFormValues) {
     registerMutation.mutate({ data: { ...data, role: "customer" } }, {
-      onSuccess: (response) => {
+      onSuccess: async (response) => {
         login(response.token);
-        toast({ title: "Welcome to NFGN!", description: "Your account has been created." });
+
+        if (isNonprofit && npOrgName.trim()) {
+          await submitNonprofitRequest(response.token);
+          toast({
+            title: "Welcome to NFGN!",
+            description: "Your account has been created and your nonprofit application has been submitted for review. We'll be in touch soon!",
+          });
+        } else {
+          toast({ title: "Welcome to NFGN!", description: "Your account has been created." });
+        }
+
         if (response.user.role === "customer") setLocation("/");
         else setLocation("/dashboard");
       },
@@ -150,7 +190,7 @@ export function Join() {
                 </div>
                 <FormField control={form.control} name="organizationName" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Company or Non Profit Organization Name <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
+                    <FormLabel>Company or Organization Name <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
                     <FormControl><Input placeholder="e.g. Rivers Wellness LLC" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
@@ -205,8 +245,163 @@ export function Join() {
                     <FormMessage />
                   </FormItem>
                 )} />
-                <Button type="submit" className="w-full h-12" disabled={registerMutation.isPending}>
-                  {registerMutation.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating Account...</> : "Create Free Account"}
+
+                {/* ── Nonprofit / Church Toggle ─────────────────── */}
+                <div
+                  style={{
+                    border: `1.5px solid ${isNonprofit ? GOLD : "rgba(201,168,76,0.25)"}`,
+                    borderRadius: 12,
+                    padding: "16px 18px",
+                    background: isNonprofit ? "rgba(201,168,76,0.06)" : "transparent",
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setIsNonprofit(!isNonprofit)}
+                    style={{
+                      width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+                      background: "none", border: "none", cursor: "pointer", padding: 0,
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{
+                        width: 36, height: 36, borderRadius: 8,
+                        background: isNonprofit ? GOLD : "rgba(201,168,76,0.12)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        transition: "background 0.2s",
+                      }}>
+                        {npOrgType === "church"
+                          ? <Church size={18} color={isNonprofit ? "#000" : GOLD} />
+                          : <HandHeart size={18} color={isNonprofit ? "#000" : GOLD} />}
+                      </div>
+                      <div style={{ textAlign: "left" }}>
+                        <p style={{ color: "#fff", fontSize: 14, fontWeight: 700, margin: 0 }}>
+                          I represent a church or non-profit
+                        </p>
+                        <p style={{ color: "#888", fontSize: 12, margin: 0 }}>
+                          Request to be listed on the Support Somebody page
+                        </p>
+                      </div>
+                    </div>
+                    {/* Toggle pill */}
+                    <div style={{
+                      width: 44, height: 24, borderRadius: 99, flexShrink: 0,
+                      background: isNonprofit ? GOLD : "rgba(255,255,255,0.12)",
+                      position: "relative", transition: "background 0.2s",
+                    }}>
+                      <div style={{
+                        width: 18, height: 18, borderRadius: "50%", background: "#fff",
+                        position: "absolute", top: 3,
+                        left: isNonprofit ? 23 : 3,
+                        transition: "left 0.2s",
+                        boxShadow: "0 1px 4px rgba(0,0,0,0.4)",
+                      }} />
+                    </div>
+                  </button>
+
+                  {/* Expanded nonprofit fields */}
+                  {isNonprofit && (
+                    <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 14 }}>
+                      <div>
+                        <label style={{ color: "#888", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", display: "block", marginBottom: 6 }}>
+                          Organization Type <span style={{ color: "#ef4444" }}>*</span>
+                        </label>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          {(["nonprofit", "church"] as const).map(type => (
+                            <button
+                              key={type}
+                              type="button"
+                              onClick={() => setNpOrgType(type)}
+                              style={{
+                                flex: 1, padding: "10px 0", borderRadius: 8, fontSize: 13, fontWeight: 700,
+                                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                                background: npOrgType === type ? GOLD : "rgba(255,255,255,0.05)",
+                                color: npOrgType === type ? "#000" : "#aaa",
+                                border: `1.5px solid ${npOrgType === type ? GOLD : "rgba(255,255,255,0.12)"}`,
+                                transition: "all 0.18s",
+                              }}
+                            >
+                              {type === "church" ? <Church size={14} /> : <HandHeart size={14} />}
+                              {type === "church" ? "Church" : "Non-Profit"}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label style={{ color: "#888", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", display: "block", marginBottom: 6 }}>
+                          Organization Name <span style={{ color: "#ef4444" }}>*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={npOrgName}
+                          onChange={e => setNpOrgName(e.target.value)}
+                          placeholder="e.g. New Life Community Church"
+                          required={isNonprofit}
+                          style={{ width: "100%", padding: "10px 12px", background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box" }}
+                        />
+                      </div>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                        <div>
+                          <label style={{ color: "#888", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", display: "block", marginBottom: 6 }}>
+                            EIN / Tax ID <span style={{ color: "#555", fontWeight: 400, textTransform: "none" }}>(optional)</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={npEin}
+                            onChange={e => setNpEin(e.target.value)}
+                            placeholder="12-3456789"
+                            style={{ width: "100%", padding: "10px 12px", background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box" }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ color: "#888", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", display: "block", marginBottom: 6 }}>
+                            Website <span style={{ color: "#555", fontWeight: 400, textTransform: "none" }}>(optional)</span>
+                          </label>
+                          <input
+                            type="url"
+                            value={npWebsite}
+                            onChange={e => setNpWebsite(e.target.value)}
+                            placeholder="https://yourorg.org"
+                            style={{ width: "100%", padding: "10px 12px", background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box" }}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label style={{ color: "#888", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", display: "block", marginBottom: 6 }}>
+                          Brief Description <span style={{ color: "#555", fontWeight: 400, textTransform: "none" }}>(optional)</span>
+                        </label>
+                        <textarea
+                          value={npDescription}
+                          onChange={e => setNpDescription(e.target.value)}
+                          placeholder="Tell us about your organization and the community you serve..."
+                          rows={3}
+                          style={{ width: "100%", padding: "10px 12px", background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, color: "#fff", fontSize: 13, outline: "none", resize: "vertical", boxSizing: "border-box" }}
+                        />
+                      </div>
+
+                      <div style={{ padding: "12px 14px", background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.22)", borderRadius: 8 }}>
+                        <p style={{ color: GOLD, fontSize: 12, fontWeight: 700, margin: "0 0 4px" }}>📋 What happens next?</p>
+                        <p style={{ color: "#888", fontSize: 12, margin: 0, lineHeight: 1.6 }}>
+                          After registration, your application will be reviewed by the NFGN team. Once approved, your organization will be listed on the <strong style={{ color: "#ccc" }}>Support Somebody</strong> page and a QR code will be generated for member donations. <strong style={{ color: "#ccc" }}>No Pro Membership is required</strong> — this listing is completely free.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full h-12"
+                  disabled={registerMutation.isPending || npSubmitting || (isNonprofit && !npOrgName.trim())}
+                >
+                  {(registerMutation.isPending || npSubmitting)
+                    ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating Account...</>
+                    : isNonprofit ? "Create Account & Submit Application" : "Create Free Account"
+                  }
                 </Button>
                 <p className="text-center text-sm text-muted-foreground">
                   Already have an account? <Link href="/login" className="text-primary hover:underline">Sign in</Link>
@@ -232,6 +427,30 @@ export function Join() {
                 </CardContent>
               </Card>
             )}
+
+            {/* Nonprofit listing callout */}
+            <div style={{ borderRadius: 12, border: `1.5px solid rgba(201,168,76,0.3)`, background: "rgba(201,168,76,0.05)", padding: "20px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                <HandHeart className="h-5 w-5 text-primary flex-shrink-0" />
+                <h4 className="font-bold text-sm">Church or Non-Profit?</h4>
+              </div>
+              <p className="text-sm text-muted-foreground mb-3">
+                Register your organization for <strong className="text-foreground">free</strong> and get listed on our Support Somebody page. Members of the NFGN network can donate directly to your cause. No Pro Membership required.
+              </p>
+              <ul className="space-y-1.5 text-sm text-muted-foreground">
+                {[
+                  "Free listing — no fees, no Pro upgrade needed",
+                  "80% of every gift goes directly to your cause",
+                  "Unique QR code for easy donation sharing",
+                  "Corporate approval required (usually within 48 hrs)",
+                ].map(item => (
+                  <li key={item} className="flex items-start gap-2">
+                    <CheckCircle className="h-3.5 w-3.5 text-primary flex-shrink-0 mt-0.5" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
 
             {/* UPM Policy notice */}
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm space-y-1.5">

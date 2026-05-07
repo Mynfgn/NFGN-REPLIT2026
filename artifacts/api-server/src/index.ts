@@ -2,6 +2,7 @@ import app from "./app";
 import { logger } from "./lib/logger";
 import { startCodReminderJob } from "./lib/codReminder";
 import { startBookingReminderJob } from "./lib/bookingReminder";
+import { seedBannerMessages } from "./lib/seedBanners";
 
 const rawPort = process.env["PORT"];
 
@@ -26,4 +27,7 @@ app.listen(port, (err) => {
   logger.info({ port }, "Server listening");
   startCodReminderJob();
   startBookingReminderJob();
+  seedBannerMessages().catch((seedErr) =>
+    logger.error({ err: seedErr }, "Failed to seed banner messages")
+  );
 });

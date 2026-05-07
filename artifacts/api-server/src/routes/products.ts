@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, productsTable, categoriesTable, orderItemsTable, usersTable, productReviewsTable } from "@workspace/db";
+import { db, productsTable, categoriesTable, orderItemsTable, usersTable, productReviewsTable, proPackagesTable } from "@workspace/db";
 import { eq, like, and, sql, count, desc, ne, asc, avg } from "drizzle-orm";
 import { requireAdmin, requireAuth } from "../lib/auth";
 
@@ -336,7 +336,12 @@ router.delete("/products/:id", requireAdmin, async (req, res): Promise<void> => 
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
-  await db.delete(productsTable).where(eq(productsTable.id, id));
+  await db.transaction(async (tx) => {
+    await tx.delete(productsTable).where(eq(productsTable.id, id));
+    await tx.update(proPackagesTable)
+      .set({ productId: null })
+      .where(eq(proPackagesTable.productId, id));
+  });
   res.sendStatus(204);
 });
 

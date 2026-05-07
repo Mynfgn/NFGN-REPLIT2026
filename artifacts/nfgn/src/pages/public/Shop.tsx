@@ -405,7 +405,7 @@ function ProPackageCard({
           Add to Cart
         </button>
       ) : (
-        <Link href="/join">
+        <Link href="/join/pro">
           <button
             style={{
               width: "100%",
@@ -424,7 +424,7 @@ function ProPackageCard({
               transition: "all 0.2s ease",
             }}
           >
-            <Shield size={15} /> Get Started
+            <ShoppingCart size={15} /> Add to Cart
           </button>
         </Link>
       )}

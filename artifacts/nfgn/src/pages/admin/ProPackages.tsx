@@ -67,12 +67,13 @@ const EMPTY_FORM = {
 
 interface SortableRowProps {
   pkg: ProPackage;
+  position: number;
   products: ShopProduct[];
   onEdit: (pkg: ProPackage) => void;
   onDelete: (pkg: ProPackage) => void;
 }
 
-function SortableRow({ pkg, products, onEdit, onDelete }: SortableRowProps) {
+function SortableRow({ pkg, position, products, onEdit, onDelete }: SortableRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: pkg.id });
 
@@ -89,14 +90,19 @@ function SortableRow({ pkg, products, onEdit, onDelete }: SortableRowProps) {
   return (
     <TableRow ref={setNodeRef} style={style}>
       <TableCell>
-        <button
-          {...attributes}
-          {...listeners}
-          className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-muted touch-none"
-          aria-label="Drag to reorder"
-        >
-          <GripVertical className="h-4 w-4 text-muted-foreground" />
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            {...attributes}
+            {...listeners}
+            className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-muted touch-none"
+            aria-label="Drag to reorder"
+          >
+            <GripVertical className="h-4 w-4 text-muted-foreground" />
+          </button>
+          <span className="text-xs font-mono text-muted-foreground/60 select-none min-w-[1.25rem] text-right">
+            {position}
+          </span>
+        </div>
       </TableCell>
       <TableCell className="font-medium">{pkg.name}</TableCell>
       <TableCell>
@@ -413,10 +419,11 @@ export function AdminProPackagesPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {packages.map((pkg) => (
+                    {packages.map((pkg, index) => (
                       <SortableRow
                         key={pkg.id}
                         pkg={pkg}
+                        position={index + 1}
                         products={products}
                         onEdit={openEdit}
                         onDelete={setDeleteTarget}

@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect } from "react";
 import { customFetch } from "@/lib/custom-fetch";
+import { TickerBar } from "@/components/ticker-bar";
 
 const GOLD = "#C9A84C";
 const GOLD_MUTED = "rgba(201,168,76,0.75)";
@@ -115,7 +116,7 @@ const FALLBACK_BANNER_ITEMS = [
   "SALE!! 1 Month Free Pro Membership with the purchase of IGNITE PRO XL.",
 ];
 
-function TickerBar() {
+function ShopTickerBar() {
   const { data: banners } = useQuery<{ id: number; message: string }[]>({
     queryKey: ["/api/banners"],
     queryFn: () => customFetch("/api/banners").then(r => r.json()),
@@ -126,36 +127,7 @@ function TickerBar() {
     ? banners.map(b => b.message)
     : FALLBACK_BANNER_ITEMS;
 
-  return (
-    <div style={{ background: GOLD, overflow: "hidden", padding: "20px 0" }}>
-      <div
-        style={{
-          display: "flex",
-          gap: 72,
-          whiteSpace: "nowrap",
-          animation: "ticker 24s linear infinite",
-        }}
-      >
-        {[...items, ...items].map((item, i) => (
-          <span
-            key={i}
-            style={{
-              color: "#fff",
-              fontSize: 20,
-              fontWeight: 800,
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 16,
-              textShadow: "0 1px 4px rgba(0,0,0,0.3)",
-            }}
-          >
-            <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 14 }}>✦</span> {item}
-          </span>
-        ))}
-      </div>
-      <style>{`@keyframes ticker { from { transform: translateX(0) } to { transform: translateX(-50%) } }`}</style>
-    </div>
-  );
+  return <TickerBar messages={items} />;
 }
 
 function ProductCard({
@@ -914,7 +886,7 @@ export function Shop() {
       </div>
 
       {/* ── ZONE 3: GOLD — Ticker ────────────────────────── */}
-      <TickerBar />
+      <ShopTickerBar />
 
       {/* ── Specials ─────────────────────────────────────── */}
       {saleProducts.length > 0 && (

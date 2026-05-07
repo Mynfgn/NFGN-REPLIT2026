@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { customFetch } from "@/lib/custom-fetch";
+import { TickerBar } from "@/components/ticker-bar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import {
   Megaphone, Plus, Trash2, Save, Loader2, GripVertical,
-  ToggleLeft, ToggleRight, RefreshCw, Eye, EyeOff,
+  ToggleLeft, ToggleRight, RefreshCw, Eye, EyeOff, MonitorPlay,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -167,6 +168,7 @@ export function AdminBannerMessagesPage() {
   }
 
   const activeCount = banners.filter(b => b.isActive).length;
+  const activeMessages = banners.filter(b => b.isActive).map(b => b.message);
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -314,6 +316,33 @@ export function AdminBannerMessagesPage() {
                 );
               })}
             </ul>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <MonitorPlay className="h-4 w-4 text-primary" />
+            Live Preview
+            {activeMessages.length > 0 ? (
+              <Badge className="bg-primary/20 text-primary hover:bg-primary/20 border border-primary/30 text-xs font-semibold">
+                {activeMessages.length} active
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-xs">No active messages</Badge>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          {activeMessages.length > 0 ? (
+            <div className="rounded-b-lg overflow-hidden">
+              <TickerBar messages={activeMessages} fontSize={15} padding="14px 0" />
+            </div>
+          ) : (
+            <div className="py-8 text-center text-muted-foreground text-sm px-4">
+              No active messages — enable at least one message above to see the preview.
+            </div>
           )}
         </CardContent>
       </Card>

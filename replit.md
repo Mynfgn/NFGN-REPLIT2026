@@ -35,7 +35,7 @@ Full-stack MLM/network marketing platform for naturopathic wellness products. Bu
 
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | joemarcelino99@gmail.com | admin123 |
+| Admin | Mynfgn@gmail.com | Admin123 |
 | Pro Member | promember@nfgn.com | ProMember!2026# |
 | Member (customer) | customer@nfgn.com | Customer!2026# |
 

@@ -287,7 +287,7 @@ export function ChurchesAndNonProfits() {
             <span style={{ color: GOLD, fontSize: 11, fontWeight: 800, letterSpacing: "0.22em", textTransform: "uppercase" }}>NFGN Giving Hub</span>
           </div>
           <h1 style={{ color: "#fff", fontSize: "clamp(36px, 6vw, 64px)", fontWeight: 900, margin: "0 0 20px", fontFamily: "serif", lineHeight: 1.05 }}>
-            Churches &amp; <span style={{ color: GOLD }}>Non-Profits.</span>
+            Support <span style={{ color: GOLD }}>Somebody.</span>
           </h1>
           <p style={{ color: "#a0a0a0", fontSize: 18, maxWidth: 620, margin: "0 0 32px", lineHeight: 1.7 }}>
             Everything related to giving, fundraising, tithing, donations, and community support is right here in one centralized place. Give directly through your NFGN account — transparently, securely, and with purpose.

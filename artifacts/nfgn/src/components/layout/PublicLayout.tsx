@@ -22,7 +22,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
   const navLinks = [
     { name: "Store", href: "/shop" },
     { name: "Book-A-Pro", href: "/book" },
-    { name: "Churches & Non-Profits", href: "/give" },
+    { name: "Support Somebody", href: "/give" },
     { name: "Join Us", href: "/join" },
   ];
 

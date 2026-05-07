@@ -715,6 +715,10 @@ export function Shop() {
 
   const assignedIds = new Set(grouped.flatMap((g) => g.products.map((p) => p.id)));
   const uncategorized = regularProducts.filter((p) => !assignedIds.has(p.id));
+  const herbalGroup  = grouped.find(g => g.group.key === "herbal")  ?? { group: CATEGORY_GROUPS[0], products: [] as Product[] };
+  const soapsGroup   = grouped.find(g => g.group.key === "soaps")   ?? { group: CATEGORY_GROUPS[1], products: [] as Product[] };
+  const candlesGroup = grouped.find(g => g.group.key === "candles") ?? { group: CATEGORY_GROUPS[2], products: [] as Product[] };
+  const booksGroup   = grouped.find(g => g.group.key === "books")   ?? { group: CATEGORY_GROUPS[3], products: [] as Product[] };
 
   return (
     <div style={{ fontFamily: "'Inter','Segoe UI',sans-serif", minHeight: "100vh", background: "#fff" }}>
@@ -888,251 +892,8 @@ export function Shop() {
       {/* ── ZONE 3: GOLD — Ticker ────────────────────────── */}
       <ShopTickerBar />
 
-      {/* ── Specials ─────────────────────────────────────── */}
-      {saleProducts.length > 0 && (
-        <div style={{ background: "linear-gradient(135deg, #1a1200, #0a0a0a)", padding: "56px 0", borderTop: "1px solid rgba(201,168,76,0.25)" }}>
-          <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 32, flexWrap: "wrap" }}>
-              <Zap size={22} color={GOLD} />
-              <h2 style={{ color: "#fff", fontSize: 28, fontWeight: 900, margin: 0, fontFamily: "serif" }}>
-                Current Specials & Sales
-              </h2>
-              <span
-                style={{
-                  background: GOLD,
-                  color: "#000",
-                  fontSize: 11,
-                  fontWeight: 800,
-                  padding: "4px 12px",
-                  borderRadius: 99,
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                }}
-              >
-                Limited Offers
-              </span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {saleProducts.map((p) => (
-                <Link key={p.id} href={`/product/${p.slug}`}>
-                  <SaleCard product={p} />
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── NFGN SPORTS ───────────────────────────────────── */}
-      {sportsProducts.length > 0 && (
-        <div style={{ background: "linear-gradient(135deg, #0a0a0a 0%, #111 50%, #0d0d0d 100%)", padding: "72px 0", borderTop: "3px solid #C9A84C", borderBottom: "3px solid #C9A84C", position: "relative", overflow: "hidden" }}>
-          {/* Background field pattern */}
-          <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(201,168,76,0.04) 39px, rgba(201,168,76,0.04) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(201,168,76,0.04) 39px, rgba(201,168,76,0.04) 40px)", pointerEvents: "none" }} />
-          {/* Glow orbs */}
-          <div style={{ position: "absolute", top: -80, left: "10%", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,168,76,0.12), transparent 70%)", pointerEvents: "none" }} />
-          <div style={{ position: "absolute", bottom: -60, right: "8%", width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,168,76,0.08), transparent 70%)", pointerEvents: "none" }} />
-
-          <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto", position: "relative" }}>
-            {/* Section header */}
-            <div style={{ marginBottom: 48 }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 16, background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.35)", padding: "6px 16px", borderRadius: 99 }}>
-                <Trophy size={13} color={GOLD} />
-                <span style={{ color: GOLD, fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>NFGN SPORTS</span>
-              </div>
-              <h2 style={{ color: "#fff", fontSize: "clamp(30px, 5vw, 46px)", fontWeight: 900, margin: "0 0 12px", fontFamily: "serif", lineHeight: 1.1 }}>
-                Game On. <span style={{ color: GOLD }}>Compete. Win.</span>
-              </h2>
-              <p style={{ color: "#a0a0a0", fontSize: 16, maxWidth: 560, margin: 0 }}>
-                Tournaments, entry fees, sponsorships, concessions, skills camps, personal training, and more — all powered by NFGN.
-              </p>
-              {/* Sports category pills */}
-              <div style={{ display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
-                {[
-                  { icon: <Ticket size={11} />, label: "Tournament Tickets" },
-                  { icon: <Trophy size={11} />, label: "Entry Fees" },
-                  { icon: <Award size={11} />, label: "Sponsorships" },
-                  { icon: <Utensils size={11} />, label: "Concessions & Food" },
-                  { icon: <Dumbbell size={11} />, label: "Skills & Training" },
-                ].map(tag => (
-                  <span key={tag.label} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)", color: GOLD, fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 99, letterSpacing: "0.04em" }}>
-                    {tag.icon} {tag.label}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Sports product grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {sportsProducts.map(p => (
-                <SportsProductCard
-                  key={p.id}
-                  product={p}
-                  onAdd={handleAddToCart}
-                  adding={addingId === p.id}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── NON-PROFIT ORGANIZATIONS ──────────────────────── */}
-      {nonProfitProducts.length > 0 && (
-        <div style={{ background: "linear-gradient(135deg, #0d0d1a 0%, #111128 50%, #0d0d1f 100%)", padding: "72px 0", borderTop: "3px solid #6366f1", borderBottom: "3px solid #6366f1", position: "relative", overflow: "hidden" }}>
-          <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(99,102,241,0.04) 39px, rgba(99,102,241,0.04) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(99,102,241,0.04) 39px, rgba(99,102,241,0.04) 40px)", pointerEvents: "none" }} />
-          <div style={{ position: "absolute", top: -80, right: "8%", width: 280, height: 280, borderRadius: "50%", background: "radial-gradient(circle, rgba(99,102,241,0.15), transparent 70%)", pointerEvents: "none" }} />
-          <div style={{ position: "absolute", bottom: -60, left: "6%", width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, rgba(99,102,241,0.09), transparent 70%)", pointerEvents: "none" }} />
-
-          <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto", position: "relative" }}>
-            <div style={{ marginBottom: 48 }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 16, background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.35)", padding: "6px 16px", borderRadius: 99 }}>
-                <HandHeart size={13} color="#6366f1" />
-                <span style={{ color: "#6366f1", fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>NON-PROFIT ORGANIZATIONS</span>
-              </div>
-              <h2 style={{ color: "#fff", fontSize: "clamp(28px, 5vw, 44px)", fontWeight: 900, margin: "0 0 12px", fontFamily: "serif", lineHeight: 1.1 }}>
-                Give Back. <span style={{ color: "#6366f1" }}>Support. Unite.</span>
-              </h2>
-              <p style={{ color: "#a0a0a0", fontSize: 16, maxWidth: 560, margin: 0 }}>
-                Products, events, and services that support non-profit causes — every purchase makes a difference in the community.
-              </p>
-              {/* Gift-split info banner — shown for donation products in this section */}
-              {nonProfitProducts.some(p => p.isDonation) && (
-                <div style={{ marginTop: 20, padding: "12px 16px", background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.28)", borderRadius: 10, maxWidth: 560 }}>
-                  <p style={{ color: "#6366f1", fontSize: 12, fontWeight: 700, margin: "0 0 6px", letterSpacing: "0.05em" }}>🎁 HOW MONETARY GIFTS WORK</p>
-                  <p style={{ color: "#a0a0a0", fontSize: 12, margin: 0, lineHeight: 1.55 }}>
-                    When you give a monetary gift, the majority goes <strong style={{ color: "#fff" }}>directly to the organisation</strong>. A small network portion (typically 20%) supports NFGN referral rewards and operations. This is a <strong style={{ color: "#fff" }}>GIFT — not a payment</strong> and is not considered taxable income for recipients.
-                  </p>
-                </div>
-              )}
-              <div style={{ display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
-                {[
-                  { icon: <Heart size={11} />, label: "Community Support" },
-                  { icon: <HandHeart size={11} />, label: "Charitable Events" },
-                  { icon: <Users size={11} />, label: "Organization Fundraisers" },
-                  { icon: <Coins size={11} />, label: "Donation Drives" },
-                ].map(tag => (
-                  <span key={tag.label} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(99,102,241,0.10)", border: "1px solid rgba(99,102,241,0.25)", color: "#6366f1", fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 99, letterSpacing: "0.04em" }}>
-                    {tag.icon} {tag.label}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {nonProfitProducts.map(p => (
-                <NonProfitProductCard
-                  key={p.id}
-                  product={p}
-                  onAdd={handleAddToCart}
-                  adding={addingId === p.id}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── CHURCH GIVING ──────────────────────────────────── */}
-      {churchDonationProducts.length > 0 && (
-        <div style={{ background: "linear-gradient(135deg, #0f0b04 0%, #161208 50%, #120e05 100%)", padding: "72px 0", borderTop: `3px solid ${GOLD}`, borderBottom: `3px solid ${GOLD}`, position: "relative", overflow: "hidden" }}>
-          {/* Cross pattern overlay */}
-          <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(201,168,76,0.04) 39px, rgba(201,168,76,0.04) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(201,168,76,0.04) 39px, rgba(201,168,76,0.04) 40px)", pointerEvents: "none" }} />
-          <div style={{ position: "absolute", top: -90, right: "6%", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,168,76,0.12), transparent 70%)", pointerEvents: "none" }} />
-          <div style={{ position: "absolute", bottom: -60, left: "8%", width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, rgba(180,83,9,0.10), transparent 70%)", pointerEvents: "none" }} />
-
-          <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto", position: "relative" }}>
-            <div style={{ marginBottom: 48 }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 16, background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.35)", padding: "6px 16px", borderRadius: 99 }}>
-                <Church size={13} color={GOLD} />
-                <span style={{ color: GOLD, fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>Church Giving</span>
-              </div>
-              <h2 style={{ color: "#fff", fontSize: "clamp(28px, 5vw, 44px)", fontWeight: 900, margin: "0 0 12px", fontFamily: "serif", lineHeight: 1.1 }}>
-                Give to Your <span style={{ color: GOLD }}>Church.</span>
-              </h2>
-              <p style={{ color: "#9a9a9a", fontSize: 16, maxWidth: 580, margin: 0, lineHeight: 1.6 }}>
-                Support your church community directly through your NFGN account. Choose any amount at or above the minimum — every dollar goes straight to your house of worship.
-              </p>
-              {/* Gift-split info banner for church giving */}
-              <div style={{ marginTop: 20, padding: "12px 16px", background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.28)", borderRadius: 10, maxWidth: 580 }}>
-                <p style={{ color: GOLD, fontSize: 12, fontWeight: 700, margin: "0 0 6px", letterSpacing: "0.05em" }}>🎁 HOW YOUR GIFT IS DISTRIBUTED</p>
-                <p style={{ color: "#9a9a9a", fontSize: 12, margin: 0, lineHeight: 1.55 }}>
-                  The majority of every gift goes <strong style={{ color: "#fff" }}>directly to your church</strong>. A small network portion (typically 20%) supports NFGN referral rewards and platform operations. Your gift is a <strong style={{ color: "#fff" }}>GIFT — not a purchase</strong> and is not subject to sales tax.
-                </p>
-              </div>
-              <div style={{ display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
-                {[
-                  { icon: <Church size={11} />, label: "Direct Church Giving" },
-                  { icon: <Heart size={11} />, label: "Community Support" },
-                  { icon: <HandHeart size={11} />, label: "Choose Your Amount" },
-                  { icon: <Shield size={11} />, label: "Members Only" },
-                ].map(tag => (
-                  <span key={tag.label} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(201,168,76,0.10)", border: "1px solid rgba(201,168,76,0.28)", color: GOLD, fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 99, letterSpacing: "0.04em" }}>
-                    {tag.icon} {tag.label}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {churchDonationProducts.map(p => (
-                <ChurchDonationCard
-                  key={p.id}
-                  product={p}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── WEDDING REGISTRY ──────────────────────────────── */}
-      {weddingProducts.length > 0 && (
-        <div style={{ background: "linear-gradient(135deg, #fff7fb 0%, #fdf2f8 50%, #fff5fa 100%)", padding: "72px 0", borderTop: "3px solid #e11d7a", borderBottom: "3px solid #e11d7a", position: "relative", overflow: "hidden" }}>
-          <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(225,29,122,0.03) 39px, rgba(225,29,122,0.03) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(225,29,122,0.03) 39px, rgba(225,29,122,0.03) 40px)", pointerEvents: "none" }} />
-          <div style={{ position: "absolute", top: -60, left: "12%", width: 260, height: 260, borderRadius: "50%", background: "radial-gradient(circle, rgba(225,29,122,0.10), transparent 70%)", pointerEvents: "none" }} />
-          <div style={{ position: "absolute", bottom: -50, right: "10%", width: 180, height: 180, borderRadius: "50%", background: "radial-gradient(circle, rgba(225,29,122,0.07), transparent 70%)", pointerEvents: "none" }} />
-
-          <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto", position: "relative" }}>
-            <div style={{ marginBottom: 48 }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 16, background: "rgba(225,29,122,0.09)", border: "1px solid rgba(225,29,122,0.30)", padding: "6px 16px", borderRadius: 99 }}>
-                <Gem size={13} color="#e11d7a" />
-                <span style={{ color: "#e11d7a", fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>SPECIAL EVENTS REGISTRY</span>
-              </div>
-              <h2 style={{ color: "#1a1a1a", fontSize: "clamp(28px, 5vw, 44px)", fontWeight: 900, margin: "0 0 12px", fontFamily: "serif", lineHeight: 1.1 }}>
-                Celebrate Every Milestone. <span style={{ color: "#e11d7a" }}>Gift Meaningfully.</span>
-              </h2>
-              <p style={{ color: "#6b7280", fontSize: 16, maxWidth: 620, margin: 0 }}>
-                Gift, sponsor, or donate toward someone's special occasion — weddings, birthdays, graduations, Sweet 16s, baby showers, family reunions, and every life milestone worth celebrating. Members can cover the cake, the DJ, the flights, the photographer, or simply send a heartfelt gift.
-              </p>
-              <div style={{ display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
-                {[
-                  { icon: <Heart size={11} />, label: "Weddings & Honeymoons" },
-                  { icon: <Gem size={11} />, label: "Birthdays & Anniversaries" },
-                  { icon: <Flower2 size={11} />, label: "Graduations & Milestones" },
-                  { icon: <Church size={11} />, label: "Baptisms & Sweet 16s" },
-                  { icon: <Heart size={11} />, label: "Baby Showers & Gender Reveals" },
-                  { icon: <Gem size={11} />, label: "Retreats & Family Reunions" },
-                ].map(tag => (
-                  <span key={tag.label} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(225,29,122,0.07)", border: "1px solid rgba(225,29,122,0.22)", color: "#e11d7a", fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 99, letterSpacing: "0.04em" }}>
-                    {tag.icon} {tag.label}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {weddingProducts.map(p => (
-                <WeddingProductCard
-                  key={p.id}
-                  product={p}
-                  onAdd={handleAddToCart}
-                  adding={addingId === p.id}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── ZONE 2: WHITE — All Products ─────────────────── */}
-      <div id="products" style={{ background: GREY_50, padding: "72px 0" }}>
+      {/* ── Our Collection — All Products ───────────────── */}
+      <div id="products" style={{ background: GREY_50, paddingTop: 72, paddingBottom: isLoading ? 72 : 0 }}>
         <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 56 }}>
             <p style={{ color: GOLD, fontSize: 12, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 8 }}>
@@ -1160,52 +921,75 @@ export function Shop() {
               ))}
             </div>
           ) : (
-            <>
-              {grouped.map(({ group, products: gProducts }) => (
-                <CategorySection
-                  key={group.key}
-                  group={group}
-                  products={gProducts}
-                  onAdd={handleAddToCart}
-                  addingId={addingId}
-                />
-              ))}
-
-              {uncategorized.length > 0 && (
-                <CategorySection
-                  group={{
-                    key: "other",
-                    label: "More Products",
-                    icon: <Sparkles className="h-5 w-5" />,
-                    accentColor: GOLD,
-                    description: "Additional wellness offerings from NFGN.",
-                    slugs: [],
-                  }}
-                  products={uncategorized}
-                  onAdd={handleAddToCart}
-                  addingId={addingId}
-                />
-              )}
-
-              {products.length === 0 && (
-                <div style={{ textAlign: "center", padding: "80px 0" }}>
-                  <div style={{ fontSize: 56, marginBottom: 16, opacity: 0.2, color: GOLD }}>✦</div>
-                  <h3 style={{ fontSize: 20, fontWeight: 700, color: "#1a1a1a", marginBottom: 8 }}>No products yet</h3>
-                  <p style={{ color: GREY_600 }}>Check back soon — the marketplace is being stocked.</p>
-                </div>
-              )}
-            </>
+            herbalGroup.products.length > 0 && (
+              <CategorySection
+                group={herbalGroup.group}
+                products={herbalGroup.products}
+                onAdd={handleAddToCart}
+                addingId={addingId}
+              />
+            )
           )}
         </div>
       </div>
 
-      {/* ── HOLIDAY & SPECIAL OCCASIONS ───────────────────── */}
-      {holidayProducts.length > 0 && (
+      {/* ── SPECIAL EVENTS REGISTRY (above Soaps & Lotions) ─── */}
+      {!isLoading && weddingProducts.length > 0 && (
+        <div style={{ background: "linear-gradient(135deg, #fff7fb 0%, #fdf2f8 50%, #fff5fa 100%)", padding: "72px 0", borderTop: "3px solid #e11d7a", borderBottom: "3px solid #e11d7a", position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(225,29,122,0.03) 39px, rgba(225,29,122,0.03) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(225,29,122,0.03) 39px, rgba(225,29,122,0.03) 40px)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", top: -60, left: "12%", width: 260, height: 260, borderRadius: "50%", background: "radial-gradient(circle, rgba(225,29,122,0.10), transparent 70%)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", bottom: -50, right: "10%", width: 180, height: 180, borderRadius: "50%", background: "radial-gradient(circle, rgba(225,29,122,0.07), transparent 70%)", pointerEvents: "none" }} />
+          <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto", position: "relative" }}>
+            <div style={{ marginBottom: 48 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 16, background: "rgba(225,29,122,0.09)", border: "1px solid rgba(225,29,122,0.30)", padding: "6px 16px", borderRadius: 99 }}>
+                <Gem size={13} color="#e11d7a" />
+                <span style={{ color: "#e11d7a", fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>SPECIAL EVENTS REGISTRY</span>
+              </div>
+              <h2 style={{ color: "#1a1a1a", fontSize: "clamp(28px, 5vw, 44px)", fontWeight: 900, margin: "0 0 12px", fontFamily: "serif", lineHeight: 1.1 }}>
+                Celebrate Every Milestone. <span style={{ color: "#e11d7a" }}>Gift Meaningfully.</span>
+              </h2>
+              <p style={{ color: "#6b7280", fontSize: 16, maxWidth: 620, margin: 0 }}>
+                Gift, sponsor, or donate toward someone's special occasion — weddings, birthdays, graduations, Sweet 16s, baby showers, family reunions, and every life milestone worth celebrating.
+              </p>
+              <div style={{ display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
+                {[
+                  { icon: <Heart size={11} />, label: "Weddings & Honeymoons" },
+                  { icon: <Gem size={11} />, label: "Birthdays & Anniversaries" },
+                  { icon: <Flower2 size={11} />, label: "Graduations & Milestones" },
+                  { icon: <Church size={11} />, label: "Baptisms & Sweet 16s" },
+                  { icon: <Heart size={11} />, label: "Baby Showers & Gender Reveals" },
+                  { icon: <Gem size={11} />, label: "Retreats & Family Reunions" },
+                ].map(tag => (
+                  <span key={tag.label} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(225,29,122,0.07)", border: "1px solid rgba(225,29,122,0.22)", color: "#e11d7a", fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 99, letterSpacing: "0.04em" }}>
+                    {tag.icon} {tag.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {weddingProducts.map(p => (
+                <WeddingProductCard key={p.id} product={p} onAdd={handleAddToCart} adding={addingId === p.id} />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Soaps & Lotions ──────────────────────────────── */}
+      {!isLoading && soapsGroup.products.length > 0 && (
+        <div style={{ background: GREY_50, paddingBottom: 8 }}>
+          <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto" }}>
+            <CategorySection group={soapsGroup.group} products={soapsGroup.products} onAdd={handleAddToCart} addingId={addingId} />
+          </div>
+        </div>
+      )}
+
+      {/* ── HOLIDAY & SPECIAL OCCASIONS (above Aromatherapy) ─── */}
+      {!isLoading && holidayProducts.length > 0 && (
         <div style={{ background: "linear-gradient(135deg, #fffbeb 0%, #fef3c7 50%, #fffbeb 100%)", padding: "72px 0", borderTop: "3px solid #d97706", borderBottom: "3px solid #d97706", position: "relative", overflow: "hidden" }}>
           <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(217,119,6,0.03) 39px, rgba(217,119,6,0.03) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(217,119,6,0.03) 39px, rgba(217,119,6,0.03) 40px)", pointerEvents: "none" }} />
           <div style={{ position: "absolute", top: -60, right: "10%", width: 260, height: 260, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,168,76,0.15), transparent 70%)", pointerEvents: "none" }} />
           <div style={{ position: "absolute", bottom: -50, left: "8%", width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, rgba(217,119,6,0.10), transparent 70%)", pointerEvents: "none" }} />
-
           <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto", position: "relative" }}>
             <div style={{ marginBottom: 48 }}>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 16, background: "rgba(217,119,6,0.10)", border: "1px solid rgba(217,119,6,0.35)", padding: "6px 16px", borderRadius: 99 }}>
@@ -1216,7 +1000,7 @@ export function Shop() {
                 Season of Giving. <span style={{ color: "#d97706" }}>Shop the Holidays.</span>
               </h2>
               <p style={{ color: "#6b7280", fontSize: 16, maxWidth: 620, margin: 0 }}>
-                Curated gifts, bundles, and seasonal products for every holiday and special occasion — Christmas, Hanukkah, Kwanzaa, Valentine's Day, Mother's Day, Eid, Diwali, and more. The perfect gift is always in season.
+                Curated gifts, bundles, and seasonal products for every holiday and special occasion — Christmas, Hanukkah, Kwanzaa, Valentine's Day, Mother's Day, Eid, Diwali, and more.
               </p>
               <div style={{ display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
                 {[
@@ -1235,12 +1019,101 @@ export function Shop() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {holidayProducts.map(p => (
-                <HolidayProductCard
-                  key={p.id}
-                  product={p}
-                  onAdd={handleAddToCart}
-                  adding={addingId === p.id}
-                />
+                <HolidayProductCard key={p.id} product={p} onAdd={handleAddToCart} adding={addingId === p.id} />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Aromatherapy Candles, Books & Education, More Products ── */}
+      {!isLoading && (
+        <div style={{ background: GREY_50, paddingBottom: 72 }}>
+          <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto" }}>
+            {candlesGroup.products.length > 0 && (
+              <CategorySection group={candlesGroup.group} products={candlesGroup.products} onAdd={handleAddToCart} addingId={addingId} />
+            )}
+            {booksGroup.products.length > 0 && (
+              <CategorySection group={booksGroup.group} products={booksGroup.products} onAdd={handleAddToCart} addingId={addingId} />
+            )}
+            {uncategorized.length > 0 && (
+              <CategorySection
+                group={{ key: "other", label: "More Products", icon: <Sparkles className="h-5 w-5" />, accentColor: GOLD, description: "Additional wellness offerings from NFGN.", slugs: [] }}
+                products={uncategorized}
+                onAdd={handleAddToCart}
+                addingId={addingId}
+              />
+            )}
+            {regularProducts.length === 0 && weddingProducts.length === 0 && holidayProducts.length === 0 && (
+              <div style={{ textAlign: "center", padding: "80px 0" }}>
+                <div style={{ fontSize: 56, marginBottom: 16, opacity: 0.2, color: GOLD }}>✦</div>
+                <h3 style={{ fontSize: 20, fontWeight: 700, color: "#1a1a1a", marginBottom: 8 }}>No products yet</h3>
+                <p style={{ color: GREY_600 }}>Check back soon — the marketplace is being stocked.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Specials ─────────────────────────────────────── */}
+      {saleProducts.length > 0 && (
+        <div style={{ background: "linear-gradient(135deg, #1a1200, #0a0a0a)", padding: "56px 0", borderTop: "1px solid rgba(201,168,76,0.25)" }}>
+          <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 32, flexWrap: "wrap" }}>
+              <Zap size={22} color={GOLD} />
+              <h2 style={{ color: "#fff", fontSize: 28, fontWeight: 900, margin: 0, fontFamily: "serif" }}>
+                Current Specials & Sales
+              </h2>
+              <span style={{ background: GOLD, color: "#000", fontSize: 11, fontWeight: 800, padding: "4px 12px", borderRadius: 99, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                Limited Offers
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {saleProducts.map((p) => (
+                <Link key={p.id} href={`/product/${p.slug}`}>
+                  <SaleCard product={p} />
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── NFGN SPORTS ───────────────────────────────────── */}
+      {sportsProducts.length > 0 && (
+        <div style={{ background: "linear-gradient(135deg, #0a0a0a 0%, #111 50%, #0d0d0d 100%)", padding: "72px 0", borderTop: "3px solid #C9A84C", borderBottom: "3px solid #C9A84C", position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(201,168,76,0.04) 39px, rgba(201,168,76,0.04) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(201,168,76,0.04) 39px, rgba(201,168,76,0.04) 40px)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", top: -80, left: "10%", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,168,76,0.12), transparent 70%)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", bottom: -60, right: "8%", width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,168,76,0.08), transparent 70%)", pointerEvents: "none" }} />
+          <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto", position: "relative" }}>
+            <div style={{ marginBottom: 48 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 16, background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.35)", padding: "6px 16px", borderRadius: 99 }}>
+                <Trophy size={13} color={GOLD} />
+                <span style={{ color: GOLD, fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>NFGN SPORTS</span>
+              </div>
+              <h2 style={{ color: "#fff", fontSize: "clamp(30px, 5vw, 46px)", fontWeight: 900, margin: "0 0 12px", fontFamily: "serif", lineHeight: 1.1 }}>
+                Game On. <span style={{ color: GOLD }}>Compete. Win.</span>
+              </h2>
+              <p style={{ color: "#a0a0a0", fontSize: 16, maxWidth: 560, margin: 0 }}>
+                Tournaments, entry fees, sponsorships, concessions, skills camps, personal training, and more — all powered by NFGN.
+              </p>
+              <div style={{ display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
+                {[
+                  { icon: <Ticket size={11} />, label: "Tournament Tickets" },
+                  { icon: <Trophy size={11} />, label: "Entry Fees" },
+                  { icon: <Award size={11} />, label: "Sponsorships" },
+                  { icon: <Utensils size={11} />, label: "Concessions & Food" },
+                  { icon: <Dumbbell size={11} />, label: "Skills & Training" },
+                ].map(tag => (
+                  <span key={tag.label} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)", color: GOLD, fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 99, letterSpacing: "0.04em" }}>
+                    {tag.icon} {tag.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {sportsProducts.map(p => (
+                <SportsProductCard key={p.id} product={p} onAdd={handleAddToCart} adding={addingId === p.id} />
               ))}
             </div>
           </div>
@@ -1770,8 +1643,7 @@ function NonProfitProductCard({
   const img = resolveImageSrc(product.image);
   const outOfStock = product.stock === 0;
   const onSale = product.comparePrice && product.comparePrice > product.price;
-  const INDIGO = "#6366f1";
-  const INDIGO_DIM = "rgba(99,102,241,0.18)";
+  const NP_GOLD = "#C9A84C";
 
   return (
     <Link href={`/product/${product.slug}`}>
@@ -1779,11 +1651,11 @@ function NonProfitProductCard({
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
         style={{
-          background: hover ? "#1a1a2e" : "#13131f",
-          border: `1.5px solid ${hover ? INDIGO : "rgba(99,102,241,0.28)"}`,
+          background: hover ? "#151208" : "#0f0d08",
+          border: `1.5px solid ${hover ? NP_GOLD : "rgba(201,168,76,0.22)"}`,
           borderRadius: 12,
           overflow: "hidden",
-          boxShadow: hover ? `0 12px 36px rgba(99,102,241,0.22)` : "0 2px 12px rgba(0,0,0,0.4)",
+          boxShadow: hover ? `0 12px 36px rgba(201,168,76,0.18)` : "0 2px 12px rgba(0,0,0,0.4)",
           transition: "all 0.22s ease",
           cursor: "pointer",
           transform: hover ? "translateY(-4px)" : "none",
@@ -1792,13 +1664,13 @@ function NonProfitProductCard({
           height: "100%",
         }}
       >
-        <div style={{ background: img ? "#1a1a1a" : `linear-gradient(135deg, ${INDIGO_DIM}, rgba(99,102,241,0.05))`, height: 160, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+        <div style={{ background: img ? "#1a1a1a" : `linear-gradient(135deg, rgba(201,168,76,0.12), rgba(201,168,76,0.03))`, height: 160, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
           {img ? (
             <img src={img} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease", transform: hover ? "scale(1.06)" : "scale(1)" }} />
           ) : (
-            <HandHeart size={40} color={INDIGO} style={{ opacity: 0.4 }} />
+            <HandHeart size={40} color={NP_GOLD} style={{ opacity: 0.4 }} />
           )}
-          <span style={{ position: "absolute", top: 10, left: 10, background: INDIGO, color: "#fff", fontSize: 9, fontWeight: 900, padding: "3px 8px", borderRadius: 99, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+          <span style={{ position: "absolute", top: 10, left: 10, background: NP_GOLD, color: "#000", fontSize: 9, fontWeight: 900, padding: "3px 8px", borderRadius: 99, letterSpacing: "0.12em", textTransform: "uppercase" }}>
             🤝 NON-PROFIT
           </span>
           {onSale && !outOfStock && (
@@ -1813,14 +1685,14 @@ function NonProfitProductCard({
           )}
         </div>
         <div style={{ padding: "16px 16px 18px", flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
-          <p style={{ fontSize: 10, fontWeight: 800, color: INDIGO, letterSpacing: "0.15em", textTransform: "uppercase", margin: 0 }}>
+          <p style={{ fontSize: 10, fontWeight: 800, color: NP_GOLD, letterSpacing: "0.15em", textTransform: "uppercase", margin: 0 }}>
             {product.categoryName || "Non-Profit"}
           </p>
           <h4 style={{ fontSize: 15, fontWeight: 800, color: "#fff", lineHeight: 1.3, flex: 1, margin: 0 }}>
             {product.name}
           </h4>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
-            <span style={{ fontSize: 18, fontWeight: 900, color: INDIGO }}>${product.price.toFixed(2)}</span>
+            <span style={{ fontSize: 18, fontWeight: 900, color: NP_GOLD }}>${product.price.toFixed(2)}</span>
             {onSale && (
               <span style={{ fontSize: 13, color: "#666", textDecoration: "line-through" }}>
                 ${product.comparePrice!.toFixed(2)}
@@ -1834,11 +1706,11 @@ function NonProfitProductCard({
             return (
               <div style={{ marginTop: 4 }}>
                 <div style={{ display: "flex", borderRadius: 99, overflow: "hidden", height: 5, background: "rgba(255,255,255,0.08)" }}>
-                  <div style={{ width: `${charityPct}%`, background: INDIGO, transition: "width 0.2s" }} />
+                  <div style={{ width: `${charityPct}%`, background: NP_GOLD, transition: "width 0.2s" }} />
                   <div style={{ flex: 1, background: "rgba(255,255,255,0.12)" }} />
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginTop: 3, fontSize: 9, color: "#7a7a7a", fontWeight: 700, letterSpacing: "0.05em" }}>
-                  <span style={{ color: INDIGO }}>🤝 {charityPct}% → Org</span>
+                  <span style={{ color: NP_GOLD }}>🤝 {charityPct}% → Org</span>
                   <span>🔗 {memberPct}% → Network</span>
                 </div>
               </div>
@@ -1851,9 +1723,9 @@ function NonProfitProductCard({
               marginTop: 8,
               width: "100%",
               padding: "10px 0",
-              background: hover && !outOfStock ? INDIGO : "transparent",
-              color: outOfStock ? "#555" : hover ? "#fff" : INDIGO,
-              border: `1.5px solid ${outOfStock ? "#333" : INDIGO}`,
+              background: hover && !outOfStock ? NP_GOLD : "transparent",
+              color: outOfStock ? "#555" : hover ? "#000" : NP_GOLD,
+              border: `1.5px solid ${outOfStock ? "#333" : NP_GOLD}`,
               borderRadius: 8,
               fontWeight: 800,
               fontSize: 13,

@@ -20,6 +20,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
   const navLinks = [
     { name: "Shop", href: "/shop" },
     { name: "Book-A-Pro", href: "/book" },
+    { name: "Churches & Non-Profits", href: "/give" },
     { name: "Join NFGN", href: "/join" },
     { name: "About", href: "/about" },
     { name: "Contact Us", href: "/contact" },

@@ -19,6 +19,7 @@ import { ProductDetail } from "@/pages/public/ProductDetail";
 import { Join } from "@/pages/public/Join";
 import { ProJoin } from "@/pages/public/ProJoin";
 import { BookAPro } from "@/pages/public/BookAPro";
+import { ChurchesAndNonProfits } from "@/pages/public/ChurchesAndNonProfits";
 import { About } from "@/pages/public/About";
 import { Contact } from "@/pages/public/Contact";
 
@@ -140,6 +141,9 @@ function Router() {
       </Route>
       <Route path="/book">
         <PublicLayout><BookAPro /></PublicLayout>
+      </Route>
+      <Route path="/give">
+        <PublicLayout><ChurchesAndNonProfits /></PublicLayout>
       </Route>
       <Route path="/about">
         <PublicLayout><About /></PublicLayout>

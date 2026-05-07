@@ -264,6 +264,102 @@ async function seed() {
   }
   console.log("Products seeded");
 
+  // Donation / Church / Non-Profit products — seeded separately so we can set
+  // isDonation, isChurchDonation, isNonProfit, giftCharityPercent, donationMinAmount, etc.
+  const donationProductData = [
+    {
+      name: "Give to New Life Community Church",
+      slug: "give-to-new-life-community-church",
+      description: "Support New Life Community Church through your NFGN account. Every dollar you give goes directly to our congregation — funding outreach programs, community events, youth ministry, and building maintenance. Give any amount at or above the minimum, as often as you like. 80% flows directly to the church; the remaining 20% supports NFGN referral rewards and platform operations.",
+      price: "10.00",
+      image: "https://images.unsplash.com/photo-1519491050282-cf00c82424b4?w=500&q=80",
+      categorySlug: "services",
+      stock: 9999,
+      featured: false,
+      isProPackage: false,
+      commissionRate: "0",
+      isDonation: true,
+      isChurchDonation: true,
+      isNonProfit: false,
+      churchName: "New Life Community Church",
+      donationRecipientType: "Church",
+      donationRecipientName: "New Life Community Church",
+      donationMinAmount: "5.00",
+      giftCharityPercent: "80",
+    },
+    {
+      name: "Non-Profit Community Support Fund",
+      slug: "non-profit-community-support-fund",
+      description: "Contribute to the NFGN Community Support Fund — a non-profit initiative that provides emergency assistance, food programs, educational scholarships, and wellness resources to underserved communities. Every gift makes a direct impact. 80% of every contribution goes straight to the fund; 20% supports the NFGN referral network and platform.",
+      price: "25.00",
+      image: "https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=500&q=80",
+      categorySlug: "services",
+      stock: 9999,
+      featured: false,
+      isProPackage: false,
+      commissionRate: "0",
+      isDonation: true,
+      isChurchDonation: false,
+      isNonProfit: true,
+      churchName: null,
+      donationRecipientType: "Non-Profit Organization",
+      donationRecipientName: "NFGN Community Support Fund",
+      donationMinAmount: "10.00",
+      giftCharityPercent: "80",
+    },
+    {
+      name: "Memorial Gift — Tribute to a Loved One",
+      slug: "memorial-gift-tribute-to-loved-one",
+      description: "Honor the memory of someone special with a memorial gift through NFGN. Your contribution funds scholarships, community programs, and charitable work in memory of your loved one. A personalized acknowledgment is sent in their name. 85% of every gift goes to the designated memorial fund; 15% supports NFGN operations.",
+      price: "50.00",
+      image: "https://images.unsplash.com/photo-1573126617899-41f1dffb196c?w=500&q=80",
+      categorySlug: "services",
+      stock: 9999,
+      featured: false,
+      isProPackage: false,
+      commissionRate: "0",
+      isDonation: true,
+      isChurchDonation: false,
+      isNonProfit: true,
+      churchName: null,
+      donationRecipientType: "Non-Profit Organization",
+      donationRecipientName: "Memorial Tribute Fund",
+      donationMinAmount: "25.00",
+      giftCharityPercent: "85",
+    },
+  ];
+
+  for (const dp of donationProductData) {
+    const existingDonation = existingProducts.find(ep => ep.slug === dp.slug);
+    if (!existingDonation) {
+      const [created] = await db.insert(productsTable).values({
+        name: dp.name,
+        slug: dp.slug,
+        description: dp.description,
+        price: dp.price,
+        image: dp.image,
+        categoryId: catMap[dp.categorySlug],
+        stock: dp.stock,
+        featured: dp.featured,
+        isProPackage: dp.isProPackage,
+        commissionRate: dp.commissionRate,
+        isDonation: dp.isDonation,
+        isChurchDonation: dp.isChurchDonation,
+        isNonProfit: dp.isNonProfit,
+        churchName: dp.churchName ?? undefined,
+        donationRecipientType: dp.donationRecipientType,
+        donationRecipientName: dp.donationRecipientName,
+        donationMinAmount: dp.donationMinAmount,
+        giftCharityPercent: dp.giftCharityPercent,
+        status: "active",
+      }).returning();
+      productMap[dp.slug] = created.id;
+    } else {
+      productMap[dp.slug] = existingDonation.id;
+    }
+  }
+  console.log("Donation products seeded");
+
   // Users
   const userData = [
     { email: "admin@nfgn.com", password: "NFGNAdmin!2026#", firstName: "Super", lastName: "Admin", role: "super_admin", refCode: "admin-SUPER" },

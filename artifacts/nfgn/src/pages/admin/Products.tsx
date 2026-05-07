@@ -1040,12 +1040,10 @@ export function AdminProductsPage() {
                   value={form.cv}
                   onChange={e => setForm(f => ({ ...f, cv: e.target.value }))}
                   placeholder="50"
-                  readOnly={form.isProPackage}
-                  className={form.isProPackage ? "opacity-60 cursor-not-allowed bg-muted" : ""}
                 />
                 {form.isProPackage ? (
                   <p className="text-xs text-amber-600 font-medium">
-                    ⚠️ Registration products contribute CV toward the buyer's Personal Commission Volume (PCV). CV here should match the product's qualifying value — do not change unless intentional. The qualifying threshold (default 150 CV) is set in <strong>Admin → Compensation Settings</strong>.
+                    ℹ️ Each registration package has its own CV — set it to match the package's commissionable value. This CV counts toward the buyer's Personal Commission Volume (PCV). The qualifying threshold (default 150 CV) is configured in <strong>Admin → Compensation Settings</strong>.
                   </p>
                 ) : (
                   <p className="text-xs text-muted-foreground">Integer value used to calculate group volume (GV) in the downline.</p>

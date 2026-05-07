@@ -21,7 +21,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
     { name: "Store", href: "/shop" },
     { name: "Book-A-Pro", href: "/book" },
     { name: "Churches & Non-Profits", href: "/give" },
-    { name: "Join NFGN", href: "/join" },
+    { name: "Join Us", href: "/join" },
     { name: "About", href: "/about" },
     { name: "Contact Us", href: "/contact" },
   ];

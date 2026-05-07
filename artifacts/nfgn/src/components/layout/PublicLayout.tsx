@@ -3,16 +3,18 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useCartStore } from "@/hooks/use-cart-store";
 import { useGetCart } from "@workspace/api-client-react";
-import { ShoppingCart, Menu, X } from "lucide-react";
+import { ShoppingCart, Menu, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 
 export function PublicLayout({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
   const { cartOpen, setCartOpen } = useCartStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const [location] = useLocation();
+  const aboutRef = useRef<HTMLDivElement>(null);
 
   const { data: cart } = useGetCart({ query: { enabled: isAuthenticated } as any });
   const itemCount = cart?.itemCount ?? 0;
@@ -22,9 +24,24 @@ export function PublicLayout({ children }: { children: ReactNode }) {
     { name: "Book-A-Pro", href: "/book" },
     { name: "Churches & Non-Profits", href: "/give" },
     { name: "Join Us", href: "/join" },
-    { name: "About", href: "/about" },
+  ];
+
+  const aboutLinks = [
+    { name: "About Us", href: "/about" },
     { name: "Contact Us", href: "/contact" },
   ];
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (aboutRef.current && !aboutRef.current.contains(e.target as Node)) {
+        setAboutOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const isAboutActive = location === "/about" || location === "/contact";
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground selection:bg-primary selection:text-primary-foreground overflow-x-hidden">
@@ -46,6 +63,72 @@ export function PublicLayout({ children }: { children: ReactNode }) {
                   {link.name}
                 </Link>
               ))}
+
+              {/* About dropdown */}
+              <div ref={aboutRef} style={{ position: "relative" }}>
+                <button
+                  onClick={() => setAboutOpen((o) => !o)}
+                  className={`text-sm font-medium transition-colors hover:text-primary flex items-center gap-1 ${
+                    isAboutActive ? "text-primary" : "text-muted-foreground"
+                  }`}
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                >
+                  About
+                  <ChevronDown
+                    size={13}
+                    style={{
+                      transition: "transform 0.18s",
+                      transform: aboutOpen ? "rotate(180deg)" : "rotate(0deg)",
+                    }}
+                  />
+                </button>
+
+                {aboutOpen && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "calc(100% + 10px)",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      background: "#0a0a0a",
+                      border: "1px solid rgba(201,168,76,0.25)",
+                      borderRadius: 10,
+                      minWidth: 160,
+                      boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+                      overflow: "hidden",
+                      zIndex: 100,
+                    }}
+                  >
+                    {aboutLinks.map((link, i) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setAboutOpen(false)}
+                        style={{
+                          display: "block",
+                          padding: "11px 18px",
+                          fontSize: 13,
+                          fontWeight: 500,
+                          color: location === link.href ? "#C9A84C" : "#ccc",
+                          borderBottom: i < aboutLinks.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                          transition: "color 0.15s, background 0.15s",
+                          textDecoration: "none",
+                        }}
+                        onMouseEnter={(e) => {
+                          (e.currentTarget as HTMLElement).style.color = "#C9A84C";
+                          (e.currentTarget as HTMLElement).style.background = "rgba(201,168,76,0.07)";
+                        }}
+                        onMouseLeave={(e) => {
+                          (e.currentTarget as HTMLElement).style.color = location === link.href ? "#C9A84C" : "#ccc";
+                          (e.currentTarget as HTMLElement).style.background = "transparent";
+                        }}
+                      >
+                        {link.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
             </nav>
           </div>
 
@@ -93,6 +176,18 @@ export function PublicLayout({ children }: { children: ReactNode }) {
           <div className="md:hidden border-b bg-background px-4 py-4 space-y-4">
             <nav className="flex flex-col gap-4">
               {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`text-sm font-medium ${
+                    location === link.href ? "text-primary" : "text-foreground"
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {link.name}
+                </Link>
+              ))}
+              {aboutLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}

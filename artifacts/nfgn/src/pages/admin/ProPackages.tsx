@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   DndContext,
   closestCenter,
@@ -31,7 +31,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, RefreshCw, Package, Check, GripVertical, Save } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, Package, Check, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
@@ -176,8 +176,8 @@ export function AdminProPackagesPage() {
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ProPackage | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [orderChanged, setOrderChanged] = useState(false);
   const [savingOrder, setSavingOrder] = useState(false);
+  const reorderAbortRef = useRef<AbortController | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -190,7 +190,6 @@ export function AdminProPackagesPage() {
       if (!res.ok) throw new Error("Failed to fetch");
       const data: ProPackage[] = await res.json();
       setPackages(data);
-      setOrderChanged(false);
     } catch {
       toast.error("Failed to load pro packages");
     } finally {
@@ -220,32 +219,33 @@ export function AdminProPackagesPage() {
     fetchProducts();
   }, []);
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    setPackages((prev) => {
-      const oldIndex = prev.findIndex((p) => p.id === active.id);
-      const newIndex = prev.findIndex((p) => p.id === over.id);
-      return arrayMove(prev, oldIndex, newIndex);
-    });
-    setOrderChanged(true);
-  };
+    const oldIndex = packages.findIndex((p) => p.id === active.id);
+    const newIndex = packages.findIndex((p) => p.id === over.id);
+    const reordered = arrayMove(packages, oldIndex, newIndex);
+    setPackages(reordered);
 
-  const handleSaveOrder = async () => {
+    reorderAbortRef.current?.abort();
+    reorderAbortRef.current = new AbortController();
+    const { signal } = reorderAbortRef.current;
+
     setSavingOrder(true);
     try {
-      const order = packages.map((pkg, index) => ({ id: pkg.id, sortOrder: index + 1 }));
+      const order = reordered.map((pkg, index) => ({ id: pkg.id, sortOrder: index + 1 }));
       const res = await customFetch("/api/pro-packages/reorder", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ order }),
+        signal,
       });
       if (!res.ok) throw new Error("Failed to save order");
       toast.success("Order saved");
-      setOrderChanged(false);
       setPackages((prev) => prev.map((pkg, i) => ({ ...pkg, sortOrder: i + 1 })));
-    } catch {
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") return;
       toast.error("Failed to save order");
     } finally {
       setSavingOrder(false);
@@ -354,12 +354,11 @@ export function AdminProPackagesPage() {
             Manage the pro registration tiers shown on the Shop page. Drag rows to reorder.
           </p>
         </div>
-        <div className="flex gap-2">
-          {orderChanged && (
-            <Button size="sm" onClick={handleSaveOrder} disabled={savingOrder}>
-              <Save className="h-4 w-4 mr-2" />
-              {savingOrder ? "Saving..." : "Save Order"}
-            </Button>
+        <div className="flex items-center gap-2">
+          {savingOrder && (
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <RefreshCw className="h-3 w-3 animate-spin" /> Saving order…
+            </span>
           )}
           <Button variant="outline" size="sm" onClick={fetchPackages} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />

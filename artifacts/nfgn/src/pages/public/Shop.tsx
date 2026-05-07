@@ -648,6 +648,15 @@ export function Shop() {
       .finally(() => setProPackagesLoading(false));
   }, []);
 
+  // Scroll to giving section when ?section=giving is in the URL (e.g. from the dashboard sidebar link)
+  useEffect(() => {
+    if (new URLSearchParams(search).get("section") !== "giving") return;
+    const timer = setTimeout(() => {
+      document.getElementById("giving-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [search]);
+
   const addToCart = useAddToCart({
     mutation: {
       onSuccess: () => {
@@ -1122,7 +1131,7 @@ export function Shop() {
 
       {/* ── CHURCH GIVING ─────────────────────────────────────── */}
       {churchDonationProducts.length > 0 && (
-        <div style={{ background: "linear-gradient(135deg, #0d0900 0%, #110b00 50%, #0a0800 100%)", padding: "72px 0", borderTop: "3px solid #C9A84C", borderBottom: "1px solid rgba(201,168,76,0.15)", position: "relative", overflow: "hidden" }}>
+        <div id="giving-section" style={{ background: "linear-gradient(135deg, #0d0900 0%, #110b00 50%, #0a0800 100%)", padding: "72px 0", borderTop: "3px solid #C9A84C", borderBottom: "1px solid rgba(201,168,76,0.15)", position: "relative", overflow: "hidden" }}>
           {/* Subtle grid overlay */}
           <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(201,168,76,0.03) 39px, rgba(201,168,76,0.03) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(201,168,76,0.03) 39px, rgba(201,168,76,0.03) 40px)", pointerEvents: "none" }} />
           <div style={{ position: "absolute", top: -80, right: "8%", width: 320, height: 320, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,168,76,0.10), transparent 70%)", pointerEvents: "none" }} />

@@ -9,7 +9,7 @@ import {
   BarChart3, LogOut, Menu, X, UserPlus, ArrowRightLeft,
   TrendingUp, Wrench, Home, Star, BookOpen, DollarSign,
   ChevronDown, ChevronRight, ShieldCheck, Link2, Sparkles,
-  CreditCard, Zap, Store, CalendarDays,
+  CreditCard, Zap, Store, CalendarDays, Heart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { roleLabel, tierLabel } from "@/lib/labels";
@@ -54,6 +54,7 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
       { name: "Bookings",           href: "/dashboard/bookings",     icon: Calendar },
       { name: "My Referral Link",   href: "/dashboard/referral",     icon: Link2 },
       { name: "Get the App",        href: "/dashboard/tools/get-the-app", icon: Home },
+      { name: "Send A Gift/Donation", href: "/shop?section=giving",       icon: Heart },
     ],
   },
   {

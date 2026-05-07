@@ -103,6 +103,8 @@ type ProPackage = {
   perks: string[];
   sortOrder: number;
   productId: number | null;
+  productName: string | null;
+  productSlug: string | null;
 };
 
 function categorySlugFromName(name?: string | null): string {
@@ -282,13 +284,17 @@ function ProductCard({
 function ProPackageCard({
   pkg,
   matchedProduct,
+  resolutionMethod,
   onAdd,
   adding,
+  isAdmin,
 }: {
   pkg: ProPackage;
   matchedProduct: Product | null;
+  resolutionMethod: "direct" | "fuzzy" | null;
   onAdd: (e: React.MouseEvent, id: number) => void;
   adding: boolean;
+  isAdmin: boolean;
 }) {
   const [hover, setHover] = useState(false);
   const savings = pkg.originalPrice - pkg.price;
@@ -379,6 +385,53 @@ function ProPackageCard({
           </div>
         ))}
       </div>
+      {/* Product link indicator */}
+      {resolutionMethod === "direct" && pkg.productName && (
+        <Link href={`/product/${pkg.productSlug}`}>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              marginBottom: 14,
+              background: "rgba(201,168,76,0.08)",
+              border: "1px solid rgba(201,168,76,0.22)",
+              padding: "5px 10px",
+              borderRadius: 6,
+              cursor: "pointer",
+              transition: "border-color 0.15s",
+              width: "fit-content",
+            }}
+          >
+            <Package size={11} color={GOLD_MUTED} />
+            <span style={{ color: GOLD_MUTED, fontSize: 11, fontWeight: 600 }}>
+              Viewing product:{" "}
+              <span style={{ color: GOLD, fontWeight: 700 }}>{pkg.productName}</span>
+            </span>
+          </div>
+        </Link>
+      )}
+      {resolutionMethod === "fuzzy" && matchedProduct && isAdmin && (
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            marginBottom: 14,
+            background: "rgba(107,114,128,0.10)",
+            border: "1px solid rgba(107,114,128,0.25)",
+            padding: "5px 10px",
+            borderRadius: 6,
+            width: "fit-content",
+          }}
+        >
+          <Package size={11} color={GREY_600} />
+          <span style={{ color: GREY_600, fontSize: 11, fontWeight: 600 }}>
+            Fuzzy match:{" "}
+            <span style={{ color: GREY_400, fontWeight: 700 }}>{matchedProduct.name}</span>
+          </span>
+        </div>
+      )}
       {/* CTA */}
       {matchedProduct ? (
         <button
@@ -636,6 +689,8 @@ export function Shop() {
     currentUser.isProMember || currentUser.role === "pro_member" ||
     ["admin", "super_admin", "store_admin"].includes(currentUser.role)
   );
+  const isAdminRole = isAuthenticated && !!currentUser &&
+    ["admin", "super_admin", "store_admin"].includes(currentUser.role);
   const [proPackages, setProPackages] = useState<ProPackage[]>([]);
   const [proPackagesLoading, setProPackagesLoading] = useState(true);
 
@@ -693,10 +748,10 @@ export function Shop() {
   // Resolve which real product to use for a package card's "Add to Cart" button.
   // Prefer the admin-configured direct product link (productId); fall back to
   // fuzzy price matching (within 25% tolerance) when no link is set.
-  function resolveProProduct(pkg: ProPackage): Product | null {
+  function resolveProProduct(pkg: ProPackage): { product: Product | null; method: "direct" | "fuzzy" | null } {
     if (pkg.productId != null) {
       const direct = products.find((p) => p.id === pkg.productId);
-      if (direct) return direct;
+      if (direct) return { product: direct, method: "direct" };
       // productId set but product not found (stale link) — fall through to fuzzy match
     }
     const targetPrice = pkg.price;
@@ -710,7 +765,7 @@ export function Shop() {
         bestDiff = diff;
       }
     }
-    return best;
+    return { product: best, method: best ? "fuzzy" : null };
   }
   const saleProducts = regularProducts.filter((p) => p.comparePrice && p.comparePrice > p.price).slice(0, 3);
 
@@ -882,14 +937,16 @@ export function Shop() {
               ))
             ) : proPackages.length === 0 ? null : (
               proPackages.map((pkg) => {
-                const matched = resolveProProduct(pkg);
+                const { product: matched, method } = resolveProProduct(pkg);
                 return (
                   <ProPackageCard
                     key={pkg.id}
                     pkg={pkg}
                     matchedProduct={matched}
+                    resolutionMethod={method}
                     onAdd={handleAddToCart}
                     adding={addingId === matched?.id}
+                    isAdmin={isAdminRole}
                   />
                 );
               })

@@ -1,11 +1,14 @@
 import { Router, type IRouter } from "express";
-import { db, proPackagesTable } from "@workspace/db";
+import { db, proPackagesTable, productsTable } from "@workspace/db";
 import { eq, asc } from "drizzle-orm";
 import { requireAdmin } from "../lib/auth";
 
 const router: IRouter = Router();
 
-function serializePackage(p: typeof proPackagesTable.$inferSelect) {
+function serializePackage(
+  p: typeof proPackagesTable.$inferSelect,
+  product?: { name: string; slug: string } | null,
+) {
   return {
     id: p.id,
     name: p.name,
@@ -17,16 +20,27 @@ function serializePackage(p: typeof proPackagesTable.$inferSelect) {
     sortOrder: p.sortOrder,
     cv: p.cv ?? 0,
     productId: p.productId ?? null,
+    productName: product?.name ?? null,
+    productSlug: product?.slug ?? null,
   };
 }
 
 router.get("/pro-packages", async (req, res): Promise<void> => {
-  const packages = await db
-    .select()
+  const rows = await db
+    .select({
+      pkg: proPackagesTable,
+      productName: productsTable.name,
+      productSlug: productsTable.slug,
+    })
     .from(proPackagesTable)
+    .leftJoin(productsTable, eq(proPackagesTable.productId, productsTable.id))
     .orderBy(asc(proPackagesTable.sortOrder), asc(proPackagesTable.id));
 
-  res.json(packages.map(serializePackage));
+  res.json(
+    rows.map((r) =>
+      serializePackage(r.pkg, r.productName && r.productSlug ? { name: r.productName, slug: r.productSlug } : null)
+    )
+  );
 });
 
 router.post("/pro-packages", requireAdmin, async (req, res): Promise<void> => {

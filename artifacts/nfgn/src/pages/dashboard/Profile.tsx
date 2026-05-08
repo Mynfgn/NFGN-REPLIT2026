@@ -12,7 +12,7 @@ import {
   AlertCircle, CheckCircle2, Star, Calendar, Phone, Mail,
   Building2, CreditCard, Wallet, Users, Award, ChevronRight,
   Eye, EyeOff, Sparkles, ArrowRight, Crown, Zap, TrendingUp, Lock, Camera,
-  Briefcase, QrCode, ExternalLink, Smartphone, Trophy, Upload, ShieldCheck,
+  Briefcase, QrCode, ExternalLink, Smartphone, Trophy, Upload, ShieldCheck, MapPin,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -223,6 +223,12 @@ export function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+  const [city, setCity]       = useState("");
+  const [addrState, setAddrState] = useState("");
+  const [country, setCountry] = useState("");
+  const [addrSaving, setAddrSaving] = useState(false);
+  const [addrMsg, setAddrMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
   const [bankName, setBankName] = useState("");
   const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [bankRoutingNumber, setBankRoutingNumber] = useState("");
@@ -287,6 +293,9 @@ export function ProfilePage() {
       setPayoutMethod((user as any).payoutMethod ?? "bank");
       setPayoutPaypalEmail((user as any).payoutPaypalEmail ?? "");
       setPayoutCashAppHandle((user as any).payoutCashAppHandle ?? "");
+      setCity((user as any).city ?? "");
+      setAddrState((user as any).state ?? "");
+      setCountry((user as any).country ?? "");
       setBapEnabled((user as any).isBookAProProvider ?? false);
       setBapCategory((user as any).bookAProCategory ?? "");
       setBapSubServices((user as any).bookAProSubServices ?? []);
@@ -321,6 +330,16 @@ export function ProfilePage() {
     } catch (e: any) {
       setSaveMsg({ type: "error", text: e.message });
     } finally { setSaving(false); }
+  }
+
+  async function handleSaveAddress() {
+    setAddrSaving(true); setAddrMsg(null);
+    try {
+      await patchUser({ city: city.trim() || null, state: addrState.trim() || null, country: country.trim() || null });
+      setAddrMsg({ type: "success", text: "Mailing address saved." });
+    } catch (e: any) {
+      setAddrMsg({ type: "error", text: e.message });
+    } finally { setAddrSaving(false); }
   }
 
   async function handleSaveBank() {
@@ -757,6 +776,42 @@ export function ProfilePage() {
           <Button onClick={handleSaveProfile} disabled={saving} className="gap-2">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             Save Personal Info
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Mailing Address */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-primary" />
+            Mailing Address
+          </CardTitle>
+          <CardDescription>Your city and country appear on the Community World Map for your upline and admin</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>City</Label>
+              <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="e.g. Atlanta" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>State / Province</Label>
+              <Input value={addrState} onChange={(e) => setAddrState(e.target.value)} placeholder="e.g. Georgia" />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Country</Label>
+            <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="e.g. United States" />
+          </div>
+          <div className="rounded-lg bg-muted/50 border px-4 py-3 text-xs text-muted-foreground flex items-start gap-2">
+            <MapPin className="h-3.5 w-3.5 flex-shrink-0 mt-0.5 text-primary" />
+            <span>This is used only for the Community World Map — it is never shared publicly. Your shipping address is entered separately at checkout.</span>
+          </div>
+          <StatusMessage msg={addrMsg} />
+          <Button onClick={handleSaveAddress} disabled={addrSaving} className="gap-2">
+            {addrSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            Save Address
           </Button>
         </CardContent>
       </Card>

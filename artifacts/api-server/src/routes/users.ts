@@ -32,6 +32,9 @@ function formatUser(user: typeof usersTable.$inferSelect, sponsorName?: string) 
     payoutMethod: user.payoutMethod ?? "bank",
     payoutPaypalEmail: user.payoutPaypalEmail ?? null,
     payoutCashAppHandle: user.payoutCashAppHandle ?? null,
+    city: user.city ?? null,
+    state: user.state ?? null,
+    country: user.country ?? null,
     pvAdjustment: user.pvAdjustment ?? 0,
     gvAdjustment: user.gvAdjustment ?? 0,
     isBookAProProvider: user.isBookAProProvider ?? false,
@@ -103,6 +106,7 @@ router.patch("/users/:id", requireAuth, async (req, res): Promise<void> => {
   const {
     firstName, lastName, phone, avatar, role, status,
     gender, dateOfBirth,
+    city, state, country,
     bankName, bankAccountNumber, bankRoutingNumber, bankAccountType,
     payoutMethod, payoutPaypalEmail, payoutCashAppHandle,
     referralCode,
@@ -133,6 +137,9 @@ router.patch("/users/:id", requireAuth, async (req, res): Promise<void> => {
   if (payoutMethod !== undefined) updateData.payoutMethod = payoutMethod;
   if (payoutPaypalEmail !== undefined) updateData.payoutPaypalEmail = payoutPaypalEmail;
   if (payoutCashAppHandle !== undefined) updateData.payoutCashAppHandle = payoutCashAppHandle;
+  if (city !== undefined) updateData.city = city || null;
+  if (state !== undefined) updateData.state = state || null;
+  if (country !== undefined) updateData.country = country || null;
   if (isSportsPlayer !== undefined) updateData.isSportsPlayer = isSportsPlayer;
   if (sportsDateOfBirth !== undefined) updateData.sportsDateOfBirth = sportsDateOfBirth;
   if (sportsSchool !== undefined) updateData.sportsSchool = sportsSchool;

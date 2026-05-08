@@ -517,7 +517,7 @@ export function AdminDashboard() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
           {[
             { label: "All Orders", icon: <ShoppingCart className="h-4 w-4" />, href: "/admin/orders" },
-            { label: "Approve Orders", icon: <CheckCircle2 className="h-4 w-4" />, href: "/admin/orders-for-approval" },
+            { label: "Approve Orders", icon: <CheckCircle2 className="h-4 w-4" />, href: "/admin/orders/approval" },
             { label: "Users", icon: <Users className="h-4 w-4" />, href: "/admin/users" },
             { label: "Products", icon: <Package className="h-4 w-4" />, href: "/admin/products" },
             { label: "Payouts", icon: <DollarSign className="h-4 w-4" />, href: "/admin/payouts" },

@@ -46,6 +46,8 @@ interface ProPackage {
   sortOrder: number;
   cv: number;
   productId: number | null;
+  productName: string | null;
+  productSlug: string | null;
 }
 
 interface ShopProduct {
@@ -70,14 +72,12 @@ const EMPTY_FORM = {
 interface SortableRowProps {
   pkg: ProPackage;
   position: number;
-  products: ShopProduct[];
-  productsLoaded: boolean;
   savingOrder: boolean;
   onEdit: (pkg: ProPackage) => void;
   onDelete: (pkg: ProPackage) => void;
 }
 
-function SortableRow({ pkg, position, products, productsLoaded, savingOrder, onEdit, onDelete }: SortableRowProps) {
+function SortableRow({ pkg, position, savingOrder, onEdit, onDelete }: SortableRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: pkg.id });
 
@@ -90,7 +90,6 @@ function SortableRow({ pkg, position, products, productsLoaded, savingOrder, onE
   };
 
   const savings = (pkg.originalPrice - pkg.price).toFixed(2);
-  const linkedProduct = pkg.productId != null ? products.find((p) => p.id === pkg.productId) : null;
 
   return (
     <TableRow
@@ -159,17 +158,23 @@ function SortableRow({ pkg, position, products, productsLoaded, savingOrder, onE
         </div>
       </TableCell>
       <TableCell>
-        {linkedProduct ? (
-          <span className="text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded px-2 py-0.5">
-            {linkedProduct.name}
-          </span>
-        ) : pkg.productId != null && productsLoaded ? (
+        {pkg.productName ? (
+          <a
+            href={pkg.productSlug ? `/product/${pkg.productSlug}` : "/admin/products"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded px-2 py-0.5 hover:bg-green-100 hover:border-green-300 transition-colors"
+            title={`View product: ${pkg.productName}`}
+          >
+            {pkg.productName}
+          </a>
+        ) : pkg.productId != null ? (
           <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-300 rounded px-2 py-0.5">
             <AlertTriangle className="h-3 w-3 flex-shrink-0" />
             Stale link (ID {pkg.productId})
           </span>
         ) : (
-          <span className="text-xs text-muted-foreground italic">None (fuzzy match)</span>
+          <span className="text-xs text-muted-foreground italic">No product linked</span>
         )}
       </TableCell>
       <TableCell className="text-right">
@@ -194,7 +199,6 @@ function SortableRow({ pkg, position, products, productsLoaded, savingOrder, onE
 export function AdminProPackagesPage() {
   const [packages, setPackages] = useState<ProPackage[]>([]);
   const [products, setProducts] = useState<ShopProduct[]>([]);
-  const [productsLoaded, setProductsLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editPkg, setEditPkg] = useState<ProPackage | null>(null);
@@ -235,10 +239,8 @@ export function AdminProPackagesPage() {
         isProPackage: p.isProPackage,
       }));
       setProducts(list);
-      setProductsLoaded(true);
     } catch {
-      // silently ignore; product list is optional — but don't set productsLoaded
-      // so stale-link warnings are not shown when the fetch failed
+      // silently ignore; product list is optional for the edit dialog dropdown
     }
   };
 
@@ -450,8 +452,6 @@ export function AdminProPackagesPage() {
                         key={pkg.id}
                         pkg={pkg}
                         position={index + 1}
-                        products={products}
-                        productsLoaded={productsLoaded}
                         savingOrder={savingOrder}
                         onEdit={openEdit}
                         onDelete={setDeleteTarget}

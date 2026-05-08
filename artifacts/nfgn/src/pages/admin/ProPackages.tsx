@@ -84,15 +84,20 @@ function SortableRow({ pkg, position, products, productsLoaded, savingOrder, onE
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 1 : undefined,
+    opacity: isDragging ? 0.6 : 1,
+    zIndex: isDragging ? 10 : undefined,
+    boxShadow: isDragging ? "0 8px 24px 0 rgba(201,168,76,0.35), 0 2px 8px 0 rgba(0,0,0,0.4)" : undefined,
   };
 
   const savings = (pkg.originalPrice - pkg.price).toFixed(2);
   const linkedProduct = pkg.productId != null ? products.find((p) => p.id === pkg.productId) : null;
 
   return (
-    <TableRow ref={setNodeRef} style={style}>
+    <TableRow
+      ref={setNodeRef}
+      style={style}
+      className={isDragging ? "ring-2 ring-[#C9A84C] ring-inset bg-[#C9A84C]/10 rounded" : undefined}
+    >
       <TableCell>
         <div className="flex items-center gap-1.5">
           <button

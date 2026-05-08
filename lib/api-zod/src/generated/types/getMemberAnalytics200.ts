@@ -16,4 +16,6 @@ export type GetMemberAnalytics200 = {
   groupVolume?: number;
   cvMaintenanceRequired?: number;
   proPackageProgress?: GetMemberAnalytics200ProPackageProgress;
+  powerSquadBonus?: number;
+  rolling30DayPcv?: number;
 };

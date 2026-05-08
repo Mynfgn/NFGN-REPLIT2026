@@ -25,6 +25,7 @@ function formatSettings(s: typeof appSettingsTable.$inferSelect) {
     homePageBannerSubtitle: s.homePageBannerSubtitle ?? null,
     appIconUrl: s.appIconUrl ?? null,
     demoMode: s.demoMode,
+    tickerSpeed: s.tickerSpeed,
   };
 }
 
@@ -57,6 +58,7 @@ router.put("/settings", requireAdmin, async (req, res): Promise<void> => {
     homePageBannerSubtitle: req.body.homePageBannerSubtitle ?? existing?.homePageBannerSubtitle,
     appIconUrl: req.body.appIconUrl !== undefined ? (req.body.appIconUrl || null) : existing?.appIconUrl,
     demoMode: req.body.demoMode ?? existing?.demoMode,
+    tickerSpeed: req.body.tickerSpeed ?? existing?.tickerSpeed ?? "medium",
   };
 
   let result;

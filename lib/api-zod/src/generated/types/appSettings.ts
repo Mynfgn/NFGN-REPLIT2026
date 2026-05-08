@@ -5,6 +5,7 @@
  * New Face Global Network API
  * OpenAPI spec version: 0.1.0
  */
+import type { AppSettingsTickerSpeed } from "./appSettingsTickerSpeed";
 
 export interface AppSettings {
   companyName: string;
@@ -29,4 +30,5 @@ export interface AppSettings {
   /** @nullable */
   homePageBannerSubtitle?: string | null;
   demoMode: boolean;
+  tickerSpeed: AppSettingsTickerSpeed;
 }

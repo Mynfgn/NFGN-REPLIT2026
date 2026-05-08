@@ -4,15 +4,14 @@ import { TickerBar } from "@/components/ticker-bar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import {
   Megaphone, Plus, Trash2, Save, Loader2, GripVertical,
-  ToggleLeft, ToggleRight, RefreshCw, Eye, EyeOff, MonitorPlay,
+  ToggleLeft, ToggleRight, RefreshCw, Eye, EyeOff, MonitorPlay, Gauge,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useGetSettings, useUpdateSettings } from "@workspace/api-client-react";
 
 interface BannerMessage {
   id: number;
@@ -22,6 +21,10 @@ interface BannerMessage {
   createdAt: string;
   updatedAt: string;
 }
+
+type TickerSpeed = "slow" | "medium" | "fast";
+
+const SPEED_LABELS: Record<TickerSpeed, string> = { slow: "Slow", medium: "Medium", fast: "Fast" };
 
 export function AdminBannerMessagesPage() {
   const { toast } = useToast();
@@ -35,7 +38,18 @@ export function AdminBannerMessagesPage() {
   const [dragging, setDragging] = useState<number | null>(null);
   const [dragOver, setDragOver] = useState<number | null>(null);
   const [highlightedId, setHighlightedId] = useState<number | null>(null);
+  const [tickerSpeed, setTickerSpeed] = useState<TickerSpeed>("medium");
+  const [savingSpeed, setSavingSpeed] = useState(false);
   const rowRefs = useRef<Record<number, HTMLLIElement | null>>({});
+
+  const { data: settingsData } = useGetSettings();
+  const { mutateAsync: updateSettings } = useUpdateSettings();
+
+  useEffect(() => {
+    if (settingsData?.tickerSpeed) {
+      setTickerSpeed(settingsData.tickerSpeed as TickerSpeed);
+    }
+  }, [settingsData]);
 
   async function load() {
     setLoading(true);
@@ -51,6 +65,22 @@ export function AdminBannerMessagesPage() {
   }
 
   useEffect(() => { load(); }, []);
+
+  async function handleSpeedChange(speed: TickerSpeed) {
+    if (!settingsData) return;
+    const previous = tickerSpeed;
+    setTickerSpeed(speed);
+    setSavingSpeed(true);
+    try {
+      await updateSettings({ data: { ...settingsData, tickerSpeed: speed } });
+      toast({ title: "Saved", description: `Ticker speed set to ${SPEED_LABELS[speed].toLowerCase()}.` });
+    } catch {
+      setTickerSpeed(previous);
+      toast({ title: "Error", description: "Failed to save speed.", variant: "destructive" });
+    } finally {
+      setSavingSpeed(false);
+    }
+  }
 
   async function handleAdd() {
     if (!newMessage.trim()) return;
@@ -249,7 +279,7 @@ export function AdminBannerMessagesPage() {
             </div>
           ) : (
             <ul className="divide-y">
-              {banners.map((banner, idx) => {
+              {banners.map((banner) => {
                 const isEditing = editText[banner.id] !== undefined;
                 const isDragTarget = dragOver === banner.id;
                 return (
@@ -338,22 +368,46 @@ export function AdminBannerMessagesPage() {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <MonitorPlay className="h-4 w-4 text-primary" />
-            Live Preview
-            {activeMessages.length > 0 ? (
-              <Badge className="bg-primary/20 text-primary hover:bg-primary/20 border border-primary/30 text-xs font-semibold">
-                {activeMessages.length} active
-              </Badge>
-            ) : (
-              <Badge variant="outline" className="text-xs">No active messages</Badge>
-            )}
-          </CardTitle>
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <MonitorPlay className="h-4 w-4 text-primary" />
+              Live Preview
+              {activeMessages.length > 0 ? (
+                <Badge className="bg-primary/20 text-primary hover:bg-primary/20 border border-primary/30 text-xs font-semibold">
+                  {activeMessages.length} active
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-xs">No active messages</Badge>
+              )}
+            </CardTitle>
+
+            <div className="flex items-center gap-2">
+              {savingSpeed && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+              <Gauge className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground font-medium">Speed:</span>
+              <div className="flex rounded-md border overflow-hidden text-xs">
+                {(["slow", "medium", "fast"] as TickerSpeed[]).map(speed => (
+                  <button
+                    key={speed}
+                    onClick={() => handleSpeedChange(speed)}
+                    disabled={savingSpeed || !settingsData}
+                    className={`px-3 py-1 font-medium transition-colors capitalize ${
+                      tickerSpeed === speed
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-background text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    {SPEED_LABELS[speed]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           {activeMessages.length > 0 ? (
             <div className="rounded-b-lg overflow-hidden">
-              <TickerBar messages={activeMessages} fontSize={15} padding="14px 0" onMessageClick={handlePreviewClick} />
+              <TickerBar messages={activeMessages} fontSize={15} padding="14px 0" speed={tickerSpeed} onMessageClick={handlePreviewClick} />
             </div>
           ) : (
             <div className="py-8 text-center text-muted-foreground text-sm px-4">

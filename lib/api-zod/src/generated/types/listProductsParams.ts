@@ -10,6 +10,7 @@ export type ListProductsParams = {
   category?: string;
   search?: string;
   featured?: boolean;
+  isProPackage?: boolean;
   page?: number;
   limit?: number;
 };

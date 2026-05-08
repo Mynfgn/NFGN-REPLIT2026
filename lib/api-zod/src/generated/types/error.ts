@@ -6,9 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type ListPayoutsParams = {
-  userId?: number;
-  status?: string;
-  page?: number;
-  limit?: number;
-};
+export interface Error {
+  error: string;
+}

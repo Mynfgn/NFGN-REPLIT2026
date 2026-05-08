@@ -2,15 +2,24 @@ const GOLD = "#C9A84C";
 
 const TICKER_KEYFRAMES = `@keyframes ticker { from { transform: translateX(0) } to { transform: translateX(-50%) } }`;
 
+const SPEED_DURATION: Record<string, number> = {
+  slow: 40,
+  medium: 24,
+  fast: 12,
+};
+
 interface TickerBarProps {
   messages: string[];
   fontSize?: number;
   padding?: string;
+  speed?: string;
   onMessageClick?: (index: number) => void;
 }
 
-export function TickerBar({ messages, fontSize = 20, padding = "20px 0", onMessageClick }: TickerBarProps) {
+export function TickerBar({ messages, fontSize = 20, padding = "20px 0", speed = "medium", onMessageClick }: TickerBarProps) {
   if (messages.length === 0) return null;
+
+  const duration = SPEED_DURATION[speed] ?? SPEED_DURATION.medium;
 
   return (
     <div style={{ background: GOLD, overflow: "hidden", padding }}>
@@ -19,7 +28,7 @@ export function TickerBar({ messages, fontSize = 20, padding = "20px 0", onMessa
           display: "flex",
           gap: 72,
           whiteSpace: "nowrap",
-          animation: "ticker 24s linear infinite",
+          animation: `ticker ${duration}s linear infinite`,
         }}
       >
         {[...messages, ...messages].map((item, i) => {

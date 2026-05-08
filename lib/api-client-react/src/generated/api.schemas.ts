@@ -549,6 +549,15 @@ export interface BroadcastMessageBody {
   targetRole?: string | null;
 }
 
+export type AppSettingsTickerSpeed =
+  (typeof AppSettingsTickerSpeed)[keyof typeof AppSettingsTickerSpeed];
+
+export const AppSettingsTickerSpeed = {
+  slow: "slow",
+  medium: "medium",
+  fast: "fast",
+} as const;
+
 export interface AppSettings {
   companyName: string;
   /** @nullable */
@@ -572,6 +581,7 @@ export interface AppSettings {
   /** @nullable */
   homePageBannerSubtitle?: string | null;
   demoMode: boolean;
+  tickerSpeed: AppSettingsTickerSpeed;
 }
 
 export interface PromoCode {

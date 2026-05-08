@@ -300,6 +300,7 @@ export const ListProductsQueryParams = zod.object({
   category: zod.coerce.string().optional(),
   search: zod.coerce.string().optional(),
   featured: zod.coerce.boolean().optional(),
+  isProPackage: zod.coerce.boolean().optional(),
   page: zod.coerce.number().optional(),
   limit: zod.coerce.number().optional(),
 });
@@ -1003,6 +1004,7 @@ export const ListPayoutsQueryParams = zod.object({
   userId: zod.coerce.number().optional(),
   status: zod.coerce.string().optional(),
   page: zod.coerce.number().optional(),
+  limit: zod.coerce.number().optional(),
 });
 
 export const ListPayoutsResponse = zod.object({
@@ -1256,6 +1258,7 @@ export const UpdateProfessionalResponse = zod.object({
 export const ListMessagesQueryParams = zod.object({
   folder: zod.coerce.string().optional(),
   page: zod.coerce.number().optional(),
+  limit: zod.coerce.number().optional(),
 });
 
 export const ListMessagesResponse = zod.object({
@@ -1322,6 +1325,7 @@ export const GetSettingsResponse = zod.object({
   homePageBanner: zod.string().nullish(),
   homePageBannerSubtitle: zod.string().nullish(),
   demoMode: zod.boolean(),
+  tickerSpeed: zod.enum(["slow", "medium", "fast"]),
 });
 
 /**
@@ -1343,6 +1347,7 @@ export const UpdateSettingsBody = zod.object({
   homePageBanner: zod.string().nullish(),
   homePageBannerSubtitle: zod.string().nullish(),
   demoMode: zod.boolean(),
+  tickerSpeed: zod.enum(["slow", "medium", "fast"]),
 });
 
 export const UpdateSettingsResponse = zod.object({
@@ -1361,6 +1366,7 @@ export const UpdateSettingsResponse = zod.object({
   homePageBanner: zod.string().nullish(),
   homePageBannerSubtitle: zod.string().nullish(),
   demoMode: zod.boolean(),
+  tickerSpeed: zod.enum(["slow", "medium", "fast"]),
 });
 
 /**
@@ -1596,6 +1602,8 @@ export const GetMemberAnalyticsResponse = zod.object({
       level2Unlocked: zod.boolean().optional(),
     })
     .optional(),
+  powerSquadBonus: zod.number().optional(),
+  rolling30DayPcv: zod.number().optional(),
 });
 
 /**

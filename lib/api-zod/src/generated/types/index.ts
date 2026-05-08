@@ -8,6 +8,7 @@
 
 export * from "./addToCartBody";
 export * from "./appSettings";
+export * from "./appSettingsTickerSpeed";
 export * from "./authResponse";
 export * from "./booking";
 export * from "./bookingListResponse";
@@ -31,6 +32,7 @@ export * from "./dashboardSummary";
 export * from "./dashboardSummarySalesByMonthItem";
 export * from "./dashboardSummaryTopProductsItem";
 export * from "./downlineMember";
+export * from "./error";
 export * from "./genealogyNode";
 export * from "./genealogyStats";
 export * from "./genealogyStatsGenerationBreakdownItem";

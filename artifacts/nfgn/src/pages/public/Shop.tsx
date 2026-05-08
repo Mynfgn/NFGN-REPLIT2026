@@ -118,10 +118,15 @@ function ShopTickerBar() {
     queryFn: () => customFetch("/api/banners").then(r => r.json()),
     staleTime: 60000,
   });
+  const { data: settings } = useQuery<{ tickerSpeed?: string }>({
+    queryKey: ["/api/settings"],
+    queryFn: () => customFetch("/api/settings").then(r => r.json()),
+    staleTime: 60000,
+  });
 
   if (!banners || banners.length === 0) return null;
 
-  return <TickerBar messages={banners.map(b => b.message)} />;
+  return <TickerBar messages={banners.map(b => b.message)} speed={settings?.tickerSpeed} />;
 }
 
 function ProductCard({

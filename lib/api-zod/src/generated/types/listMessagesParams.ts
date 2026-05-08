@@ -9,4 +9,5 @@
 export type ListMessagesParams = {
   folder?: string;
   page?: number;
+  limit?: number;
 };

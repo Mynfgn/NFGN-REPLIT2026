@@ -124,9 +124,13 @@ function ShopTickerBar() {
     staleTime: 60000,
   });
 
-  if (!banners || banners.length === 0) return null;
+  if (!banners) return null;
 
-  return <TickerBar messages={banners.map(b => b.message)} speed={settings?.tickerSpeed} />;
+  const messages = banners.length > 0
+    ? banners.map(b => b.message)
+    : ["Check back soon for our latest news and promotions!"];
+
+  return <TickerBar messages={messages} speed={banners.length > 0 ? settings?.tickerSpeed : "slow"} />;
 }
 
 function ProductCard({

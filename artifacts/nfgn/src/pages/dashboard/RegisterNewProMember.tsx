@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useGetMe, useListProducts } from "@workspace/api-client-react";
+import { useGetMe } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,13 +13,25 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { resolveImageSrc } from "@/lib/image";
 import { BAP_CATEGORIES } from "@/lib/bapCategories";
 import {
-  Star, Loader2, UserPlus, CheckCircle, Package,
+  Star, Loader2, UserPlus, CheckCircle,
   Truck, Smartphone, DollarSign, CreditCard,
   AlertTriangle, RotateCcw, UserCheck, Lock,
 } from "lucide-react";
+
+type ProPackage = {
+  id: number;
+  name: string;
+  price: number;
+  originalPrice: number;
+  badge: string;
+  badgeColor: string;
+  perks: string[];
+  sortOrder: number;
+  cv: number;
+  productId: number | null;
+};
 
 const schema = z.object({
   firstName: z.string().min(2, "First name is required"),
@@ -53,11 +65,21 @@ type SuccessData = { firstName: string; lastName: string; email: string; orderNu
 
 export function RegisterNewProMemberPage() {
   const { data: me } = useGetMe();
-  const { data: productsData, isLoading: productsLoading } = useListProducts({ isProPackage: true });
   const { toast } = useToast();
 
-  const proPackages = productsData?.products?.filter((p: any) => p.isProPackage) ?? [];
-  const [selectedProductId, setSelectedProductId] = useState<string>("");
+  const [proPackages, setProPackages] = useState<ProPackage[]>([]);
+  const [proPackagesLoading, setProPackagesLoading] = useState(true);
+
+  useEffect(() => {
+    setProPackagesLoading(true);
+    fetch("/api/pro-packages")
+      .then(r => r.json())
+      .then((data: ProPackage[]) => setProPackages(Array.isArray(data) ? data : []))
+      .catch(() => setProPackages([]))
+      .finally(() => setProPackagesLoading(false));
+  }, []);
+
+  const [selectedProPackageId, setSelectedProPackageId] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState<SuccessData | null>(null);
 
@@ -94,12 +116,12 @@ export function RegisterNewProMemberPage() {
   }, [me?.referralCode]);
 
   useEffect(() => {
-    if (proPackages.length > 0 && !selectedProductId) {
-      setSelectedProductId(String(proPackages[0].id));
+    if (proPackages.length > 0 && !selectedProPackageId) {
+      setSelectedProPackageId(String(proPackages[0].id));
     }
   }, [proPackages.length]);
 
-  const selectedProduct = proPackages.find((p: any) => String(p.id) === selectedProductId);
+  const selectedPackage = proPackages.find(p => String(p.id) === selectedProPackageId);
 
   function resetForm() {
     form.reset({
@@ -109,7 +131,7 @@ export function RegisterNewProMemberPage() {
       address1: "", city: "", state: "", zip: "",
       paymentMethod: "cod",
     });
-    if (proPackages.length > 0) setSelectedProductId(String(proPackages[0].id));
+    if (proPackages.length > 0) setSelectedProPackageId(String(proPackages[0].id));
     setIsBAPProvider(false);
     setBapCategory("");
     setBapSubServices([]);
@@ -118,7 +140,7 @@ export function RegisterNewProMemberPage() {
   }
 
   async function onSubmit(data: FormValues) {
-    if (!selectedProductId) {
+    if (!selectedProPackageId) {
       toast({ variant: "destructive", title: "Select a package", description: "Please select a Pro Registration Package." });
       return;
     }
@@ -127,7 +149,7 @@ export function RegisterNewProMemberPage() {
       const shippingAddress = `${data.address1}, ${data.city}, ${data.state} ${data.zip}`;
       const body: Record<string, any> = {
         ...data,
-        selectedProductId,
+        selectedProPackageId,
         shippingAddress,
         isBookAProProvider: isBAPProvider,
       };
@@ -268,7 +290,7 @@ export function RegisterNewProMemberPage() {
               <div className="h-7 w-7 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center flex-shrink-0">1</div>
               <h2 className="text-xl font-serif font-bold">Select Pro Registration Package</h2>
             </div>
-            {productsLoading ? (
+            {proPackagesLoading ? (
               <div className="flex items-center gap-2 text-muted-foreground py-6">
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading packages…
               </div>
@@ -278,41 +300,66 @@ export function RegisterNewProMemberPage() {
               </div>
             ) : (
               <div className="grid sm:grid-cols-2 gap-4">
-                {proPackages.map((pkg: any) => {
-                  const isSelected = selectedProductId === String(pkg.id);
+                {proPackages.map((pkg) => {
+                  const isSelected = selectedProPackageId === String(pkg.id);
                   return (
                     <div
                       key={pkg.id}
-                      onClick={() => setSelectedProductId(String(pkg.id))}
-                      className={`relative cursor-pointer rounded-xl border-2 transition-all ${
-                        isSelected ? "border-primary shadow-md shadow-primary/20" : "border-border hover:border-primary/40"
-                      }`}
+                      onClick={() => setSelectedProPackageId(String(pkg.id))}
+                      className="relative cursor-pointer rounded-xl border-2 transition-all overflow-hidden"
+                      style={{
+                        borderColor: isSelected ? "#C9A84C" : "hsl(var(--border))",
+                        boxShadow: isSelected ? "0 0 0 2px rgba(201,168,76,0.25), 0 4px 20px rgba(201,168,76,0.12)" : "none",
+                        background: isSelected ? "rgba(201,168,76,0.04)" : "transparent",
+                      }}
                     >
+                      {/* Badge strip */}
+                      {pkg.badge && (
+                        <div
+                          className="text-center py-1.5 text-xs font-bold tracking-wide"
+                          style={{ background: pkg.badgeColor ?? "#C9A84C", color: "#000" }}
+                        >
+                          {pkg.badge}
+                        </div>
+                      )}
+
+                      {/* Selected checkmark */}
                       {isSelected && (
-                        <div className="absolute top-3 right-3">
-                          <CheckCircle className="h-5 w-5 text-primary fill-primary/10" />
+                        <div className="absolute top-2 right-2 z-10">
+                          <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center">
+                            <CheckCircle className="h-4 w-4 text-primary-foreground" />
+                          </div>
                         </div>
                       )}
-                      {resolveImageSrc(pkg.image) ? (
-                        <div className="aspect-video rounded-t-lg overflow-hidden">
-                          <img src={resolveImageSrc(pkg.image)!} alt={pkg.name} className="w-full h-full object-cover" />
-                        </div>
-                      ) : (
-                        <div className="aspect-video rounded-t-lg overflow-hidden bg-primary/5 flex items-center justify-center">
-                          <Package className="h-12 w-12 text-primary/30" />
-                        </div>
-                      )}
+
                       <div className="p-4">
-                        <div className="flex items-start gap-2 mb-1">
-                          <h3 className="font-semibold leading-snug flex-1">{pkg.name}</h3>
-                          <Badge variant="outline" className="text-xs border-primary text-primary flex-shrink-0">Pro</Badge>
+                        {/* Name */}
+                        <h3 className="font-bold text-base leading-snug mb-3" style={{ color: isSelected ? "#C9A84C" : undefined }}>
+                          {pkg.name}
+                        </h3>
+
+                        {/* Pricing */}
+                        <div className="flex items-baseline gap-2 mb-4">
+                          <span className="text-2xl font-black text-primary">${Number(pkg.price).toFixed(2)}</span>
+                          {pkg.originalPrice > pkg.price && (
+                            <span className="text-sm text-muted-foreground line-through">${Number(pkg.originalPrice).toFixed(2)}</span>
+                          )}
+                          {pkg.cv > 0 && (
+                            <span className="text-xs text-muted-foreground ml-auto">{pkg.cv} CV</span>
+                          )}
                         </div>
-                        <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{pkg.description}</p>
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl font-bold text-primary">${Number(pkg.price).toFixed(2)}</span>
-                          {pkg.comparePrice && <span className="text-sm text-muted-foreground line-through">${Number(pkg.comparePrice).toFixed(2)}</span>}
-                          <span className="text-xs text-muted-foreground ml-auto">{pkg.cv} CV</span>
-                        </div>
+
+                        {/* Perks list */}
+                        {pkg.perks.length > 0 && (
+                          <ul className="space-y-1.5">
+                            {pkg.perks.map((perk) => (
+                              <li key={perk} className="flex items-start gap-2 text-xs">
+                                <CheckCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5 text-primary" />
+                                <span className="text-muted-foreground leading-snug">{perk}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                       </div>
                     </div>
                   );
@@ -545,7 +592,7 @@ export function RegisterNewProMemberPage() {
           <Button
             type="submit"
             size="lg"
-            disabled={submitting || !selectedProductId}
+            disabled={submitting || !selectedProPackageId}
             className="w-full gap-2 text-base h-13 font-bold"
             style={{ background: "#C9A84C", color: "#0a0a0a" }}
           >

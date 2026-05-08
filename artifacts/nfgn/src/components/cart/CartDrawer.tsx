@@ -1854,6 +1854,7 @@ export function CartDrawer() {
                     body: JSON.stringify({ signature }),
                   });
                   setSignatureDataUrl(signature);
+                  qc.invalidateQueries({ queryKey: ["/api/orders"] });
                   setView("confirm");
                 } catch (_) {
                   toast({ title: "Signature not saved", description: "Could not save your signature. Please try again.", variant: "destructive" });

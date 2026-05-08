@@ -133,7 +133,17 @@ router.put("/pro-packages/:id", requireAdmin, async (req, res): Promise<void> =>
 
   if (!pkg) { res.status(404).json({ error: "Not found" }); return; }
 
-  res.json(serializePackage(pkg));
+  let product: { name: string; slug: string } | null = null;
+  if (pkg.productId != null) {
+    const [row] = await db
+      .select({ name: productsTable.name, slug: productsTable.slug })
+      .from(productsTable)
+      .where(eq(productsTable.id, pkg.productId))
+      .limit(1);
+    product = row ?? null;
+  }
+
+  res.json(serializePackage(pkg, product));
 });
 
 router.delete("/pro-packages/:id", requireAdmin, async (req, res): Promise<void> => {

@@ -112,12 +112,6 @@ function categorySlugFromName(name?: string | null): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-const FALLBACK_BANNER_ITEMS = [
-  "Find out how you can \"GET PAID TO LOSE WEIGHT!\"",
-  "Become A Member For FREE!",
-  "SALE!! 1 Month Free Pro Membership with the purchase of IGNITE PRO XL.",
-];
-
 function ShopTickerBar() {
   const { data: banners } = useQuery<{ id: number; message: string }[]>({
     queryKey: ["/api/banners"],
@@ -125,11 +119,9 @@ function ShopTickerBar() {
     staleTime: 60000,
   });
 
-  const items = banners && banners.length > 0
-    ? banners.map(b => b.message)
-    : FALLBACK_BANNER_ITEMS;
+  if (!banners || banners.length === 0) return null;
 
-  return <TickerBar messages={items} />;
+  return <TickerBar messages={banners.map(b => b.message)} />;
 }
 
 function ProductCard({

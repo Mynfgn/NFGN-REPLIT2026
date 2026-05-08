@@ -753,6 +753,23 @@ export function Shop() {
     ["admin", "super_admin", "store_admin"].includes(currentUser.role);
   const [proPackages, setProPackages] = useState<ProPackage[]>([]);
   const [proPackagesLoading, setProPackagesLoading] = useState(true);
+  const [catOverrides, setCatOverrides] = useState<Record<string, { description?: string; tags?: string[] }>>({});
+
+  useEffect(() => {
+    fetch("/api/categories")
+      .then(r => r.json())
+      .then((data: Array<{ slug: string; description: string | null; shopHeadline: string | null; shopTags: string | null }>) => {
+        const overrides: Record<string, { description?: string; tags?: string[] }> = {};
+        for (const cat of data) {
+          overrides[cat.slug] = {
+            description: cat.description ?? undefined,
+            tags: cat.shopTags ? cat.shopTags.split(",").map(t => t.trim()).filter(Boolean) : undefined,
+          };
+        }
+        setCatOverrides(overrides);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     setProPackagesLoading(true);
@@ -1426,11 +1443,11 @@ export function Shop() {
                       {cat.key === "General Exclusive" && <>Premium Access. <span style={{ color: cat.color }}>Exclusively Yours.</span></>}
                     </h3>
                     <p style={{ color: "#9a9a9a", fontSize: 15, maxWidth: 580, margin: "0 0 20px", lineHeight: 1.65 }}>
-                      {cat.description}
+                      {catOverrides[cat.slug]?.description ?? cat.description}
                     </p>
                     {/* Tags */}
                     <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
-                      {cat.tags.map(tag => (
+                      {(catOverrides[cat.slug]?.tags ?? cat.tags).map(tag => (
                         <span key={tag} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: cat.colorDim, border: `1px solid ${cat.colorBorder}`, color: cat.color, fontSize: 11, fontWeight: 700, padding: "4px 11px", borderRadius: 99, letterSpacing: "0.05em" }}>
                           {tag}
                         </span>

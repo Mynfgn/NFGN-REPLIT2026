@@ -24,10 +24,12 @@ interface Category {
   slug: string;
   description: string | null;
   image: string | null;
+  shopHeadline: string | null;
+  shopTags: string | null;
   productCount: number;
 }
 
-const EMPTY_FORM = { name: "", slug: "", description: "", image: "" };
+const EMPTY_FORM = { name: "", slug: "", description: "", image: "", shopHeadline: "", shopTags: "" };
 
 function slugify(str: string) {
   return str.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -76,6 +78,8 @@ export function AdminCategoriesPage() {
       slug: cat.slug,
       description: cat.description ?? "",
       image: cat.image ?? "",
+      shopHeadline: cat.shopHeadline ?? "",
+      shopTags: cat.shopTags ?? "",
     });
     setDialogOpen(true);
   };
@@ -100,6 +104,8 @@ export function AdminCategoriesPage() {
         slug: form.slug.trim(),
         description: form.description.trim() || null,
         image: form.image.trim() || null,
+        shopHeadline: form.shopHeadline.trim() || null,
+        shopTags: form.shopTags.trim() || null,
       };
       const res = editCat
         ? await customFetch(`/api/categories/${editCat.id}`, {
@@ -351,6 +357,31 @@ export function AdminCategoriesPage() {
                   onError={e => (e.currentTarget.style.display = "none")}
                 />
               )}
+            </div>
+
+            <div className="border-t pt-4 space-y-4">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Pro Store Section (optional)</p>
+              <p className="text-xs text-muted-foreground -mt-2">If this category appears as a Pro Store section on the Shop page, you can override its headline and filter tags here.</p>
+
+              <div className="space-y-1.5">
+                <Label>Section Headline <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                <Input
+                  value={form.shopHeadline}
+                  onChange={e => setForm(f => ({ ...f, shopHeadline: e.target.value }))}
+                  placeholder='e.g. "Travel the World. Together."'
+                />
+                <p className="text-xs text-muted-foreground">Overrides the large heading shown at the top of that section on the Shop page.</p>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Filter Tags <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                <Input
+                  value={form.shopTags}
+                  onChange={e => setForm(f => ({ ...f, shopTags: e.target.value }))}
+                  placeholder="e.g. Destination Retreats, Group Trips, VIP Experiences"
+                />
+                <p className="text-xs text-muted-foreground">Comma-separated list of tags shown as badges below the heading.</p>
+              </div>
             </div>
           </div>
 

@@ -222,6 +222,7 @@ export function AdminProPackagesPage() {
   const [fixLinkProductId, setFixLinkProductId] = useState<string>("");
   const [fixLinkSaving, setFixLinkSaving] = useState(false);
   const reorderAbortRef = useRef<AbortController | null>(null);
+  const serverConfirmedOrderRef = useRef<ProPackage[]>([]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -234,6 +235,7 @@ export function AdminProPackagesPage() {
       if (!res.ok) throw new Error("Failed to fetch");
       const data: ProPackage[] = await res.json();
       setPackages(data);
+      serverConfirmedOrderRef.current = data;
     } catch {
       toast.error("Failed to load pro packages");
     } finally {
@@ -267,7 +269,6 @@ export function AdminProPackagesPage() {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const prevOrder = packages;
     const oldIndex = packages.findIndex((p) => p.id === active.id);
     const newIndex = packages.findIndex((p) => p.id === over.id);
     const reordered = arrayMove(packages, oldIndex, newIndex);
@@ -288,10 +289,12 @@ export function AdminProPackagesPage() {
       });
       if (!res.ok) throw new Error("Failed to save order");
       toast.success("Order saved");
-      setPackages((prev) => prev.map((pkg, i) => ({ ...pkg, sortOrder: i + 1 })));
+      const confirmed = reordered.map((pkg, i) => ({ ...pkg, sortOrder: i + 1 }));
+      setPackages(confirmed);
+      serverConfirmedOrderRef.current = confirmed;
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") return;
-      setPackages(prevOrder);
+      setPackages(serverConfirmedOrderRef.current);
       toast.error("Failed to save order — the previous order has been restored");
     } finally {
       setSavingOrder(false);

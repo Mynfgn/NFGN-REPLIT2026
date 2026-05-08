@@ -127,6 +127,7 @@ export function AdminBannerMessagesPage() {
     const text = editText[banner.id];
     if (text === undefined || text === banner.message) {
       setEditText(prev => { const n = { ...prev }; delete n[banner.id]; return n; });
+      setHighlightedId(null);
       return;
     }
     if (!text.trim()) return;
@@ -140,6 +141,7 @@ export function AdminBannerMessagesPage() {
       if (!res.ok) throw new Error();
       setBanners(prev => prev.map(b => b.id === banner.id ? { ...b, message: text.trim() } : b));
       setEditText(prev => { const n = { ...prev }; delete n[banner.id]; return n; });
+      setHighlightedId(null);
       toast({ title: "Saved", description: "Message updated." });
     } catch {
       toast({ title: "Error", description: "Failed to save.", variant: "destructive" });
@@ -212,7 +214,6 @@ export function AdminBannerMessagesPage() {
     }
     setEditText(prev => ({ ...prev, [banner.id]: banner.message }));
     setHighlightedId(banner.id);
-    setTimeout(() => setHighlightedId(null), 1500);
   }
 
   return (
@@ -305,7 +306,7 @@ export function AdminBannerMessagesPage() {
                           onChange={e => setEditText(prev => ({ ...prev, [banner.id]: e.target.value }))}
                           onKeyDown={e => {
                             if (e.key === "Enter") handleSaveText(banner);
-                            if (e.key === "Escape") setEditText(prev => { const n = { ...prev }; delete n[banner.id]; return n; });
+                            if (e.key === "Escape") { setEditText(prev => { const n = { ...prev }; delete n[banner.id]; return n; }); setHighlightedId(null); }
                           }}
                           className="h-8 text-sm"
                         />

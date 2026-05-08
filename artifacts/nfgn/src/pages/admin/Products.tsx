@@ -297,6 +297,10 @@ export function AdminProductsPage() {
 
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [linkedPackages, setLinkedPackages] = useState<{ id: number; name: string }[]>([]);
+  const [checkingLinks, setCheckingLinks] = useState(false);
+  const [linkCheckFailed, setLinkCheckFailed] = useState(false);
+  const linkCheckAbortRef = useRef<AbortController | null>(null);
   const [duplicating, setDuplicating] = useState<number | null>(null);
   const [togglingStatus, setTogglingStatus] = useState<number | null>(null);
   const [sortingId, setSortingId] = useState<number | null>(null);
@@ -499,6 +503,8 @@ export function AdminProductsPage() {
       if (res.ok || res.status === 204) {
         toast.success(`"${deleteTarget.name}" has been permanently deleted.`);
         setDeleteTarget(null);
+        setLinkedPackages([]);
+        setLinkCheckFailed(false);
         fetchProducts();
       } else {
         toast.error("Failed to delete product");
@@ -507,6 +513,34 @@ export function AdminProductsPage() {
       toast.error("Network error");
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const openDelete = async (p: Product) => {
+    linkCheckAbortRef.current?.abort();
+    const controller = new AbortController();
+    linkCheckAbortRef.current = controller;
+
+    setCheckingLinks(true);
+    setLinkedPackages([]);
+    setLinkCheckFailed(false);
+    setDeleteTarget(p);
+    try {
+      const res = await customFetch(`/api/products/${p.id}/linked-packages`, { signal: controller.signal });
+      if (controller.signal.aborted) return;
+      if (res.ok) {
+        const data = await res.json();
+        setLinkedPackages(data.packages ?? []);
+      } else {
+        setLinkCheckFailed(true);
+        toast.warning("Could not check for linked packages — verify manually before deleting.");
+      }
+    } catch (err: any) {
+      if (err?.name === "AbortError") return;
+      setLinkCheckFailed(true);
+      toast.warning("Could not check for linked packages — verify manually before deleting.");
+    } finally {
+      if (!controller.signal.aborted) setCheckingLinks(false);
     }
   };
 
@@ -898,7 +932,7 @@ export function AdminProductsPage() {
                             variant="ghost" size="icon"
                             className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                             title="Permanently delete product"
-                            onClick={() => setDeleteTarget(p)}
+                            onClick={() => openDelete(p)}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
@@ -1860,18 +1894,53 @@ export function AdminProductsPage() {
       </Dialog>
 
       {/* Delete Confirmation */}
-      <AlertDialog open={!!deleteTarget} onOpenChange={open => !open && setDeleteTarget(null)}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={open => { if (!open) { linkCheckAbortRef.current?.abort(); setDeleteTarget(null); setLinkedPackages([]); setLinkCheckFailed(false); } }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Permanently Delete Product?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will <strong>permanently remove</strong> <strong>"{deleteTarget?.name}"</strong> from the database. This action cannot be undone.
-              If you only want to hide it from the Store temporarily, use the <strong>Deactivate</strong> button instead.
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>
+                  This will <strong>permanently remove</strong> <strong>"{deleteTarget?.name}"</strong> from the database. This action cannot be undone.
+                  If you only want to hide it from the Store temporarily, use the <strong>Deactivate</strong> button instead.
+                </p>
+                {checkingLinks && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Checking for linked registration packages…
+                  </div>
+                )}
+                {!checkingLinks && linkCheckFailed && (
+                  <div className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3">
+                    <p className="text-sm font-semibold text-destructive flex items-center gap-1.5">
+                      <span>⚠️</span> Could not verify package links
+                    </p>
+                    <p className="text-sm text-destructive/80 mt-1">
+                      The package link check failed. Please verify manually in <strong>Admin → Registration Packages</strong> before proceeding.
+                    </p>
+                  </div>
+                )}
+                {!checkingLinks && !linkCheckFailed && linkedPackages.length > 0 && (
+                  <div className="rounded-md border border-amber-400/50 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 space-y-1.5">
+                    <p className="text-sm font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                      <span>⚠️</span> This product is linked to {linkedPackages.length === 1 ? "a registration package" : "registration packages"}:
+                    </p>
+                    <ul className="list-disc list-inside text-sm text-amber-700 dark:text-amber-400 space-y-0.5">
+                      {linkedPackages.map(pkg => (
+                        <li key={pkg.id}>{pkg.name}</li>
+                      ))}
+                    </ul>
+                    <p className="text-sm text-amber-600 dark:text-amber-500">
+                      Deleting this product will remove {linkedPackages.length === 1 ? "that link" : "those links"}. The package{linkedPackages.length > 1 ? "s" : ""} will still exist but will no longer have an associated product.
+                    </p>
+                  </div>
+                )}
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-destructive hover:bg-destructive/90">
+            <AlertDialogAction onClick={handleDelete} disabled={deleting || checkingLinks} className="bg-destructive hover:bg-destructive/90">
               {deleting ? "Deleting..." : "Yes, Permanently Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>

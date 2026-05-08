@@ -331,6 +331,19 @@ router.patch("/products/:id", requireAdmin, async (req, res): Promise<void> => {
   res.json(formatProduct(updated));
 });
 
+// Check which pro packages are linked to a product (pre-delete check)
+router.get("/products/:id/linked-packages", requireAdmin, async (req, res): Promise<void> => {
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const packages = await db
+    .select({ id: proPackagesTable.id, name: proPackagesTable.name })
+    .from(proPackagesTable)
+    .where(eq(proPackagesTable.productId, id));
+
+  res.json({ packages });
+});
+
 // Permanent hard delete
 router.delete("/products/:id", requireAdmin, async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);

@@ -828,9 +828,12 @@ router.post("/orders/:id/sign", requireAuth, async (req, res) => {
     return;
   }
 
+  const userRole = (req as any).user?.role as string | undefined;
+  const isAdmin = ["admin", "super_admin", "store_admin"].includes(userRole ?? "");
+
   const [order] = await db.select().from(ordersTable).where(eq(ordersTable.id, id));
   if (!order) { res.status(404).json({ error: "Order not found" }); return; }
-  if (order.userId !== userId) { res.status(403).json({ error: "Forbidden" }); return; }
+  if (order.userId !== userId && !isAdmin) { res.status(403).json({ error: "Forbidden" }); return; }
   if (order.digitalSignature) { res.status(409).json({ error: "Already signed" }); return; }
 
   const [updated] = await db

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { customFetch } from "@/lib/custom-fetch";
 import { TickerBar } from "@/components/ticker-bar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,6 +34,8 @@ export function AdminBannerMessagesPage() {
   const [editText, setEditText] = useState<Record<number, string>>({});
   const [dragging, setDragging] = useState<number | null>(null);
   const [dragOver, setDragOver] = useState<number | null>(null);
+  const [highlightedId, setHighlightedId] = useState<number | null>(null);
+  const rowRefs = useRef<Record<number, HTMLLIElement | null>>({});
 
   async function load() {
     setLoading(true);
@@ -167,8 +169,21 @@ export function AdminBannerMessagesPage() {
     }
   }
 
-  const activeCount = banners.filter(b => b.isActive).length;
-  const activeMessages = banners.filter(b => b.isActive).map(b => b.message);
+  const activeBanners = banners.filter(b => b.isActive);
+  const activeCount = activeBanners.length;
+  const activeMessages = activeBanners.map(b => b.message);
+
+  function handlePreviewClick(index: number) {
+    const banner = activeBanners[index];
+    if (!banner) return;
+    const el = rowRefs.current[banner.id];
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    setEditText(prev => ({ ...prev, [banner.id]: banner.message }));
+    setHighlightedId(banner.id);
+    setTimeout(() => setHighlightedId(null), 1500);
+  }
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -240,12 +255,13 @@ export function AdminBannerMessagesPage() {
                 return (
                   <li
                     key={banner.id}
+                    ref={el => { rowRefs.current[banner.id] = el; }}
                     draggable
                     onDragStart={() => handleDragStart(banner.id)}
                     onDragOver={e => handleDragOver(e, banner.id)}
                     onDrop={() => handleDrop(banner.id)}
                     onDragEnd={() => { setDragging(null); setDragOver(null); }}
-                    className={`flex items-start gap-3 px-4 py-3 transition-colors ${isDragTarget ? "bg-primary/5 border-primary/30" : "hover:bg-muted/40"} ${dragging === banner.id ? "opacity-40" : ""}`}
+                    className={`flex items-start gap-3 px-4 py-3 transition-colors ${highlightedId === banner.id ? "bg-primary/10 ring-1 ring-inset ring-primary/40" : isDragTarget ? "bg-primary/5 border-primary/30" : "hover:bg-muted/40"} ${dragging === banner.id ? "opacity-40" : ""}`}
                   >
                     <button className="mt-2 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground shrink-0">
                       <GripVertical className="h-4 w-4" />
@@ -337,7 +353,7 @@ export function AdminBannerMessagesPage() {
         <CardContent className="p-0">
           {activeMessages.length > 0 ? (
             <div className="rounded-b-lg overflow-hidden">
-              <TickerBar messages={activeMessages} fontSize={15} padding="14px 0" />
+              <TickerBar messages={activeMessages} fontSize={15} padding="14px 0" onMessageClick={handlePreviewClick} />
             </div>
           ) : (
             <div className="py-8 text-center text-muted-foreground text-sm px-4">
@@ -348,7 +364,7 @@ export function AdminBannerMessagesPage() {
       </Card>
 
       <p className="text-xs text-muted-foreground text-center">
-        Click a message text to edit inline. Changes appear on the shop immediately.
+        Click a message text to edit inline, or click it in the Live Preview to jump to its row. Changes appear on the shop immediately.
       </p>
     </div>
   );

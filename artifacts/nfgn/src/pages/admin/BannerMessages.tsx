@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   Megaphone, Plus, Trash2, Save, Loader2, GripVertical,
-  ToggleLeft, ToggleRight, RefreshCw, Eye, EyeOff, MonitorPlay, Gauge,
+  ToggleLeft, ToggleRight, RefreshCw, Eye, EyeOff, MonitorPlay, Gauge, ExternalLink,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useGetSettings, useUpdateSettings } from "@workspace/api-client-react";
@@ -382,26 +382,38 @@ export function AdminBannerMessagesPage() {
               )}
             </CardTitle>
 
-            <div className="flex items-center gap-2">
-              {savingSpeed && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
-              <Gauge className="h-4 w-4 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground font-medium">Speed:</span>
-              <div className="flex rounded-md border overflow-hidden text-xs">
-                {(["slow", "medium", "fast"] as TickerSpeed[]).map(speed => (
-                  <button
-                    key={speed}
-                    onClick={() => handleSpeedChange(speed)}
-                    disabled={savingSpeed || !settingsData}
-                    className={`px-3 py-1 font-medium transition-colors capitalize ${
-                      tickerSpeed === speed
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-background text-muted-foreground hover:bg-muted"
-                    }`}
-                  >
-                    {SPEED_LABELS[speed]}
-                  </button>
-                ))}
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-2">
+                {savingSpeed && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+                <Gauge className="h-4 w-4 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground font-medium">Speed:</span>
+                <div className="flex rounded-md border overflow-hidden text-xs">
+                  {(["slow", "medium", "fast"] as TickerSpeed[]).map(speed => (
+                    <button
+                      key={speed}
+                      onClick={() => handleSpeedChange(speed)}
+                      disabled={savingSpeed || !settingsData}
+                      className={`px-3 py-1 font-medium transition-colors capitalize ${
+                        tickerSpeed === speed
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-background text-muted-foreground hover:bg-muted"
+                      }`}
+                    >
+                      {SPEED_LABELS[speed]}
+                    </button>
+                  ))}
+                </div>
               </div>
+              <a
+                href="/shop"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+                title="Open the Shop page to see the live ticker"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                Preview on Shop
+              </a>
             </div>
           </div>
         </CardHeader>

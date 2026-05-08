@@ -9,7 +9,7 @@ import {
   Users, TrendingUp, Star, Gift, Shield, Zap, ArrowLeft,
   Trophy, Ticket, Award, Utensils, Dumbbell, Heart, Gem,
   HandHeart, Coins, Church, Flower2, Sun, Snowflake, PartyPopper,
-  Lock, Plane, Stethoscope, Brain, Pill, Tag, Crown,
+  Lock, Plane, Stethoscope, Brain, Pill, Tag, Crown, Gauge,
 } from "lucide-react";
 import { useCartStore } from "@/hooks/use-cart-store";
 import { useToast } from "@/hooks/use-toast";
@@ -112,7 +112,23 @@ function categorySlugFromName(name?: string | null): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
+const ADMIN_ROLES = new Set(["super_admin", "admin", "store_admin"]);
+
+function parseJwtRole(token: string | null): string | null {
+  if (!token) return null;
+  try {
+    const payload = token.split(".")[1];
+    const decoded = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
+    return decoded.role ?? null;
+  } catch {
+    return null;
+  }
+}
+
+const TICKER_SPEED_LABELS: Record<string, string> = { slow: "Slow", medium: "Medium", fast: "Fast" };
+
 function ShopTickerBar() {
+  const { token } = useAuth();
   const { data: banners } = useQuery<{ id: number; message: string }[]>({
     queryKey: ["/api/banners"],
     queryFn: () => customFetch("/api/banners").then(r => r.json()),
@@ -130,7 +146,48 @@ function ShopTickerBar() {
     ? banners.map(b => b.message)
     : ["Check back soon for our latest news and promotions!"];
 
-  return <TickerBar messages={messages} speed={banners.length > 0 ? settings?.tickerSpeed : "slow"} />;
+  const speed = banners.length > 0 ? settings?.tickerSpeed : "slow";
+  const role = parseJwtRole(token);
+  const isAdmin = role ? ADMIN_ROLES.has(role) : false;
+  const speedLabel = TICKER_SPEED_LABELS[speed ?? "medium"] ?? speed;
+
+  return (
+    <div style={{ position: "relative" }}>
+      <TickerBar messages={messages} speed={speed} />
+      {isAdmin && speed && (
+        <a
+          href="/admin/banner-messages"
+          title={`Ticker speed: ${speedLabel} — click to adjust in Banner Messages`}
+          style={{
+            position: "absolute",
+            top: "50%",
+            transform: "translateY(-50%)",
+            right: 12,
+            zIndex: 10,
+            background: "rgba(0,0,0,0.55)",
+            backdropFilter: "blur(4px)",
+            borderRadius: 6,
+            padding: "3px 9px",
+            fontSize: 11,
+            fontWeight: 700,
+            color: GOLD,
+            letterSpacing: "0.05em",
+            display: "flex",
+            alignItems: "center",
+            gap: 5,
+            border: "1px solid rgba(201,168,76,0.45)",
+            textDecoration: "none",
+            opacity: 0.85,
+          }}
+          onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
+          onMouseLeave={e => (e.currentTarget.style.opacity = "0.85")}
+        >
+          <Gauge style={{ width: 11, height: 11 }} />
+          {speedLabel}
+        </a>
+      )}
+    </div>
+  );
 }
 
 function ProductCard({

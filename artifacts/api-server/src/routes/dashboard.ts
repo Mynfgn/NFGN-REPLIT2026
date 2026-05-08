@@ -618,6 +618,39 @@ router.get("/replicated/:username", async (req, res): Promise<void> => {
 
 // ── GET /dashboard/member-locations ──────────────────────────────────────────
 // Admin: all member locations; Member: downline only
+// Falls back to order shipping address for users with no city/state on profile.
+
+/** Parse "City, State ZIP" or "Street, City, State ZIP" → { city, state } */
+function parseShippingAddress(address: string): { city: string; state: string } | null {
+  const stateAbbrevFull: Record<string, string> = {
+    "AL": "Alabama","AK": "Alaska","AZ": "Arizona","AR": "Arkansas","CA": "California",
+    "CO": "Colorado","CT": "Connecticut","DE": "Delaware","FL": "Florida","GA": "Georgia",
+    "HI": "Hawaii","ID": "Idaho","IL": "Illinois","IN": "Indiana","IA": "Iowa",
+    "KS": "Kansas","KY": "Kentucky","LA": "Louisiana","ME": "Maine","MD": "Maryland",
+    "MA": "Massachusetts","MI": "Michigan","MN": "Minnesota","MS": "Mississippi",
+    "MO": "Missouri","MT": "Montana","NE": "Nebraska","NV": "Nevada","NH": "New Hampshire",
+    "NJ": "New Jersey","NM": "New Mexico","NY": "New York","NC": "North Carolina",
+    "ND": "North Dakota","OH": "Ohio","OK": "Oklahoma","OR": "Oregon","PA": "Pennsylvania",
+    "RI": "Rhode Island","SC": "South Carolina","SD": "South Dakota","TN": "Tennessee",
+    "TX": "Texas","UT": "Utah","VT": "Vermont","VA": "Virginia","WA": "Washington",
+    "WV": "West Virginia","WI": "Wisconsin","WY": "Wyoming","DC": "Washington DC",
+  };
+  // Split by comma and try last 2 parts as "City, State ZIP"
+  const parts = address.split(",").map(p => p.trim()).filter(Boolean);
+  for (let i = parts.length - 1; i >= 1; i--) {
+    const statePart = parts[i];
+    const cityPart = parts[i - 1];
+    // Expand abbreviated state: "LA 70001" or "Louisiana 70001" or just "LA"
+    const stateMatch = statePart.match(/^([A-Za-z][a-z ]+|[A-Z]{2})(?:\s+\d{5})?$/);
+    if (stateMatch && cityPart && !cityPart.match(/^\d/)) {
+      const raw = stateMatch[1].trim();
+      const state = stateAbbrevFull[raw] ?? raw;
+      return { city: cityPart, state };
+    }
+  }
+  return null;
+}
+
 router.get("/dashboard/member-locations", requireAuth, async (req, res): Promise<void> => {
   const me = (req as any).user as typeof usersTable.$inferSelect;
   const isAdmin = ["admin", "super_admin", "store_admin"].includes(me.role);
@@ -645,6 +678,30 @@ router.get("/dashboard/member-locations", requireAuth, async (req, res): Promise
     }
   }
 
+  // For users with no city/state, fall back to their latest order's shipping address
+  const missingIds = users.filter(u => !u.city || !u.state).map(u => u.id);
+  if (missingIds.length > 0) {
+    const orders = await db
+      .select({ userId: ordersTable.userId, shippingAddress: ordersTable.shippingAddress })
+      .from(ordersTable)
+      .where(inArray(ordersTable.userId, missingIds))
+      .orderBy(desc(ordersTable.createdAt));
+    // First (most recent) address per user
+    const addressMap: Record<number, string> = {};
+    for (const o of orders) {
+      if (o.shippingAddress && !addressMap[o.userId]) {
+        addressMap[o.userId] = o.shippingAddress;
+      }
+    }
+    users = users.map(u => {
+      if ((!u.city || !u.state) && addressMap[u.id]) {
+        const parsed = parseShippingAddress(addressMap[u.id]!);
+        if (parsed) return { ...u, city: parsed.city, state: parsed.state };
+      }
+      return u;
+    });
+  }
+
   // Group by location label
   const locationMap: Record<string, { label: string; country: string; count: number; latestJoin: string }> = {};
   for (const u of users) {
@@ -652,13 +709,12 @@ router.get("/dashboard/member-locations", requireAuth, async (req, res): Promise
     const state = u.state ?? null;
     const city = u.city ?? null;
     const label = city && state ? `${city}, ${state}` : state ? state : country;
-    const key = label;
-    if (!locationMap[key]) {
-      locationMap[key] = { label, country, count: 0, latestJoin: u.createdAt.toISOString() };
+    if (!locationMap[label]) {
+      locationMap[label] = { label, country, count: 0, latestJoin: u.createdAt.toISOString() };
     }
-    locationMap[key].count++;
-    if (u.createdAt.toISOString() > locationMap[key].latestJoin) {
-      locationMap[key].latestJoin = u.createdAt.toISOString();
+    locationMap[label].count++;
+    if (u.createdAt.toISOString() > locationMap[label].latestJoin) {
+      locationMap[label].latestJoin = u.createdAt.toISOString();
     }
   }
 

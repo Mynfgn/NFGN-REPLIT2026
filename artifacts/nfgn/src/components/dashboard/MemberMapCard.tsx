@@ -30,6 +30,51 @@ const COORDS: Record<string, [number, number]> = {
   "Virginia": [-78.17, 37.77], "Washington": [-120.74, 47.75], "West Virginia": [-80.45, 38.65],
   "Wisconsin": [-88.79, 44.27], "Wyoming": [-107.55, 43.08], "Washington DC": [-77.04, 38.91],
   "DC": [-77.04, 38.91],
+  // US Cities (Louisiana / Gulf Coast)
+  "New Orleans": [-90.07, 29.95], "Kenner": [-90.24, 29.99], "Metairie": [-90.16, 29.99],
+  "Baton Rouge": [-91.14, 30.45], "Shreveport": [-93.75, 32.52], "Lafayette": [-92.02, 30.22],
+  "Lake Charles": [-93.22, 30.23], "Monroe": [-92.12, 32.51], "Alexandria": [-92.44, 31.31],
+  // US Cities (Georgia)
+  "Atlanta": [-84.39, 33.75], "Decatur": [-84.30, 33.77], "Marietta": [-84.55, 33.95],
+  "Savannah": [-81.10, 32.08], "Augusta": [-81.97, 33.47], "Columbus": [-84.99, 32.46],
+  "Macon": [-83.63, 32.84], "Albany": [-84.17, 31.58], "Athens": [-83.36, 33.96],
+  // US Cities (Texas)
+  "Houston": [-95.37, 29.76], "Dallas": [-96.80, 32.78], "San Antonio": [-98.49, 29.42],
+  "Austin": [-97.74, 30.27], "Fort Worth": [-97.33, 32.75], "El Paso": [-106.49, 31.76],
+  "Arlington": [-97.11, 32.74], "Plano": [-96.70, 33.02], "Garland": [-96.64, 32.91],
+  "Lubbock": [-101.86, 33.58], "Corpus Christi": [-97.40, 27.80], "Laredo": [-99.50, 27.51],
+  // US Cities (Florida)
+  "Miami": [-80.19, 25.77], "Orlando": [-81.38, 28.54], "Tampa": [-82.46, 27.95],
+  "Jacksonville": [-81.66, 30.33], "Fort Lauderdale": [-80.14, 26.12], "Tallahassee": [-84.28, 30.44],
+  "St. Petersburg": [-82.64, 27.77], "Hialeah": [-80.28, 25.86], "Pembroke Pines": [-80.34, 26.01],
+  // US Cities (New York)
+  "New York City": [-74.01, 40.71], "Brooklyn": [-73.94, 40.68], "Queens": [-73.80, 40.73],
+  "Bronx": [-73.86, 40.85], "Staten Island": [-74.15, 40.58], "Buffalo": [-78.88, 42.89],
+  "Yonkers": [-73.90, 40.93], "Syracuse": [-76.15, 43.05], "Rochester": [-77.61, 43.16],
+  // US Cities (California)
+  "Los Angeles": [-118.24, 34.05], "San Diego": [-117.16, 32.72], "San Jose": [-121.89, 37.34],
+  "San Francisco": [-122.42, 37.77], "Fresno": [-119.79, 36.74], "Sacramento": [-121.49, 38.58],
+  "Long Beach": [-118.19, 33.77], "Oakland": [-122.27, 37.80], "Bakersfield": [-119.02, 35.37],
+  "Anaheim": [-117.91, 33.84], "Riverside": [-117.40, 33.98], "Stockton": [-121.29, 37.96],
+  // US Cities (Illinois)
+  "Chicago": [-87.63, 41.88], "Aurora": [-88.33, 41.76], "Rockford": [-89.09, 42.27],
+  "Naperville": [-88.16, 41.79], "Joliet": [-88.08, 41.53],
+  // US Cities (North Carolina)
+  "Charlotte": [-80.84, 35.23], "Raleigh": [-78.64, 35.78], "Greensboro": [-79.79, 36.07],
+  "Durham": [-78.90, 35.99], "Winston-Salem": [-80.24, 36.10], "Fayetteville": [-78.88, 35.05],
+  // US Cities (Maryland)
+  "Baltimore": [-76.61, 39.29], "Frederick": [-77.41, 39.41], "Rockville": [-77.15, 39.08],
+  "Gaithersburg": [-77.20, 39.14], "Hagerstown": [-77.72, 39.64], "Annapolis": [-76.50, 38.97],
+  // US Cities (other major)
+  "Phoenix": [-112.07, 33.45], "Philadelphia": [-75.16, 39.95], "Detroit": [-83.05, 42.33],
+  "Seattle": [-122.33, 47.61], "Denver": [-104.99, 39.74], "Nashville": [-86.78, 36.16],
+  "Memphis": [-90.05, 35.15], "Louisville": [-85.76, 38.25], "Portland": [-122.68, 45.52],
+  "Las Vegas": [-115.14, 36.17], "Minneapolis": [-93.27, 44.98], "Tucson": [-110.93, 32.22],
+  "Kansas City": [-94.58, 39.10], "Mesa": [-111.83, 33.42], "Omaha": [-95.93, 41.26],
+  "Cleveland": [-81.69, 41.50], "Virginia Beach": [-75.98, 36.85], "Indianapolis": [-86.16, 39.77],
+  "Pittsburgh": [-79.99, 40.44], "Cincinnati": [-84.51, 39.10], "St. Louis": [-90.20, 38.63],
+  "St Louis": [-90.20, 38.63], "Colorado Springs": [-104.82, 38.83], "Henderson": [-114.98, 36.04],
+  "Anchorage": [-149.90, 61.22], "Honolulu": [-157.86, 21.31],
   // Countries
   "United States": [-95.71, 37.09], "Canada": [-106.35, 56.13], "Mexico": [-102.55, 23.63],
   "United Kingdom": [-3.44, 55.38], "England": [-1.17, 52.36], "Scotland": [-4.20, 56.49],

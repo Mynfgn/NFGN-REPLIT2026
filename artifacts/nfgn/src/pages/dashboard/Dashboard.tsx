@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Wallet, Users, ShoppingBag, ArrowUpRight, TrendingUp, MapPin, Star, CheckCircle2, AlertCircle, BarChart3, Link2, Copy, Check, ExternalLink, DollarSign, Sparkles, ShoppingCart, Zap, X, QrCode, Phone, Mail, UserCircle, Smartphone, CreditCard, Gift, Clock } from "lucide-react";
 import { MemberMapCard } from "@/components/dashboard/MemberMapCard";
+import { NotificationsPanel } from "@/components/dashboard/NotificationsPanel";
 import { customFetch } from "@/lib/custom-fetch";
 import { resolveImageSrc } from "@/lib/image";
 import { Link } from "wouter";
@@ -1369,6 +1370,9 @@ export function Dashboard() {
 
       {/* Volume This Month */}
       <CVCard pv={pv} gv={gv} required={required} rolling30DayPcv={rolling30DayPcv} />
+
+      {/* Community Activity — Notifications Panel */}
+      <NotificationsPanel />
 
       {/* Community World Map */}
       <MemberMapCard title="Your Community Map" />

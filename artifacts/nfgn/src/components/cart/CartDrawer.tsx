@@ -1848,11 +1848,15 @@ export function CartDrawer() {
                 setSigSubmitting(true);
                 try {
                   const signature = sigCanvasRef.current.toDataURL("image/png");
-                  await customFetch(`/api/orders/${lastOrder.id}/sign`, {
+                  const signRes = await customFetch(`/api/orders/${lastOrder.id}/sign`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ signature }),
                   });
+                  if (!signRes.ok) {
+                    const errBody = await signRes.json().catch(() => ({}));
+                    throw new Error((errBody as any)?.error ?? `Server error ${signRes.status}`);
+                  }
                   setSignatureDataUrl(signature);
                   qc.invalidateQueries({ queryKey: ["/api/orders"] });
                   setView("confirm");

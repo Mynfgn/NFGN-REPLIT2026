@@ -391,7 +391,7 @@ export function AdminDashboard() {
                 </Badge>
               )}
             </div>
-            <Link href="/admin/orders-for-approval">
+            <Link href="/admin/orders/approval">
               <Button variant="outline" size="sm" className="text-xs gap-1 h-7 border-red-200 text-red-600 hover:bg-red-50">
                 View All <ArrowRight className="h-3 w-3" />
               </Button>

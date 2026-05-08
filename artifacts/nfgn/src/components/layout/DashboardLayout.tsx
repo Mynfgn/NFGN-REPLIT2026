@@ -71,6 +71,7 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
       { name: "Genealogy",          href: "/dashboard/genealogy",    icon: Users, minTier: "retail_community_builder" },
       { name: "User Earnings",      href: "/dashboard/earnings",     icon: TrendingUp, minTier: "retail_community_builder" },
       { name: "Commissions",        href: "/dashboard/commissions",  icon: Award, minTier: "retail_community_builder" },
+      { name: "Register New Member", href: "/dashboard/registration",  icon: UserPlus, minTier: "retail_community_builder" },
       {
         name: "Registration", icon: UserPlus, group: "registration", minTier: "pro_member",
         children: [

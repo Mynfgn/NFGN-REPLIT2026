@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -7,8 +8,9 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Printer, Share2, Check, Zap, Star, AlertCircle, Download } from "lucide-react";
+import { Printer, Share2, Check, Zap, Star, AlertCircle, Download, PenLine, X, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { customFetch } from "@/lib/custom-fetch";
 
 interface OrderItem {
   id: number;
@@ -71,11 +73,27 @@ function fmt(n: number) { return n.toFixed(2); }
 
 export function ReceiptModal({ order, open, onClose, isProMember, currentMonthPv }: ReceiptModalProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
+  const sigCanvasRef = useRef<HTMLCanvasElement>(null);
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
+  const qc = useQueryClient();
+
+  // Inline signing state
+  const [showSigning, setShowSigning] = useState(false);
+  const [sigEmpty, setSigEmpty] = useState(true);
+  const [sigAgreed, setSigAgreed] = useState(false);
+  const [sigSubmitting, setSigSubmitting] = useState(false);
+  const [sigDrawing, setSigDrawing] = useState(false);
+  // Local signature — shown immediately after signing without waiting for cache refresh
+  const [localSignature, setLocalSignature] = useState<string | null>(null);
+  const [localSignedAt, setLocalSignedAt] = useState<string | null>(null);
 
   if (!order) return null;
   const o = order as Order;
+
+  // Use locally captured signature if the prop hasn't refreshed yet
+  const displaySignature = localSignature ?? o.digitalSignature ?? null;
+  const displaySignedAt  = localSignedAt  ?? o.digitalSignedAt  ?? null;
 
   const totalPv = o.items.reduce((s, i) => s + (i.cvTotal ?? 0), 0);
   const pvAfterOrder = (currentMonthPv ?? 0) + totalPv;
@@ -143,8 +161,43 @@ export function ReceiptModal({ order, open, onClose, isProMember, currentMonthPv
     setTimeout(() => setCopied(false), 2500);
   }
 
+  function clearCanvas() {
+    const ctx = sigCanvasRef.current?.getContext("2d");
+    if (ctx && sigCanvasRef.current) {
+      ctx.clearRect(0, 0, sigCanvasRef.current.width, sigCanvasRef.current.height);
+    }
+    setSigEmpty(true);
+  }
+
+  async function submitSignature() {
+    if (!sigCanvasRef.current) return;
+    setSigSubmitting(true);
+    try {
+      const signature = sigCanvasRef.current.toDataURL("image/png");
+      const res = await customFetch(`/api/orders/${o.id}/sign`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ signature }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as any)?.error ?? `Server error ${res.status}`);
+      }
+      const result = await res.json();
+      setLocalSignature(signature);
+      setLocalSignedAt(result.digitalSignedAt ?? new Date().toISOString());
+      setShowSigning(false);
+      qc.invalidateQueries({ queryKey: ["/api/orders"] });
+      toast({ title: "Signature saved!", description: "Your receipt has been signed." });
+    } catch (err: any) {
+      toast({ title: "Could not save signature", description: err?.message ?? "Please try again.", variant: "destructive" });
+    } finally {
+      setSigSubmitting(false);
+    }
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) { setShowSigning(false); setSigEmpty(true); setSigAgreed(false); } onClose(); }}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0">
         <DialogHeader className="px-6 pt-5 pb-0">
           <DialogTitle className="text-base font-semibold flex items-center justify-between gap-2">
@@ -380,7 +433,7 @@ export function ReceiptModal({ order, open, onClose, isProMember, currentMonthPv
             )}
           </div>
 
-          {/* Digital Downloads — shown when order contains downloadable items and is paid */}
+          {/* Digital Downloads */}
           {o.items.some(i => i.isDownloadable && i.downloadUrl) && ["paid", "demo_paid", "completed"].includes(o.paymentStatus) && (
             <div className="mt-5 rounded-lg overflow-hidden border-2" style={{ borderColor: "#C9A84C" }}>
               <div className="px-4 py-2.5" style={{ background: "linear-gradient(135deg, #faf8f3, #f5f0e8)", borderBottom: "1px solid #e8dfc8" }}>
@@ -415,21 +468,173 @@ export function ReceiptModal({ order, open, onClose, isProMember, currentMonthPv
             </div>
           )}
 
-          {/* Digital Signature — always shown; image only when signature was captured */}
+          {/* ── Digital Signature Section ─────────────────────────────────── */}
           <div className="mt-5 rounded-lg overflow-hidden" style={{ border: "1.5px solid #C9A84C" }}>
-            <div className="px-4 py-2.5" style={{ background: "linear-gradient(135deg, #faf8f3, #f5f0e8)", borderBottom: "1px solid #e8dfc8" }}>
-              <p className="text-[10px] font-bold uppercase tracking-[1.5px]" style={{ color: "#C9A84C" }}>Electronic Purchase Agreement</p>
-              {o.digitalSignedAt && (
-                <p className="text-[10px] mt-0.5" style={{ color: "#888" }}>
-                  Signed: {new Date(o.digitalSignedAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}
-                </p>
+            {/* Header bar */}
+            <div className="px-4 py-2.5 flex items-center justify-between" style={{ background: "linear-gradient(135deg, #faf8f3, #f5f0e8)", borderBottom: "1px solid #e8dfc8" }}>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[1.5px]" style={{ color: "#C9A84C" }}>Electronic Purchase Agreement</p>
+                {displaySignedAt && (
+                  <p className="text-[10px] mt-0.5" style={{ color: "#888" }}>
+                    Signed: {new Date(displaySignedAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                )}
+              </div>
+              {/* Sign Now button — only if not yet signed and not currently in signing flow */}
+              {!displaySignature && !showSigning && (
+                <button
+                  onClick={() => { setShowSigning(true); setSigEmpty(true); setSigAgreed(false); }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
+                  style={{ background: "linear-gradient(135deg,#C9A84C,#e8c96a)", color: "#000", border: "none", cursor: "pointer" }}
+                >
+                  <PenLine className="h-3.5 w-3.5" />
+                  Sign Now
+                </button>
+              )}
+              {showSigning && (
+                <button
+                  onClick={() => { setShowSigning(false); setSigEmpty(true); setSigAgreed(false); clearCanvas(); }}
+                  className="flex items-center gap-1 px-2 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  style={{ background: "transparent", border: "none", cursor: "pointer" }}
+                >
+                  <X className="h-3.5 w-3.5" /> Cancel
+                </button>
               )}
             </div>
-            {o.digitalSignature && (
+
+            {/* Signed — show image */}
+            {displaySignature && (
               <div className="px-4 py-3 bg-white">
-                <img src={o.digitalSignature} alt="Customer signature" className="w-full rounded border" style={{ maxHeight: 80, objectFit: "contain", borderColor: "#e8dfc8" }} />
+                <img src={displaySignature} alt="Customer signature" className="w-full rounded border" style={{ maxHeight: 80, objectFit: "contain", borderColor: "#e8dfc8" }} />
               </div>
             )}
+
+            {/* Inline signing pad — shown when Sign Now is clicked */}
+            {showSigning && !displaySignature && (
+              <div className="px-4 py-4 bg-white space-y-3">
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Your signature serves as legal confirmation that you personally authorised this purchase. It is timestamped and linked to this order as proof of presence.
+                </p>
+
+                {/* Canvas */}
+                <div className="relative rounded-lg overflow-hidden" style={{ border: "1.5px solid #C9A84C", background: "#fafafa" }}>
+                  {sigEmpty && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <span className="text-xs text-muted-foreground/50 select-none">Draw your signature here</span>
+                    </div>
+                  )}
+                  <canvas
+                    ref={sigCanvasRef}
+                    width={560}
+                    height={110}
+                    style={{ display: "block", width: "100%", height: 110, touchAction: "none", cursor: "crosshair" }}
+                    onMouseDown={(e) => {
+                      const canvas = sigCanvasRef.current;
+                      if (!canvas) return;
+                      const ctx = canvas.getContext("2d");
+                      if (!ctx) return;
+                      setSigDrawing(true);
+                      setSigEmpty(false);
+                      const rect = canvas.getBoundingClientRect();
+                      const scaleX = canvas.width / rect.width;
+                      const scaleY = canvas.height / rect.height;
+                      ctx.beginPath();
+                      ctx.moveTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
+                      ctx.strokeStyle = "#0a0a0a";
+                      ctx.lineWidth = 2;
+                      ctx.lineCap = "round";
+                    }}
+                    onMouseMove={(e) => {
+                      if (!sigDrawing) return;
+                      const canvas = sigCanvasRef.current;
+                      if (!canvas) return;
+                      const ctx = canvas.getContext("2d");
+                      if (!ctx) return;
+                      const rect = canvas.getBoundingClientRect();
+                      const scaleX = canvas.width / rect.width;
+                      const scaleY = canvas.height / rect.height;
+                      ctx.lineTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
+                      ctx.stroke();
+                    }}
+                    onMouseUp={() => setSigDrawing(false)}
+                    onMouseLeave={() => setSigDrawing(false)}
+                    onTouchStart={(e) => {
+                      e.preventDefault();
+                      const canvas = sigCanvasRef.current;
+                      if (!canvas) return;
+                      const ctx = canvas.getContext("2d");
+                      if (!ctx) return;
+                      setSigDrawing(true);
+                      setSigEmpty(false);
+                      const touch = e.touches[0];
+                      const rect = canvas.getBoundingClientRect();
+                      const scaleX = canvas.width / rect.width;
+                      const scaleY = canvas.height / rect.height;
+                      ctx.beginPath();
+                      ctx.moveTo((touch.clientX - rect.left) * scaleX, (touch.clientY - rect.top) * scaleY);
+                      ctx.strokeStyle = "#0a0a0a";
+                      ctx.lineWidth = 2;
+                      ctx.lineCap = "round";
+                    }}
+                    onTouchMove={(e) => {
+                      e.preventDefault();
+                      if (!sigDrawing) return;
+                      const canvas = sigCanvasRef.current;
+                      if (!canvas) return;
+                      const ctx = canvas.getContext("2d");
+                      if (!ctx) return;
+                      const touch = e.touches[0];
+                      const rect = canvas.getBoundingClientRect();
+                      const scaleX = canvas.width / rect.width;
+                      const scaleY = canvas.height / rect.height;
+                      ctx.lineTo((touch.clientX - rect.left) * scaleX, (touch.clientY - rect.top) * scaleY);
+                      ctx.stroke();
+                    }}
+                    onTouchEnd={() => setSigDrawing(false)}
+                  />
+                </div>
+
+                {/* Clear + agreement */}
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={clearCanvas}
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    style={{ background: "transparent", border: "none", cursor: "pointer", padding: "4px 0" }}
+                  >
+                    <RotateCcw className="h-3 w-3" /> Clear
+                  </button>
+                </div>
+
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={sigAgreed}
+                    onChange={e => setSigAgreed(e.target.checked)}
+                    className="mt-0.5 h-3.5 w-3.5 accent-amber-500 flex-shrink-0"
+                  />
+                  <span className="text-[10px] leading-relaxed" style={{ color: "#555" }}>
+                    I confirm that I personally authorised this purchase and am the account holder. I understand this digital signature is timestamped and serves as my official proof of purchase. I acknowledge that all sales are final — this product is non-refundable and cannot be returned.
+                  </span>
+                </label>
+
+                <Button
+                  disabled={sigEmpty || !sigAgreed || sigSubmitting}
+                  className="w-full font-bold text-xs h-9"
+                  style={{
+                    background: (!sigEmpty && sigAgreed) ? "linear-gradient(135deg,#C9A84C,#e8c96a)" : undefined,
+                    color: (!sigEmpty && sigAgreed) ? "#000" : undefined,
+                  }}
+                  onClick={submitSignature}
+                >
+                  {sigSubmitting
+                    ? <span className="flex items-center gap-2"><span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />Saving…</span>
+                    : <><PenLine className="h-3.5 w-3.5 mr-1.5" />Submit Signature</>
+                  }
+                </Button>
+              </div>
+            )}
+
+            {/* Agreement text — always visible */}
             <div className="px-4 py-3">
               <p className="text-[10px] rounded px-2 py-1.5 leading-relaxed" style={{ background: "rgba(201,168,76,0.07)", border: "1px solid rgba(201,168,76,0.2)", color: "#666" }}>
                 <span className="font-bold" style={{ color: "#C9A84C" }}>Agreement: </span>
@@ -473,13 +678,12 @@ function buildShareText(order: Order, totalPv: number): string {
     `Shipping: ${order.shipping === 0 ? "Free" : "$" + order.shipping.toFixed(2)}`,
     `Tax: $${order.tax.toFixed(2)}`,
     `TOTAL: $${order.total.toFixed(2)}`,
-    `PV EARNED: ${totalPv} PV`,
-    "─────────────────────────────",
-    `Ship To: ${order.userName}`,
-    order.shippingAddress ?? "No address on file",
+    ...(totalPv > 0 ? [`PV Earned: ${totalPv} PV`] : []),
     "═══════════════════════════════",
-    "newfaceglobalnetwork@gmail.com",
-    "(678) 909-9974",
+    "  New Face Global Network",
+    "  newfaceglobalnetwork@gmail.com",
+    "  (678) 909-9974",
+    "═══════════════════════════════",
   ];
   return lines.join("\n");
 }

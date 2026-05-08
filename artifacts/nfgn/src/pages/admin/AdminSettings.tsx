@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Settings,
   Globe,
@@ -28,6 +29,7 @@ import {
   Smartphone,
   Upload,
   RotateCcw,
+  MessageSquare,
 } from "lucide-react";
 
 /* ── Section wrapper ────────────────────────────────────────────── */
@@ -121,6 +123,7 @@ export default function AdminSettingsPage() {
     registrationPackagePrice: "",
     demoMode: false,
     paymentMethods: ["authorize_net", "cash_app", "paypal", "cod"] as string[],
+    welcomeMessage: "Thank you for joining our community! Let me know if there is anything I can do to help!",
   });
 
   /* Hydrate form when settings load */
@@ -141,6 +144,7 @@ export default function AdminSettingsPage() {
       registrationPackagePrice: String(settings.registrationPackagePrice ?? "149.99"),
       demoMode: settings.demoMode ?? false,
       paymentMethods: (settings.paymentMethods as string[]) ?? ["authorize_net", "cash_app", "paypal", "cod"],
+      welcomeMessage: (settings as any).welcomeMessage ?? "Thank you for joining our community! Let me know if there is anything I can do to help!",
     });
     if ((settings as any).appIconUrl) {
       setIconPreview((settings as any).appIconUrl);
@@ -238,6 +242,7 @@ export default function AdminSettingsPage() {
         paypalEmail: form.paypalEmail || undefined,
         registrationPackagePrice: parseFloat(form.registrationPackagePrice) || 149.99,
         demoMode: form.demoMode,
+        welcomeMessage: form.welcomeMessage,
         paymentMethods: form.paymentMethods,
       } as any,
     });
@@ -626,7 +631,38 @@ export default function AdminSettingsPage() {
         )}
       </Section>
 
-      {/* ── 7. System Mode ── */}
+      {/* ── 7. Community Welcome Message ── */}
+      <Section title="Community Welcome Message" icon={MessageSquare}>
+        <Field
+          label="Auto Welcome Message"
+          hint="This message is automatically sent from a sponsor to every new member they bring in at levels 1–3. Leave blank to disable auto-welcome messages."
+        >
+          <Textarea
+            className="mt-1 min-h-[100px] resize-y font-medium"
+            value={form.welcomeMessage}
+            onChange={e => set("welcomeMessage", e.target.value)}
+            placeholder="Thank you for joining our community! Let me know if there is anything I can do to help!"
+            maxLength={1000}
+          />
+          <div className="flex items-center justify-between mt-1.5">
+            <p className="text-xs text-muted-foreground">
+              Sent via the NFGN Mailbox. Members see it immediately after joining.
+            </p>
+            <span className="text-xs text-muted-foreground">{form.welcomeMessage.length}/1000</span>
+          </div>
+        </Field>
+        <div className="rounded-lg bg-primary/5 border border-primary/20 px-4 py-3 text-xs text-foreground space-y-1">
+          <p className="font-semibold flex items-center gap-1.5"><MessageSquare className="h-3.5 w-3.5 text-primary" /> How it works</p>
+          <ul className="list-disc list-inside space-y-0.5 text-muted-foreground">
+            <li>When a new member registers using a sponsor's referral code, this message is sent automatically from the sponsor to the new member.</li>
+            <li>Only applies to members at genealogy levels 1–3 (direct and near-downline).</li>
+            <li>The new member sees it in their Mailbox immediately after signing up.</li>
+            <li>Clear this field to turn off the auto-welcome for all new joiners.</li>
+          </ul>
+        </div>
+      </Section>
+
+      {/* ── 8. System Mode ── */}
       <Section title="System Mode" icon={Shield}>
         <div className="flex items-start justify-between gap-4">
           <div>

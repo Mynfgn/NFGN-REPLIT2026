@@ -638,7 +638,7 @@ export function ProfilePage() {
                 <div className="border rounded-xl p-4 bg-white shadow-sm flex-shrink-0">
                   <img src={qrSrc} alt="Contact Card QR Code" width={180} height={180} className="rounded" />
                 </div>
-                <div className="flex-1 space-y-3">
+                <div className="flex-1 min-w-0 space-y-3">
                   <div>
                     <p className="font-semibold text-sm mb-1">What's encoded in this QR code?</p>
                     <p className="text-xs text-muted-foreground leading-relaxed">
@@ -652,10 +652,10 @@ export function ProfilePage() {
                       { icon: Phone, label: "Phone", value: phone || "Not set — add in Personal Info below" },
                       { icon: Smartphone, label: "Referral Link", value: refCode ? refLink : "—" },
                     ].map(({ icon: Icon, label, value }) => (
-                      <div key={label} className="flex items-start gap-2 text-xs">
+                      <div key={label} className="flex items-start gap-2 text-xs min-w-0">
                         <Icon className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
                         <span className="text-muted-foreground font-medium w-20 flex-shrink-0">{label}:</span>
-                        <span className={`truncate ${value.includes("Not set") ? "text-amber-600" : ""}`}>{value}</span>
+                        <span className={`truncate min-w-0 flex-1 ${value.includes("Not set") ? "text-amber-600" : ""}`}>{value}</span>
                       </div>
                     ))}
                   </div>

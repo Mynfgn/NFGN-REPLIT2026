@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, usersTable, walletsTable, genealogyNodesTable, notificationsTable, professionalsTable, ordersTable, orderItemsTable, productsTable, proPackagesTable, appSettingsTable } from "@workspace/db";
+import { db, usersTable, walletsTable, genealogyNodesTable, notificationsTable, professionalsTable, ordersTable, orderItemsTable, productsTable, proPackagesTable, appSettingsTable, messagesTable } from "@workspace/db";
 import { eq, count, sql } from "drizzle-orm";
 import { hashPassword, verifyPassword, generateToken, generateReferralCode, requireAuth } from "../lib/auth";
 import { LoginBody, RegisterBody } from "@workspace/api-zod";
@@ -199,6 +199,28 @@ router.post("/auth/register", async (req, res): Promise<void> => {
       }
     } catch {
       // Non-blocking — don't fail registration if notifications error
+    }
+  }
+
+  // 💌 Auto-send welcome message from sponsor to new member (L1–L3 downline)
+  if (sponsorId) {
+    try {
+      const [settingsRow] = await db.select({ welcomeMessage: appSettingsTable.welcomeMessage }).from(appSettingsTable).limit(1);
+      const welcomeMsg = settingsRow?.welcomeMessage?.trim();
+      const [newMemberNode] = await db.select({ generation: genealogyNodesTable.generation }).from(genealogyNodesTable).where(eq(genealogyNodesTable.userId, newUser.id));
+      const memberGeneration = newMemberNode?.generation ?? 99;
+      if (welcomeMsg && memberGeneration <= 4) {
+        await db.insert(messagesTable).values({
+          fromUserId: sponsorId,
+          toUserId: newUser.id,
+          subject: "Welcome to NFGN! 🎉",
+          body: welcomeMsg,
+          isRead: false,
+          isBroadcast: false,
+        });
+      }
+    } catch {
+      // Non-blocking — never fail registration over a welcome message
     }
   }
 

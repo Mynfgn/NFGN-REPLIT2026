@@ -322,7 +322,10 @@ function NodeEl({
 function UniLevelTree({ root }: { root: TreeNode }) {
   const [selected, setSelected] = useState<Pos | null>(null);
   const [zoom, setZoom] = useState(1);
-  const wrapRef = useRef<HTMLDivElement>(null);
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const [scrollTop,  setScrollTop]  = useState(0);
+  const wrapRef  = useRef<HTMLDivElement>(null);
+  const outerRef = useRef<HTMLDivElement>(null);
   const didFit = useRef(false);
 
   const measured = measure(root);
@@ -358,8 +361,23 @@ function UniLevelTree({ root }: { root: TreeNode }) {
     setSelected(null);
   };
 
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    setScrollLeft(e.currentTarget.scrollLeft);
+    setScrollTop(e.currentTarget.scrollTop);
+  };
+
+  /* Popup position — computed relative to outerRef so it escapes the
+     overflow:auto container and is never clipped.                        */
+  const popupPos = selected && wrapRef.current
+    ? {
+        ...selected,
+        x: (wrapRef.current.offsetLeft ?? 0) + selected.x * zoom - scrollLeft,
+        y: (wrapRef.current.offsetTop  ?? 0) + selected.y * zoom - scrollTop,
+      }
+    : null;
+
   return (
-    <div>
+    <div ref={outerRef} style={{ position: "relative" }}>
       {/* Toolbar */}
       <div className="flex items-center gap-3 mb-3 px-1 flex-wrap">
         <div className="flex items-center gap-2 text-sm">
@@ -392,9 +410,13 @@ function UniLevelTree({ root }: { root: TreeNode }) {
       </div>
 
       {/* Scrollable viewport */}
-      <div ref={wrapRef} className="overflow-auto border border-border rounded-lg bg-muted/20" style={{ maxHeight: 520 }}>
-        {/* Inner div sized to scaled SVG so scroll area is correct */}
-        <div className="relative" style={{ width: scaledW, height: scaledH, minWidth: "100%" }}>
+      <div
+        ref={wrapRef}
+        className="overflow-auto border border-border rounded-lg bg-muted/20"
+        style={{ maxHeight: 520 }}
+        onScroll={handleScroll}
+      >
+        <div style={{ width: scaledW, height: scaledH, minWidth: "100%", position: "relative" }}>
           <svg
             width={scaledW}
             height={scaledH}
@@ -421,16 +443,17 @@ function UniLevelTree({ root }: { root: TreeNode }) {
               ))}
             </g>
           </svg>
-          {/* Popup overlay — position scaled to match zoom */}
-          {selected && (
-            <MemberPopup
-              pos={{ ...selected, x: selected.x * zoom, y: selected.y * zoom }}
-              onClose={() => setSelected(null)}
-              svgW={scaledW}
-            />
-          )}
         </div>
       </div>
+
+      {/* Popup rendered OUTSIDE the overflow container — never clipped */}
+      {popupPos && (
+        <MemberPopup
+          pos={popupPos}
+          onClose={() => setSelected(null)}
+          svgW={scaledW}
+        />
+      )}
     </div>
   );
 }

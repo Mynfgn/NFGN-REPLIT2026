@@ -576,12 +576,12 @@ export function RegisterNewProMemberPage() {
           </section>
 
           {/* Order Summary + Submit */}
-          {selectedProduct && (
+          {selectedPackage && (
             <div className="rounded-xl border-2 border-primary bg-primary/5 p-5 space-y-4">
               <h3 className="font-serif font-bold text-lg">Order Summary</h3>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">{selectedProduct.name}</span>
-                <span className="font-bold text-primary text-lg">${Number(selectedProduct.price).toFixed(2)}</span>
+                <span className="text-muted-foreground">{selectedPackage.name}</span>
+                <span className="font-bold text-primary text-lg">${Number(selectedPackage.price).toFixed(2)}</span>
               </div>
               <div className="text-xs text-muted-foreground border-t pt-3">
                 This order will be placed on behalf of the new member. Once admin approves, their Pro Member status will be activated and commissions will process.

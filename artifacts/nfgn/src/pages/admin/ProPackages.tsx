@@ -31,7 +31,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, RefreshCw, Package, Check, GripVertical, AlertTriangle } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, Package, Check, GripVertical, AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
@@ -72,11 +72,12 @@ interface SortableRowProps {
   position: number;
   products: ShopProduct[];
   productsLoaded: boolean;
+  savingOrder: boolean;
   onEdit: (pkg: ProPackage) => void;
   onDelete: (pkg: ProPackage) => void;
 }
 
-function SortableRow({ pkg, position, products, productsLoaded, onEdit, onDelete }: SortableRowProps) {
+function SortableRow({ pkg, position, products, productsLoaded, savingOrder, onEdit, onDelete }: SortableRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: pkg.id });
 
@@ -98,9 +99,14 @@ function SortableRow({ pkg, position, products, productsLoaded, onEdit, onDelete
             {...attributes}
             {...listeners}
             className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-muted touch-none"
-            aria-label="Drag to reorder"
+            aria-label={savingOrder ? "Saving order…" : "Drag to reorder"}
+            disabled={savingOrder}
           >
-            <GripVertical className="h-4 w-4 text-muted-foreground" />
+            {savingOrder ? (
+              <Loader2 className="h-4 w-4 text-muted-foreground animate-spin" />
+            ) : (
+              <GripVertical className="h-4 w-4 text-muted-foreground" />
+            )}
           </button>
           <span className="text-xs font-mono text-muted-foreground/60 select-none min-w-[1.25rem] text-right">
             {position}
@@ -441,6 +447,7 @@ export function AdminProPackagesPage() {
                         position={index + 1}
                         products={products}
                         productsLoaded={productsLoaded}
+                        savingOrder={savingOrder}
                         onEdit={openEdit}
                         onDelete={setDeleteTarget}
                       />

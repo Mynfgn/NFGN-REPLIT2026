@@ -240,6 +240,7 @@ export function AdminProPackagesPage() {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
+    const prevOrder = packages;
     const oldIndex = packages.findIndex((p) => p.id === active.id);
     const newIndex = packages.findIndex((p) => p.id === over.id);
     const reordered = arrayMove(packages, oldIndex, newIndex);
@@ -263,7 +264,8 @@ export function AdminProPackagesPage() {
       setPackages((prev) => prev.map((pkg, i) => ({ ...pkg, sortOrder: i + 1 })));
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") return;
-      toast.error("Failed to save order");
+      setPackages(prevOrder);
+      toast.error("Failed to save order — the previous order has been restored");
     } finally {
       setSavingOrder(false);
     }

@@ -57,6 +57,7 @@ interface ReceiptModalProps {
   onClose: () => void;
   isProMember?: boolean;
   currentMonthPv?: number;
+  allowResign?: boolean;
 }
 
 const statusColors: Record<string, string> = {
@@ -71,7 +72,7 @@ const BPP_MIN_PV = 150;
 
 function fmt(n: number) { return n.toFixed(2); }
 
-export function ReceiptModal({ order, open, onClose, isProMember, currentMonthPv }: ReceiptModalProps) {
+export function ReceiptModal({ order, open, onClose, isProMember, currentMonthPv, allowResign }: ReceiptModalProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
   const sigCanvasRef = useRef<HTMLCanvasElement>(null);
   const [copied, setCopied] = useState(false);
@@ -480,7 +481,7 @@ export function ReceiptModal({ order, open, onClose, isProMember, currentMonthPv
                   </p>
                 )}
               </div>
-              {/* Sign Now button — only if not yet signed and not currently in signing flow */}
+              {/* Sign Now — unsigned order */}
               {!displaySignature && !showSigning && (
                 <button
                   onClick={() => { setShowSigning(true); setSigEmpty(true); setSigAgreed(false); }}
@@ -489,6 +490,17 @@ export function ReceiptModal({ order, open, onClose, isProMember, currentMonthPv
                 >
                   <PenLine className="h-3.5 w-3.5" />
                   Sign Now
+                </button>
+              )}
+              {/* Re-sign — admin overwrite when signature already exists */}
+              {displaySignature && allowResign && !showSigning && (
+                <button
+                  onClick={() => { setLocalSignature(null); setLocalSignedAt(null); setShowSigning(true); setSigEmpty(true); setSigAgreed(false); clearCanvas(); }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
+                  style={{ background: "linear-gradient(135deg,#C9A84C,#e8c96a)", color: "#000", border: "none", cursor: "pointer" }}
+                >
+                  <PenLine className="h-3.5 w-3.5" />
+                  Re-sign
                 </button>
               )}
               {showSigning && (

@@ -306,6 +306,7 @@ export function AdminOrdersPage() {
         order={receiptOrder}
         open={!!receiptOrder}
         onClose={() => setReceiptOrder(null)}
+        allowResign
       />
 
       {/* Refund Modal */}

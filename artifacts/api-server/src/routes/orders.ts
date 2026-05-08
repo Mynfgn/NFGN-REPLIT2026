@@ -834,7 +834,9 @@ router.post("/orders/:id/sign", requireAuth, async (req, res) => {
   const [order] = await db.select().from(ordersTable).where(eq(ordersTable.id, id));
   if (!order) { res.status(404).json({ error: "Order not found" }); return; }
   if (order.userId !== userId && !isAdmin) { res.status(403).json({ error: "Forbidden" }); return; }
-  if (order.digitalSignature) { res.status(409).json({ error: "Already signed" }); return; }
+  // Admins can overwrite an existing signature (e.g. to countersign or correct a bad one).
+  // Regular members cannot re-sign once a signature is stored.
+  if (order.digitalSignature && !isAdmin) { res.status(409).json({ error: "Already signed" }); return; }
 
   const [updated] = await db
     .update(ordersTable)

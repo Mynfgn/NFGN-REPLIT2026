@@ -26,6 +26,7 @@ function formatSettings(s: typeof appSettingsTable.$inferSelect) {
     appIconUrl: s.appIconUrl ?? null,
     demoMode: s.demoMode,
     tickerSpeed: s.tickerSpeed,
+    tickerFontSize: s.tickerFontSize,
     welcomeMessage: s.welcomeMessage,
   };
 }
@@ -60,6 +61,7 @@ router.put("/settings", requireAdmin, async (req, res): Promise<void> => {
     appIconUrl: req.body.appIconUrl !== undefined ? (req.body.appIconUrl || null) : existing?.appIconUrl,
     demoMode: req.body.demoMode ?? existing?.demoMode,
     tickerSpeed: req.body.tickerSpeed ?? existing?.tickerSpeed ?? "medium",
+    tickerFontSize: req.body.tickerFontSize ?? existing?.tickerFontSize ?? "medium",
     welcomeMessage: req.body.welcomeMessage ?? existing?.welcomeMessage ?? "Thank you for joining our community! Let me know if there is anything I can do to help!",
   };
 

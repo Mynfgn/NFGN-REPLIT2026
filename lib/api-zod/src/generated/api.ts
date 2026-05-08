@@ -1326,6 +1326,7 @@ export const GetSettingsResponse = zod.object({
   homePageBannerSubtitle: zod.string().nullish(),
   demoMode: zod.boolean(),
   tickerSpeed: zod.enum(["slow", "medium", "fast"]),
+  tickerFontSize: zod.enum(["small", "medium", "large"]),
 });
 
 /**
@@ -1348,6 +1349,7 @@ export const UpdateSettingsBody = zod.object({
   homePageBannerSubtitle: zod.string().nullish(),
   demoMode: zod.boolean(),
   tickerSpeed: zod.enum(["slow", "medium", "fast"]),
+  tickerFontSize: zod.enum(["small", "medium", "large"]),
 });
 
 export const UpdateSettingsResponse = zod.object({
@@ -1367,6 +1369,7 @@ export const UpdateSettingsResponse = zod.object({
   homePageBannerSubtitle: zod.string().nullish(),
   demoMode: zod.boolean(),
   tickerSpeed: zod.enum(["slow", "medium", "fast"]),
+  tickerFontSize: zod.enum(["small", "medium", "large"]),
 });
 
 /**

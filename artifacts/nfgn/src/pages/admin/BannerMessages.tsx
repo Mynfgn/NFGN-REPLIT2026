@@ -23,8 +23,11 @@ interface BannerMessage {
 }
 
 type TickerSpeed = "slow" | "medium" | "fast";
+type TickerFontSize = "small" | "medium" | "large";
 
 const SPEED_LABELS: Record<TickerSpeed, string> = { slow: "Slow", medium: "Medium", fast: "Fast" };
+const FONT_SIZE_LABELS: Record<TickerFontSize, string> = { small: "Small", medium: "Medium", large: "Large" };
+const FONT_SIZE_PX: Record<TickerFontSize, number> = { small: 13, medium: 16, large: 22 };
 
 export function AdminBannerMessagesPage() {
   const { toast } = useToast();
@@ -39,7 +42,9 @@ export function AdminBannerMessagesPage() {
   const [dragOver, setDragOver] = useState<number | null>(null);
   const [highlightedId, setHighlightedId] = useState<number | null>(null);
   const [tickerSpeed, setTickerSpeed] = useState<TickerSpeed>("medium");
+  const [tickerFontSize, setTickerFontSize] = useState<TickerFontSize>("medium");
   const [savingSpeed, setSavingSpeed] = useState(false);
+  const [savingFontSize, setSavingFontSize] = useState(false);
   const rowRefs = useRef<Record<number, HTMLLIElement | null>>({});
 
   const { data: settingsData } = useGetSettings();
@@ -48,6 +53,9 @@ export function AdminBannerMessagesPage() {
   useEffect(() => {
     if (settingsData?.tickerSpeed) {
       setTickerSpeed(settingsData.tickerSpeed as TickerSpeed);
+    }
+    if (settingsData?.tickerFontSize) {
+      setTickerFontSize(settingsData.tickerFontSize as TickerFontSize);
     }
   }, [settingsData]);
 
@@ -65,6 +73,22 @@ export function AdminBannerMessagesPage() {
   }
 
   useEffect(() => { load(); }, []);
+
+  async function handleFontSizeChange(size: TickerFontSize) {
+    if (!settingsData) return;
+    const previous = tickerFontSize;
+    setTickerFontSize(size);
+    setSavingFontSize(true);
+    try {
+      await updateSettings({ data: { ...settingsData, tickerFontSize: size } });
+      toast({ title: "Saved", description: `Ticker size set to ${FONT_SIZE_LABELS[size].toLowerCase()}.` });
+    } catch {
+      setTickerFontSize(previous);
+      toast({ title: "Error", description: "Failed to save font size.", variant: "destructive" });
+    } finally {
+      setSavingFontSize(false);
+    }
+  }
 
   async function handleSpeedChange(speed: TickerSpeed) {
     if (!settingsData) return;
@@ -384,6 +408,26 @@ export function AdminBannerMessagesPage() {
 
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex items-center gap-2">
+                {savingFontSize && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+                <span className="text-xs text-muted-foreground font-medium">Size:</span>
+                <div className="flex rounded-md border overflow-hidden text-xs">
+                  {(["small", "medium", "large"] as TickerFontSize[]).map(size => (
+                    <button
+                      key={size}
+                      onClick={() => handleFontSizeChange(size)}
+                      disabled={savingFontSize || !settingsData}
+                      className={`px-3 py-1 font-medium transition-colors capitalize ${
+                        tickerFontSize === size
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-background text-muted-foreground hover:bg-muted"
+                      }`}
+                    >
+                      {FONT_SIZE_LABELS[size]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
                 {savingSpeed && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
                 <Gauge className="h-4 w-4 text-muted-foreground" />
                 <span className="text-xs text-muted-foreground font-medium">Speed:</span>
@@ -420,7 +464,7 @@ export function AdminBannerMessagesPage() {
         <CardContent className="p-0">
           {activeMessages.length > 0 ? (
             <div className="rounded-b-lg overflow-hidden">
-              <TickerBar messages={activeMessages} fontSize={15} padding="14px 0" speed={tickerSpeed} onMessageClick={handlePreviewClick} />
+              <TickerBar messages={activeMessages} fontSize={FONT_SIZE_PX[tickerFontSize]} padding="14px 0" speed={tickerSpeed} onMessageClick={handlePreviewClick} />
             </div>
           ) : (
             <div className="py-8 text-center text-muted-foreground text-sm px-4">

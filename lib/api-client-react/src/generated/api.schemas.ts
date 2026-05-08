@@ -558,6 +558,15 @@ export const AppSettingsTickerSpeed = {
   fast: "fast",
 } as const;
 
+export type AppSettingsTickerFontSize =
+  (typeof AppSettingsTickerFontSize)[keyof typeof AppSettingsTickerFontSize];
+
+export const AppSettingsTickerFontSize = {
+  small: "small",
+  medium: "medium",
+  large: "large",
+} as const;
+
 export interface AppSettings {
   companyName: string;
   /** @nullable */
@@ -582,6 +591,7 @@ export interface AppSettings {
   homePageBannerSubtitle?: string | null;
   demoMode: boolean;
   tickerSpeed: AppSettingsTickerSpeed;
+  tickerFontSize: AppSettingsTickerFontSize;
 }
 
 export interface PromoCode {

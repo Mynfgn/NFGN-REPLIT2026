@@ -5,6 +5,7 @@
  * New Face Global Network API
  * OpenAPI spec version: 0.1.0
  */
+import type { AppSettingsTickerFontSize } from "./appSettingsTickerFontSize";
 import type { AppSettingsTickerSpeed } from "./appSettingsTickerSpeed";
 
 export interface AppSettings {
@@ -31,4 +32,5 @@ export interface AppSettings {
   homePageBannerSubtitle?: string | null;
   demoMode: boolean;
   tickerSpeed: AppSettingsTickerSpeed;
+  tickerFontSize: AppSettingsTickerFontSize;
 }

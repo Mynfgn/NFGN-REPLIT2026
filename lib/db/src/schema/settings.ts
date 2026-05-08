@@ -30,6 +30,7 @@ export const appSettingsTable = pgTable("app_settings", {
   appIconUrl: text("app_icon_url"),
   demoMode: boolean("demo_mode").notNull().default(true),
   tickerSpeed: text("ticker_speed").notNull().default("medium"),
+  tickerFontSize: text("ticker_font_size").notNull().default("medium"),
   welcomeMessage: text("welcome_message").notNull().default("Thank you for joining our community! Let me know if there is anything I can do to help!"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),

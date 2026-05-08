@@ -2717,6 +2717,9 @@ components:
         tickerSpeed:
           type: string
           enum: [slow, medium, fast]
+        tickerFontSize:
+          type: string
+          enum: [small, medium, large]
       required:
         - companyName
         - contactEmail
@@ -2727,6 +2730,7 @@ components:
         - registrationPackagePrice
         - demoMode
         - tickerSpeed
+        - tickerFontSize
 
     PromoCode:
       type: object

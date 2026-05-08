@@ -8,6 +8,7 @@
 
 export * from "./addToCartBody";
 export * from "./appSettings";
+export * from "./appSettingsTickerFontSize";
 export * from "./appSettingsTickerSpeed";
 export * from "./authResponse";
 export * from "./booking";

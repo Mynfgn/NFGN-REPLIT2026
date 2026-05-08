@@ -134,7 +134,7 @@ function ShopTickerBar() {
     queryFn: () => customFetch("/api/banners").then(r => r.json()),
     staleTime: 60000,
   });
-  const { data: settings } = useQuery<{ tickerSpeed?: string }>({
+  const { data: settings } = useQuery<{ tickerSpeed?: string; tickerFontSize?: string }>({
     queryKey: ["/api/settings"],
     queryFn: () => customFetch("/api/settings").then(r => r.json()),
     staleTime: 60000,
@@ -147,13 +147,15 @@ function ShopTickerBar() {
     : ["Check back soon for our latest news and promotions!"];
 
   const speed = banners.length > 0 ? settings?.tickerSpeed : "slow";
+  const fontSizePx: Record<string, number> = { small: 14, medium: 20, large: 28 };
+  const fontSize = fontSizePx[settings?.tickerFontSize ?? "medium"] ?? 20;
   const role = parseJwtRole(token);
   const isAdmin = role ? ADMIN_ROLES.has(role) : false;
   const speedLabel = TICKER_SPEED_LABELS[speed ?? "medium"] ?? speed;
 
   return (
     <div style={{ position: "relative" }}>
-      <TickerBar messages={messages} speed={speed} />
+      <TickerBar messages={messages} speed={speed} fontSize={fontSize} />
       {isAdmin && speed && (
         <a
           href="/admin/banner-messages"

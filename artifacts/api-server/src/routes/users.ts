@@ -32,8 +32,11 @@ function formatUser(user: typeof usersTable.$inferSelect, sponsorName?: string) 
     payoutMethod: user.payoutMethod ?? "bank",
     payoutPaypalEmail: user.payoutPaypalEmail ?? null,
     payoutCashAppHandle: user.payoutCashAppHandle ?? null,
+    addressLine1: user.addressLine1 ?? null,
+    addressLine2: user.addressLine2 ?? null,
     city: user.city ?? null,
     state: user.state ?? null,
+    zip: user.zip ?? null,
     country: user.country ?? null,
     pvAdjustment: user.pvAdjustment ?? 0,
     gvAdjustment: user.gvAdjustment ?? 0,
@@ -106,7 +109,7 @@ router.patch("/users/:id", requireAuth, async (req, res): Promise<void> => {
   const {
     firstName, lastName, phone, avatar, role, status,
     gender, dateOfBirth,
-    city, state, country,
+    addressLine1, addressLine2, city, state, zip, country,
     bankName, bankAccountNumber, bankRoutingNumber, bankAccountType,
     payoutMethod, payoutPaypalEmail, payoutCashAppHandle,
     referralCode,
@@ -137,8 +140,11 @@ router.patch("/users/:id", requireAuth, async (req, res): Promise<void> => {
   if (payoutMethod !== undefined) updateData.payoutMethod = payoutMethod;
   if (payoutPaypalEmail !== undefined) updateData.payoutPaypalEmail = payoutPaypalEmail;
   if (payoutCashAppHandle !== undefined) updateData.payoutCashAppHandle = payoutCashAppHandle;
+  if (addressLine1 !== undefined) updateData.addressLine1 = addressLine1 || null;
+  if (addressLine2 !== undefined) updateData.addressLine2 = addressLine2 || null;
   if (city !== undefined) updateData.city = city || null;
   if (state !== undefined) updateData.state = state || null;
+  if (zip !== undefined) updateData.zip = zip || null;
   if (country !== undefined) updateData.country = country || null;
   if (isSportsPlayer !== undefined) updateData.isSportsPlayer = isSportsPlayer;
   if (sportsDateOfBirth !== undefined) updateData.sportsDateOfBirth = sportsDateOfBirth;

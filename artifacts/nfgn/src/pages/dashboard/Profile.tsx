@@ -223,8 +223,11 @@ export function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+  const [addressLine1, setAddressLine1] = useState("");
+  const [addressLine2, setAddressLine2] = useState("");
   const [city, setCity]       = useState("");
   const [addrState, setAddrState] = useState("");
+  const [zip, setZip] = useState("");
   const [country, setCountry] = useState("");
   const [addrSaving, setAddrSaving] = useState(false);
   const [addrMsg, setAddrMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -293,8 +296,11 @@ export function ProfilePage() {
       setPayoutMethod((user as any).payoutMethod ?? "bank");
       setPayoutPaypalEmail((user as any).payoutPaypalEmail ?? "");
       setPayoutCashAppHandle((user as any).payoutCashAppHandle ?? "");
+      setAddressLine1((user as any).addressLine1 ?? "");
+      setAddressLine2((user as any).addressLine2 ?? "");
       setCity((user as any).city ?? "");
       setAddrState((user as any).state ?? "");
+      setZip((user as any).zip ?? "");
       setCountry((user as any).country ?? "");
       setBapEnabled((user as any).isBookAProProvider ?? false);
       setBapCategory((user as any).bookAProCategory ?? "");
@@ -335,8 +341,15 @@ export function ProfilePage() {
   async function handleSaveAddress() {
     setAddrSaving(true); setAddrMsg(null);
     try {
-      await patchUser({ city: city.trim() || null, state: addrState.trim() || null, country: country.trim() || null });
-      setAddrMsg({ type: "success", text: "Mailing address saved." });
+      await patchUser({
+        addressLine1: addressLine1.trim() || null,
+        addressLine2: addressLine2.trim() || null,
+        city: city.trim() || null,
+        state: addrState.trim() || null,
+        zip: zip.trim() || null,
+        country: country.trim() || null,
+      });
+      setAddrMsg({ type: "success", text: "Address saved." });
     } catch (e: any) {
       setAddrMsg({ type: "error", text: e.message });
     } finally { setAddrSaving(false); }
@@ -780,16 +793,24 @@ export function ProfilePage() {
         </CardContent>
       </Card>
 
-      {/* Mailing Address */}
+      {/* Mailing / Shipping Address */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <MapPin className="h-4 w-4 text-primary" />
-            Mailing Address
+            Mailing &amp; Shipping Address
           </CardTitle>
-          <CardDescription>Your city and country appear on the Community World Map for your upline and admin</CardDescription>
+          <CardDescription>Used for Community World Map, mailing correspondence, and pre-filling your shipping address at checkout</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="space-y-1.5">
+            <Label>Address Line 1</Label>
+            <Input value={addressLine1} onChange={(e) => setAddressLine1(e.target.value)} placeholder="Street address, P.O. box" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Address Line 2 <span className="text-muted-foreground font-normal">(optional)</span></Label>
+            <Input value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)} placeholder="Apt, suite, unit, building, floor, etc." />
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>City</Label>
@@ -800,13 +821,19 @@ export function ProfilePage() {
               <Input value={addrState} onChange={(e) => setAddrState(e.target.value)} placeholder="e.g. Georgia" />
             </div>
           </div>
-          <div className="space-y-1.5">
-            <Label>Country</Label>
-            <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="e.g. United States" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>ZIP / Postal Code</Label>
+              <Input value={zip} onChange={(e) => setZip(e.target.value)} placeholder="e.g. 30301" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Country</Label>
+              <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="e.g. United States" />
+            </div>
           </div>
           <div className="rounded-lg bg-muted/50 border px-4 py-3 text-xs text-muted-foreground flex items-start gap-2">
             <MapPin className="h-3.5 w-3.5 flex-shrink-0 mt-0.5 text-primary" />
-            <span>This is used only for the Community World Map — it is never shared publicly. Your shipping address is entered separately at checkout.</span>
+            <span>Your city and country power the Community World Map. Your full address may be used for mailing and pre-filled at checkout for convenience.</span>
           </div>
           <StatusMessage msg={addrMsg} />
           <Button onClick={handleSaveAddress} disabled={addrSaving} className="gap-2">

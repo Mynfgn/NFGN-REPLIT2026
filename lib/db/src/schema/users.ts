@@ -36,8 +36,11 @@ export const usersTable = pgTable("users", {
   pvAdjustment: integer("pv_adjustment").notNull().default(0),
   gvAdjustment: integer("gv_adjustment").notNull().default(0),
 
+  addressLine1: text("address_line1"),
+  addressLine2: text("address_line2"),
   city: text("city"),
   state: text("state"),
+  zip: text("zip"),
   country: text("country").default("United States"),
 
   organizationName: text("organization_name"),

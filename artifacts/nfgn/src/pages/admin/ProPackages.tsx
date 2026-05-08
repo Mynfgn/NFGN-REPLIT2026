@@ -31,7 +31,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, RefreshCw, Package, Check, GripVertical, AlertTriangle, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, Package, Check, GripVertical, AlertTriangle, Loader2, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
@@ -75,9 +75,10 @@ interface SortableRowProps {
   savingOrder: boolean;
   onEdit: (pkg: ProPackage) => void;
   onDelete: (pkg: ProPackage) => void;
+  onFixLink: (pkg: ProPackage) => void;
 }
 
-function SortableRow({ pkg, position, savingOrder, onEdit, onDelete }: SortableRowProps) {
+function SortableRow({ pkg, position, savingOrder, onEdit, onDelete, onFixLink }: SortableRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: pkg.id });
 
@@ -169,10 +170,20 @@ function SortableRow({ pkg, position, savingOrder, onEdit, onDelete }: SortableR
             {pkg.productName}
           </a>
         ) : pkg.productId != null ? (
-          <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-300 rounded px-2 py-0.5">
-            <AlertTriangle className="h-3 w-3 flex-shrink-0" />
-            Stale link (ID {pkg.productId})
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-300 rounded px-2 py-0.5">
+              <AlertTriangle className="h-3 w-3 flex-shrink-0" />
+              Stale link (ID {pkg.productId})
+            </span>
+            <button
+              onClick={() => onFixLink(pkg)}
+              className="inline-flex items-center gap-0.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded px-1.5 py-0.5 hover:bg-blue-100 hover:border-blue-300 transition-colors"
+              title="Fix stale product link"
+            >
+              <Link2 className="h-3 w-3 flex-shrink-0" />
+              Fix
+            </button>
+          </div>
         ) : (
           <span className="text-xs text-muted-foreground italic">No product linked</span>
         )}
@@ -207,6 +218,9 @@ export function AdminProPackagesPage() {
   const [deleteTarget, setDeleteTarget] = useState<ProPackage | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [savingOrder, setSavingOrder] = useState(false);
+  const [fixLinkTarget, setFixLinkTarget] = useState<ProPackage | null>(null);
+  const [fixLinkProductId, setFixLinkProductId] = useState<string>("");
+  const [fixLinkSaving, setFixLinkSaving] = useState(false);
   const reorderAbortRef = useRef<AbortController | null>(null);
 
   const sensors = useSensors(
@@ -363,6 +377,34 @@ export function AdminProPackagesPage() {
     }
   };
 
+  const openFixLink = (pkg: ProPackage) => {
+    setFixLinkTarget(pkg);
+    setFixLinkProductId("");
+  };
+
+  const handleFixLink = async () => {
+    if (!fixLinkTarget) return;
+    setFixLinkSaving(true);
+    try {
+      const productId = fixLinkProductId !== "" && fixLinkProductId !== "none"
+        ? parseInt(fixLinkProductId)
+        : null;
+      const res = await customFetch(`/api/pro-packages/${fixLinkTarget.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId }),
+      });
+      if (!res.ok) throw new Error("Failed to save");
+      toast.success(productId ? "Product link updated" : "Stale link cleared");
+      setFixLinkTarget(null);
+      fetchPackages();
+    } catch {
+      toast.error("Failed to update product link");
+    } finally {
+      setFixLinkSaving(false);
+    }
+  };
+
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
@@ -455,6 +497,7 @@ export function AdminProPackagesPage() {
                         savingOrder={savingOrder}
                         onEdit={openEdit}
                         onDelete={setDeleteTarget}
+                        onFixLink={openFixLink}
                       />
                     ))}
                   </TableBody>
@@ -583,6 +626,49 @@ export function AdminProPackagesPage() {
             </Button>
             <Button onClick={handleSave} disabled={saving}>
               {saving ? "Saving..." : editPkg ? "Save Changes" : "Create Package"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!fixLinkTarget} onOpenChange={(o) => !o && setFixLinkTarget(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Link2 className="h-4 w-4 text-blue-600" />
+              Fix Stale Product Link
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-sm text-muted-foreground">
+              The product previously linked to <span className="font-semibold text-foreground">{fixLinkTarget?.name}</span> no longer exists. Select a replacement or clear the link.
+            </p>
+            <div className="space-y-1.5">
+              <Label>Linked Shop Product</Label>
+              <Select
+                value={fixLinkProductId !== "" ? fixLinkProductId : "none"}
+                onValueChange={(val) => setFixLinkProductId(val === "none" ? "" : val)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a product…" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Clear link (use price matching)</SelectItem>
+                  {products.map((p) => (
+                    <SelectItem key={p.id} value={String(p.id)}>
+                      {p.name} (${Number(p.price).toFixed(2)}){p.isProPackage ? " ★" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFixLinkTarget(null)} disabled={fixLinkSaving}>
+              Cancel
+            </Button>
+            <Button onClick={handleFixLink} disabled={fixLinkSaving}>
+              {fixLinkSaving ? "Saving…" : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>

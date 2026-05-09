@@ -5,7 +5,9 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  DragOverlay,
   type DragEndEvent,
+  type DragStartEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -79,37 +81,26 @@ interface SortableRowProps {
   onFixLink: (pkg: ProPackage) => void;
 }
 
-function SortableRow({ pkg, position, savingOrder, isSavingEdit, onEdit, onDelete, onFixLink }: SortableRowProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: pkg.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.6 : 1,
-    zIndex: isDragging ? 10 : undefined,
-    boxShadow: isDragging ? "0 8px 24px 0 rgba(201,168,76,0.35), 0 2px 8px 0 rgba(0,0,0,0.4)" : undefined,
+function RowContent({ pkg, position, savingOrder, onEdit, onDelete, onFixLink, dragHandleProps }: {
+  pkg: ProPackage;
+  position: number;
+  savingOrder: boolean;
+  onEdit: (pkg: ProPackage) => void;
+  onDelete: (pkg: ProPackage) => void;
+  onFixLink: (pkg: ProPackage) => void;
+  dragHandleProps?: {
+    attributes: ReturnType<typeof useSortable>["attributes"];
+    listeners: ReturnType<typeof useSortable>["listeners"];
   };
-
+}) {
   const savings = (pkg.originalPrice - pkg.price).toFixed(2);
-
-  const rowClass = isDragging
-    ? "ring-2 ring-[#C9A84C] ring-inset bg-[#C9A84C]/10 rounded"
-    : isSavingEdit
-      ? "ring-2 ring-[#C9A84C] ring-inset bg-[#C9A84C]/5 transition-colors"
-      : undefined;
-
   return (
-    <TableRow
-      ref={setNodeRef}
-      style={style}
-      className={rowClass}
-    >
+    <>
       <TableCell>
         <div className="flex items-center gap-1.5">
           <button
-            {...attributes}
-            {...listeners}
+            {...(dragHandleProps?.attributes ?? {})}
+            {...(dragHandleProps?.listeners ?? {})}
             className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-muted touch-none"
             aria-label={savingOrder ? "Saving order…" : "Drag to reorder"}
             disabled={savingOrder}
@@ -216,6 +207,40 @@ function SortableRow({ pkg, position, savingOrder, isSavingEdit, onEdit, onDelet
           </Button>
         </div>
       </TableCell>
+    </>
+  );
+}
+
+function SortableRow({ pkg, position, savingOrder, isSavingEdit, onEdit, onDelete, onFixLink }: SortableRowProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: pkg.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  const rowClass = isDragging
+    ? "opacity-0"
+    : isSavingEdit
+      ? "ring-2 ring-[#C9A84C] ring-inset bg-[#C9A84C]/5 transition-colors"
+      : undefined;
+
+  return (
+    <TableRow
+      ref={setNodeRef}
+      style={style}
+      className={rowClass}
+    >
+      <RowContent
+        pkg={pkg}
+        position={position}
+        savingOrder={savingOrder}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onFixLink={onFixLink}
+        dragHandleProps={{ attributes, listeners }}
+      />
     </TableRow>
   );
 }
@@ -237,6 +262,7 @@ export function AdminProPackagesPage() {
   const [fixLinkTarget, setFixLinkTarget] = useState<ProPackage | null>(null);
   const [fixLinkProductId, setFixLinkProductId] = useState<string>("");
   const [fixLinkSaving, setFixLinkSaving] = useState(false);
+  const [activeId, setActiveId] = useState<number | null>(null);
   const reorderAbortRef = useRef<AbortController | null>(null);
   const serverConfirmedOrderRef = useRef<ProPackage[]>([]);
 
@@ -283,7 +309,16 @@ export function AdminProPackagesPage() {
     fetchProducts();
   }, []);
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as number);
+  };
+
+  const handleDragCancel = () => {
+    setActiveId(null);
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
+    setActiveId(null);
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
@@ -530,7 +565,9 @@ export function AdminProPackagesPage() {
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
+              onDragCancel={handleDragCancel}
             >
               <SortableContext
                 items={packages.map((p) => p.id)}
@@ -566,6 +603,32 @@ export function AdminProPackagesPage() {
                   </TableBody>
                 </Table>
               </SortableContext>
+              <DragOverlay dropAnimation={{ duration: 180, easing: "ease" }}>
+                {activeId != null ? (() => {
+                  const activePkg = packages.find((p) => p.id === activeId);
+                  const activePosition = packages.findIndex((p) => p.id === activeId) + 1;
+                  if (!activePkg) return null;
+                  return (
+                    <table style={{ borderCollapse: "collapse", width: "100%" }}>
+                      <tbody>
+                        <TableRow
+                          className="ring-2 ring-[#C9A84C] ring-inset bg-[#C9A84C]/10 rounded shadow-[0_8px_24px_0_rgba(201,168,76,0.35),0_2px_8px_0_rgba(0,0,0,0.4)]"
+                          style={{ display: "table-row" }}
+                        >
+                          <RowContent
+                            pkg={activePkg}
+                            position={activePosition}
+                            savingOrder={savingOrder}
+                            onEdit={openEdit}
+                            onDelete={setDeleteTarget}
+                            onFixLink={openFixLink}
+                          />
+                        </TableRow>
+                      </tbody>
+                    </table>
+                  );
+                })() : null}
+              </DragOverlay>
             </DndContext>
           )}
         </CardContent>

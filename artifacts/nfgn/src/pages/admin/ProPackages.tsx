@@ -73,12 +73,13 @@ interface SortableRowProps {
   pkg: ProPackage;
   position: number;
   savingOrder: boolean;
+  isSavingEdit: boolean;
   onEdit: (pkg: ProPackage) => void;
   onDelete: (pkg: ProPackage) => void;
   onFixLink: (pkg: ProPackage) => void;
 }
 
-function SortableRow({ pkg, position, savingOrder, onEdit, onDelete, onFixLink }: SortableRowProps) {
+function SortableRow({ pkg, position, savingOrder, isSavingEdit, onEdit, onDelete, onFixLink }: SortableRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: pkg.id });
 
@@ -92,11 +93,17 @@ function SortableRow({ pkg, position, savingOrder, onEdit, onDelete, onFixLink }
 
   const savings = (pkg.originalPrice - pkg.price).toFixed(2);
 
+  const rowClass = isDragging
+    ? "ring-2 ring-[#C9A84C] ring-inset bg-[#C9A84C]/10 rounded"
+    : isSavingEdit
+      ? "ring-2 ring-[#C9A84C] ring-inset bg-[#C9A84C]/5 transition-colors"
+      : undefined;
+
   return (
     <TableRow
       ref={setNodeRef}
       style={style}
-      className={isDragging ? "ring-2 ring-[#C9A84C] ring-inset bg-[#C9A84C]/10 rounded" : undefined}
+      className={rowClass}
     >
       <TableCell>
         <div className="flex items-center gap-1.5">
@@ -221,6 +228,7 @@ export function AdminProPackagesPage() {
   const [editPkg, setEditPkg] = useState<ProPackage | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [savingEditId, setSavingEditId] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ProPackage | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [savingOrder, setSavingOrder] = useState(false);
@@ -362,6 +370,7 @@ export function AdminProPackagesPage() {
       .filter(Boolean);
 
     setSaving(true);
+    if (editPkg) setSavingEditId(editPkg.id);
     try {
       const body = {
         name: form.name.trim(),
@@ -398,6 +407,7 @@ export function AdminProPackagesPage() {
       toast.error("Failed to save package");
     } finally {
       setSaving(false);
+      setSavingEditId(null);
     }
   };
 
@@ -547,6 +557,7 @@ export function AdminProPackagesPage() {
                         pkg={pkg}
                         position={index + 1}
                         savingOrder={savingOrder}
+                        isSavingEdit={savingEditId === pkg.id}
                         onEdit={openEdit}
                         onDelete={setDeleteTarget}
                         onFixLink={openFixLink}

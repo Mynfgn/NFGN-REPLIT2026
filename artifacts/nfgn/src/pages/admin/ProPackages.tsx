@@ -31,7 +31,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, RefreshCw, Package, Check, GripVertical, AlertTriangle, Loader2, Link2 } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, Package, Check, GripVertical, AlertTriangle, Loader2, Link2, Save, Undo2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
@@ -218,6 +218,8 @@ export function AdminProPackagesPage() {
   const [deleteTarget, setDeleteTarget] = useState<ProPackage | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [savingOrder, setSavingOrder] = useState(false);
+  const [hasPendingReorder, setHasPendingReorder] = useState(false);
+  const [orderSaveError, setOrderSaveError] = useState<string | null>(null);
   const [fixLinkTarget, setFixLinkTarget] = useState<ProPackage | null>(null);
   const [fixLinkProductId, setFixLinkProductId] = useState<string>("");
   const [fixLinkSaving, setFixLinkSaving] = useState(false);
@@ -236,6 +238,8 @@ export function AdminProPackagesPage() {
       const data: ProPackage[] = await res.json();
       setPackages(data);
       serverConfirmedOrderRef.current = data;
+      setHasPendingReorder(false);
+      setOrderSaveError(null);
     } catch {
       toast.error("Failed to load pro packages");
     } finally {
@@ -265,7 +269,7 @@ export function AdminProPackagesPage() {
     fetchProducts();
   }, []);
 
-  const handleDragEnd = async (event: DragEndEvent) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
@@ -273,14 +277,19 @@ export function AdminProPackagesPage() {
     const newIndex = packages.findIndex((p) => p.id === over.id);
     const reordered = arrayMove(packages, oldIndex, newIndex);
     setPackages(reordered);
+    setHasPendingReorder(true);
+    setOrderSaveError(null);
+  };
 
+  const handleSaveOrder = async () => {
     reorderAbortRef.current?.abort();
     reorderAbortRef.current = new AbortController();
     const { signal } = reorderAbortRef.current;
 
     setSavingOrder(true);
+    setOrderSaveError(null);
     try {
-      const order = reordered.map((pkg, index) => ({ id: pkg.id, sortOrder: index + 1 }));
+      const order = packages.map((pkg, index) => ({ id: pkg.id, sortOrder: index + 1 }));
       const res = await customFetch("/api/pro-packages/reorder", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -288,17 +297,23 @@ export function AdminProPackagesPage() {
         signal,
       });
       if (!res.ok) throw new Error("Failed to save order");
-      toast.success("Order saved");
-      const confirmed = reordered.map((pkg, i) => ({ ...pkg, sortOrder: i + 1 }));
+      const confirmed = packages.map((pkg, i) => ({ ...pkg, sortOrder: i + 1 }));
       setPackages(confirmed);
       serverConfirmedOrderRef.current = confirmed;
+      setHasPendingReorder(false);
+      toast.success("Order saved");
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") return;
-      setPackages(serverConfirmedOrderRef.current);
-      toast.error("Failed to save order — the previous order has been restored");
+      setOrderSaveError("Failed to save — please try again or undo.");
     } finally {
       setSavingOrder(false);
     }
+  };
+
+  const handleUndoOrder = () => {
+    setPackages(serverConfirmedOrderRef.current);
+    setHasPendingReorder(false);
+    setOrderSaveError(null);
   };
 
   const openCreate = () => {
@@ -433,17 +448,45 @@ export function AdminProPackagesPage() {
             Manage the pro registration tiers shown on the Shop page. Drag rows to reorder.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {savingOrder && (
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              <RefreshCw className="h-3 w-3 animate-spin" /> Saving order…
-            </span>
+        <div className="flex items-center gap-2 flex-wrap justify-end">
+          {hasPendingReorder && (
+            <div className={`flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm ${orderSaveError ? "border-destructive/40 bg-destructive/10 text-destructive" : "border-[#C9A84C]/40 bg-[#C9A84C]/10 text-[#C9A84C]"}`}>
+              {orderSaveError ? (
+                <XCircle className="h-4 w-4 flex-shrink-0" />
+              ) : null}
+              <span className="font-medium">
+                {orderSaveError ?? "Order changed"}
+              </span>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 px-2 text-xs font-semibold text-[#C9A84C] hover:bg-[#C9A84C]/20 hover:text-[#C9A84C]"
+                onClick={handleUndoOrder}
+                disabled={savingOrder}
+              >
+                <Undo2 className="h-3 w-3 mr-1" />
+                Undo
+              </Button>
+              <Button
+                size="sm"
+                className="h-6 px-2 text-xs font-semibold bg-[#C9A84C] text-black hover:bg-[#C9A84C]/90"
+                onClick={handleSaveOrder}
+                disabled={savingOrder}
+              >
+                {savingOrder ? (
+                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                ) : (
+                  <Save className="h-3 w-3 mr-1" />
+                )}
+                {savingOrder ? "Saving…" : "Save"}
+              </Button>
+            </div>
           )}
-          <Button variant="outline" size="sm" onClick={fetchPackages} disabled={loading}>
+          <Button variant="outline" size="sm" onClick={fetchPackages} disabled={loading || savingOrder}>
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
-          <Button size="sm" onClick={openCreate}>
+          <Button size="sm" onClick={openCreate} disabled={savingOrder}>
             <Plus className="h-4 w-4 mr-2" />
             Add Package
           </Button>

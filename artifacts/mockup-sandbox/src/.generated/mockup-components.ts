@@ -4,7 +4,7 @@ export const modules: ModuleMap = {
   "./components/mockups/cashapp-checkout/OptionA.tsx": () => import("../components/mockups/cashapp-checkout/OptionA.tsx"),
   "./components/mockups/cashapp-checkout/OptionB.tsx": () => import("../components/mockups/cashapp-checkout/OptionB.tsx"),
   "./components/mockups/nfgn-home/Redesign.tsx": () => import("../components/mockups/nfgn-home/Redesign.tsx"),
-  "./components/mockups/nfgn-shop/ShopRedesign.tsx": () => import("../components/mockups/nfgn-shop/ShopRedesign.tsx"),
   "./components/mockups/nfgn-theme-compare/Dark.tsx": () => import("../components/mockups/nfgn-theme-compare/Dark.tsx"),
-  "./components/mockups/nfgn-theme-compare/Light.tsx": () => import("../components/mockups/nfgn-theme-compare/Light.tsx")
+  "./components/mockups/nfgn-theme-compare/Light.tsx": () => import("../components/mockups/nfgn-theme-compare/Light.tsx"),
+  "./components/mockups/nfgn-shop/ShopRedesign.tsx": () => import("../components/mockups/nfgn-shop/ShopRedesign.tsx")
 };

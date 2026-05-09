@@ -36,6 +36,12 @@ import {
 import { Plus, Pencil, Trash2, RefreshCw, Package, Check, GripVertical, AlertTriangle, Loader2, Link2, Save, Undo2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ProPackage {
   id: number;
@@ -81,10 +87,11 @@ interface SortableRowProps {
   onFixLink: (pkg: ProPackage) => void;
 }
 
-function RowContent({ pkg, position, savingOrder, onEdit, onDelete, onFixLink, dragHandleProps }: {
+function RowContent({ pkg, position, savingOrder, isDragging, onEdit, onDelete, onFixLink, dragHandleProps }: {
   pkg: ProPackage;
   position: number;
   savingOrder: boolean;
+  isDragging?: boolean;
   onEdit: (pkg: ProPackage) => void;
   onDelete: (pkg: ProPackage) => void;
   onFixLink: (pkg: ProPackage) => void;
@@ -98,19 +105,28 @@ function RowContent({ pkg, position, savingOrder, onEdit, onDelete, onFixLink, d
     <>
       <TableCell>
         <div className="flex items-center gap-1.5">
-          <button
-            {...(dragHandleProps?.attributes ?? {})}
-            {...(dragHandleProps?.listeners ?? {})}
-            className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-muted touch-none"
-            aria-label={savingOrder ? "Saving order…" : "Drag to reorder"}
-            disabled={savingOrder}
-          >
-            {savingOrder ? (
-              <Loader2 className="h-4 w-4 text-muted-foreground animate-spin" />
-            ) : (
-              <GripVertical className="h-4 w-4 text-muted-foreground" />
-            )}
-          </button>
+          <TooltipProvider delayDuration={300}>
+            <Tooltip open={isDragging || savingOrder ? false : undefined}>
+              <TooltipTrigger asChild>
+                <button
+                  {...(dragHandleProps?.attributes ?? {})}
+                  {...(dragHandleProps?.listeners ?? {})}
+                  className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-muted touch-none"
+                  aria-label={savingOrder ? "Saving order…" : "Drag to reorder"}
+                  disabled={savingOrder}
+                >
+                  {savingOrder ? (
+                    <Loader2 className="h-4 w-4 text-muted-foreground animate-spin" />
+                  ) : (
+                    <GripVertical className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="text-xs">
+                Drag to reorder
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <span className="text-xs font-mono text-muted-foreground/60 select-none min-w-[1.25rem] text-right">
             {position}
           </span>
@@ -236,6 +252,7 @@ function SortableRow({ pkg, position, savingOrder, isSavingEdit, onEdit, onDelet
         pkg={pkg}
         position={position}
         savingOrder={savingOrder}
+        isDragging={isDragging}
         onEdit={onEdit}
         onDelete={onDelete}
         onFixLink={onFixLink}

@@ -68,7 +68,17 @@ router.post("/pro-packages", requireAdmin, async (req, res): Promise<void> => {
     })
     .returning();
 
-  res.status(201).json(serializePackage(pkg));
+  let product: { name: string; slug: string; status: string } | null = null;
+  if (pkg.productId != null) {
+    const [row] = await db
+      .select({ name: productsTable.name, slug: productsTable.slug, status: productsTable.status })
+      .from(productsTable)
+      .where(eq(productsTable.id, pkg.productId))
+      .limit(1);
+    product = row ?? null;
+  }
+
+  res.status(201).json(serializePackage(pkg, product));
 });
 
 router.put("/pro-packages/reorder", requireAdmin, async (req, res): Promise<void> => {

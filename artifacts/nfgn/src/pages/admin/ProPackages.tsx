@@ -190,7 +190,12 @@ function SortableRow({ pkg, position, savingOrder, onEdit, onDelete, onFixLink }
       </TableCell>
       <TableCell className="text-right">
         <div className="flex justify-end gap-2">
-          <Button variant="ghost" size="icon" onClick={() => onEdit(pkg)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onEdit(pkg)}
+            disabled={savingOrder}
+          >
             <Pencil className="h-4 w-4" />
           </Button>
           <Button
@@ -198,6 +203,7 @@ function SortableRow({ pkg, position, savingOrder, onEdit, onDelete, onFixLink }
             size="icon"
             className="text-destructive hover:text-destructive"
             onClick={() => onDelete(pkg)}
+            disabled={savingOrder}
           >
             <Trash2 className="h-4 w-4" />
           </Button>

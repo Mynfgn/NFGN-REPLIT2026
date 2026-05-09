@@ -971,56 +971,77 @@ export function CartDrawer() {
                     const isRemoving = removingId === item.id;
                     const displayQty = optimisticQtys[item.id] ?? item.quantity;
                     const displayLineTotal = item.price * displayQty;
+                    const isDonationItem = item.isDonation;
+                    const donationBelowMin = isDonationItem && item.donationMinAmount != null && item.price < item.donationMinAmount;
                     return (
-                    <div key={item.id} className={`flex gap-3 p-3 rounded-xl transition-opacity ${isRemoving ? "opacity-40 pointer-events-none" : ""}`} style={{ background: "#faf8f3", border: "1px solid #e8dfc8" }}>
-                      <div className="h-[76px] w-[68px] flex-shrink-0 rounded-lg overflow-hidden" style={{ background: "linear-gradient(135deg, #f5f0e8, #ede5d0)", border: "2px solid #e0d4b8" }}>
-                        {resolveImageSrc(item.productImage) ? (
-                          <img src={resolveImageSrc(item.productImage)!} alt={item.productName} className="h-full w-full object-cover" />
-                        ) : (
-                          <div className="h-full w-full flex items-center justify-center font-black text-xs" style={{ color: "#C9A84C" }}>NFGN</div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm leading-snug">{item.productName}</p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <p className="font-bold text-sm" style={{ color: "#C9A84C" }}>${item.price.toFixed(2)}</p>
-                          {(item.cvPerUnit ?? 0) > 0 && (
-                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(201,168,76,0.12)", color: "#C9A84C", border: "1px solid rgba(201,168,76,0.25)" }}>
-                              {item.cvPerUnit} CV
-                            </span>
+                    <div key={item.id} className={`flex flex-col gap-2 transition-opacity ${isRemoving ? "opacity-40 pointer-events-none" : ""}`}>
+                      <div className="flex gap-3 p-3 rounded-xl" style={{ background: "#faf8f3", border: `1px solid ${donationBelowMin ? "#fca5a5" : "#e8dfc8"}` }}>
+                        <div className="h-[76px] w-[68px] flex-shrink-0 rounded-lg overflow-hidden" style={{ background: "linear-gradient(135deg, #f5f0e8, #ede5d0)", border: "2px solid #e0d4b8" }}>
+                          {resolveImageSrc(item.productImage) ? (
+                            <img src={resolveImageSrc(item.productImage)!} alt={item.productName} className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center font-black text-xs" style={{ color: "#C9A84C" }}>NFGN</div>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 mt-2">
-                          <button
-                            onClick={() => handleQty(item.id, -1, item.quantity)}
-                            disabled={isRemoving || displayQty <= 1}
-                            className="h-7 w-7 rounded-lg flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-bold"
-                            style={{ background: "#fff", border: "1.5px solid #C9A84C", color: "#C9A84C" }}
-                          >
-                            <Minus className="h-3 w-3" />
-                          </button>
-                          <span className="text-sm font-bold w-6 text-center">{displayQty}</span>
-                          <button
-                            onClick={() => handleQty(item.id, 1, item.quantity)}
-                            disabled={isRemoving}
-                            className="h-7 w-7 rounded-lg flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-bold"
-                            style={{ background: "#C9A84C", color: "#000" }}
-                          >
-                            <Plus className="h-3 w-3" />
-                          </button>
-                          <span className="ml-auto text-sm font-bold" style={{ color: "#0a0a0a" }}>${displayLineTotal.toFixed(2)}</span>
-                          <button
-                            onClick={() => handleRemove(item.id)}
-                            disabled={isRemoving}
-                            className="text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                          >
-                            {isRemoving
-                              ? <Loader2 className="h-4 w-4 animate-spin" />
-                              : <Trash2 className="h-4 w-4" />
-                            }
-                          </button>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm leading-snug">{item.productName}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <p className="font-bold text-sm" style={{ color: "#C9A84C" }}>${item.price.toFixed(2)}</p>
+                            {isDonationItem && (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(201,168,76,0.12)", color: "#C9A84C", border: "1px solid rgba(201,168,76,0.25)" }}>
+                                Gift / Donation
+                              </span>
+                            )}
+                            {(item.cvPerUnit ?? 0) > 0 && (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(201,168,76,0.12)", color: "#C9A84C", border: "1px solid rgba(201,168,76,0.25)" }}>
+                                {item.cvPerUnit} CV
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 mt-2">
+                            {!isDonationItem && (
+                              <>
+                                <button
+                                  onClick={() => handleQty(item.id, -1, item.quantity)}
+                                  disabled={isRemoving || displayQty <= 1}
+                                  className="h-7 w-7 rounded-lg flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-bold"
+                                  style={{ background: "#fff", border: "1.5px solid #C9A84C", color: "#C9A84C" }}
+                                >
+                                  <Minus className="h-3 w-3" />
+                                </button>
+                                <span className="text-sm font-bold w-6 text-center">{displayQty}</span>
+                                <button
+                                  onClick={() => handleQty(item.id, 1, item.quantity)}
+                                  disabled={isRemoving}
+                                  className="h-7 w-7 rounded-lg flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-bold"
+                                  style={{ background: "#C9A84C", color: "#000" }}
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </button>
+                              </>
+                            )}
+                            <span className={`${isDonationItem ? "" : "ml-auto"} text-sm font-bold`} style={{ color: "#0a0a0a" }}>${displayLineTotal.toFixed(2)}</span>
+                            <button
+                              onClick={() => handleRemove(item.id)}
+                              disabled={isRemoving}
+                              className="ml-auto text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                              {isRemoving
+                                ? <Loader2 className="h-4 w-4 animate-spin" />
+                                : <Trash2 className="h-4 w-4" />
+                              }
+                            </button>
+                          </div>
                         </div>
                       </div>
+                      {donationBelowMin && (
+                        <div className="flex items-start gap-2 rounded-lg px-3 py-2 text-xs" style={{ background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.25)", color: "#dc2626" }}>
+                          <Info className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+                          <span>
+                            <strong>Minimum donation of ${item.donationMinAmount.toFixed(2)} required.</strong> Please return to the product page to update your gift amount before checking out.
+                          </span>
+                        </div>
+                      )}
                     </div>
                   );})}
                 </div>

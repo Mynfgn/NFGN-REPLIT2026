@@ -8,12 +8,13 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 import { customFetch } from "@/lib/custom-fetch";
 import { resolveImageSrc } from "@/lib/image";
 import {
   ShoppingCart, ArrowLeft, Star, Package, Leaf,
   CheckCircle2, Loader2, ChevronRight, ThumbsUp,
-  Church, Heart, HandHeart,
+  Church, Heart, HandHeart, AlertCircle,
 } from "lucide-react";
 
 interface Product {
@@ -69,6 +70,7 @@ export function ProductDetail() {
   const [error, setError] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
+  const [donationAmount, setDonationAmount] = useState<string>("");
 
   const [reviews, setReviews] = useState<Review[]>([]);
   const [avgRating, setAvgRating] = useState<number | null>(null);
@@ -85,6 +87,10 @@ export function ProductDetail() {
         setProduct(data);
         const imgs = data.images?.length ? data.images : (data.image ? [data.image] : []);
         setActiveImage(imgs[0] ?? null);
+        const isGift = data.isDonation || data.isChurchDonation;
+        if (isGift && data.donationMinAmount) {
+          setDonationAmount(String(data.donationMinAmount));
+        }
       })
       .catch(e => setError(e.message ?? "Could not load product"))
       .finally(() => setLoading(false));
@@ -125,6 +131,26 @@ export function ProductDetail() {
       return;
     }
     if (!product) return;
+
+    const isGift = product.isDonation || product.isChurchDonation;
+    if (isGift) {
+      const amt = parseFloat(donationAmount);
+      const min = product.donationMinAmount ?? 0;
+      const orgName = product.churchName ?? product.donationRecipientName ?? "the recipient";
+      if (isNaN(amt) || amt < min) {
+        toast({
+          title: "Minimum Donation Required",
+          description: `A minimum donation of $${min.toFixed(2)} is required for this gift. This ensures that after corporate and credit card processing fees are covered, your full intended gift amount reaches ${orgName}. Please enter $${min.toFixed(2)} or more to continue.`,
+          variant: "destructive",
+          duration: 8000,
+        });
+        return;
+      }
+      setAdding(true);
+      addToCart.mutate({ data: { productId: product.id, quantity: 1, customPrice: amt } } as any);
+      return;
+    }
+
     setAdding(true);
     addToCart.mutate({ data: { productId: product.id, quantity: 1 } });
   }
@@ -283,19 +309,52 @@ export function ProductDetail() {
           {/* Price / Donation Amount */}
           {isGiftProduct ? (
             <div className="space-y-3">
-              <div className="flex items-baseline gap-3">
-                <span className="text-sm text-muted-foreground">Starting at</span>
-                <span className="text-3xl font-bold text-foreground">${product.donationMinAmount.toFixed(2)}</span>
-              </div>
-
               {/* Org name */}
               <div className="flex items-center gap-2 text-sm font-semibold">
                 {product.isChurchDonation ? <Church className="h-4 w-4 text-primary" /> : <HandHeart className="h-4 w-4 text-primary" />}
                 <span className="text-foreground">Recipient: <strong>{orgName}</strong></span>
               </div>
 
+              {/* Donation amount input */}
+              <div className="rounded-xl border p-4 space-y-3" style={{ background: "rgba(201,168,76,0.05)", borderColor: "rgba(201,168,76,0.3)" }}>
+                <p className="text-xs font-bold tracking-widest uppercase text-primary">Your Donation Amount</p>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground font-bold text-lg">$</span>
+                  <Input
+                    type="number"
+                    min={product.donationMinAmount}
+                    step="0.01"
+                    value={donationAmount}
+                    onChange={e => setDonationAmount(e.target.value)}
+                    className="pl-7 text-lg font-bold h-12"
+                    style={{ borderColor: (() => { const v = parseFloat(donationAmount); return isNaN(v) || v < product.donationMinAmount ? "#ef4444" : "rgba(201,168,76,0.6)"; })() }}
+                    placeholder={product.donationMinAmount.toFixed(2)}
+                  />
+                </div>
+                {(() => {
+                  const v = parseFloat(donationAmount);
+                  const min = product.donationMinAmount;
+                  if (isNaN(v) || v < min) {
+                    return (
+                      <div className="flex items-start gap-2 rounded-lg px-3 py-2.5 text-xs" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)", color: "#dc2626" }}>
+                        <AlertCircle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+                        <span>
+                          <strong>Minimum of ${min.toFixed(2)} required.</strong> This minimum ensures that after corporate and credit card processing fees are covered, your full gift amount reaches {orgName}.
+                        </span>
+                      </div>
+                    );
+                  }
+                  return (
+                    <p className="text-xs text-muted-foreground">
+                      Your gift of <strong className="text-foreground">${v.toFixed(2)}</strong> is above the minimum — thank you for your generosity!
+                    </p>
+                  );
+                })()}
+                <p className="text-[10px] text-muted-foreground">Minimum donation: <strong className="text-foreground">${product.donationMinAmount.toFixed(2)}</strong> · Enter any amount at or above this threshold.</p>
+              </div>
+
               {/* Gift split bar */}
-              <div className="rounded-xl border p-4 space-y-2" style={{ background: "rgba(201,168,76,0.05)", borderColor: "rgba(201,168,76,0.25)" }}>
+              <div className="rounded-xl border p-4 space-y-2" style={{ background: "rgba(201,168,76,0.03)", borderColor: "rgba(201,168,76,0.2)" }}>
                 <p className="text-xs font-bold tracking-wide text-primary">🎁 HOW YOUR GIFT IS DISTRIBUTED</p>
                 <div className="flex rounded-full overflow-hidden h-3.5 border" style={{ borderColor: "rgba(201,168,76,0.3)" }}>
                   <div style={{ width: `${charityPct}%`, background: "#C9A84C", transition: "width 0.2s" }} />

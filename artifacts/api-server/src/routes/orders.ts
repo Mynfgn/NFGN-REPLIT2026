@@ -310,9 +310,31 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
   const shippingRate = parseFloat(settings?.shippingRate ?? "9.99");
   const freeShippingThreshold = parseFloat(settings?.freeShippingThreshold ?? "75");
 
+  // ── Donation minimum validation (server-side guardrail) ───────────────────
+  for (const { cart, product } of cartItems) {
+    if (!product) continue;
+    const isDonation = product.isDonation || product.isChurchDonation;
+    if (!isDonation) continue;
+    const minAmt = product.donationMinAmount != null ? parseFloat(product.donationMinAmount) : null;
+    const chosenAmt = cart.customPrice != null ? parseFloat(cart.customPrice) : parseFloat(product.price);
+    if (minAmt != null && chosenAmt < minAmt) {
+      const recipientName = (product as any).donationRecipientName || (product as any).churchName || "the recipient";
+      res.status(400).json({
+        error: `Minimum donation amount not met`,
+        message: `A minimum donation of $${minAmt.toFixed(2)} is required for "${product.name}". This minimum ensures that after corporate and credit card processing fees are covered, the full intended gift reaches ${recipientName}. Please update your donation amount to $${minAmt.toFixed(2)} or more to continue.`,
+      });
+      return;
+    }
+  }
+
   let subtotal = 0;
   for (const { cart, product } of cartItems) {
-    if (product) subtotal += parseFloat(product.price) * cart.quantity;
+    if (!product) continue;
+    const isDonation = product.isDonation || product.isChurchDonation;
+    const effectivePrice = (isDonation && cart.customPrice != null)
+      ? parseFloat(cart.customPrice)
+      : parseFloat(product.price);
+    subtotal += effectivePrice * cart.quantity;
   }
 
   let discount = 0;
@@ -434,13 +456,17 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
 
   for (const { cart, product } of cartItems) {
     if (!product) continue;
-    const lineTotal = parseFloat(product.price) * cart.quantity;
+    const isDonationItem = product.isDonation || product.isChurchDonation;
+    const effectivePrice = (isDonationItem && cart.customPrice != null)
+      ? cart.customPrice
+      : product.price;
+    const lineTotal = parseFloat(effectivePrice) * cart.quantity;
     await db.insert(orderItemsTable).values({
       orderId: order.id,
       productId: product.id,
       productName: product.name,
       productImage: product.image ?? undefined,
-      price: product.price,
+      price: effectivePrice,
       quantity: cart.quantity,
       total: String(lineTotal),
       cvTotal: (product.cv ?? 0) * cart.quantity,
@@ -450,7 +476,7 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
     });
 
     commissionItems.push({
-      price: product.price,
+      price: effectivePrice,
       quantity: cart.quantity,
       commissionRate: product.commissionRate ?? "10",
       isDonationOrSponsorship: !!(product.isDonation || product.isChurchDonation || product.isSports),
@@ -728,7 +754,12 @@ router.post("/orders/estimate", requireAuth, async (req, res): Promise<void> => 
 
   let subtotal = 0;
   for (const { cart, product } of cartItems) {
-    if (product) subtotal += parseFloat(product.price) * cart.quantity;
+    if (!product) continue;
+    const isDonation = product.isDonation || product.isChurchDonation;
+    const effectivePrice = (isDonation && cart.customPrice != null)
+      ? parseFloat(cart.customPrice)
+      : parseFloat(product.price);
+    subtotal += effectivePrice * cart.quantity;
   }
 
   let discount = 0;

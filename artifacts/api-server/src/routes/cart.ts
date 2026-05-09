@@ -16,7 +16,11 @@ async function buildCart(userId: number) {
   let subtotal = 0;
   const cartItems = items.map(({ cart, product }) => {
     if (!product) return null;
-    const price = parseFloat(product.price);
+    const basePrice = parseFloat(product.price);
+    const isDonation = product.isDonation || product.isChurchDonation;
+    const price = (isDonation && cart.customPrice != null)
+      ? parseFloat(cart.customPrice)
+      : basePrice;
     const lineTotal = price * cart.quantity;
     subtotal += lineTotal;
     const cvPerUnit = product.cv ?? 0;
@@ -26,10 +30,13 @@ async function buildCart(userId: number) {
       productName: product.name,
       productImage: product.image ?? null,
       price,
+      customPrice: cart.customPrice != null ? parseFloat(cart.customPrice) : null,
       quantity: cart.quantity,
       lineTotal,
       cvPerUnit,
       cvLineTotal: cvPerUnit * cart.quantity,
+      isDonation: !!isDonation,
+      donationMinAmount: product.donationMinAmount != null ? parseFloat(product.donationMinAmount) : null,
     };
   }).filter(Boolean);
 
@@ -48,7 +55,7 @@ router.get("/cart", requireAuth, async (req, res): Promise<void> => {
 
 router.post("/cart/items", requireAuth, async (req, res): Promise<void> => {
   const userId = (req as typeof req & { user: typeof usersTable.$inferSelect }).user.id;
-  const { productId, quantity } = req.body;
+  const { productId, quantity, customPrice } = req.body;
 
   if (!productId || !quantity) { res.status(400).json({ error: "productId and quantity required" }); return; }
 
@@ -57,10 +64,14 @@ router.post("/cart/items", requireAuth, async (req, res): Promise<void> => {
     eq(cartItemsTable.productId, productId)
   ));
 
+  const customPriceVal = customPrice != null ? String(customPrice) : undefined;
+
   if (existing) {
-    await db.update(cartItemsTable).set({ quantity: existing.quantity + quantity }).where(eq(cartItemsTable.id, existing.id));
+    await db.update(cartItemsTable)
+      .set({ quantity: existing.quantity + quantity, ...(customPriceVal !== undefined ? { customPrice: customPriceVal } : {}) })
+      .where(eq(cartItemsTable.id, existing.id));
   } else {
-    await db.insert(cartItemsTable).values({ userId, productId, quantity });
+    await db.insert(cartItemsTable).values({ userId, productId, quantity, ...(customPriceVal !== undefined ? { customPrice: customPriceVal } : {}) });
   }
 
   res.json(await buildCart(userId));
@@ -69,12 +80,14 @@ router.post("/cart/items", requireAuth, async (req, res): Promise<void> => {
 router.patch("/cart/items/:itemId", requireAuth, async (req, res): Promise<void> => {
   const userId = (req as typeof req & { user: typeof usersTable.$inferSelect }).user.id;
   const itemId = parseInt(Array.isArray(req.params.itemId) ? req.params.itemId[0] : req.params.itemId);
-  const { quantity } = req.body;
+  const { quantity, customPrice } = req.body;
 
   if (!quantity || quantity < 1) {
     await db.delete(cartItemsTable).where(and(eq(cartItemsTable.id, itemId), eq(cartItemsTable.userId, userId)));
   } else {
-    await db.update(cartItemsTable).set({ quantity }).where(and(eq(cartItemsTable.id, itemId), eq(cartItemsTable.userId, userId)));
+    const updates: Record<string, unknown> = { quantity };
+    if (customPrice != null) updates.customPrice = String(customPrice);
+    await db.update(cartItemsTable).set(updates as any).where(and(eq(cartItemsTable.id, itemId), eq(cartItemsTable.userId, userId)));
   }
 
   res.json(await buildCart(userId));

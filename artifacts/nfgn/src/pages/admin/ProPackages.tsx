@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useLocation } from "wouter";
 import {
   DndContext,
   closestCenter,
@@ -85,9 +86,10 @@ interface SortableRowProps {
   onEdit: (pkg: ProPackage) => void;
   onDelete: (pkg: ProPackage) => void;
   onFixLink: (pkg: ProPackage) => void;
+  onViewProduct: (pkg: ProPackage) => void;
 }
 
-function RowContent({ pkg, position, savingOrder, isDragging, onEdit, onDelete, onFixLink, dragHandleProps }: {
+function RowContent({ pkg, position, savingOrder, isDragging, onEdit, onDelete, onFixLink, onViewProduct, dragHandleProps }: {
   pkg: ProPackage;
   position: number;
   savingOrder: boolean;
@@ -95,6 +97,7 @@ function RowContent({ pkg, position, savingOrder, isDragging, onEdit, onDelete, 
   onEdit: (pkg: ProPackage) => void;
   onDelete: (pkg: ProPackage) => void;
   onFixLink: (pkg: ProPackage) => void;
+  onViewProduct: (pkg: ProPackage) => void;
   dragHandleProps?: {
     attributes: ReturnType<typeof useSortable>["attributes"];
     listeners: ReturnType<typeof useSortable>["listeners"];
@@ -174,15 +177,14 @@ function RowContent({ pkg, position, savingOrder, isDragging, onEdit, onDelete, 
       </TableCell>
       <TableCell>
         {pkg.productName ? (
-          <a
-            href={pkg.productSlug ? `/product/${pkg.productSlug}` : "/admin/products"}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded px-2 py-0.5 hover:bg-green-100 hover:border-green-300 transition-colors"
-            title={`View product: ${pkg.productName}`}
+          <button
+            type="button"
+            onClick={() => onViewProduct(pkg)}
+            className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded px-2 py-0.5 hover:bg-green-100 hover:border-green-300 transition-colors cursor-pointer"
+            title={`Open product details: ${pkg.productName}`}
           >
             {pkg.productName}
-          </a>
+          </button>
         ) : pkg.productId != null ? (
           <div className="flex items-center gap-1.5">
             <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-300 rounded px-2 py-0.5">
@@ -227,7 +229,7 @@ function RowContent({ pkg, position, savingOrder, isDragging, onEdit, onDelete, 
   );
 }
 
-function SortableRow({ pkg, position, savingOrder, isSavingEdit, onEdit, onDelete, onFixLink }: SortableRowProps) {
+function SortableRow({ pkg, position, savingOrder, isSavingEdit, onEdit, onDelete, onFixLink, onViewProduct }: SortableRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: pkg.id });
 
@@ -256,6 +258,7 @@ function SortableRow({ pkg, position, savingOrder, isSavingEdit, onEdit, onDelet
         onEdit={onEdit}
         onDelete={onDelete}
         onFixLink={onFixLink}
+        onViewProduct={onViewProduct}
         dragHandleProps={{ attributes, listeners }}
       />
     </TableRow>
@@ -463,6 +466,13 @@ export function AdminProPackagesPage() {
     }
   };
 
+  const [, setLocation] = useLocation();
+
+  const openViewProduct = (pkg: ProPackage) => {
+    if (pkg.productId == null) return;
+    setLocation(`/admin/products?edit=${pkg.productId}`);
+  };
+
   const openFixLink = (pkg: ProPackage) => {
     setFixLinkTarget(pkg);
     setFixLinkProductId("");
@@ -615,6 +625,7 @@ export function AdminProPackagesPage() {
                         onEdit={openEdit}
                         onDelete={setDeleteTarget}
                         onFixLink={openFixLink}
+                        onViewProduct={openViewProduct}
                       />
                     ))}
                   </TableBody>
@@ -639,6 +650,7 @@ export function AdminProPackagesPage() {
                             onEdit={openEdit}
                             onDelete={setDeleteTarget}
                             onFixLink={openFixLink}
+                            onViewProduct={openViewProduct}
                           />
                         </TableRow>
                       </tbody>

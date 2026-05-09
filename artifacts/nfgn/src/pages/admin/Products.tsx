@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { customFetch } from "@/lib/custom-fetch";
 import { useListCategories } from "@workspace/api-client-react";
 import { useUpload } from "@workspace/object-storage-web";
@@ -279,7 +279,8 @@ function ImageSlot({ label, value, onChange, slotKey }: {
 }
 
 export function AdminProductsPage() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
+  const search_ = useSearch();
   const isDigitalView = location === "/admin/products/digital";
   const isSportsView = location === "/admin/products/sports";
   const isNonProfitView = location === "/admin/products/nonprofit";
@@ -348,9 +349,23 @@ export function AdminProductsPage() {
     }
   };
 
+  const autoOpenedRef = useRef(false);
+
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  useEffect(() => {
+    if (loading || autoOpenedRef.current) return;
+    const params = new URLSearchParams(search_);
+    const editId = params.get("edit");
+    if (!editId) return;
+    const target = products.find(p => String(p.id) === editId);
+    if (!target) return;
+    autoOpenedRef.current = true;
+    openEdit(target);
+    setLocation(location, { replace: true });
+  }, [loading, products, search_]);
 
   const openCreate = () => {
     setEditProduct(null);

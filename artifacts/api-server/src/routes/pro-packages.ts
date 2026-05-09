@@ -7,7 +7,7 @@ const router: IRouter = Router();
 
 function serializePackage(
   p: typeof proPackagesTable.$inferSelect,
-  product?: { name: string; slug: string } | null,
+  product?: { name: string; slug: string; status: string } | null,
 ) {
   return {
     id: p.id,
@@ -22,6 +22,7 @@ function serializePackage(
     productId: p.productId ?? null,
     productName: product?.name ?? null,
     productSlug: product?.slug ?? null,
+    productStatus: product?.status ?? null,
   };
 }
 
@@ -31,6 +32,7 @@ router.get("/pro-packages", async (req, res): Promise<void> => {
       pkg: proPackagesTable,
       productName: productsTable.name,
       productSlug: productsTable.slug,
+      productStatus: productsTable.status,
     })
     .from(proPackagesTable)
     .leftJoin(productsTable, eq(proPackagesTable.productId, productsTable.id))
@@ -38,7 +40,7 @@ router.get("/pro-packages", async (req, res): Promise<void> => {
 
   res.json(
     rows.map((r) =>
-      serializePackage(r.pkg, r.productName && r.productSlug ? { name: r.productName, slug: r.productSlug } : null)
+      serializePackage(r.pkg, r.productName && r.productSlug ? { name: r.productName, slug: r.productSlug, status: r.productStatus ?? "active" } : null)
     )
   );
 });
@@ -133,10 +135,10 @@ router.put("/pro-packages/:id", requireAdmin, async (req, res): Promise<void> =>
 
   if (!pkg) { res.status(404).json({ error: "Not found" }); return; }
 
-  let product: { name: string; slug: string } | null = null;
+  let product: { name: string; slug: string; status: string } | null = null;
   if (pkg.productId != null) {
     const [row] = await db
-      .select({ name: productsTable.name, slug: productsTable.slug })
+      .select({ name: productsTable.name, slug: productsTable.slug, status: productsTable.status })
       .from(productsTable)
       .where(eq(productsTable.id, pkg.productId))
       .limit(1);

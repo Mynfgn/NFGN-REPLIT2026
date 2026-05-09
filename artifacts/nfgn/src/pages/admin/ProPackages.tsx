@@ -57,6 +57,7 @@ interface ProPackage {
   productId: number | null;
   productName: string | null;
   productSlug: string | null;
+  productStatus: string | null;
 }
 
 interface ShopProduct {
@@ -177,14 +178,26 @@ function RowContent({ pkg, position, savingOrder, isDragging, onEdit, onDelete, 
       </TableCell>
       <TableCell>
         {pkg.productName ? (
-          <button
-            type="button"
-            onClick={() => onViewProduct(pkg)}
-            className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded px-2 py-0.5 hover:bg-green-100 hover:border-green-300 transition-colors cursor-pointer"
-            title={`Open product details: ${pkg.productName}`}
-          >
-            {pkg.productName}
-          </button>
+          <TooltipProvider delayDuration={300}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => onViewProduct(pkg)}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded px-2 py-0.5 hover:bg-green-100 hover:border-green-300 transition-colors cursor-pointer"
+                  title={`Open product details: ${pkg.productName}`}
+                >
+                  <span
+                    className={`inline-block h-1.5 w-1.5 rounded-full flex-shrink-0 ${pkg.productStatus === "active" ? "bg-green-500" : "bg-gray-400"}`}
+                  />
+                  {pkg.productName}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">
+                Product is {pkg.productStatus === "active" ? "active" : (pkg.productStatus ?? "inactive")}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         ) : pkg.productId != null ? (
           <div className="flex items-center gap-1.5">
             <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-300 rounded px-2 py-0.5">

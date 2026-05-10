@@ -141,7 +141,7 @@ function ShopTickerBar() {
     queryFn: () => customFetch("/api/banners").then(r => r.json()),
     staleTime: 60000,
   });
-  const { data: settings } = useQuery<{ tickerSpeed?: string; tickerFontSize?: string }>({
+  const { data: settings } = useQuery<{ tickerSpeed?: string; tickerFontSize?: string; tickerPlaceholder?: string }>({
     queryKey: ["/api/settings"],
     queryFn: () => customFetch("/api/settings").then(r => r.json()),
     staleTime: 60000,
@@ -149,9 +149,10 @@ function ShopTickerBar() {
 
   if (!banners) return null;
 
+  const placeholder = settings?.tickerPlaceholder?.trim() || "Check back soon for our latest news and promotions!";
   const messages = banners.length > 0
     ? banners.map(b => b.message)
-    : ["Check back soon for our latest news and promotions!"];
+    : [placeholder];
 
   const speed = banners.length > 0 ? settings?.tickerSpeed : "slow";
   const fontSizePx: Record<string, number> = { small: 14, medium: 20, large: 28 };

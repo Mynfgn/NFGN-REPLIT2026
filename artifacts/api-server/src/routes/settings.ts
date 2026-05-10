@@ -27,6 +27,7 @@ function formatSettings(s: typeof appSettingsTable.$inferSelect) {
     demoMode: s.demoMode,
     tickerSpeed: s.tickerSpeed,
     tickerFontSize: s.tickerFontSize,
+    tickerPlaceholder: s.tickerPlaceholder,
     welcomeMessage: s.welcomeMessage,
   };
 }
@@ -62,6 +63,7 @@ router.put("/settings", requireAdmin, async (req, res): Promise<void> => {
     demoMode: req.body.demoMode ?? existing?.demoMode,
     tickerSpeed: req.body.tickerSpeed ?? existing?.tickerSpeed ?? "medium",
     tickerFontSize: req.body.tickerFontSize ?? existing?.tickerFontSize ?? "medium",
+    tickerPlaceholder: (req.body.tickerPlaceholder?.trim() || existing?.tickerPlaceholder) ?? "Check back soon for our latest news and promotions!",
     welcomeMessage: req.body.welcomeMessage ?? existing?.welcomeMessage ?? "Thank you for joining our community! Let me know if there is anything I can do to help!",
   };
 

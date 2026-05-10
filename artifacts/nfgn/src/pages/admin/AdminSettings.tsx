@@ -124,6 +124,7 @@ export default function AdminSettingsPage() {
     demoMode: false,
     paymentMethods: ["authorize_net", "cash_app", "paypal", "cod"] as string[],
     welcomeMessage: "Thank you for joining our community! Let me know if there is anything I can do to help!",
+    tickerPlaceholder: "Check back soon for our latest news and promotions!",
   });
 
   /* Hydrate form when settings load */
@@ -145,6 +146,7 @@ export default function AdminSettingsPage() {
       demoMode: settings.demoMode ?? false,
       paymentMethods: (settings.paymentMethods as string[]) ?? ["authorize_net", "cash_app", "paypal", "cod"],
       welcomeMessage: (settings as any).welcomeMessage ?? "Thank you for joining our community! Let me know if there is anything I can do to help!",
+      tickerPlaceholder: (settings as any).tickerPlaceholder ?? "Check back soon for our latest news and promotions!",
     });
     if ((settings as any).appIconUrl) {
       setIconPreview((settings as any).appIconUrl);
@@ -243,6 +245,7 @@ export default function AdminSettingsPage() {
         registrationPackagePrice: parseFloat(form.registrationPackagePrice) || 149.99,
         demoMode: form.demoMode,
         welcomeMessage: form.welcomeMessage,
+        tickerPlaceholder: form.tickerPlaceholder,
         paymentMethods: form.paymentMethods,
       } as any,
     });
@@ -405,7 +408,30 @@ export default function AdminSettingsPage() {
         </Field>
       </Section>
 
-      {/* ── 3. Payment Methods ── */}
+      {/* ── 3b. Ticker Settings ── */}
+      <Section title="Ticker / Banner" icon={Megaphone}>
+        <Field
+          label="Ticker placeholder message"
+          hint="Shown in the shop ticker when no banner messages are active. Keep it short and on-brand."
+        >
+          <Input
+            value={form.tickerPlaceholder}
+            onChange={e => set("tickerPlaceholder", e.target.value)}
+            placeholder="Check back soon for our latest news and promotions!"
+            className="mt-1"
+            maxLength={200}
+          />
+          <p className="text-xs text-muted-foreground mt-1">{form.tickerPlaceholder.length}/200 characters</p>
+        </Field>
+        <div className="rounded-lg bg-primary/5 border border-primary/20 px-4 py-3 text-xs text-foreground space-y-1">
+          <p className="font-semibold flex items-center gap-1.5"><Megaphone className="h-3.5 w-3.5 text-primary" /> When is this shown?</p>
+          <p className="text-muted-foreground">
+            This message scrolls in the shop ticker whenever all banner messages are turned off or none have been created yet. When active banners exist, they display instead.
+          </p>
+        </div>
+      </Section>
+
+      {/* ── 4. Payment Methods ── */}
       <Section title="Payment Methods" icon={CreditCard}>
         <p className="text-sm text-muted-foreground -mt-2">
           Enable or disable payment options that customers see during checkout.

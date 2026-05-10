@@ -2747,6 +2747,8 @@ components:
         tickerFontSize:
           type: string
           enum: [small, medium, large]
+        tickerPlaceholder:
+          type: string
       required:
         - companyName
         - contactEmail
@@ -2758,6 +2760,7 @@ components:
         - demoMode
         - tickerSpeed
         - tickerFontSize
+        - tickerPlaceholder
 
     PromoCode:
       type: object

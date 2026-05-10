@@ -33,4 +33,5 @@ export interface AppSettings {
   demoMode: boolean;
   tickerSpeed: AppSettingsTickerSpeed;
   tickerFontSize: AppSettingsTickerFontSize;
+  tickerPlaceholder: string;
 }

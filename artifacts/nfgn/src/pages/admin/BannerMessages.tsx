@@ -462,14 +462,23 @@ export function AdminBannerMessagesPage() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          {activeMessages.length > 0 ? (
-            <div className="rounded-b-lg overflow-hidden">
-              <TickerBar messages={activeMessages} fontSize={FONT_SIZE_PX[tickerFontSize]} padding="14px 0" speed={tickerSpeed} onMessageClick={handlePreviewClick} />
-            </div>
-          ) : (
-            <div className="py-8 text-center text-muted-foreground text-sm px-4">
-              No active messages — enable at least one message above to see the preview.
-            </div>
+          <div className="rounded-b-lg overflow-hidden">
+            <TickerBar
+              messages={
+                activeMessages.length > 0
+                  ? activeMessages
+                  : [settingsData?.tickerPlaceholder?.trim() || "Check back soon for our latest news and promotions!"]
+              }
+              fontSize={FONT_SIZE_PX[tickerFontSize]}
+              padding="14px 0"
+              speed={activeMessages.length > 0 ? tickerSpeed : "slow"}
+              onMessageClick={activeMessages.length > 0 ? handlePreviewClick : undefined}
+            />
+          </div>
+          {activeMessages.length === 0 && (
+            <p className="text-xs text-muted-foreground text-center py-2 px-4">
+              Showing placeholder — enable at least one message above to show real content.
+            </p>
           )}
         </CardContent>
       </Card>

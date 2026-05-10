@@ -338,7 +338,7 @@ export function AdminBannerMessagesPage() {
                         <p
                           className={`text-sm cursor-text select-none truncate ${!banner.isActive ? "text-muted-foreground" : ""}`}
                           style={{ textDecoration: !banner.isActive ? "line-through" : "none" }}
-                          onClick={() => setEditText(prev => ({ ...prev, [banner.id]: banner.message }))}
+                          onClick={() => { setEditText(prev => ({ ...prev, [banner.id]: banner.message })); setHighlightedId(banner.id); }}
                           title="Click to edit"
                         >
                           {banner.message}

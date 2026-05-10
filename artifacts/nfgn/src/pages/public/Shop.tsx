@@ -10,6 +10,7 @@ import {
   Trophy, Ticket, Award, Utensils, Dumbbell, Heart, Gem,
   HandHeart, Coins, Church, Flower2, Sun, Snowflake, PartyPopper,
   Lock, Plane, Stethoscope, Brain, Pill, Tag, Crown, Gauge,
+  AlertTriangle, Link2,
 } from "lucide-react";
 import { useCartStore } from "@/hooks/use-cart-store";
 import { useToast } from "@/hooks/use-toast";
@@ -17,6 +18,12 @@ import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect } from "react";
 import { customFetch } from "@/lib/custom-fetch";
 import { TickerBar } from "@/components/ticker-bar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 
 const GOLD = "#C9A84C";
 const GOLD_MUTED = "rgba(201,168,76,0.75)";
@@ -348,6 +355,7 @@ function ProPackageCard({
   onAdd,
   adding,
   isAdmin,
+  onFixLink,
 }: {
   pkg: ProPackage;
   matchedProduct: Product | null;
@@ -355,6 +363,7 @@ function ProPackageCard({
   onAdd: (e: React.MouseEvent, id: number) => void;
   adding: boolean;
   isAdmin: boolean;
+  onFixLink?: () => void;
 }) {
   const [hover, setHover] = useState(false);
   const savings = pkg.originalPrice - pkg.price;
@@ -491,6 +500,40 @@ function ProPackageCard({
             <span style={{ color: GREY_400, fontWeight: 700 }}>{matchedProduct.name}</span>
           </span>
         </div>
+      )}
+      {/* Stale link indicator — admin only */}
+      {isAdmin && pkg.productId != null && !pkg.productName && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onFixLink?.(); }}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            marginBottom: 14,
+            background: "rgba(245,158,11,0.10)",
+            border: "1px solid rgba(245,158,11,0.35)",
+            padding: "5px 10px",
+            borderRadius: 6,
+            cursor: "pointer",
+            width: "fit-content",
+            transition: "background 0.15s, border-color 0.15s",
+          }}
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLButtonElement).style.background = "rgba(245,158,11,0.18)";
+            (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(245,158,11,0.55)";
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLButtonElement).style.background = "rgba(245,158,11,0.10)";
+            (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(245,158,11,0.35)";
+          }}
+        >
+          <AlertTriangle size={11} color="#f59e0b" />
+          <span style={{ color: "#f59e0b", fontSize: 11, fontWeight: 700 }}>
+            Stale link
+          </span>
+          <Link2 size={10} color="#f59e0b" />
+          <span style={{ color: "#f59e0b", fontSize: 11, fontWeight: 700 }}>Fix</span>
+        </button>
       )}
       {/* CTA */}
       {matchedProduct ? (
@@ -754,6 +797,43 @@ export function Shop() {
   const [proPackages, setProPackages] = useState<ProPackage[]>([]);
   const [proPackagesLoading, setProPackagesLoading] = useState(true);
   const [catOverrides, setCatOverrides] = useState<Record<string, { description?: string; tags?: string[] }>>({});
+
+  const [fixLinkTarget, setFixLinkTarget] = useState<ProPackage | null>(null);
+  const [fixLinkProductId, setFixLinkProductId] = useState<string>("");
+  const [fixLinkSaving, setFixLinkSaving] = useState(false);
+
+  const openFixLink = (pkg: ProPackage) => {
+    setFixLinkTarget(pkg);
+    setFixLinkProductId("");
+  };
+
+  const handleFixLink = async () => {
+    if (!fixLinkTarget) return;
+    setFixLinkSaving(true);
+    try {
+      const productId = fixLinkProductId !== "" && fixLinkProductId !== "none"
+        ? parseInt(fixLinkProductId)
+        : null;
+      const res = await customFetch(`/api/pro-packages/${fixLinkTarget.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId }),
+      });
+      if (!res.ok) throw new Error("Failed to save");
+      toast({ title: productId ? "Product link updated" : "Stale link cleared" });
+      setFixLinkTarget(null);
+      setProPackagesLoading(true);
+      fetch("/api/pro-packages")
+        .then((r) => r.json())
+        .then((d: ProPackage[]) => setProPackages(Array.isArray(d) ? d : []))
+        .catch(() => {})
+        .finally(() => setProPackagesLoading(false));
+    } catch {
+      toast({ title: "Failed to update product link", variant: "destructive" });
+    } finally {
+      setFixLinkSaving(false);
+    }
+  };
 
   useEffect(() => {
     fetch("/api/categories")
@@ -1024,6 +1104,7 @@ export function Shop() {
                     onAdd={handleAddToCart}
                     adding={addingId === matched?.id}
                     isAdmin={isAdminRole}
+                    onFixLink={() => openFixLink(pkg)}
                   />
                 );
               })
@@ -1652,6 +1733,54 @@ export function Shop() {
           ))}
         </div>
       </div>
+
+      {/* ── Fix Link Dialog — admin only ─────────────────── */}
+      <Dialog open={!!fixLinkTarget} onOpenChange={(o) => !o && setFixLinkTarget(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Link2 className="h-4 w-4 text-blue-600" />
+              Fix Stale Product Link
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-sm text-muted-foreground">
+              The product previously linked to{" "}
+              <span className="font-semibold text-foreground">{fixLinkTarget?.name}</span>{" "}
+              no longer exists. Select a replacement or clear the link.
+            </p>
+            <div className="space-y-1.5">
+              <Label>Linked Shop Product</Label>
+              <Select
+                value={fixLinkProductId !== "" ? fixLinkProductId : "none"}
+                onValueChange={(val) => setFixLinkProductId(val === "none" ? "" : val)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a product…" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Clear link (use price matching)</SelectItem>
+                  {(data?.products ?? []).map((p) => (
+                    <SelectItem key={p.id} value={String(p.id)}>
+                      {p.name} (${Number(p.price).toFixed(2)}){p.isProPackage ? " ★" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFixLinkTarget(null)} disabled={fixLinkSaving}>
+              Cancel
+            </Button>
+            <Button onClick={handleFixLink} disabled={fixLinkSaving}>
+              {fixLinkSaving ? (
+                <><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Saving…</>
+              ) : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

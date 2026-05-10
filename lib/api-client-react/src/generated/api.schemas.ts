@@ -723,6 +723,11 @@ export type ListUsersParams = {
   limit?: number;
 };
 
+export type ListCategoryProducts200Item = {
+  id: number;
+  name: string;
+};
+
 export type ListProductsParams = {
   category?: string;
   search?: string;

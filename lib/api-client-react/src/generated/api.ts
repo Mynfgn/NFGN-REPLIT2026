@@ -48,6 +48,7 @@ import type {
   GetSalesReportParams,
   HealthStatus,
   ListBookingsParams,
+  ListCategoryProducts200Item,
   ListCommissionsParams,
   ListMessagesParams,
   ListOrdersParams,
@@ -1252,7 +1253,7 @@ export const useUpdateCategory = <
 };
 
 /**
- * @summary Delete category
+ * @summary Delete category (nulls out categoryId on any assigned products first)
  */
 export const getDeleteCategoryUrl = (id: number) => {
   return `/api/categories/${id}`;
@@ -1313,7 +1314,7 @@ export type DeleteCategoryMutationResult = NonNullable<
 export type DeleteCategoryMutationError = ErrorType<unknown>;
 
 /**
- * @summary Delete category
+ * @summary Delete category (nulls out categoryId on any assigned products first)
  */
 export const useDeleteCategory = <
   TError = ErrorType<unknown>,
@@ -1334,6 +1335,97 @@ export const useDeleteCategory = <
 > => {
   return useMutation(getDeleteCategoryMutationOptions(options));
 };
+
+/**
+ * @summary List products assigned to a category (pre-delete check, admin only)
+ */
+export const getListCategoryProductsUrl = (id: number) => {
+  return `/api/categories/${id}/products`;
+};
+
+export const listCategoryProducts = async (
+  id: number,
+  options?: RequestInit,
+): Promise<ListCategoryProducts200Item[]> => {
+  return customFetch<ListCategoryProducts200Item[]>(
+    getListCategoryProductsUrl(id),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListCategoryProductsQueryKey = (id: number) => {
+  return [`/api/categories/${id}/products`] as const;
+};
+
+export const getListCategoryProductsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listCategoryProducts>>,
+  TError = ErrorType<unknown>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listCategoryProducts>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListCategoryProductsQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listCategoryProducts>>
+  > = ({ signal }) => listCategoryProducts(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listCategoryProducts>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListCategoryProductsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listCategoryProducts>>
+>;
+export type ListCategoryProductsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List products assigned to a category (pre-delete check, admin only)
+ */
+
+export function useListCategoryProducts<
+  TData = Awaited<ReturnType<typeof listCategoryProducts>>,
+  TError = ErrorType<unknown>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listCategoryProducts>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListCategoryProductsQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary List products

@@ -48,6 +48,7 @@ export * from "./getMemberAnalytics200SalesByStateItem";
 export * from "./getSalesReportParams";
 export * from "./healthStatus";
 export * from "./listBookingsParams";
+export * from "./listCategoryProducts200Item";
 export * from "./listCommissionsParams";
 export * from "./listMessagesParams";
 export * from "./listOrdersParams";

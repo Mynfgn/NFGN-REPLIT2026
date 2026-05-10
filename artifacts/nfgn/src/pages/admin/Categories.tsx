@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { customFetch } from "@/lib/custom-fetch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Plus, Pencil, Trash2, RefreshCw, FolderOpen, ShoppingBag } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, FolderOpen, ShoppingBag, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Category {
@@ -27,6 +27,11 @@ interface Category {
   shopHeadline: string | null;
   shopTags: string | null;
   productCount: number;
+}
+
+interface LinkedProduct {
+  id: number;
+  name: string;
 }
 
 const EMPTY_FORM = { name: "", slug: "", description: "", image: "", shopHeadline: "", shopTags: "" };
@@ -48,6 +53,11 @@ export function AdminCategoriesPage() {
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  const [linkedProducts, setLinkedProducts] = useState<LinkedProduct[]>([]);
+  const [checkingProducts, setCheckingProducts] = useState(false);
+  const [productCheckFailed, setProductCheckFailed] = useState(false);
+  const productCheckAbortRef = useRef<AbortController | null>(null);
+
   const fetchCategories = async () => {
     setLoading(true);
     try {
@@ -64,6 +74,43 @@ export function AdminCategoriesPage() {
   };
 
   useEffect(() => { fetchCategories(); }, []);
+
+  // When delete target changes, check for assigned products
+  useEffect(() => {
+    if (!deleteTarget) {
+      setLinkedProducts([]);
+      setCheckingProducts(false);
+      setProductCheckFailed(false);
+      return;
+    }
+
+    productCheckAbortRef.current?.abort();
+    const ctrl = new AbortController();
+    productCheckAbortRef.current = ctrl;
+
+    setCheckingProducts(true);
+    setLinkedProducts([]);
+    setProductCheckFailed(false);
+
+    // Always fetch from the API — don't rely on cached productCount which may be stale
+    customFetch(`/api/categories/${deleteTarget.id}/products`, { signal: ctrl.signal })
+      .then(async res => {
+        if (ctrl.signal.aborted) return;
+        if (res.ok) {
+          const data = await res.json();
+          setLinkedProducts(Array.isArray(data) ? data : []);
+        } else {
+          setProductCheckFailed(true);
+        }
+      })
+      .catch(err => {
+        if (err?.name === "AbortError") return;
+        setProductCheckFailed(true);
+      })
+      .finally(() => {
+        if (!ctrl.signal.aborted) setCheckingProducts(false);
+      });
+  }, [deleteTarget]);
 
   const openCreate = () => {
     setEditCat(null);
@@ -136,16 +183,16 @@ export function AdminCategoriesPage() {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    if (deleteTarget.productCount > 0) {
-      toast.error("Cannot delete a category that has products assigned to it. Reassign or remove those products first.");
-      setDeleteTarget(null);
-      return;
-    }
     setDeleting(true);
     try {
       const res = await customFetch(`/api/categories/${deleteTarget.id}`, { method: "DELETE" });
       if (res.ok || res.status === 204) {
-        toast.success(`"${deleteTarget.name}" deleted.`);
+        const count = linkedProducts.length;
+        if (count > 0) {
+          toast.success(`"${deleteTarget.name}" deleted. ${count} ${count === 1 ? "product was" : "products were"} uncategorized.`);
+        } else {
+          toast.success(`"${deleteTarget.name}" deleted.`);
+        }
         setDeleteTarget(null);
         fetchCategories();
       } else {
@@ -251,7 +298,7 @@ export function AdminCategoriesPage() {
                   </TableRow>
                 ) : (
                   filtered.map(cat => (
-                    <TableRow key={cat.id}>
+                    <TableRow key={cat.id} className={deleteTarget?.id === cat.id ? "bg-destructive/5" : ""}>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {cat.image ? (
@@ -287,8 +334,7 @@ export function AdminCategoriesPage() {
                             size="icon"
                             className="h-8 w-8 text-destructive hover:text-destructive"
                             onClick={() => setDeleteTarget(cat)}
-                            disabled={cat.productCount > 0}
-                            title={cat.productCount > 0 ? "Cannot delete — has products" : "Delete category"}
+                            title="Delete category"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
@@ -397,23 +443,64 @@ export function AdminCategoriesPage() {
       </Dialog>
 
       {/* Delete Confirmation */}
-      <AlertDialog open={!!deleteTarget} onOpenChange={open => !open && setDeleteTarget(null)}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={open => { if (!open) { productCheckAbortRef.current?.abort(); setDeleteTarget(null); setLinkedProducts([]); setProductCheckFailed(false); } }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Category?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete <strong>"{deleteTarget?.name}"</strong>. 
-              This action cannot be undone. Make sure no products are assigned to this category before deleting.
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>
+                  This will permanently delete <strong>"{deleteTarget?.name}"</strong>. This action cannot be undone.
+                </p>
+
+                {checkingProducts && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Checking for assigned products…
+                  </div>
+                )}
+
+                {!checkingProducts && productCheckFailed && (
+                  <div className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3">
+                    <p className="text-sm font-semibold text-destructive flex items-center gap-1.5">
+                      <span>⚠️</span> Could not verify assigned products
+                    </p>
+                    <p className="text-sm text-destructive/80 mt-1">
+                      The product check failed. Please verify manually before proceeding.
+                    </p>
+                  </div>
+                )}
+
+                {!checkingProducts && !productCheckFailed && linkedProducts.length > 0 && (
+                  <div className="rounded-md border border-amber-400/50 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 space-y-1.5">
+                    <p className="text-sm font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                      <span>⚠️</span> This category has {linkedProducts.length} assigned {linkedProducts.length === 1 ? "product" : "products"}:
+                    </p>
+                    <ul className="list-disc list-inside text-sm text-amber-700 dark:text-amber-400 space-y-0.5">
+                      {linkedProducts.map(p => (
+                        <li key={p.id}>{p.name}</li>
+                      ))}
+                    </ul>
+                    <p className="text-sm text-amber-600 dark:text-amber-500">
+                      {linkedProducts.length === 1 ? "That product" : "Those products"} will remain in the store but will no longer have a category assigned.
+                    </p>
+                  </div>
+                )}
+
+                {!checkingProducts && !productCheckFailed && linkedProducts.length === 0 && deleteTarget?.productCount === 0 && (
+                  <p className="text-sm text-muted-foreground">No products are assigned to this category.</p>
+                )}
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              disabled={deleting}
+              disabled={deleting || checkingProducts}
               className="bg-destructive hover:bg-destructive/90"
             >
-              {deleting ? "Deleting..." : "Yes, Delete"}
+              {deleting ? "Deleting..." : linkedProducts.length > 0 ? "Yes, Delete & Uncategorize" : "Yes, Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

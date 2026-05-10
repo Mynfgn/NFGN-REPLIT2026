@@ -61,11 +61,28 @@ router.patch("/categories/:id", requireAdmin, async (req, res): Promise<void> =>
   res.json(formatCat(cat, 0));
 });
 
+// Return the list of products assigned to this category (pre-delete check)
+router.get("/categories/:id/products", requireAdmin, async (req, res): Promise<void> => {
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const rows = await db
+    .select({ id: productsTable.id, name: productsTable.name })
+    .from(productsTable)
+    .where(eq(productsTable.categoryId, id));
+
+  res.json(rows);
+});
+
 router.delete("/categories/:id", requireAdmin, async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
-  await db.delete(categoriesTable).where(eq(categoriesTable.id, id));
+  // In a single transaction: null out categoryId on assigned products, then delete the category
+  await db.transaction(async (tx) => {
+    await tx.update(productsTable).set({ categoryId: null }).where(eq(productsTable.categoryId, id));
+    await tx.delete(categoriesTable).where(eq(categoriesTable.id, id));
+  });
   res.sendStatus(204);
 });
 

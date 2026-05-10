@@ -287,11 +287,26 @@ export const UpdateCategoryResponse = zod.object({
 });
 
 /**
- * @summary Delete category
+ * @summary Delete category (nulls out categoryId on any assigned products first)
  */
 export const DeleteCategoryParams = zod.object({
   id: zod.coerce.number(),
 });
+
+/**
+ * @summary List products assigned to a category (pre-delete check, admin only)
+ */
+export const ListCategoryProductsParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ListCategoryProductsResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+});
+export const ListCategoryProductsResponse = zod.array(
+  ListCategoryProductsResponseItem,
+);
 
 /**
  * @summary List products

@@ -312,7 +312,7 @@ paths:
     delete:
       operationId: deleteCategory
       tags: [categories]
-      summary: Delete category
+      summary: Delete category (nulls out categoryId on any assigned products first)
       parameters:
         - name: id
           in: path
@@ -322,6 +322,33 @@ paths:
       responses:
         "204":
           description: Deleted
+
+  /categories/{id}/products:
+    get:
+      operationId: listCategoryProducts
+      tags: [categories]
+      summary: List products assigned to a category (pre-delete check, admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Products in this category
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required: [id, name]
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
 
   # PRODUCTS
   /products:

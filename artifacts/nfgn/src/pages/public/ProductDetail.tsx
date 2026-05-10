@@ -233,7 +233,7 @@ export function ProductDetail() {
               <img
                 src={resolveImageSrc(activeImage)!}
                 alt={product.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-muted-foreground font-serif text-4xl opacity-20">
@@ -270,7 +270,7 @@ export function ProductDetail() {
                   }`}
                 >
                   {resolveImageSrc(img) ? (
-                    <img src={resolveImageSrc(img)!} alt={`View ${i + 1}`} className="w-full h-full object-cover" />
+                    <img src={resolveImageSrc(img)!} alt={`View ${i + 1}`} className="w-full h-full object-contain" />
                   ) : (
                     <div className="w-full h-full bg-muted" />
                   )}
@@ -563,7 +563,7 @@ export function ProductDetail() {
                       <img
                         src={resolveImageSrc(rel.image)!}
                         alt={rel.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-muted-foreground opacity-20 font-serif">NFGN</div>

@@ -64,7 +64,7 @@ function ChurchCard({ product, highlight, onShowQR }: { product: Product; highli
       >
         <div style={{ background: img ? "#1a1a1a" : `linear-gradient(135deg, rgba(180,83,9,0.18), rgba(201,168,76,0.08))`, height: 170, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
           {img ? (
-            <img src={img} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease", transform: active ? "scale(1.07)" : "scale(1)" }} />
+            <img src={img} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "contain", transition: "transform 0.5s ease", transform: active ? "scale(1.07)" : "scale(1)" }} />
           ) : (
             <Church size={48} color={GOLD} style={{ opacity: 0.45 }} />
           )}
@@ -156,7 +156,7 @@ function NonProfitCard({
       >
         <div style={{ background: img ? "#1a1a1a" : `linear-gradient(135deg, rgba(201,168,76,0.12), rgba(201,168,76,0.03))`, height: 160, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
           {img ? (
-            <img src={img} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease", transform: active ? "scale(1.06)" : "scale(1)" }} />
+            <img src={img} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "contain", transition: "transform 0.5s ease", transform: active ? "scale(1.06)" : "scale(1)" }} />
           ) : (
             <HandHeart size={40} color={GOLD} style={{ opacity: 0.4 }} />
           )}

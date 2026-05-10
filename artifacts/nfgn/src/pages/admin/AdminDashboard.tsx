@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGetDashboardSummary } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,8 +9,9 @@ import {
   DollarSign, ShoppingCart, Users, UserCheck, TrendingUp, BarChart3,
   LayoutDashboard, AlertTriangle, Package, Clock, CreditCard,
   ArrowRight, Calendar, CheckCircle2, Zap, Star, Activity,
-  ChevronRight, ExternalLink, Truck, CalendarClock,
+  ChevronRight, ExternalLink, Truck, CalendarClock, LinkIcon,
 } from "lucide-react";
+import { customFetch } from "@/lib/custom-fetch";
 import { roleLabel } from "@/lib/labels";
 import { MemberMapCard } from "@/components/dashboard/MemberMapCard";
 import {
@@ -142,9 +143,26 @@ function OrderRow({ order }: { order: any }) {
   );
 }
 
+function useStalePackageLinks() {
+  const [staleCount, setStaleCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    customFetch("/api/pro-packages")
+      .then((r) => r.json())
+      .then((packages: { productName: string | null }[]) => {
+        const count = packages.filter((p) => p.productName === null).length;
+        setStaleCount(count);
+      })
+      .catch(() => setStaleCount(null));
+  }, []);
+
+  return staleCount;
+}
+
 export function AdminDashboard() {
   const { data, isLoading } = useGetDashboardSummary();
   const [period, setPeriod] = useState<Period>("month");
+  const staleLinks = useStalePackageLinks();
 
   const d = data as any;
 
@@ -206,6 +224,30 @@ export function AdminDashboard() {
           </Link>
         </div>
       </div>
+
+      {/* ── STALE LINKS WARNING ── */}
+      {staleLinks !== null && staleLinks > 0 && (
+        <Link href="/admin/pro-packages">
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5 group"
+            style={{ borderColor: "#f59e0b", background: "#fffbeb" }}>
+            <div className="h-9 w-9 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{ background: "#fde68a", color: "#b45309" }}>
+              <LinkIcon className="h-4 w-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold" style={{ color: "#92400e" }}>
+                {staleLinks} Registration {staleLinks === 1 ? "Package" : "Packages"} {staleLinks === 1 ? "has" : "have"} a stale product link
+              </p>
+              <p className="text-xs" style={{ color: "#b45309" }}>
+                Affected packages cannot add to cart — fix the product links to restore checkout.
+              </p>
+            </div>
+            <div className="flex items-center gap-1 text-xs font-semibold flex-shrink-0 group-hover:underline" style={{ color: "#b45309" }}>
+              Fix Now <ArrowRight className="h-3.5 w-3.5" />
+            </div>
+          </div>
+        </Link>
+      )}
 
       {/* ── REVENUE CHART ── */}
       <Card className="shadow-sm">

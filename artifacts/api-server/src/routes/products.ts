@@ -345,15 +345,64 @@ router.get("/products/:id/linked-packages", requireAdmin, async (req, res): Prom
 });
 
 // Permanent hard delete
+// Body (optional): { replacements: { [packageId]: replacementProductId | null } }
 router.delete("/products/:id", requireAdmin, async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
+  const rawReplacements: Record<string, unknown> = req.body?.replacements ?? {};
+
+  // Build and validate the replacement map before touching the DB.
+  // Maps packageId -> replacementProductId (or null to clear the link).
+  const replacementMap = new Map<number, number | null>();
+  for (const [pkgIdStr, val] of Object.entries(rawReplacements)) {
+    const pkgId = parseInt(pkgIdStr);
+    if (isNaN(pkgId)) { res.status(400).json({ error: `Invalid package id: ${pkgIdStr}` }); return; }
+
+    if (val == null || val === "__none__") {
+      replacementMap.set(pkgId, null);
+    } else {
+      const replacementProductId = Number(val);
+      if (isNaN(replacementProductId) || !Number.isInteger(replacementProductId)) {
+        res.status(400).json({ error: `Invalid replacement product id for package ${pkgId}` });
+        return;
+      }
+      if (replacementProductId === id) {
+        res.status(400).json({ error: `Replacement product cannot be the product being deleted (package ${pkgId})` });
+        return;
+      }
+      // Validate the replacement product exists (before entering the transaction)
+      const [exists] = await db
+        .select({ id: productsTable.id })
+        .from(productsTable)
+        .where(eq(productsTable.id, replacementProductId));
+      if (!exists) {
+        res.status(400).json({ error: `Replacement product ${replacementProductId} not found` });
+        return;
+      }
+      replacementMap.set(pkgId, replacementProductId);
+    }
+  }
+
+  // Everything is valid — run atomically.
   await db.transaction(async (tx) => {
-    await tx.delete(productsTable).where(eq(productsTable.id, id));
-    await tx.update(proPackagesTable)
-      .set({ productId: null })
+    // Fetch linked packages inside the transaction so we work on a consistent snapshot.
+    const linkedPkgs = await tx
+      .select({ id: proPackagesTable.id })
+      .from(proPackagesTable)
       .where(eq(proPackagesTable.productId, id));
+
+    for (const pkg of linkedPkgs) {
+      const replacementProductId = replacementMap.has(pkg.id)
+        ? replacementMap.get(pkg.id) ?? null
+        : null;
+
+      await tx.update(proPackagesTable)
+        .set({ productId: replacementProductId })
+        .where(eq(proPackagesTable.id, pkg.id));
+    }
+
+    await tx.delete(productsTable).where(eq(productsTable.id, id));
   });
   res.sendStatus(204);
 });

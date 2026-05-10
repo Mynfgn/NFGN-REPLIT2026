@@ -299,6 +299,7 @@ export function AdminProductsPage() {
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [linkedPackages, setLinkedPackages] = useState<{ id: number; name: string }[]>([]);
+  const [packageReplacements, setPackageReplacements] = useState<Record<number, string>>({});
   const [checkingLinks, setCheckingLinks] = useState(false);
   const [linkCheckFailed, setLinkCheckFailed] = useState(false);
   const linkCheckAbortRef = useRef<AbortController | null>(null);
@@ -514,15 +515,32 @@ export function AdminProductsPage() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      const res = await customFetch(`/api/products/${deleteTarget.id}`, { method: "DELETE" });
+      const replacements: Record<string, number> = {};
+      for (const pkg of linkedPackages) {
+        const val = packageReplacements[pkg.id];
+        if (val && val !== "__none__") {
+          replacements[String(pkg.id)] = parseInt(val);
+        }
+      }
+      const res = await customFetch(`/api/products/${deleteTarget.id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ replacements }),
+      });
       if (res.ok || res.status === 204) {
-        toast.success(`"${deleteTarget.name}" has been permanently deleted.`);
+        const relinkedCount = Object.keys(replacements).length;
+        const msg = relinkedCount > 0
+          ? `"${deleteTarget.name}" deleted. ${relinkedCount} package${relinkedCount > 1 ? "s" : ""} re-linked to a replacement product.`
+          : `"${deleteTarget.name}" has been permanently deleted.`;
+        toast.success(msg);
         setDeleteTarget(null);
         setLinkedPackages([]);
+        setPackageReplacements({});
         setLinkCheckFailed(false);
         fetchProducts();
       } else {
-        toast.error("Failed to delete product");
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.error ?? "Failed to delete product");
       }
     } catch {
       toast.error("Network error");
@@ -1909,7 +1927,7 @@ export function AdminProductsPage() {
       </Dialog>
 
       {/* Delete Confirmation */}
-      <AlertDialog open={!!deleteTarget} onOpenChange={open => { if (!open) { linkCheckAbortRef.current?.abort(); setDeleteTarget(null); setLinkedPackages([]); setLinkCheckFailed(false); } }}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={open => { if (!open) { linkCheckAbortRef.current?.abort(); setDeleteTarget(null); setLinkedPackages([]); setPackageReplacements({}); setLinkCheckFailed(false); } }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Permanently Delete Product?</AlertDialogTitle>
@@ -1936,17 +1954,39 @@ export function AdminProductsPage() {
                   </div>
                 )}
                 {!checkingLinks && !linkCheckFailed && linkedPackages.length > 0 && (
-                  <div className="rounded-md border border-amber-400/50 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 space-y-1.5">
+                  <div className="rounded-md border border-amber-400/50 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 space-y-3">
                     <p className="text-sm font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
                       <span>⚠️</span> This product is linked to {linkedPackages.length === 1 ? "a registration package" : "registration packages"}:
                     </p>
-                    <ul className="list-disc list-inside text-sm text-amber-700 dark:text-amber-400 space-y-0.5">
+                    <div className="space-y-2">
                       {linkedPackages.map(pkg => (
-                        <li key={pkg.id}>{pkg.name}</li>
+                        <div key={pkg.id} className="space-y-1">
+                          <p className="text-sm font-medium text-amber-700 dark:text-amber-400">{pkg.name}</p>
+                          <Select
+                            value={packageReplacements[pkg.id] ?? "__none__"}
+                            onValueChange={val => setPackageReplacements(prev => ({ ...prev, [pkg.id]: val }))}
+                          >
+                            <SelectTrigger className="h-8 text-xs bg-white dark:bg-background border-amber-300 dark:border-amber-700">
+                              <SelectValue placeholder="Pick a replacement product (optional)" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="__none__">
+                                <span className="text-muted-foreground">— No replacement (clear the link)</span>
+                              </SelectItem>
+                              {products
+                                .filter(p => p.id !== deleteTarget?.id && p.status === "active")
+                                .map(p => (
+                                  <SelectItem key={p.id} value={String(p.id)}>
+                                    {p.name}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       ))}
-                    </ul>
-                    <p className="text-sm text-amber-600 dark:text-amber-500">
-                      Deleting this product will remove {linkedPackages.length === 1 ? "that link" : "those links"}. The package{linkedPackages.length > 1 ? "s" : ""} will still exist but will no longer have an associated product.
+                    </div>
+                    <p className="text-xs text-amber-600 dark:text-amber-500">
+                      Pick a replacement product for each package, or leave blank to clear the link.
                     </p>
                   </div>
                 )}

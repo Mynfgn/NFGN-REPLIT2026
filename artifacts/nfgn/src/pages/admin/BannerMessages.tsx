@@ -447,6 +447,9 @@ export function AdminBannerMessagesPage() {
                     </button>
                   ))}
                 </div>
+                <span className="text-xs text-muted-foreground">
+                  Currently: <span className="font-semibold text-foreground">{SPEED_LABELS[tickerSpeed]}</span>
+                </span>
               </div>
               <a
                 href="/shop"

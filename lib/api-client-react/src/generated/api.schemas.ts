@@ -567,6 +567,14 @@ export const AppSettingsTickerFontSize = {
   large: "large",
 } as const;
 
+export type AppSettingsTickerFontWeight =
+  (typeof AppSettingsTickerFontWeight)[keyof typeof AppSettingsTickerFontWeight];
+
+export const AppSettingsTickerFontWeight = {
+  bold: "bold",
+  regular: "regular",
+} as const;
+
 export interface AppSettings {
   companyName: string;
   /** @nullable */
@@ -592,6 +600,7 @@ export interface AppSettings {
   demoMode: boolean;
   tickerSpeed: AppSettingsTickerSpeed;
   tickerFontSize: AppSettingsTickerFontSize;
+  tickerFontWeight: AppSettingsTickerFontWeight;
   tickerPlaceholder: string;
 }
 

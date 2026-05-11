@@ -142,7 +142,7 @@ function ShopTickerBar() {
     queryFn: () => customFetch("/api/banners").then(r => r.json()),
     staleTime: 60000,
   });
-  const { data: settings } = useQuery<{ tickerSpeed?: string; tickerFontSize?: string; tickerPlaceholder?: string }>({
+  const { data: settings } = useQuery<{ tickerSpeed?: string; tickerFontSize?: string; tickerFontWeight?: string; tickerPlaceholder?: string }>({
     queryKey: ["/api/settings"],
     queryFn: () => customFetch("/api/settings").then(r => r.json()),
     staleTime: 60000,
@@ -158,6 +158,7 @@ function ShopTickerBar() {
   const speed = banners.length > 0 ? settings?.tickerSpeed : "slow";
   const fontSizePx: Record<string, number> = { small: 14, medium: 20, large: 28 };
   const fontSize = fontSizePx[settings?.tickerFontSize ?? "medium"] ?? 20;
+  const fontWeight = (settings?.tickerFontWeight ?? "bold") as "bold" | "regular";
   const role = parseJwtRole(token);
   const isAdmin = role ? ADMIN_ROLES.has(role) : false;
   const speedLabel = TICKER_SPEED_LABELS[speed ?? "medium"] ?? speed;
@@ -181,7 +182,7 @@ function ShopTickerBar() {
 
   return (
     <div className="group" style={{ position: "relative" }}>
-      <TickerBar messages={messages} speed={speed} fontSize={fontSize} />
+      <TickerBar messages={messages} speed={speed} fontSize={fontSize} fontWeight={fontWeight} />
       {isAdmin && (
         <div
           style={{

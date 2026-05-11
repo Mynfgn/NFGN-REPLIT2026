@@ -2747,6 +2747,9 @@ components:
         tickerFontSize:
           type: string
           enum: [small, medium, large]
+        tickerFontWeight:
+          type: string
+          enum: [bold, regular]
         tickerPlaceholder:
           type: string
       required:
@@ -2760,6 +2763,7 @@ components:
         - demoMode
         - tickerSpeed
         - tickerFontSize
+        - tickerFontWeight
         - tickerPlaceholder
 
     PromoCode:

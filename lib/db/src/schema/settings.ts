@@ -31,6 +31,7 @@ export const appSettingsTable = pgTable("app_settings", {
   demoMode: boolean("demo_mode").notNull().default(true),
   tickerSpeed: text("ticker_speed").notNull().default("medium"),
   tickerFontSize: text("ticker_font_size").notNull().default("medium"),
+  tickerFontWeight: text("ticker_font_weight").notNull().default("bold"),
   tickerPlaceholder: text("ticker_placeholder").notNull().default("Check back soon for our latest news and promotions!"),
   welcomeMessage: text("welcome_message").notNull().default("Thank you for joining our community! Let me know if there is anything I can do to help!"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   Megaphone, Plus, Trash2, Save, Loader2, GripVertical,
-  ToggleLeft, ToggleRight, RefreshCw, Eye, EyeOff, MonitorPlay, Gauge, ExternalLink, ALargeSmall,
+  ToggleLeft, ToggleRight, RefreshCw, Eye, EyeOff, MonitorPlay, Gauge, ExternalLink, ALargeSmall, Bold,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useGetSettings, useUpdateSettings } from "@workspace/api-client-react";
@@ -24,10 +24,12 @@ interface BannerMessage {
 
 type TickerSpeed = "slow" | "medium" | "fast";
 type TickerFontSize = "small" | "medium" | "large";
+type TickerFontWeight = "bold" | "regular";
 
 const SPEED_LABELS: Record<TickerSpeed, string> = { slow: "Slow", medium: "Medium", fast: "Fast" };
 const FONT_SIZE_LABELS: Record<TickerFontSize, string> = { small: "Small", medium: "Medium", large: "Large" };
 const FONT_SIZE_PX: Record<TickerFontSize, number> = { small: 13, medium: 16, large: 22 };
+const FONT_WEIGHT_LABELS: Record<TickerFontWeight, string> = { bold: "Bold", regular: "Regular" };
 
 export function AdminBannerMessagesPage() {
   const { toast } = useToast();
@@ -43,8 +45,10 @@ export function AdminBannerMessagesPage() {
   const [highlightedId, setHighlightedId] = useState<number | null>(null);
   const [tickerSpeed, setTickerSpeed] = useState<TickerSpeed>("medium");
   const [tickerFontSize, setTickerFontSize] = useState<TickerFontSize>("medium");
+  const [tickerFontWeight, setTickerFontWeight] = useState<TickerFontWeight>("bold");
   const [savingSpeed, setSavingSpeed] = useState(false);
   const [savingFontSize, setSavingFontSize] = useState(false);
+  const [savingFontWeight, setSavingFontWeight] = useState(false);
   const rowRefs = useRef<Record<number, HTMLLIElement | null>>({});
 
   const { data: settingsData } = useGetSettings();
@@ -56,6 +60,9 @@ export function AdminBannerMessagesPage() {
     }
     if (settingsData?.tickerFontSize) {
       setTickerFontSize(settingsData.tickerFontSize as TickerFontSize);
+    }
+    if (settingsData?.tickerFontWeight) {
+      setTickerFontWeight(settingsData.tickerFontWeight as TickerFontWeight);
     }
   }, [settingsData]);
 
@@ -73,6 +80,22 @@ export function AdminBannerMessagesPage() {
   }
 
   useEffect(() => { load(); }, []);
+
+  async function handleFontWeightChange(weight: TickerFontWeight) {
+    if (!settingsData) return;
+    const previous = tickerFontWeight;
+    setTickerFontWeight(weight);
+    setSavingFontWeight(true);
+    try {
+      await updateSettings({ data: { ...settingsData, tickerFontWeight: weight } });
+      toast({ title: "Saved", description: `Ticker style set to ${FONT_WEIGHT_LABELS[weight].toLowerCase()}.` });
+    } catch {
+      setTickerFontWeight(previous);
+      toast({ title: "Error", description: "Failed to save font style.", variant: "destructive" });
+    } finally {
+      setSavingFontWeight(false);
+    }
+  }
 
   async function handleFontSizeChange(size: TickerFontSize) {
     if (!settingsData) return;
@@ -450,6 +473,27 @@ export function AdminBannerMessagesPage() {
 
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex items-center gap-2">
+                {savingFontWeight && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+                <Bold className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground font-medium">Style:</span>
+                <div className="flex rounded-md border overflow-hidden text-xs">
+                  {(["bold", "regular"] as TickerFontWeight[]).map(weight => (
+                    <button
+                      key={weight}
+                      onClick={() => handleFontWeightChange(weight)}
+                      disabled={savingFontWeight || !settingsData}
+                      className={`px-3 py-1 font-medium transition-colors capitalize ${
+                        tickerFontWeight === weight
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-background text-muted-foreground hover:bg-muted"
+                      }`}
+                    >
+                      {FONT_WEIGHT_LABELS[weight]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
                 {savingFontSize && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
                 <span className="text-xs text-muted-foreground font-medium">Size:</span>
                 <div className="flex rounded-md border overflow-hidden text-xs">
@@ -517,6 +561,7 @@ export function AdminBannerMessagesPage() {
               fontSize={FONT_SIZE_PX[tickerFontSize]}
               padding="14px 0"
               speed={activeMessages.length > 0 ? tickerSpeed : "slow"}
+              fontWeight={tickerFontWeight}
               onMessageClick={activeMessages.length > 0 ? handlePreviewClick : undefined}
             />
           </div>

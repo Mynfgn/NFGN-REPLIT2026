@@ -13,10 +13,11 @@ interface TickerBarProps {
   fontSize?: number;
   padding?: string;
   speed?: string;
+  fontWeight?: "bold" | "regular";
   onMessageClick?: (index: number) => void;
 }
 
-export function TickerBar({ messages, fontSize = 20, padding = "20px 0", speed = "medium", onMessageClick }: TickerBarProps) {
+export function TickerBar({ messages, fontSize = 20, padding = "20px 0", speed = "medium", fontWeight = "bold", onMessageClick }: TickerBarProps) {
   if (messages.length === 0) return null;
 
   const duration = SPEED_DURATION[speed] ?? SPEED_DURATION.medium;
@@ -40,7 +41,7 @@ export function TickerBar({ messages, fontSize = 20, padding = "20px 0", speed =
               style={{
                 color: "#fff",
                 fontSize,
-                fontWeight: 800,
+                fontWeight: fontWeight === "regular" ? 400 : 800,
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 16,

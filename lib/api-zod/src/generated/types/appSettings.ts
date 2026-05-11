@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { AppSettingsTickerFontSize } from "./appSettingsTickerFontSize";
+import type { AppSettingsTickerFontWeight } from "./appSettingsTickerFontWeight";
 import type { AppSettingsTickerSpeed } from "./appSettingsTickerSpeed";
 
 export interface AppSettings {
@@ -33,5 +34,6 @@ export interface AppSettings {
   demoMode: boolean;
   tickerSpeed: AppSettingsTickerSpeed;
   tickerFontSize: AppSettingsTickerFontSize;
+  tickerFontWeight: AppSettingsTickerFontWeight;
   tickerPlaceholder: string;
 }

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   Megaphone, Plus, Trash2, Save, Loader2, GripVertical,
-  ToggleLeft, ToggleRight, RefreshCw, Eye, EyeOff, MonitorPlay, Gauge, ExternalLink,
+  ToggleLeft, ToggleRight, RefreshCw, Eye, EyeOff, MonitorPlay, Gauge, ExternalLink, ALargeSmall,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useGetSettings, useUpdateSettings } from "@workspace/api-client-react";
@@ -242,15 +242,57 @@ export function AdminBannerMessagesPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="group flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold font-serif flex items-center gap-2">
             <Megaphone className="h-6 w-6 text-primary" />
             Banner Messages
           </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Manage the scrolling ticker messages on the Shop page.
-          </p>
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
+            <p className="text-muted-foreground text-sm">
+              Manage the scrolling ticker messages on the Shop page.
+            </p>
+            <a
+              href="#live-preview"
+              className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-1 no-underline"
+              style={{
+                background: "rgba(201,168,76,0.08)",
+                border: "1px solid rgba(201,168,76,0.3)",
+                borderRadius: 6,
+                padding: "2px 8px",
+                fontSize: 11,
+                fontWeight: 700,
+                color: "#C9A84C",
+                letterSpacing: "0.04em",
+                textDecoration: "none",
+                whiteSpace: "nowrap",
+              }}
+              title="Jump to size control in Live Preview"
+            >
+              <ALargeSmall style={{ width: 11, height: 11, flexShrink: 0 }} />
+              Size: {FONT_SIZE_LABELS[tickerFontSize]}
+            </a>
+            <a
+              href="#live-preview"
+              className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-1 no-underline"
+              style={{
+                background: "rgba(201,168,76,0.08)",
+                border: "1px solid rgba(201,168,76,0.3)",
+                borderRadius: 6,
+                padding: "2px 8px",
+                fontSize: 11,
+                fontWeight: 700,
+                color: "#C9A84C",
+                letterSpacing: "0.04em",
+                textDecoration: "none",
+                whiteSpace: "nowrap",
+              }}
+              title="Jump to speed control in Live Preview"
+            >
+              <Gauge style={{ width: 11, height: 11, flexShrink: 0 }} />
+              Speed: {SPEED_LABELS[tickerSpeed]}
+            </a>
+          </div>
         </div>
         <Button variant="outline" size="sm" onClick={load} disabled={loading}>
           <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? "animate-spin" : ""}`} />
@@ -391,7 +433,7 @@ export function AdminBannerMessagesPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card id="live-preview">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <CardTitle className="text-base flex items-center gap-2">

@@ -162,12 +162,13 @@ function ShopTickerBar() {
   const speedLabel = TICKER_SPEED_LABELS[speed ?? "medium"] ?? speed;
 
   return (
-    <div style={{ position: "relative" }}>
+    <div className="group" style={{ position: "relative" }}>
       <TickerBar messages={messages} speed={speed} fontSize={fontSize} />
       {isAdmin && speed && (
         <a
           href="/admin/banner-messages"
           title={`Ticker speed: ${speedLabel} — click to adjust in Banner Messages`}
+          className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           style={{
             position: "absolute",
             top: "50%",
@@ -187,10 +188,7 @@ function ShopTickerBar() {
             gap: 5,
             border: "1px solid rgba(201,168,76,0.45)",
             textDecoration: "none",
-            opacity: 0.85,
           }}
-          onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
-          onMouseLeave={e => (e.currentTarget.style.opacity = "0.85")}
         >
           <Gauge style={{ width: 11, height: 11 }} />
           {speedLabel}

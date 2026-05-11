@@ -10,7 +10,7 @@ import {
   Trophy, Ticket, Award, Utensils, Dumbbell, Heart, Gem,
   HandHeart, Coins, Church, Flower2, Sun, Snowflake, PartyPopper,
   Lock, Plane, Stethoscope, Brain, Pill, Tag, Crown, Gauge,
-  AlertTriangle, Link2,
+  AlertTriangle, Link2, ALargeSmall,
 } from "lucide-react";
 import { useCartStore } from "@/hooks/use-cart-store";
 import { useToast } from "@/hooks/use-toast";
@@ -133,6 +133,7 @@ function parseJwtRole(token: string | null): string | null {
 }
 
 const TICKER_SPEED_LABELS: Record<string, string> = { slow: "Slow", medium: "Medium", fast: "Fast" };
+const TICKER_FONT_SIZE_LABELS: Record<string, string> = { small: "Small", medium: "Medium", large: "Large" };
 
 function ShopTickerBar() {
   const { token } = useAuth();
@@ -160,39 +161,59 @@ function ShopTickerBar() {
   const role = parseJwtRole(token);
   const isAdmin = role ? ADMIN_ROLES.has(role) : false;
   const speedLabel = TICKER_SPEED_LABELS[speed ?? "medium"] ?? speed;
+  const fontSizeLabel = TICKER_FONT_SIZE_LABELS[settings?.tickerFontSize ?? "medium"] ?? "Medium";
+
+  const chipStyle: React.CSSProperties = {
+    background: "rgba(0,0,0,0.55)",
+    backdropFilter: "blur(4px)",
+    borderRadius: 6,
+    padding: "3px 9px",
+    fontSize: 11,
+    fontWeight: 700,
+    color: GOLD,
+    letterSpacing: "0.05em",
+    display: "flex",
+    alignItems: "center",
+    gap: 5,
+    border: "1px solid rgba(201,168,76,0.45)",
+    textDecoration: "none",
+  };
 
   return (
     <div className="group" style={{ position: "relative" }}>
       <TickerBar messages={messages} speed={speed} fontSize={fontSize} />
-      {isAdmin && speed && (
-        <a
-          href="/admin/banner-messages"
-          title={`Ticker speed: ${speedLabel} — click to adjust in Banner Messages`}
-          className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+      {isAdmin && (
+        <div
           style={{
             position: "absolute",
             top: "50%",
             transform: "translateY(-50%)",
             right: 12,
             zIndex: 10,
-            background: "rgba(0,0,0,0.55)",
-            backdropFilter: "blur(4px)",
-            borderRadius: 6,
-            padding: "3px 9px",
-            fontSize: 11,
-            fontWeight: 700,
-            color: GOLD,
-            letterSpacing: "0.05em",
             display: "flex",
             alignItems: "center",
-            gap: 5,
-            border: "1px solid rgba(201,168,76,0.45)",
-            textDecoration: "none",
+            gap: 6,
           }}
         >
-          <Gauge style={{ width: 11, height: 11 }} />
-          {speedLabel}
-        </a>
+          <a
+            href="/admin/banner-messages"
+            title={`Ticker font size: ${fontSizeLabel} — click to adjust in Banner Messages`}
+            className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            style={chipStyle}
+          >
+            <ALargeSmall style={{ width: 11, height: 11 }} />
+            {fontSizeLabel}
+          </a>
+          <a
+            href="/admin/banner-messages"
+            title={`Ticker speed: ${speedLabel} — click to adjust in Banner Messages`}
+            className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            style={chipStyle}
+          >
+            <Gauge style={{ width: 11, height: 11 }} />
+            {speedLabel}
+          </a>
+        </div>
       )}
     </div>
   );

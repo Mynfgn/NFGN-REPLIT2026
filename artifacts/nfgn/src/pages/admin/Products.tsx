@@ -117,6 +117,7 @@ const PRO_EXCLUSIVE_CATEGORIES = [
   "Mental Health & Primary Care",
   "Health & Wellness",
   "Exclusive Member Discounts",
+  "NFGN Sports",
   "General Exclusive",
 ] as const;
 

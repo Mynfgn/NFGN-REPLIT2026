@@ -764,6 +764,19 @@ const PRO_STORE_SECTIONS = [
     tags: ["Member Pricing", "Exclusive Deals", "VIP Discounts", "Partner Savings"],
   },
   {
+    key: "NFGN Sports",
+    slug: "nfgn-sports",
+    emoji: "🏆",
+    label: "NFGN Sports",
+    color: "#f97316",
+    colorDim: "rgba(249,115,22,0.14)",
+    colorBorder: "rgba(249,115,22,0.35)",
+    gradient: "linear-gradient(135deg, #130500 0%, #200900 55%, #100400 100%)",
+    topBorder: "#f97316",
+    description: "Pro Member-exclusive sports products, athlete packages, team sponsorships, and performance gear curated for the active NFGN community.",
+    tags: ["Athlete Packages", "Team Sponsorships", "Performance Gear", "Sports Events"],
+  },
+  {
     key: "General Exclusive",
     slug: "general-exclusive",
     emoji: "🔒",
@@ -787,6 +800,7 @@ function getProCatIcon(key: string, size = 18): React.ReactNode {
     case "Mental Health & Primary Care":return <Brain {...s} />;
     case "Health & Wellness":           return <Heart {...s} />;
     case "Exclusive Member Discounts":  return <Tag {...s} />;
+    case "NFGN Sports":                 return <Trophy {...s} />;
     default:                            return <Crown {...s} />;
   }
 }
@@ -1542,6 +1556,7 @@ export function Shop() {
                       {cat.key === "Mental Health & Primary Care" && <>Mind & Body. <span style={{ color: cat.color }}>Fully Supported.</span></>}
                       {cat.key === "Health & Wellness" && <>Live Well. <span style={{ color: cat.color }}>Perform Better.</span></>}
                       {cat.key === "Exclusive Member Discounts" && <>Save More. <span style={{ color: cat.color }}>Earn More.</span></>}
+                      {cat.key === "NFGN Sports" && <>Train. Compete. <span style={{ color: cat.color }}>Win Together.</span></>}
                       {cat.key === "General Exclusive" && <>Premium Access. <span style={{ color: cat.color }}>Exclusively Yours.</span></>}
                     </h3>
                     <p style={{ color: "#9a9a9a", fontSize: 15, maxWidth: 580, margin: "0 0 20px", lineHeight: 1.65 }}>

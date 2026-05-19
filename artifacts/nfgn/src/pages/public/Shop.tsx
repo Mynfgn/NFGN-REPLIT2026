@@ -1349,6 +1349,7 @@ export function Shop() {
               <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 16, background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.35)", padding: "6px 16px", borderRadius: 99 }}>
                 <Trophy size={13} color={GOLD} />
                 <span style={{ color: GOLD, fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>NFGN SPORTS</span>
+                <span style={{ color: "rgba(201,168,76,0.6)", fontSize: 10, fontWeight: 600, letterSpacing: "0.05em" }}>· Public Store</span>
               </div>
               <h2 style={{ color: "#fff", fontSize: "clamp(30px, 5vw, 46px)", fontWeight: 900, margin: "0 0 12px", fontFamily: "serif", lineHeight: 1.1 }}>
                 Game On. <span style={{ color: GOLD }}>Compete. Win.</span>

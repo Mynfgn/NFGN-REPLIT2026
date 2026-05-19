@@ -98,6 +98,14 @@ const CATEGORY_GROUPS = [
     description: "Naturopathic education, wellness books, guides, and professional service packages.",
     slugs: ["books-education", "services"],
   },
+  {
+    key: "sports",
+    label: "NFGN Sports",
+    icon: <Trophy className="h-5 w-5" />,
+    accentColor: "#C9A84C",
+    description: "Tournaments, entry fees, coaching, skills training, concessions, and more — all powered by NFGN.",
+    slugs: [],
+  },
 ];
 
 type ProPackage = {
@@ -975,6 +983,7 @@ export function Shop() {
   const soapsGroup   = grouped.find(g => g.group.key === "soaps")   ?? { group: CATEGORY_GROUPS[1], products: [] as Product[] };
   const candlesGroup = grouped.find(g => g.group.key === "candles") ?? { group: CATEGORY_GROUPS[2], products: [] as Product[] };
   const booksGroup   = grouped.find(g => g.group.key === "books")   ?? { group: CATEGORY_GROUPS[3], products: [] as Product[] };
+  const sportsGroup  = { group: CATEGORY_GROUPS[4], products: sportsProducts };
 
   return (
     <div style={{ fontFamily: "'Inter','Segoe UI',sans-serif", minHeight: "100vh", background: "#fff" }}>
@@ -1294,6 +1303,9 @@ export function Shop() {
             )}
             {booksGroup.products.length > 0 && (
               <CategorySection group={booksGroup.group} products={booksGroup.products} onAdd={handleAddToCart} addingId={addingId} />
+            )}
+            {sportsGroup.products.length > 0 && (
+              <CategorySection group={sportsGroup.group} products={sportsGroup.products} onAdd={handleAddToCart} addingId={addingId} />
             )}
             {uncategorized.length > 0 && (
               <CategorySection

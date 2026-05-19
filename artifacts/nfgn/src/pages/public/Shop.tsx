@@ -1361,9 +1361,12 @@ export function Shop() {
                 {[
                   { icon: <Ticket size={11} />, label: "Tournament Tickets" },
                   { icon: <Trophy size={11} />, label: "Entry Fees" },
-                  { icon: <Award size={11} />, label: "Sponsorships" },
+                  { icon: <Dumbbell size={11} />, label: "Skills Training" },
+                  { icon: <Brain size={11} />, label: "Coaching" },
                   { icon: <Utensils size={11} />, label: "Concessions & Food" },
-                  { icon: <Dumbbell size={11} />, label: "Skills & Training" },
+                  { icon: <Shield size={11} />, label: "Referee / Officials" },
+                  { icon: <Award size={11} />, label: "Sponsorships" },
+                  { icon: <Users size={11} />, label: "Youth Development" },
                 ].map(tag => (
                   <span key={tag.label} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)", color: GOLD, fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 99, letterSpacing: "0.04em" }}>
                     {tag.icon} {tag.label}

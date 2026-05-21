@@ -62,6 +62,13 @@ export default defineConfig({
     port,
     host: "0.0.0.0",
     allowedHosts: true,
+    hmr: process.env.REPLIT_DEV_DOMAIN
+      ? {
+          host: process.env.REPLIT_DEV_DOMAIN,
+          protocol: "wss",
+          clientPort: 443,
+        }
+      : true,
     proxy: {
       "/api": {
         target: "http://localhost:8080",

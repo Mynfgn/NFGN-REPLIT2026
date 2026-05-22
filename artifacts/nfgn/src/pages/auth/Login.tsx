@@ -16,8 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { InfoIcon, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -89,15 +88,6 @@ export function Login() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Alert className="bg-primary/5 border-primary/20 text-foreground">
-              <InfoIcon className="h-4 w-4 text-primary" />
-              <AlertTitle className="text-sm font-bold text-primary">Demo Credentials</AlertTitle>
-              <AlertDescription className="text-xs mt-1 space-y-1">
-                <div><strong>Admin:</strong> Mynfgn@gmail.com / Admin123</div>
-                <div><strong>Pro Member:</strong> promember@nfgn.com / ProMember!2026#</div>
-              </AlertDescription>
-            </Alert>
-
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField

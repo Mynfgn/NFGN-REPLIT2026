@@ -13,6 +13,7 @@ import { AdminLayout } from "@/components/layout/AdminLayout";
 
 // Public Pages
 import NotFound from "@/pages/not-found";
+import { ComingSoon } from "@/pages/public/ComingSoon";
 import { Home } from "@/pages/public/Home";
 import { Shop } from "@/pages/public/Shop";
 import { ProductDetail } from "@/pages/public/ProductDetail";
@@ -128,7 +129,8 @@ function Router() {
       </Route>
 
       {/* Public routes */}
-      <Route path="/">
+      <Route path="/" component={ComingSoon} />
+      <Route path="/home">
         <PublicLayout><Home /></PublicLayout>
       </Route>
       <Route path="/shop">

@@ -282,7 +282,7 @@ function ProductCard({
               style={{
                 width: "100%",
                 height: "100%",
-                objectFit: "cover",
+                objectFit: "contain",
                 transition: "transform 0.5s ease",
                 transform: hover ? "scale(1.05)" : "scale(1)",
               }}
@@ -1875,7 +1875,7 @@ function ProExclusiveCard({
         {/* Image */}
         <div style={{ background: img ? "#1a1a1a" : `linear-gradient(135deg, rgba(124,58,237,0.20), rgba(124,58,237,0.06))`, height: 170, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
           {img ? (
-            <img src={img} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease", transform: hover ? "scale(1.08)" : "scale(1)" }} />
+            <img src={img} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "contain", transition: "transform 0.5s ease", transform: hover ? "scale(1.08)" : "scale(1)" }} />
           ) : (
             <Crown size={44} color={PURPLE_LIGHT} style={{ opacity: 0.38 }} />
           )}
@@ -1970,7 +1970,7 @@ function ChurchDonationCard({
         {/* Image area */}
         <div style={{ background: img ? "#1a1a1a" : `linear-gradient(135deg, rgba(180,83,9,0.18), rgba(201,168,76,0.08))`, height: 170, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
           {img ? (
-            <img src={img} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease", transform: hover ? "scale(1.07)" : "scale(1)" }} />
+            <img src={img} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "contain", transition: "transform 0.5s ease", transform: hover ? "scale(1.07)" : "scale(1)" }} />
           ) : (
             <Church size={48} color={AMBER_LIGHT} style={{ opacity: 0.45 }} />
           )}
@@ -2080,7 +2080,7 @@ function NonProfitProductCard({
       >
         <div style={{ background: img ? "#1a1a1a" : `linear-gradient(135deg, rgba(201,168,76,0.12), rgba(201,168,76,0.03))`, height: 160, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
           {img ? (
-            <img src={img} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease", transform: hover ? "scale(1.06)" : "scale(1)" }} />
+            <img src={img} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "contain", transition: "transform 0.5s ease", transform: hover ? "scale(1.06)" : "scale(1)" }} />
           ) : (
             <HandHeart size={40} color={NP_GOLD} style={{ opacity: 0.4 }} />
           )}
@@ -2197,7 +2197,7 @@ function WeddingProductCard({
       >
         <div style={{ background: img ? "#fdf2f8" : `linear-gradient(135deg, ${ROSE_DIM}, rgba(225,29,122,0.04))`, height: 160, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
           {img ? (
-            <img src={img} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease", transform: hover ? "scale(1.06)" : "scale(1)" }} />
+            <img src={img} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "contain", transition: "transform 0.5s ease", transform: hover ? "scale(1.06)" : "scale(1)" }} />
           ) : (
             <Gem size={40} color={ROSE} style={{ opacity: 0.35 }} />
           )}
@@ -2297,7 +2297,7 @@ function HolidayProductCard({
       >
         <div style={{ background: img ? "#fef3c7" : `linear-gradient(135deg, ${AMBER_DIM}, rgba(217,119,6,0.04))`, height: 160, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
           {img ? (
-            <img src={img} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease", transform: hover ? "scale(1.06)" : "scale(1)" }} />
+            <img src={img} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "contain", transition: "transform 0.5s ease", transform: hover ? "scale(1.06)" : "scale(1)" }} />
           ) : (
             <Star size={40} color={AMBER} style={{ opacity: 0.35 }} />
           )}
@@ -2396,7 +2396,7 @@ function SportsProductCard({
         {/* Image */}
         <div style={{ background: img ? "#1a1a1a" : "linear-gradient(135deg, rgba(201,168,76,0.15), rgba(201,168,76,0.05))", height: 160, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
           {img ? (
-            <img src={img} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease", transform: hover ? "scale(1.06)" : "scale(1)" }} />
+            <img src={img} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "contain", transition: "transform 0.5s ease", transform: hover ? "scale(1.06)" : "scale(1)" }} />
           ) : (
             <Trophy size={40} color={GOLD} style={{ opacity: 0.35 }} />
           )}

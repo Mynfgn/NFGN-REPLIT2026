@@ -978,7 +978,7 @@ export function CartDrawer() {
                       <div className="flex gap-3 p-3 rounded-xl" style={{ background: "#faf8f3", border: `1px solid ${donationBelowMin ? "#fca5a5" : "#e8dfc8"}` }}>
                         <div className="h-[76px] w-[68px] flex-shrink-0 rounded-lg overflow-hidden" style={{ background: "linear-gradient(135deg, #f5f0e8, #ede5d0)", border: "2px solid #e0d4b8" }}>
                           {resolveImageSrc(item.productImage) ? (
-                            <img src={resolveImageSrc(item.productImage)!} alt={item.productName} className="h-full w-full object-cover" />
+                            <img src={resolveImageSrc(item.productImage)!} alt={item.productName} className="h-full w-full object-contain" />
                           ) : (
                             <div className="h-full w-full flex items-center justify-center font-black text-xs" style={{ color: "#C9A84C" }}>NFGN</div>
                           )}

@@ -108,20 +108,6 @@ const CATEGORY_GROUPS = [
   },
 ];
 
-type ProPackage = {
-  id: number;
-  name: string;
-  price: number;
-  originalPrice: number;
-  badge: string;
-  badgeColor: string;
-  perks: string[];
-  sortOrder: number;
-  productId: number | null;
-  productName: string | null;
-  productSlug: string | null;
-};
-
 function categorySlugFromName(name?: string | null): string {
   if (!name) return "";
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -386,7 +372,7 @@ function ProPackageCard({
   isAdmin,
   onFixLink,
 }: {
-  pkg: ProPackage;
+  pkg: { id: number; name: string; price: number; originalPrice: number; badge: string; badgeColor: string; perks: string[]; sortOrder: number; productId: number | null; productName: string | null; productSlug: string | null; };
   matchedProduct: Product | null;
   resolutionMethod: "direct" | "fuzzy" | null;
   onAdd: (e: React.MouseEvent, id: number) => void;
@@ -837,46 +823,7 @@ export function Shop() {
   );
   const isAdminRole = isAuthenticated && !!currentUser &&
     ["admin", "super_admin", "store_admin"].includes(currentUser.role);
-  const [proPackages, setProPackages] = useState<ProPackage[]>([]);
-  const [proPackagesLoading, setProPackagesLoading] = useState(true);
   const [catOverrides, setCatOverrides] = useState<Record<string, { description?: string; tags?: string[] }>>({});
-
-  const [fixLinkTarget, setFixLinkTarget] = useState<ProPackage | null>(null);
-  const [fixLinkProductId, setFixLinkProductId] = useState<string>("");
-  const [fixLinkSaving, setFixLinkSaving] = useState(false);
-
-  const openFixLink = (pkg: ProPackage) => {
-    setFixLinkTarget(pkg);
-    setFixLinkProductId("");
-  };
-
-  const handleFixLink = async () => {
-    if (!fixLinkTarget) return;
-    setFixLinkSaving(true);
-    try {
-      const productId = fixLinkProductId !== "" && fixLinkProductId !== "none"
-        ? parseInt(fixLinkProductId)
-        : null;
-      const res = await customFetch(`/api/pro-packages/${fixLinkTarget.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId }),
-      });
-      if (!res.ok) throw new Error("Failed to save");
-      toast({ title: productId ? "Product link updated" : "Stale link cleared" });
-      setFixLinkTarget(null);
-      setProPackagesLoading(true);
-      fetch("/api/pro-packages")
-        .then((r) => r.json())
-        .then((d: ProPackage[]) => setProPackages(Array.isArray(d) ? d : []))
-        .catch(() => {})
-        .finally(() => setProPackagesLoading(false));
-    } catch {
-      toast({ title: "Failed to update product link", variant: "destructive" });
-    } finally {
-      setFixLinkSaving(false);
-    }
-  };
 
   useEffect(() => {
     fetch("/api/categories")
@@ -936,7 +883,6 @@ export function Shop() {
   };
 
   const products: Product[] = data?.products ?? [];
-  const proProducts = products.filter((p) => p.isProPackage);
   const sportsProducts = products.filter((p) => p.isSports && !p.isProPackage);
   const nonProfitProducts = products.filter((p) => p.isNonProfit && !p.isProPackage && !p.isSports && !p.isChurchDonation);
   const weddingProducts = products.filter((p) => p.isWeddingRegistry && !p.isProPackage && !p.isSports);
@@ -945,28 +891,6 @@ export function Shop() {
   const churchDonationProducts = products.filter((p) => p.isChurchDonation && !p.isProPackage);
   const regularProducts = products.filter((p) => !p.isProPackage && !p.isSports && !p.isNonProfit && !p.isWeddingRegistry && !p.isHolidayRegistry && !p.isProExclusive && !p.isChurchDonation);
 
-  // Resolve which real product to use for a package card's "Add to Cart" button.
-  // Prefer the admin-configured direct product link (productId); fall back to
-  // fuzzy price matching (within 25% tolerance) when no link is set.
-  function resolveProProduct(pkg: ProPackage): { product: Product | null; method: "direct" | "fuzzy" | null } {
-    if (pkg.productId != null) {
-      const direct = products.find((p) => p.id === pkg.productId);
-      if (direct) return { product: direct, method: "direct" };
-      // productId set but product not found (stale link) — fall through to fuzzy match
-    }
-    const targetPrice = pkg.price;
-    const tolerance = targetPrice * 0.25;
-    let best: Product | null = null;
-    let bestDiff = Infinity;
-    for (const p of proProducts) {
-      const diff = Math.abs(p.price - targetPrice);
-      if (diff <= tolerance && diff < bestDiff) {
-        best = p;
-        bestDiff = diff;
-      }
-    }
-    return { product: best, method: best ? "fuzzy" : null };
-  }
   const saleProducts = regularProducts.filter((p) => p.comparePrice && p.comparePrice > p.price).slice(0, 3);
 
   const grouped = CATEGORY_GROUPS.map((group) => ({
@@ -1101,59 +1025,24 @@ export function Shop() {
         </div>
       </div>
 
-      {/* ── ZONE 1: BLACK — Pro Registration Packages ───── */}
-      <div style={{ background: GREY_900, padding: "64px 0 80px", borderBottom: `1px solid ${GREY_800}` }}>
-        <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-            <div style={{ background: GOLD, borderRadius: 8, padding: 10 }}>
-              <Package size={22} color="#000" />
-            </div>
-            <div>
-              <p style={{ color: GOLD, fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", margin: 0 }}>
-                Members Only
-              </p>
-              <h2 style={{ color: "#fff", fontSize: 30, fontWeight: 900, margin: 0, fontFamily: "serif" }}>
-                Pro Registration Packages
-              </h2>
-            </div>
+      {/* ── Pro Member Callout ────────────────────────────── */}
+      <div style={{ background: GREY_900, padding: "48px 24px", borderBottom: `1px solid ${GREY_800}` }}>
+        <div style={{ maxWidth: 760, margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 16 }}>
+          <div style={{ background: "rgba(201,168,76,0.12)", border: `1px solid rgba(201,168,76,0.3)`, borderRadius: 99, padding: "4px 16px", display: "inline-flex", alignItems: "center", gap: 8 }}>
+            <Star size={12} color={GOLD} />
+            <span style={{ color: GOLD, fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>Become a Pro Member</span>
           </div>
-          <p style={{ color: GREY_600, marginBottom: 40, fontSize: 15 }}>
-            Start your NFGN journey — choose the package that fits your goals.
+          <h2 style={{ color: "#fff", fontSize: 26, fontWeight: 900, margin: 0, fontFamily: "serif" }}>
+            Ready to Join the NFGN Network?
+          </h2>
+          <p style={{ color: GREY_600, fontSize: 15, maxWidth: 520, margin: 0 }}>
+            Pro Registration Packages unlock commissions, exclusive benefits, and your own downline. View all packages and register on the Pro Member page.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {proPackagesLoading ? (
-              [1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  style={{
-                    background: "#111",
-                    border: "1.5px solid rgba(201,168,76,0.15)",
-                    borderRadius: 12,
-                    padding: "28px 24px 32px",
-                    minHeight: 320,
-                    opacity: 0.5,
-                    animation: "pulse 1.5s ease-in-out infinite",
-                  }}
-                />
-              ))
-            ) : proPackages.length === 0 ? null : (
-              proPackages.map((pkg) => {
-                const { product: matched, method } = resolveProProduct(pkg);
-                return (
-                  <ProPackageCard
-                    key={pkg.id}
-                    pkg={pkg}
-                    matchedProduct={matched}
-                    resolutionMethod={method}
-                    onAdd={handleAddToCart}
-                    adding={addingId === matched?.id}
-                    isAdmin={isAdminRole}
-                    onFixLink={() => openFixLink(pkg)}
-                  />
-                );
-              })
-            )}
-          </div>
+          <Link href="/join/pro">
+            <button style={{ marginTop: 8, padding: "13px 36px", background: GOLD, color: "#000", border: "none", borderRadius: 8, fontWeight: 800, fontSize: 14, cursor: "pointer", letterSpacing: "0.04em", display: "inline-flex", alignItems: "center", gap: 8 }}>
+              <Package size={16} /> View Pro Registration Packages
+            </button>
+          </Link>
         </div>
       </div>
 
@@ -1786,53 +1675,6 @@ export function Shop() {
         </div>
       </div>
 
-      {/* ── Fix Link Dialog — admin only ─────────────────── */}
-      <Dialog open={!!fixLinkTarget} onOpenChange={(o) => !o && setFixLinkTarget(null)}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Link2 className="h-4 w-4 text-blue-600" />
-              Fix Stale Product Link
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            <p className="text-sm text-muted-foreground">
-              The product previously linked to{" "}
-              <span className="font-semibold text-foreground">{fixLinkTarget?.name}</span>{" "}
-              no longer exists. Select a replacement or clear the link.
-            </p>
-            <div className="space-y-1.5">
-              <Label>Linked Shop Product</Label>
-              <Select
-                value={fixLinkProductId !== "" ? fixLinkProductId : "none"}
-                onValueChange={(val) => setFixLinkProductId(val === "none" ? "" : val)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a product…" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Clear link (use price matching)</SelectItem>
-                  {(data?.products ?? []).map((p) => (
-                    <SelectItem key={p.id} value={String(p.id)}>
-                      {p.name} (${Number(p.price).toFixed(2)}){p.isProPackage ? " ★" : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setFixLinkTarget(null)} disabled={fixLinkSaving}>
-              Cancel
-            </Button>
-            <Button onClick={handleFixLink} disabled={fixLinkSaving}>
-              {fixLinkSaving ? (
-                <><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Saving…</>
-              ) : "Save"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

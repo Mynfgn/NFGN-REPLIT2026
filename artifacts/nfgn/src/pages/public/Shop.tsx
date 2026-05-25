@@ -933,56 +933,71 @@ export function Shop() {
       )}
 
       {/* ── ZONE 1: BLACK — Hero ─────────────────────────── */}
-      <div style={{ background: "linear-gradient(135deg, #020202 0%, #0d0800 50%, #080f04 100%)", borderBottom: "2px solid rgba(201,168,76,0.25)", position: "relative", overflow: "hidden" }}>
-        {/* Ambient glow blobs */}
-        <div style={{ position: "absolute", top: -80, left: "8%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,168,76,0.10), transparent 70%)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", bottom: -60, right: "5%", width: 350, height: 350, borderRadius: "50%", background: "radial-gradient(circle, rgba(45,106,79,0.15), transparent 70%)", pointerEvents: "none" }} />
+      <div style={{ background: "#000", borderBottom: "2px solid rgba(201,168,76,0.30)", position: "relative", overflow: "hidden" }}>
+        {/* Deep center glow */}
+        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 700, height: 400, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(201,168,76,0.13) 0%, rgba(45,106,79,0.06) 45%, transparent 70%)", pointerEvents: "none" }} />
+        {/* Corner accents */}
+        <div style={{ position: "absolute", top: -100, left: -100, width: 320, height: 320, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,168,76,0.07), transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: -80, right: -80, width: 280, height: 280, borderRadius: "50%", background: "radial-gradient(circle, rgba(45,106,79,0.10), transparent 70%)", pointerEvents: "none" }} />
         {/* Grid overlay */}
         <div style={{ position: "absolute", inset: 0, backgroundImage: `linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px)`, backgroundSize: "40px 40px", pointerEvents: "none" }} />
+        {/* Top gold line */}
+        <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 200, height: 2, background: `linear-gradient(90deg, transparent, ${GOLD}, transparent)` }} />
 
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", position: "relative" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 48, minHeight: 480 }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", padding: "80px 24px 88px", textAlign: "center", position: "relative" }}>
 
-            {/* ── Left: copy ── */}
-            <div style={{ flex: "1 1 480px", paddingTop: 64, paddingBottom: 64 }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 22, background: "rgba(201,168,76,0.10)", border: "1px solid rgba(201,168,76,0.30)", padding: "7px 18px", borderRadius: 99 }}>
-                <Sparkles size={13} color={GOLD} />
-                <span style={{ color: GOLD, fontSize: 12, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>NFGN Marketplace</span>
+          {/* Badge */}
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 28, background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.35)", padding: "8px 22px", borderRadius: 99, boxShadow: "0 0 20px rgba(201,168,76,0.08)" }}>
+            <Sparkles size={13} color={GOLD} />
+            <span style={{ color: GOLD, fontSize: 12, fontWeight: 800, letterSpacing: "0.25em", textTransform: "uppercase" }}>NFGN Marketplace</span>
+            <Sparkles size={13} color={GOLD} />
+          </div>
+
+          {/* Headline */}
+          <h1 style={{ color: "#fff", fontSize: "clamp(48px, 8vw, 88px)", fontWeight: 900, lineHeight: 1.0, margin: "0 0 22px", fontFamily: "'Playfair Display',serif", letterSpacing: "-0.01em" }}>
+            Wellness.{" "}
+            <span style={{ color: GOLD, textShadow: "0 0 60px rgba(201,168,76,0.5), 0 0 120px rgba(201,168,76,0.2)" }}>
+              Elevated.
+            </span>
+          </h1>
+
+          {/* Divider */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, margin: "0 auto 24px", maxWidth: 400 }}>
+            <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(201,168,76,0.4))" }} />
+            <Sparkles size={14} color={GOLD} style={{ opacity: 0.7 }} />
+            <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, rgba(201,168,76,0.4), transparent)" }} />
+          </div>
+
+          {/* Subtitle */}
+          <p style={{ color: "#b0b0b0", fontSize: 18, lineHeight: 1.7, maxWidth: 520, margin: "0 auto 40px" }}>
+            Premium naturopathic products crafted with care —<br />for your body, mind, and business.
+          </p>
+
+          {/* CTAs */}
+          <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap", marginBottom: 52 }}>
+            <a href="#products" style={{ background: `linear-gradient(135deg, ${GOLD} 0%, #b8922a 100%)`, color: "#000", padding: "15px 40px", borderRadius: 8, fontWeight: 800, fontSize: 16, border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 9, textDecoration: "none", boxShadow: "0 6px 32px rgba(201,168,76,0.40), 0 2px 8px rgba(0,0,0,0.4)", letterSpacing: "0.02em" }}>
+              <ShoppingCart size={18} /> Shop Now
+            </a>
+            <Link href="/join">
+              <span style={{ background: "transparent", color: "#fff", padding: "15px 36px", borderRadius: 8, fontWeight: 700, fontSize: 16, border: "1px solid rgba(255,255,255,0.22)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 9, letterSpacing: "0.01em" }}>
+                Become a Member <ArrowRight size={17} />
+              </span>
+            </Link>
+          </div>
+
+          {/* Trust row */}
+          <div style={{ display: "flex", gap: 32, justifyContent: "center", flexWrap: "wrap" }}>
+            {[
+              { icon: <Leaf size={14} color={GOLD} />, label: "100% Natural" },
+              { icon: <Shield size={14} color={GOLD} />, label: "Certified Products" },
+              { icon: <Users size={14} color={GOLD} />, label: "Global Community" },
+              { icon: <Star size={14} color={GOLD} />, label: "Pro Member Rewards" },
+            ].map(({ icon, label }) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                {icon}
+                <span style={{ color: "#888", fontSize: 12, fontWeight: 600 }}>{label}</span>
               </div>
-              <h1 style={{ color: "#fff", fontSize: "clamp(38px, 5vw, 64px)", fontWeight: 900, lineHeight: 1.05, margin: "0 0 18px", fontFamily: "'Playfair Display',serif" }}>
-                Wellness.<br /><span style={{ color: GOLD, textShadow: "0 0 40px rgba(201,168,76,0.4)" }}>Elevated.</span>
-              </h1>
-              <p style={{ color: "#b0b0b0", fontSize: 17, lineHeight: 1.65, maxWidth: 440, margin: "0 0 34px" }}>
-                Premium naturopathic products crafted with care — for your body, mind, and business.
-              </p>
-
-              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 40 }}>
-                <a href="#products" style={{ background: `linear-gradient(135deg, ${GOLD}, #a8852e)`, color: "#000", padding: "14px 34px", borderRadius: 8, fontWeight: 800, fontSize: 15, border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none", boxShadow: "0 4px 24px rgba(201,168,76,0.35)" }}>
-                  <ShoppingCart size={17} /> Shop Now
-                </a>
-                <Link href="/join">
-                  <span style={{ background: "rgba(255,255,255,0.06)", color: "#fff", padding: "14px 28px", borderRadius: 8, fontWeight: 700, fontSize: 15, border: "1px solid rgba(255,255,255,0.15)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8, backdropFilter: "blur(8px)" }}>
-                    Become a Member <ArrowRight size={16} />
-                  </span>
-                </Link>
-              </div>
-
-              {/* Trust stats */}
-              <div style={{ display: "flex", gap: 28, flexWrap: "wrap" }}>
-                {[
-                  { icon: <Leaf size={14} color={GOLD} />, label: "100% Natural" },
-                  { icon: <Shield size={14} color={GOLD} />, label: "Certified Products" },
-                  { icon: <Users size={14} color={GOLD} />, label: "Global Community" },
-                  { icon: <Star size={14} color={GOLD} />, label: "Pro Member Rewards" },
-                ].map(({ icon, label }) => (
-                  <div key={label} style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                    {icon}
-                    <span style={{ color: "#a0a0a0", fontSize: 12, fontWeight: 600 }}>{label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
+            ))}
           </div>
         </div>
       </div>

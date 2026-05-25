@@ -841,15 +841,6 @@ export function Shop() {
       .catch(() => {});
   }, []);
 
-  useEffect(() => {
-    setProPackagesLoading(true);
-    fetch("/api/pro-packages")
-      .then((r) => r.json())
-      .then((data: ProPackage[]) => setProPackages(Array.isArray(data) ? data : []))
-      .catch(() => setProPackages([]))
-      .finally(() => setProPackagesLoading(false));
-  }, []);
-
   // Scroll to giving section when ?section=giving is in the URL (e.g. from the dashboard sidebar link)
   useEffect(() => {
     if (new URLSearchParams(search).get("section") !== "giving") return;

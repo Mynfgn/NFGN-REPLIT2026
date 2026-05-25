@@ -73,7 +73,7 @@ export function AdminNonprofitRequestsPage() {
         toast({
           title: status === "approved" ? "Organization Approved!" : "Request Rejected",
           description: status === "approved"
-            ? "A donation product has been created and the organization is now listed on the Support Somebody page."
+            ? "A donation product has been created and the organization is now listed on the Gifts & Donations page."
             : "The nonprofit request has been rejected.",
         });
         fetchRequests();
@@ -108,7 +108,7 @@ export function AdminNonprofitRequestsPage() {
               <span style={{ color: GOLD, fontSize: 11, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase" }}>Admin Queue</span>
             </div>
             <h1 style={{ color: "#fff", fontSize: 28, fontWeight: 900, margin: 0, fontFamily: "serif" }}>Nonprofit & Church Requests</h1>
-            <p style={{ color: "#666", fontSize: 14, marginTop: 6 }}>Review, approve, or reject applications to be listed on the Support Somebody page.</p>
+            <p style={{ color: "#666", fontSize: 14, marginTop: 6 }}>Review, approve, or reject applications to be listed on the Gifts & Donations page.</p>
           </div>
           <button onClick={fetchRequests} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(201,168,76,0.10)", border: `1px solid rgba(201,168,76,0.3)`, color: GOLD, padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
             <RefreshCw size={13} /> Refresh
@@ -235,7 +235,7 @@ export function AdminNonprofitRequestsPage() {
             </h3>
             {noteModal.action === "approved" && (
               <p style={{ color: "#9a9a9a", fontSize: 13, margin: "0 0 20px", lineHeight: 1.6 }}>
-                Approving will automatically create a donation product for this organization and list it on the <strong style={{ color: "#fff" }}>Support Somebody</strong> page. The default split is 80% to the cause / 20% to the network. You can adjust this in Admin → Products.
+                Approving will automatically create a donation product for this organization and list it on the <strong style={{ color: "#fff" }}>Gifts & Donations</strong> page. The default split is 80% to the cause / 20% to the network. You can adjust this in Admin → Products.
               </p>
             )}
             <div style={{ marginBottom: 20 }}>

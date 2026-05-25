@@ -280,7 +280,7 @@ export function Join() {
                           I represent a church or non-profit
                         </p>
                         <p style={{ color: "#888", fontSize: 12, margin: 0 }}>
-                          Request to be listed on the Support Somebody page
+                          Request to be listed on the Gifts & Donations page
                         </p>
                       </div>
                     </div>
@@ -386,7 +386,7 @@ export function Join() {
                       <div style={{ padding: "12px 14px", background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.22)", borderRadius: 8 }}>
                         <p style={{ color: GOLD, fontSize: 12, fontWeight: 700, margin: "0 0 4px" }}>📋 What happens next?</p>
                         <p style={{ color: "#888", fontSize: 12, margin: 0, lineHeight: 1.6 }}>
-                          After registration, your application will be reviewed by the NFGN team. Once approved, your organization will be listed on the <strong style={{ color: "#ccc" }}>Support Somebody</strong> page and a QR code will be generated for member donations. <strong style={{ color: "#ccc" }}>No Pro Membership is required</strong> — this listing is completely free.
+                          After registration, your application will be reviewed by the NFGN team. Once approved, your organization will be listed on the <strong style={{ color: "#ccc" }}>Gifts & Donations</strong> page and a QR code will be generated for member donations. <strong style={{ color: "#ccc" }}>No Pro Membership is required</strong> — this listing is completely free.
                         </p>
                       </div>
                     </div>
@@ -435,7 +435,7 @@ export function Join() {
                 <h4 className="font-bold text-sm">Church or Non-Profit?</h4>
               </div>
               <p className="text-sm text-muted-foreground mb-3">
-                Register your organization for <strong className="text-foreground">free</strong> and get listed on our Support Somebody page. Members of the NFGN network can donate directly to your cause. No Pro Membership required.
+                Register your organization for <strong className="text-foreground">free</strong> and get listed on our Gifts & Donations page. Members of the NFGN network can donate directly to your cause. No Pro Membership required.
               </p>
               <ul className="space-y-1.5 text-sm text-muted-foreground">
                 {[

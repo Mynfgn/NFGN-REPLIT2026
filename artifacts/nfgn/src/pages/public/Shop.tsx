@@ -45,6 +45,7 @@ type Product = {
   image?: string | null;
   images?: string[] | null;
   categoryName?: string | null;
+  featured?: boolean | null;
   isProPackage?: boolean | null;
   isSports?: boolean | null;
   isNonProfit?: boolean | null;
@@ -932,89 +933,186 @@ export function Shop() {
       )}
 
       {/* ── ZONE 1: BLACK — Hero ─────────────────────────── */}
-      <div style={{ background: "#000", borderBottom: "2px solid #1a1a1a" }}>
-        <div
-          style={{
-            backgroundImage: `linear-gradient(rgba(201,168,76,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.05) 1px, transparent 1px)`,
-            backgroundSize: "40px 40px",
-          }}
-        >
-          <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto", padding: "64px 0 72px", textAlign: "center" }}>
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                marginBottom: 20,
-                background: "rgba(201,168,76,0.10)",
-                border: "1px solid rgba(201,168,76,0.25)",
-                padding: "7px 18px",
-                borderRadius: 99,
-              }}
-            >
-              <Sparkles size={13} color={GOLD} />
-              <span style={{ color: GOLD, fontSize: 12, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>
-                NFGN Marketplace
-              </span>
+      <div style={{ background: "linear-gradient(135deg, #020202 0%, #0d0800 50%, #080f04 100%)", borderBottom: "2px solid rgba(201,168,76,0.25)", position: "relative", overflow: "hidden" }}>
+        {/* Ambient glow blobs */}
+        <div style={{ position: "absolute", top: -80, left: "8%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,168,76,0.10), transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: -60, right: "5%", width: 350, height: 350, borderRadius: "50%", background: "radial-gradient(circle, rgba(45,106,79,0.15), transparent 70%)", pointerEvents: "none" }} />
+        {/* Grid overlay */}
+        <div style={{ position: "absolute", inset: 0, backgroundImage: `linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px)`, backgroundSize: "40px 40px", pointerEvents: "none" }} />
+
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", position: "relative" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 48, minHeight: 480 }}>
+
+            {/* ── Left: copy ── */}
+            <div style={{ flex: "1 1 480px", paddingTop: 64, paddingBottom: 64 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 22, background: "rgba(201,168,76,0.10)", border: "1px solid rgba(201,168,76,0.30)", padding: "7px 18px", borderRadius: 99 }}>
+                <Sparkles size={13} color={GOLD} />
+                <span style={{ color: GOLD, fontSize: 12, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>NFGN Marketplace</span>
+              </div>
+              <h1 style={{ color: "#fff", fontSize: "clamp(38px, 5vw, 64px)", fontWeight: 900, lineHeight: 1.05, margin: "0 0 18px", fontFamily: "'Playfair Display',serif" }}>
+                Wellness.<br /><span style={{ color: GOLD, textShadow: "0 0 40px rgba(201,168,76,0.4)" }}>Elevated.</span>
+              </h1>
+              <p style={{ color: "#b0b0b0", fontSize: 17, lineHeight: 1.65, maxWidth: 440, margin: "0 0 34px" }}>
+                Premium naturopathic products crafted with care — for your body, mind, and business.
+              </p>
+
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 40 }}>
+                <a href="#products" style={{ background: `linear-gradient(135deg, ${GOLD}, #a8852e)`, color: "#000", padding: "14px 34px", borderRadius: 8, fontWeight: 800, fontSize: 15, border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none", boxShadow: "0 4px 24px rgba(201,168,76,0.35)" }}>
+                  <ShoppingCart size={17} /> Shop Now
+                </a>
+                <Link href="/join">
+                  <span style={{ background: "rgba(255,255,255,0.06)", color: "#fff", padding: "14px 28px", borderRadius: 8, fontWeight: 700, fontSize: 15, border: "1px solid rgba(255,255,255,0.15)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8, backdropFilter: "blur(8px)" }}>
+                    Become a Member <ArrowRight size={16} />
+                  </span>
+                </Link>
+              </div>
+
+              {/* Trust stats */}
+              <div style={{ display: "flex", gap: 28, flexWrap: "wrap" }}>
+                {[
+                  { icon: <Leaf size={14} color={GOLD} />, label: "100% Natural" },
+                  { icon: <Shield size={14} color={GOLD} />, label: "Certified Products" },
+                  { icon: <Users size={14} color={GOLD} />, label: "Global Community" },
+                  { icon: <Star size={14} color={GOLD} />, label: "Pro Member Rewards" },
+                ].map(({ icon, label }) => (
+                  <div key={label} style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                    {icon}
+                    <span style={{ color: "#a0a0a0", fontSize: 12, fontWeight: 600 }}>{label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <h1
-              style={{
-                color: "#fff",
-                fontSize: "clamp(36px, 6vw, 60px)",
-                fontWeight: 900,
-                lineHeight: 1.1,
-                margin: "0 0 16px",
-                fontFamily: "'Playfair Display',serif",
-              }}
-            >
-              Wellness. <span style={{ color: GOLD }}>Elevated.</span>
-            </h1>
-            <p style={{ color: GREY_400, fontSize: 18, maxWidth: 500, margin: "0 auto 32px" }}>
-              Premium naturopathic products crafted with care — for your body, mind, and business.
-            </p>
-            <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-              <a
-                href="#products"
-                style={{
-                  background: GOLD,
-                  color: "#000",
-                  padding: "13px 32px",
-                  borderRadius: 8,
-                  fontWeight: 800,
-                  fontSize: 15,
-                  border: "none",
-                  cursor: "pointer",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  textDecoration: "none",
-                }}
-              >
-                <ShoppingCart size={17} /> Shop Now
-              </a>
-              <Link href="/join">
-                <span
-                  style={{
-                    background: "transparent",
-                    color: "#fff",
-                    padding: "13px 28px",
-                    borderRadius: 8,
-                    fontWeight: 700,
-                    fontSize: 15,
-                    border: "1px solid rgba(255,255,255,0.2)",
-                    cursor: "pointer",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 8,
-                  }}
-                >
-                  Become a Member <ArrowRight size={16} />
-                </span>
-              </Link>
+
+            {/* ── Right: hero image ── */}
+            <div style={{ flex: "0 0 420px", maxWidth: 420, display: "flex", alignItems: "center", justifyContent: "center", alignSelf: "stretch", padding: "32px 0" }} className="hidden lg:flex">
+              <div style={{ position: "relative", width: "100%", height: 380, borderRadius: 20, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(201,168,76,0.2)" }}>
+                <img
+                  src="https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=800&q=80"
+                  alt="NFGN Wellness Products"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+                {/* Gold overlay gradient */}
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(201,168,76,0.12) 0%, transparent 60%, rgba(45,106,79,0.25) 100%)" }} />
+                {/* Floating badge */}
+                <div style={{ position: "absolute", top: 18, left: 18, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(12px)", border: "1px solid rgba(201,168,76,0.45)", borderRadius: 10, padding: "8px 14px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <Sparkles size={12} color={GOLD} />
+                    <span style={{ color: GOLD, fontSize: 11, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase" }}>Premium Wellness</span>
+                  </div>
+                </div>
+                {/* Bottom floating card */}
+                <div style={{ position: "absolute", bottom: 18, right: 18, background: "rgba(0,0,0,0.80)", backdropFilter: "blur(12px)", border: "1px solid rgba(201,168,76,0.30)", borderRadius: 12, padding: "12px 16px", textAlign: "right" }}>
+                  <div style={{ color: GOLD, fontSize: 20, fontWeight: 900, lineHeight: 1 }}>100%</div>
+                  <div style={{ color: "#a0a0a0", fontSize: 11, fontWeight: 600, marginTop: 2 }}>Naturopathic</div>
+                </div>
+              </div>
             </div>
+
           </div>
         </div>
       </div>
+
+      {/* ── Featured Products ─────────────────────────────── */}
+      {products.filter(p => p.featured && !p.isProPackage).length > 0 && (
+        <div style={{ background: "linear-gradient(180deg, #0a0a0a 0%, #111 100%)", padding: "56px 24px 64px", borderBottom: "1px solid rgba(201,168,76,0.15)" }}>
+          <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 12 }}>
+              <div>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 7, marginBottom: 8, background: "rgba(201,168,76,0.10)", border: "1px solid rgba(201,168,76,0.28)", padding: "4px 14px", borderRadius: 99 }}>
+                  <Star size={11} color={GOLD} />
+                  <span style={{ color: GOLD, fontSize: 10, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>Featured Products</span>
+                </div>
+                <h2 style={{ color: "#fff", fontSize: "clamp(22px, 3vw, 32px)", fontWeight: 900, margin: 0, fontFamily: "'Playfair Display',serif" }}>
+                  Hand-Picked for <span style={{ color: GOLD }}>You</span>
+                </h2>
+              </div>
+              <a href="#products" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: GOLD, fontSize: 13, fontWeight: 700, textDecoration: "none", opacity: 0.85 }}>
+                View All Products <ArrowRight size={14} />
+              </a>
+            </div>
+
+            <div style={{ display: "flex", gap: 20, overflowX: "auto", paddingBottom: 8, scrollbarWidth: "none" }}>
+              {products.filter(p => p.featured && !p.isProPackage).slice(0, 8).map(product => {
+                const img = resolveImageSrc(product.image);
+                const onSale = product.comparePrice && product.comparePrice > product.price;
+                const outOfStock = product.stock === 0;
+                return (
+                  <Link key={product.id} href={`/product/${product.slug}`} style={{ textDecoration: "none", flexShrink: 0 }}>
+                    <div
+                      style={{
+                        width: 220,
+                        background: "#1a1a1a",
+                        border: "1.5px solid rgba(201,168,76,0.20)",
+                        borderRadius: 14,
+                        overflow: "hidden",
+                        transition: "all 0.22s ease",
+                        cursor: "pointer",
+                      }}
+                      onMouseEnter={e => {
+                        (e.currentTarget as HTMLDivElement).style.borderColor = GOLD;
+                        (e.currentTarget as HTMLDivElement).style.transform = "translateY(-4px)";
+                        (e.currentTarget as HTMLDivElement).style.boxShadow = `0 12px 36px rgba(201,168,76,0.18)`;
+                      }}
+                      onMouseLeave={e => {
+                        (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(201,168,76,0.20)";
+                        (e.currentTarget as HTMLDivElement).style.transform = "none";
+                        (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
+                      }}
+                    >
+                      {/* Image */}
+                      <div style={{ height: 160, background: img ? "#0d0d0d" : "rgba(201,168,76,0.06)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+                        {img ? (
+                          <img src={img} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                        ) : (
+                          <span style={{ fontSize: 28, opacity: 0.12, color: GOLD, fontWeight: 900, fontFamily: "serif" }}>NFGN</span>
+                        )}
+                        {/* Featured star badge */}
+                        <div style={{ position: "absolute", top: 9, left: 9, background: "rgba(201,168,76,0.92)", borderRadius: 99, padding: "3px 9px", display: "flex", alignItems: "center", gap: 4 }}>
+                          <Star size={9} color="#000" style={{ fill: "#000" }} />
+                          <span style={{ fontSize: 9, fontWeight: 900, color: "#000", letterSpacing: "0.08em", textTransform: "uppercase" }}>Featured</span>
+                        </div>
+                        {onSale && !outOfStock && (
+                          <div style={{ position: "absolute", top: 9, right: 9, background: "#ef4444", borderRadius: 99, padding: "2px 7px" }}>
+                            <span style={{ fontSize: 9, fontWeight: 900, color: "#fff" }}>SALE</span>
+                          </div>
+                        )}
+                        {outOfStock && (
+                          <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: 600 }}>Out of Stock</span>
+                          </div>
+                        )}
+                      </div>
+                      {/* Info */}
+                      <div style={{ padding: "14px 14px 18px" }}>
+                        <p style={{ fontSize: 10, fontWeight: 700, color: GOLD, letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 5px" }}>
+                          {product.categoryName || "Wellness"}
+                        </p>
+                        <h4 style={{ fontSize: 14, fontWeight: 700, color: "#fff", lineHeight: 1.3, margin: "0 0 10px" }}>
+                          {product.name}
+                        </h4>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 18, fontWeight: 900, color: GOLD }}>${product.price.toFixed(2)}</span>
+                          {onSale && (
+                            <span style={{ fontSize: 12, color: "#6b7280", textDecoration: "line-through" }}>${product.comparePrice!.toFixed(2)}</span>
+                          )}
+                        </div>
+                        <button
+                          onClick={e => { e.preventDefault(); handleAddToCart(e, product.id); }}
+                          disabled={outOfStock || addingId === product.id}
+                          style={{ marginTop: 12, width: "100%", padding: "9px 0", background: outOfStock ? "transparent" : "rgba(201,168,76,0.12)", color: outOfStock ? "#555" : GOLD, border: `1.5px solid ${outOfStock ? "#333" : "rgba(201,168,76,0.35)"}`, borderRadius: 7, fontWeight: 700, fontSize: 12, cursor: outOfStock ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                        >
+                          {addingId === product.id ? <Loader2 size={13} className="animate-spin" /> : <ShoppingCart size={13} />}
+                          {outOfStock ? "Out of Stock" : "Add to Cart"}
+                        </button>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Pro Member Callout ────────────────────────────── */}
       <div style={{ background: GREY_900, padding: "48px 24px", borderBottom: `1px solid ${GREY_800}` }}>

@@ -1725,7 +1725,7 @@ export function AdminProductsPage() {
                 />
                 <div>
                   <Label htmlFor="featured" className="cursor-pointer">Featured Product</Label>
-                  <p className="text-xs text-muted-foreground">Displayed on the homepage and top of shop.</p>
+                  <p className="text-xs text-muted-foreground">Highlighted in the <strong>Featured Products</strong> section at the top of the Shop page — showcased before all other products.</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 flex-1">

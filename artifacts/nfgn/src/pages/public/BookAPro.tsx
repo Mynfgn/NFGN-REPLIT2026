@@ -1,12 +1,10 @@
 import { useState } from "react";
 import { useListProfessionals } from "@workspace/api-client-react";
-import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { useLocation } from "wouter";
 import {
   Star, Calendar, Clock, DollarSign, Loader2, Trophy,
   ChevronDown, Users, Dumbbell, Mic, UserCheck, Stethoscope,
-  GraduationCap, Zap, Filter,
+  GraduationCap, Zap, Filter, X, CheckCircle,
 } from "lucide-react";
 import { BAP_CATEGORIES, SPORTS_CATEGORY_KEY } from "@/lib/bapCategories";
 
@@ -25,7 +23,191 @@ const SPORTS_ROLES = [
 const ALL_OPTION = "All Categories";
 const CATEGORY_OPTIONS = [ALL_OPTION, SPORTS_CATEGORY_KEY, ...Object.keys(BAP_CATEGORIES).filter(k => k !== SPORTS_CATEGORY_KEY)];
 
-function ProCard({ pro }: { pro: any }) {
+function BookingModal({ pro, onClose }: { pro: any; onClose: () => void }) {
+  const [, navigate] = useLocation();
+  const token = localStorage.getItem("nfgn_token");
+
+  const [serviceType, setServiceType] = useState(pro.services?.[0] ?? "Consultation");
+  const [scheduledAt, setScheduledAt] = useState("");
+  const [duration, setDuration] = useState(60);
+  const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
+
+  if (!token) {
+    return (
+      <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={onClose}>
+        <div style={{ background: "#fff", borderRadius: 16, padding: 40, maxWidth: 420, width: "100%", textAlign: "center" }} onClick={e => e.stopPropagation()}>
+          <Calendar size={40} color={GOLD} style={{ margin: "0 auto 16px" }} />
+          <h2 style={{ fontSize: 22, fontWeight: 900, color: BLACK, margin: "0 0 10px" }}>Sign In to Book</h2>
+          <p style={{ color: "#6b7280", marginBottom: 24 }}>You need to be logged in to book a session with {pro.name}.</p>
+          <button
+            onClick={() => navigate("/login")}
+            style={{ background: BLACK, color: "#fff", border: "none", borderRadius: 8, padding: "12px 28px", fontWeight: 800, fontSize: 14, cursor: "pointer", width: "100%" }}
+          >
+            Sign In
+          </button>
+          <button onClick={onClose} style={{ marginTop: 12, background: "none", border: "none", color: "#9ca3af", fontSize: 13, cursor: "pointer" }}>Cancel</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (success) {
+    return (
+      <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={onClose}>
+        <div style={{ background: "#fff", borderRadius: 16, padding: 40, maxWidth: 420, width: "100%", textAlign: "center" }} onClick={e => e.stopPropagation()}>
+          <CheckCircle size={48} color="#16a34a" style={{ margin: "0 auto 16px" }} />
+          <h2 style={{ fontSize: 22, fontWeight: 900, color: BLACK, margin: "0 0 10px" }}>Booking Requested!</h2>
+          <p style={{ color: "#6b7280", marginBottom: 24 }}>Your session with <strong>{pro.name}</strong> has been submitted. You'll receive a confirmation shortly.</p>
+          <button
+            onClick={() => navigate("/dashboard/bookings")}
+            style={{ background: BLACK, color: "#fff", border: "none", borderRadius: 8, padding: "12px 28px", fontWeight: 800, fontSize: 14, cursor: "pointer", width: "100%", marginBottom: 10 }}
+          >
+            View My Bookings
+          </button>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: "#9ca3af", fontSize: 13, cursor: "pointer" }}>Close</button>
+        </div>
+      </div>
+    );
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (!scheduledAt) { setError("Please select a date and time."); return; }
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          professionalId: pro.id,
+          serviceType,
+          scheduledAt: new Date(scheduledAt).toISOString(),
+          duration,
+          paymentMethod: "card",
+          walletAmount: 0,
+          amount: pro.hourlyRate * (duration / 60),
+          notes: notes || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? "Booking failed. Please try again."); return; }
+      setSuccess(true);
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const minDateTime = new Date(Date.now() + 60 * 60 * 1000).toISOString().slice(0, 16);
+  const estimatedCost = (pro.hourlyRate * (duration / 60)).toFixed(2);
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, overflowY: "auto" }} onClick={onClose}>
+      <div style={{ background: "#fff", borderRadius: 16, padding: 0, maxWidth: 500, width: "100%", overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,0.3)" }} onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div style={{ background: BLACK, padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <p style={{ color: GOLD, fontSize: 10, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 4px" }}>Book A Session</p>
+            <h2 style={{ color: "#fff", fontSize: 18, fontWeight: 900, margin: 0 }}>{pro.name}</h2>
+            <p style={{ color: "#a0a0a0", fontSize: 12, margin: "2px 0 0" }}>{pro.specialty}</p>
+          </div>
+          <button onClick={onClose} style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 8, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+            <X size={16} color="#fff" />
+          </button>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} style={{ padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* Service Type */}
+          {pro.services?.length > 0 && (
+            <div>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 6 }}>Service Type</label>
+              <select
+                value={serviceType}
+                onChange={e => setServiceType(e.target.value)}
+                style={{ width: "100%", padding: "10px 12px", border: "1.5px solid #e5e7eb", borderRadius: 8, fontSize: 14, color: BLACK, background: "#fff", outline: "none" }}
+              >
+                {pro.services.map((s: string) => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+          )}
+
+          {/* Date & Time */}
+          <div>
+            <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 6 }}>Preferred Date & Time</label>
+            <input
+              type="datetime-local"
+              value={scheduledAt}
+              min={minDateTime}
+              onChange={e => setScheduledAt(e.target.value)}
+              required
+              style={{ width: "100%", padding: "10px 12px", border: "1.5px solid #e5e7eb", borderRadius: 8, fontSize: 14, color: BLACK, background: "#fff", outline: "none", boxSizing: "border-box" }}
+            />
+          </div>
+
+          {/* Duration */}
+          <div>
+            <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 6 }}>Session Duration</label>
+            <div style={{ display: "flex", gap: 10 }}>
+              {[60, 90].map(d => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => setDuration(d)}
+                  style={{
+                    flex: 1, padding: "10px 0", border: `1.5px solid ${duration === d ? GOLD : "#e5e7eb"}`,
+                    borderRadius: 8, background: duration === d ? "rgba(201,168,76,0.08)" : "#fff",
+                    color: duration === d ? "#92700a" : "#6b7280",
+                    fontWeight: duration === d ? 800 : 600, fontSize: 13, cursor: "pointer",
+                  }}
+                >
+                  {d} min
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 6 }}>Notes <span style={{ fontWeight: 400, color: "#9ca3af" }}>(optional)</span></label>
+            <textarea
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              rows={3}
+              placeholder="Describe your goals or any special requests..."
+              style={{ width: "100%", padding: "10px 12px", border: "1.5px solid #e5e7eb", borderRadius: 8, fontSize: 13, color: BLACK, resize: "vertical", outline: "none", boxSizing: "border-box" }}
+            />
+          </div>
+
+          {/* Cost summary */}
+          <div style={{ background: "#f9f9f9", border: "1px solid #e5e7eb", borderRadius: 10, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: 13, color: "#6b7280", fontWeight: 600 }}>Estimated Cost</span>
+            <span style={{ fontSize: 18, fontWeight: 900, color: BLACK }}>${estimatedCost}</span>
+          </div>
+
+          {error && (
+            <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#dc2626" }}>{error}</div>
+          )}
+
+          <button
+            type="submit"
+            disabled={submitting}
+            style={{ background: BLACK, color: "#fff", border: "none", borderRadius: 8, padding: "13px 0", fontWeight: 800, fontSize: 15, cursor: submitting ? "not-allowed" : "pointer", opacity: submitting ? 0.7 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+          >
+            {submitting ? <><Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} /> Submitting...</> : <><Calendar size={16} /> Confirm Booking</>}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function ProCard({ pro, onBook }: { pro: any; onBook: (pro: any) => void }) {
   const isSports = pro.specialty === SPORTS_CATEGORY_KEY;
 
   return (
@@ -135,8 +317,9 @@ function ProCard({ pro }: { pro: any }) {
 
       <div style={{ padding: "0 20px 20px", marginTop: "auto" }}>
         {pro.isAvailable ? (
-          <Link href={`/book/${pro.id}`}>
-            <button style={{
+          <button
+            onClick={() => onBook(pro)}
+            style={{
               width: "100%", padding: "11px 0",
               background: isSports ? GOLD : BLACK,
               color: isSports ? "#000" : "#fff",
@@ -144,10 +327,10 @@ function ProCard({ pro }: { pro: any }) {
               fontWeight: 800, fontSize: 14, cursor: "pointer",
               display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
               transition: "opacity 0.15s",
-            }}>
-              <Calendar size={15} /> Book Session
-            </button>
-          </Link>
+            }}
+          >
+            <Calendar size={15} /> Book Session
+          </button>
         ) : (
           <button disabled style={{
             width: "100%", padding: "11px 0",
@@ -167,6 +350,7 @@ function ProCard({ pro }: { pro: any }) {
 export function BookAPro() {
   const [selectedCategory, setSelectedCategory] = useState<string>(ALL_OPTION);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [bookingPro, setBookingPro] = useState<any>(null);
 
   const specialtyParam = selectedCategory === ALL_OPTION ? undefined : selectedCategory;
   const { data: professionals, isLoading } = useListProfessionals(
@@ -182,6 +366,7 @@ export function BookAPro() {
 
   return (
     <div style={{ fontFamily: "'Inter','Segoe UI',sans-serif", minHeight: "100vh", background: "#fff" }}>
+      {bookingPro && <BookingModal pro={bookingPro} onClose={() => setBookingPro(null)} />}
 
       {/* ── Hero ─────────────────────────────────────────────── */}
       <div style={{ background: BLACK, borderBottom: "2px solid #1a1a1a" }}>
@@ -360,7 +545,7 @@ export function BookAPro() {
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" style={{ marginBottom: 48 }}>
-                    {sportsPros.map(pro => <ProCard key={pro.id} pro={pro} />)}
+                    {sportsPros.map(pro => <ProCard key={pro.id} pro={pro} onBook={setBookingPro} />)}
                   </div>
                   {otherPros.length > 0 && (
                     <div style={{ marginBottom: 20, paddingTop: 8, borderTop: "2px solid #e5e7eb" }}>
@@ -376,7 +561,7 @@ export function BookAPro() {
               {/* Regular pros (or all if filtered to a non-sports category) */}
               {(showSportsSection ? otherPros : allPros).length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {(showSportsSection ? otherPros : allPros).map(pro => <ProCard key={pro.id} pro={pro} />)}
+                  {(showSportsSection ? otherPros : allPros).map(pro => <ProCard key={pro.id} pro={pro} onBook={setBookingPro} />)}
                 </div>
               )}
             </>

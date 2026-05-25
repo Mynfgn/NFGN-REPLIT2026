@@ -983,38 +983,13 @@ export function Shop() {
               </div>
             </div>
 
-            {/* ── Right: hero image ── */}
-            <div style={{ flex: "0 0 420px", maxWidth: 420, display: "flex", alignItems: "center", justifyContent: "center", alignSelf: "stretch", padding: "32px 0" }} className="hidden lg:flex">
-              <div style={{ position: "relative", width: "100%", height: 380, borderRadius: 20, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(201,168,76,0.2)" }}>
-                <img
-                  src="https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=800&q=80"
-                  alt="NFGN Wellness Products"
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-                {/* Gold overlay gradient */}
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(201,168,76,0.12) 0%, transparent 60%, rgba(45,106,79,0.25) 100%)" }} />
-                {/* Floating badge */}
-                <div style={{ position: "absolute", top: 18, left: 18, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(12px)", border: "1px solid rgba(201,168,76,0.45)", borderRadius: 10, padding: "8px 14px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <Sparkles size={12} color={GOLD} />
-                    <span style={{ color: GOLD, fontSize: 11, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase" }}>Premium Wellness</span>
-                  </div>
-                </div>
-                {/* Bottom floating card */}
-                <div style={{ position: "absolute", bottom: 18, right: 18, background: "rgba(0,0,0,0.80)", backdropFilter: "blur(12px)", border: "1px solid rgba(201,168,76,0.30)", borderRadius: 12, padding: "12px 16px", textAlign: "right" }}>
-                  <div style={{ color: GOLD, fontSize: 20, fontWeight: 900, lineHeight: 1 }}>100%</div>
-                  <div style={{ color: "#a0a0a0", fontSize: 11, fontWeight: 600, marginTop: 2 }}>Naturopathic</div>
-                </div>
-              </div>
-            </div>
-
           </div>
         </div>
       </div>
 
       {/* ── Featured Products ─────────────────────────────── */}
       {products.filter(p => p.featured && !p.isProPackage).length > 0 && (
-        <div style={{ background: "linear-gradient(180deg, #0a0a0a 0%, #111 100%)", padding: "56px 24px 64px", borderBottom: "1px solid rgba(201,168,76,0.15)" }}>
+        <div style={{ background: "#fff", padding: "56px 24px 64px", borderBottom: "1px solid #e5e7eb" }}>
           <div style={{ maxWidth: 1200, margin: "0 auto" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 12 }}>
               <div>
@@ -1022,7 +997,7 @@ export function Shop() {
                   <Star size={11} color={GOLD} />
                   <span style={{ color: GOLD, fontSize: 10, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>Featured Products</span>
                 </div>
-                <h2 style={{ color: "#fff", fontSize: "clamp(22px, 3vw, 32px)", fontWeight: 900, margin: 0, fontFamily: "'Playfair Display',serif" }}>
+                <h2 style={{ color: "#1a1a1a", fontSize: "clamp(22px, 3vw, 32px)", fontWeight: 900, margin: 0, fontFamily: "'Playfair Display',serif" }}>
                   Hand-Picked for <span style={{ color: GOLD }}>You</span>
                 </h2>
               </div>
@@ -1041,33 +1016,34 @@ export function Shop() {
                     <div
                       style={{
                         width: 220,
-                        background: "#1a1a1a",
-                        border: "1.5px solid rgba(201,168,76,0.20)",
+                        background: "#fff",
+                        border: "1.5px solid #e5e7eb",
                         borderRadius: 14,
                         overflow: "hidden",
                         transition: "all 0.22s ease",
                         cursor: "pointer",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
                       }}
                       onMouseEnter={e => {
                         (e.currentTarget as HTMLDivElement).style.borderColor = GOLD;
                         (e.currentTarget as HTMLDivElement).style.transform = "translateY(-4px)";
-                        (e.currentTarget as HTMLDivElement).style.boxShadow = `0 12px 36px rgba(201,168,76,0.18)`;
+                        (e.currentTarget as HTMLDivElement).style.boxShadow = `0 12px 36px rgba(201,168,76,0.15)`;
                       }}
                       onMouseLeave={e => {
-                        (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(201,168,76,0.20)";
+                        (e.currentTarget as HTMLDivElement).style.borderColor = "#e5e7eb";
                         (e.currentTarget as HTMLDivElement).style.transform = "none";
-                        (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
+                        (e.currentTarget as HTMLDivElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.05)";
                       }}
                     >
                       {/* Image */}
-                      <div style={{ height: 160, background: img ? "#0d0d0d" : "rgba(201,168,76,0.06)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+                      <div style={{ height: 160, background: img ? "#f3f4f6" : "rgba(201,168,76,0.06)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
                         {img ? (
                           <img src={img} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                         ) : (
-                          <span style={{ fontSize: 28, opacity: 0.12, color: GOLD, fontWeight: 900, fontFamily: "serif" }}>NFGN</span>
+                          <span style={{ fontSize: 28, opacity: 0.15, color: GOLD, fontWeight: 900, fontFamily: "serif" }}>NFGN</span>
                         )}
                         {/* Featured star badge */}
-                        <div style={{ position: "absolute", top: 9, left: 9, background: "rgba(201,168,76,0.92)", borderRadius: 99, padding: "3px 9px", display: "flex", alignItems: "center", gap: 4 }}>
+                        <div style={{ position: "absolute", top: 9, left: 9, background: GOLD, borderRadius: 99, padding: "3px 9px", display: "flex", alignItems: "center", gap: 4 }}>
                           <Star size={9} color="#000" style={{ fill: "#000" }} />
                           <span style={{ fontSize: 9, fontWeight: 900, color: "#000", letterSpacing: "0.08em", textTransform: "uppercase" }}>Featured</span>
                         </div>
@@ -1077,8 +1053,8 @@ export function Shop() {
                           </div>
                         )}
                         {outOfStock && (
-                          <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: 600 }}>Out of Stock</span>
+                          <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <span style={{ color: "rgba(255,255,255,0.8)", fontSize: 12, fontWeight: 600 }}>Out of Stock</span>
                           </div>
                         )}
                       </div>
@@ -1087,19 +1063,19 @@ export function Shop() {
                         <p style={{ fontSize: 10, fontWeight: 700, color: GOLD, letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 5px" }}>
                           {product.categoryName || "Wellness"}
                         </p>
-                        <h4 style={{ fontSize: 14, fontWeight: 700, color: "#fff", lineHeight: 1.3, margin: "0 0 10px" }}>
+                        <h4 style={{ fontSize: 14, fontWeight: 700, color: "#1a1a1a", lineHeight: 1.3, margin: "0 0 10px" }}>
                           {product.name}
                         </h4>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 18, fontWeight: 900, color: GOLD }}>${product.price.toFixed(2)}</span>
+                          <span style={{ fontSize: 18, fontWeight: 900, color: "#1a1a1a" }}>${product.price.toFixed(2)}</span>
                           {onSale && (
-                            <span style={{ fontSize: 12, color: "#6b7280", textDecoration: "line-through" }}>${product.comparePrice!.toFixed(2)}</span>
+                            <span style={{ fontSize: 12, color: "#9ca3af", textDecoration: "line-through" }}>${product.comparePrice!.toFixed(2)}</span>
                           )}
                         </div>
                         <button
                           onClick={e => { e.preventDefault(); handleAddToCart(e, product.id); }}
                           disabled={outOfStock || addingId === product.id}
-                          style={{ marginTop: 12, width: "100%", padding: "9px 0", background: outOfStock ? "transparent" : "rgba(201,168,76,0.12)", color: outOfStock ? "#555" : GOLD, border: `1.5px solid ${outOfStock ? "#333" : "rgba(201,168,76,0.35)"}`, borderRadius: 7, fontWeight: 700, fontSize: 12, cursor: outOfStock ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                          style={{ marginTop: 12, width: "100%", padding: "9px 0", background: outOfStock ? "transparent" : "transparent", color: outOfStock ? "#9ca3af" : GOLD, border: `1.5px solid ${outOfStock ? "#e5e7eb" : GOLD}`, borderRadius: 7, fontWeight: 700, fontSize: 12, cursor: outOfStock ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
                         >
                           {addingId === product.id ? <Loader2 size={13} className="animate-spin" /> : <ShoppingCart size={13} />}
                           {outOfStock ? "Out of Stock" : "Add to Cart"}

@@ -129,7 +129,9 @@ function Router() {
       </Route>
 
       {/* Public routes */}
-      <Route path="/" component={ComingSoon} />
+      <Route path="/">
+        <PublicLayout><Home /></PublicLayout>
+      </Route>
       <Route path="/home">
         <PublicLayout><Home /></PublicLayout>
       </Route>

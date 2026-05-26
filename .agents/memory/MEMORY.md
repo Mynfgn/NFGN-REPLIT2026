@@ -1,0 +1,1 @@
+- [Production blank page fix](production-blank-page.md) — runtimeErrorOverlay must be dev-only in vite.config.ts or it breaks the published app.

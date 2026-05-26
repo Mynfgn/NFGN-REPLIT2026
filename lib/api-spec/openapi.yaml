@@ -1768,6 +1768,33 @@ components:
           type: string
         commissionRate:
           type: number
+        isDonation:
+          type: boolean
+        isChurchDonation:
+          type: boolean
+        churchName:
+          type: ["string", "null"]
+        donationRecipientType:
+          type: ["string", "null"]
+        donationRecipientName:
+          type: ["string", "null"]
+        donationMinAmount:
+          type: ["number", "null"]
+        giftCharityPercent:
+          type: ["number", "null"]
+          description: "Percentage of donation that goes directly to the charity/org (default 80). The remaining (100 - giftCharityPercent)% funds the referral compensation pool."
+        isNonProfit:
+          type: boolean
+        isSports:
+          type: boolean
+        isWeddingRegistry:
+          type: boolean
+        isHolidayRegistry:
+          type: boolean
+        isProExclusive:
+          type: boolean
+        isDownloadable:
+          type: boolean
         createdAt:
           type: string
       required:
@@ -1889,6 +1916,33 @@ components:
           type: ["string", "null"]
         benefits:
           type: ["string", "null"]
+        isDonation:
+          type: boolean
+        isChurchDonation:
+          type: boolean
+        churchName:
+          type: ["string", "null"]
+        donationRecipientType:
+          type: ["string", "null"]
+        donationRecipientName:
+          type: ["string", "null"]
+        donationMinAmount:
+          type: number
+        giftCharityPercent:
+          type: number
+          description: "Percentage of donation that goes to the charity/org (50–95, default 80). The remaining (100 - giftCharityPercent)% is the commissionable member pool."
+        isNonProfit:
+          type: boolean
+        isSports:
+          type: boolean
+        isWeddingRegistry:
+          type: boolean
+        isHolidayRegistry:
+          type: boolean
+        isProExclusive:
+          type: boolean
+        isDownloadable:
+          type: boolean
       required:
         - name
         - slug

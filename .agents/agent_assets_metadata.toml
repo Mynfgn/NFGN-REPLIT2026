@@ -132,6 +132,12 @@ uri = "file://artifacts/mockup-sandbox/public/images/pillar-events.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "j6XMzNXtgrxvIOgMUmeoJ"
+uri = "file://artifacts/mockup-sandbox/public/images/hero-community-diverse.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "ThLpw-C-p0MEK0l4tCicI"
 uri = "file://artifacts/nfgn/public/icons/icon-512.png"

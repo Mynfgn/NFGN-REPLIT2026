@@ -135,60 +135,63 @@ export function HomeD() {
         </div>
       </nav>
 
-      {/* HERO — community image background + Variation C title */}
-      <section className="relative overflow-hidden" style={{ minHeight: "90vh" }}>
-        {/* Background community photo */}
+      {/* HERO — full-bleed dark overlay + Variation C title (identical styling) */}
+      <section className="relative min-h-screen flex flex-col">
+        {/* Background community photo — dark overlay so image shows through clearly */}
         <div className="absolute inset-0">
           <img
-            src={`${I}hero-community.png`}
+            src={`${I}hero-community-diverse.png`}
             alt="NFGN Community"
             className="w-full h-full object-cover"
           />
-          {/* White overlay so text is readable on white theme */}
-          <div className="absolute inset-0" style={{ background: "rgba(255,255,255,0.78)" }} />
-          {/* Subtle gold gradient at bottom */}
-          <div className="absolute bottom-0 left-0 right-0 h-32" style={{ background: "linear-gradient(to top, rgba(201,168,76,0.08), transparent)" }} />
+          <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom,rgba(0,0,0,0.3) 0%,rgba(0,0,0,0.55) 50%,rgba(0,0,0,0.75) 100%)" }} />
         </div>
 
-        <div className="relative z-10 flex flex-col items-center justify-center text-center px-6 py-28" style={{ minHeight: "90vh" }}>
-          {/* Eyebrow pill */}
-          <div className="inline-flex items-center gap-2 mb-8 px-4 py-2 rounded-full border" style={{ background: "rgba(201,168,76,0.08)", borderColor: GOLD + "40" }}>
-            <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: GOLD }} />
-            <span className="text-xs font-black tracking-[0.2em] uppercase" style={{ color: GOLD }}>
-              Community · Wellness · Wealth · Sports
-            </span>
+        {/* Centered hero text — identical to Variation C */}
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6 pt-20 pb-16">
+          {/* Eyebrow pill — matching Variation C */}
+          <div className="inline-flex items-center gap-3 mb-10 px-5 py-2.5 rounded-full border text-white text-xs font-bold tracking-widest" style={{ background: "rgba(255,255,255,0.1)", backdropFilter: "blur(8px)", borderColor: "rgba(255,255,255,0.2)" }}>
+            <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: GOLD }} />
+            NEW ORLEANS, LOUISIANA · FOUNDED 2013
           </div>
 
-          {/* Variation C title */}
-          <h1 className="font-black leading-none mb-6" style={{ fontSize: "clamp(44px, 7vw, 88px)", color: BLACK }}>
-            Building A New<br />
-            <span style={{ color: GOLD }}>Community</span><br />
+          {/* Title — identical sizing and colour split to Variation C */}
+          <h1 className="text-white font-black leading-none mb-4" style={{ fontSize: "clamp(48px,7vw,96px)" }}>
+            Building A New
+          </h1>
+          <h1 className="font-black leading-none mb-4" style={{ fontSize: "clamp(48px,7vw,96px)", color: GOLD }}>
+            Community
+          </h1>
+          <h1 className="text-white font-black leading-none mb-8" style={{ fontSize: "clamp(36px,5vw,72px)" }}>
             Of Health &amp; Wellness
           </h1>
 
-          <p className="text-base md:text-lg mb-12 max-w-xl leading-relaxed" style={{ color: MID_TEXT }}>
-            New Face Global Network is a faith-rooted movement — guided by a <strong style={{ color: BLACK }}>GOD First · Help First</strong> philosophy — uniting naturopathic wellness, community connection, and personal growth.
+          <p className="text-xl max-w-2xl mb-12 leading-relaxed" style={{ color: "rgba(255,255,255,0.75)" }}>
+            A faith-rooted movement guided by a <strong className="text-white">GOD First · Help First</strong> philosophy — uniting naturopathic wellness, community connection, and personal growth.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 mb-20">
-            <a href="#" className="inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-black rounded-sm transition-all hover:-translate-y-0.5 shadow-lg" style={{ background: BLACK, color: "#fff" }}>
-              Join The Network <ArrowRight className="h-5 w-5" />
+          <div className="flex flex-wrap justify-center gap-5">
+            <a href="#" className="inline-flex items-center gap-3 font-black px-10 py-5 rounded-full text-lg shadow-2xl hover:-translate-y-1 transition-all" style={{ background: GOLD, color: BLACK }}>
+              Become a Member <ArrowRight className="h-5 w-5" />
             </a>
-            <a href="#" className="inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-bold rounded-sm border-2 transition-all hover:bg-gray-50" style={{ borderColor: GOLD, color: BLACK }}>
-              <span style={{ color: GOLD }}>→</span> Shop Collection
+            <a href="#" className="inline-flex items-center gap-3 font-bold px-10 py-5 rounded-full text-lg border-2 text-white hover:bg-white/10 transition-all" style={{ backdropFilter: "blur(4px)", borderColor: "rgba(255,255,255,0.3)" }}>
+              Shop Now <ArrowRight className="h-5 w-5" />
             </a>
           </div>
+        </div>
 
-          {/* Stats bar */}
-          <div className="w-full max-w-3xl grid grid-cols-3 rounded-sm overflow-hidden shadow-lg border border-gray-200">
+        {/* Stats bar — matching Variation C */}
+        <div className="relative z-10 border-t" style={{ background: "rgba(255,255,255,0.1)", backdropFilter: "blur(12px)", borderColor: "rgba(255,255,255,0.2)" }}>
+          <div className="max-w-5xl mx-auto px-6 grid grid-cols-4 divide-x" style={{ divideColor: "rgba(255,255,255,0.2)" }}>
             {[
               { num: "10K+", label: "Active Members" },
-              { num: "$2M+", label: "Circulated Annually" },
+              { num: "$2M+", label: "Community Circulated" },
               { num: "9", label: "Business Pillars" },
+              { num: "2013", label: "Year Founded" },
             ].map((s, i) => (
-              <div key={s.label} className="text-center py-6 px-4 bg-white" style={{ borderRight: i < 2 ? "1px solid #e5e5e5" : "none" }}>
-                <div className="text-3xl font-black mb-1" style={{ color: GOLD }}>{s.num}</div>
-                <div className="text-xs tracking-widest uppercase font-semibold" style={{ color: MID_TEXT }}>{s.label}</div>
+              <div key={s.label} className="text-center py-6 px-4" style={{ borderRight: i < 3 ? "1px solid rgba(255,255,255,0.2)" : "none" }}>
+                <div className="text-3xl font-black text-white mb-1">{s.num}</div>
+                <div className="text-xs tracking-widest uppercase" style={{ color: "rgba(255,255,255,0.5)" }}>{s.label}</div>
               </div>
             ))}
           </div>

@@ -366,3 +366,22 @@ export function booking8hrReminderHtml(opts: {
     <a class="cta" href="${opts.dashboardUrl}">View Booking</a>
   `, "Appointment in 8 Hours — Reminder");
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Password Reset Email
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function passwordResetHtml(opts: { firstName: string; resetUrl: string }): string {
+  return wrap(`
+    <p>Hi ${opts.firstName},</p>
+    <p>We received a request to reset the password for your NFGN account. Click the button below to choose a new password:</p>
+    <a class="cta" href="${opts.resetUrl}">Reset My Password</a>
+    <p style="margin-top:24px; font-size:13px; color:#888;">
+      This link expires in <strong>1 hour</strong>. If you did not request a password reset, you can safely ignore this email — your password will not be changed.
+    </p>
+    <div class="detail-box" style="margin-top:20px;">
+      <p>If the button above doesn't work, copy and paste this link into your browser:</p>
+      <p style="word-break:break-all; color:#C9A84C;">${opts.resetUrl}</p>
+    </div>
+  `, "Reset Your Password");
+}

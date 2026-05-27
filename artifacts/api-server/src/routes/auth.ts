@@ -1,9 +1,11 @@
 import { Router, type IRouter } from "express";
-import { db, usersTable, walletsTable, genealogyNodesTable, notificationsTable, professionalsTable, ordersTable, orderItemsTable, productsTable, proPackagesTable, appSettingsTable, messagesTable } from "@workspace/db";
-import { eq, count, sql } from "drizzle-orm";
+import { db, usersTable, walletsTable, genealogyNodesTable, notificationsTable, professionalsTable, ordersTable, orderItemsTable, productsTable, proPackagesTable, appSettingsTable, messagesTable, passwordResetTokensTable } from "@workspace/db";
+import { eq, count, sql, and, gt } from "drizzle-orm";
+import crypto from "crypto";
 import { hashPassword, verifyPassword, generateToken, generateReferralCode, requireAuth } from "../lib/auth";
 import { LoginBody, RegisterBody } from "@workspace/api-zod";
 import { processCommissions, type OrderItemForCommission } from "../lib/commissions";
+import { sendEmail, passwordResetHtml } from "../lib/mailer";
 
 const router: IRouter = Router();
 
@@ -449,6 +451,87 @@ router.post("/auth/change-password", requireAuth, async (req, res): Promise<void
 });
 
 router.post("/auth/logout", async (_req, res): Promise<void> => {
+  res.json({ success: true });
+});
+
+router.post("/auth/forgot-password", async (req, res): Promise<void> => {
+  const { email } = req.body;
+  if (!email || typeof email !== "string") {
+    res.status(400).json({ error: "Email is required." });
+    return;
+  }
+
+  const [user] = await db.select().from(usersTable).where(sql`lower(${usersTable.email}) = lower(${email.trim()})`);
+
+  // Always respond the same way regardless of whether email exists (security best practice)
+  if (!user) {
+    res.json({ success: true });
+    return;
+  }
+
+  // Generate a cryptographically secure token
+  const plainToken = crypto.randomBytes(32).toString("hex");
+  const tokenHash = crypto.createHash("sha256").update(plainToken).digest("hex");
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+  // Invalidate any existing tokens for this user first
+  await db.delete(passwordResetTokensTable).where(eq(passwordResetTokensTable.userId, user.id));
+
+  await db.insert(passwordResetTokensTable).values({
+    userId: user.id,
+    tokenHash,
+    expiresAt,
+  });
+
+  // Build reset URL — use the request origin if available, fall back to REPLIT_DOMAINS
+  const origin = req.headers.origin ?? (process.env.REPLIT_DOMAINS ? `https://${process.env.REPLIT_DOMAINS.split(",")[0]}` : "https://nfgn.replit.app");
+  const resetUrl = `${origin}/reset-password?token=${plainToken}`;
+
+  await sendEmail({
+    to: user.email,
+    subject: "Reset your NFGN password",
+    html: passwordResetHtml({ firstName: user.firstName, resetUrl }),
+  });
+
+  res.json({ success: true });
+});
+
+router.post("/auth/reset-password", async (req, res): Promise<void> => {
+  const { token, password } = req.body;
+
+  if (!token || typeof token !== "string") {
+    res.status(400).json({ error: "Reset token is required." });
+    return;
+  }
+  if (!password || typeof password !== "string" || password.length < 8) {
+    res.status(400).json({ error: "Password must be at least 8 characters." });
+    return;
+  }
+
+  const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+  const [record] = await db.select().from(passwordResetTokensTable).where(
+    and(
+      eq(passwordResetTokensTable.tokenHash, tokenHash),
+      gt(passwordResetTokensTable.expiresAt, new Date())
+    )
+  );
+
+  if (!record) {
+    res.status(400).json({ error: "This reset link is invalid or has expired. Please request a new one." });
+    return;
+  }
+
+  if (record.usedAt) {
+    res.status(400).json({ error: "This reset link has already been used. Please request a new one." });
+    return;
+  }
+
+  const newHash = await hashPassword(password);
+
+  await db.update(usersTable).set({ passwordHash: newHash }).where(eq(usersTable.id, record.userId));
+  await db.update(passwordResetTokensTable).set({ usedAt: new Date() }).where(eq(passwordResetTokensTable.id, record.id));
+
   res.json({ success: true });
 });
 

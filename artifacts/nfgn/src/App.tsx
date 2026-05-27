@@ -26,6 +26,8 @@ import { Contact } from "@/pages/public/Contact";
 
 // Auth Pages
 import { Login } from "@/pages/auth/Login";
+import { ForgotPassword } from "@/pages/auth/ForgotPassword";
+import { ResetPassword } from "@/pages/auth/ResetPassword";
 
 // Dashboard Pages
 import { Dashboard } from "@/pages/dashboard/Dashboard";
@@ -121,6 +123,8 @@ function Router() {
     <Switch>
       {/* Auth routes */}
       <Route path="/login" component={Login} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
       <Route path="/register">
         <PublicLayout><Join /></PublicLayout>
       </Route>

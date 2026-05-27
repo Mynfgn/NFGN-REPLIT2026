@@ -112,62 +112,71 @@ export function Home() {
   return (
     <div style={{ fontFamily: "'Poppins', sans-serif", background: "#fff", color: DARK_TEXT }} className="overflow-x-hidden">
 
-      {/* HERO */}
-      <section className="relative min-h-screen flex flex-col">
-        <div className="absolute inset-0">
-          <img
-            src={`${I}hero-community-diverse.png`}
-            alt="NFGN Community"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom,rgba(0,0,0,0.3) 0%,rgba(0,0,0,0.55) 50%,rgba(0,0,0,0.75) 100%)" }} />
-        </div>
+      {/* HERO — CSS background-image fills full viewport, no extra divs needed */}
+      <section
+        className="relative flex items-center justify-center"
+        style={{
+          minHeight: "calc(100vh - 4rem)",
+          backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.25) 45%, rgba(0,0,0,0.55) 100%), url(${I}hero-community-diverse.png)`,
+          backgroundSize: "cover",
+          backgroundPosition: "center 30%",
+          backgroundRepeat: "no-repeat",
+        }}
+      >
+        {/* Thin gold bottom trim */}
+        <div className="absolute bottom-0 left-0 right-0 h-1 z-10" style={{ background: GOLD }} />
 
-        <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6 pt-12 pb-16">
-          <div className="inline-flex items-center gap-3 mb-10 px-5 py-2.5 rounded-full border text-white text-xs font-bold tracking-widest" style={{ background: "rgba(255,255,255,0.1)", backdropFilter: "blur(8px)", borderColor: "rgba(255,255,255,0.2)" }}>
-            <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: GOLD }} />
-            NEW ORLEANS, LOUISIANA · FOUNDED 2013
+        {/* Hero content */}
+        <div className="relative z-10 flex flex-col items-center justify-center text-center w-full px-6 py-12">
+
+          {/* Single unified heading block — first, so it sits over any dark sky */}
+          <h1 className="font-black text-center leading-[1.05] mb-5" style={{ fontSize: "clamp(44px, 6.5vw, 90px)", letterSpacing: "-0.02em" }}>
+            <span className="block text-white">Building A New</span>
+            <span className="block" style={{ color: GOLD }}>Community</span>
+            <span className="block text-white" style={{ fontSize: "clamp(32px, 4.5vw, 64px)", fontWeight: 700, letterSpacing: 0 }}>
+              Of Health &amp; Wellness
+            </span>
+          </h1>
+
+          {/* Location pill — sits over the faces, below the heading */}
+          <div className="inline-flex items-center gap-2 mb-6 px-5 py-2 rounded-full border text-white text-xs font-bold tracking-[0.18em] uppercase" style={{ background: "rgba(255,255,255,0.08)", backdropFilter: "blur(10px)", borderColor: "rgba(255,255,255,0.2)" }}>
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: GOLD }} />
+            New Orleans, Louisiana · Founded 2013
           </div>
 
-          <h1 className="text-white font-black leading-none mb-4" style={{ fontSize: "clamp(48px,7vw,96px)" }}>
-            Building A New
-          </h1>
-          <h1 className="font-black leading-none mb-4" style={{ fontSize: "clamp(48px,7vw,96px)", color: GOLD }}>
-            Community
-          </h1>
-          <h1 className="text-white font-black leading-none mb-8" style={{ fontSize: "clamp(36px,5vw,72px)" }}>
-            Of Health &amp; Wellness
-          </h1>
+          {/* Divider */}
+          <div className="w-16 h-0.5 mx-auto mb-6" style={{ background: GOLD }} />
 
-          <p className="text-xl max-w-2xl mb-12 leading-relaxed" style={{ color: "rgba(255,255,255,0.75)" }}>
-            A faith-rooted movement guided by a <strong className="text-white">GOD First · Help First</strong> philosophy — uniting naturopathic wellness, community connection, and personal growth.
+          <p className="text-center text-lg max-w-xl mx-auto mb-10 leading-relaxed" style={{ color: "rgba(255,255,255,0.8)" }}>
+            A faith-rooted movement guided by a <strong className="text-white">GOD First · Help First</strong> philosophy — uniting wellness, community, and opportunity.
           </p>
 
-          <div className="flex flex-wrap justify-center gap-5">
-            <Link href="/join" className="inline-flex items-center gap-3 font-black px-10 py-5 rounded-full text-lg shadow-2xl hover:-translate-y-1 transition-all" style={{ background: GOLD, color: BLACK }}>
+          {/* Buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/join" className="inline-flex items-center justify-center gap-2 font-black px-9 py-4 text-base shadow-2xl transition-all hover:brightness-110" style={{ background: GOLD, color: BLACK, borderRadius: 4 }}>
               Become a Member <ArrowRight className="h-5 w-5" />
             </Link>
-            <Link href="/shop" className="inline-flex items-center gap-3 font-bold px-10 py-5 rounded-full text-lg border-2 text-white hover:bg-white/10 transition-all" style={{ backdropFilter: "blur(4px)", borderColor: "rgba(255,255,255,0.3)" }}>
-              Shop Now <ArrowRight className="h-5 w-5" />
+            <Link href="/shop" className="inline-flex items-center justify-center gap-2 font-semibold px-9 py-4 text-base text-white border transition-all hover:bg-white/10" style={{ borderColor: "rgba(255,255,255,0.35)", borderRadius: 4, backdropFilter: "blur(4px)" }}>
+              Shop Products <ArrowRight className="h-4 w-4 opacity-70" />
             </Link>
           </div>
-        </div>
 
-        <div className="relative z-10 border-t" style={{ background: "rgba(255,255,255,0.1)", backdropFilter: "blur(12px)", borderColor: "rgba(255,255,255,0.2)" }}>
-          <div className="max-w-5xl mx-auto px-6 grid grid-cols-4">
-            {[
-              { num: "10K+", label: "Active Members" },
-              { num: "$2M+", label: "Community Circulated" },
-              { num: "9", label: "Business Pillars" },
-              { num: "2013", label: "Year Founded" },
-            ].map((s, i) => (
-              <div key={s.label} className="text-center py-6 px-4" style={{ borderRight: i < 3 ? "1px solid rgba(255,255,255,0.2)" : "none" }}>
-                <div className="text-3xl font-black text-white mb-1">{s.num}</div>
-                <div className="text-xs tracking-widest uppercase" style={{ color: "rgba(255,255,255,0.5)" }}>{s.label}</div>
-              </div>
-            ))}
-          </div>
         </div>
+      </section>
+
+      {/* STATS BAR — clean white strip between hero and pillars */}
+      <section className="grid grid-cols-4" style={{ background: "#fff", borderBottom: `3px solid ${GOLD}` }}>
+        {[
+          { num: "10K+", label: "Active Members" },
+          { num: "$2M+", label: "Community Circulated" },
+          { num: "9", label: "Business Pillars" },
+          { num: "2013", label: "Year Founded" },
+        ].map((s, i) => (
+          <div key={s.label} className="flex flex-col items-center justify-center py-8 px-4 text-center" style={{ borderRight: i < 3 ? `1px solid ${GRAY2}` : "none" }}>
+            <span className="text-3xl font-black" style={{ color: BLACK }}>{s.num}</span>
+            <span className="text-xs font-bold tracking-widest uppercase mt-1" style={{ color: GOLD }}>{s.label}</span>
+          </div>
+        ))}
       </section>
 
       {/* PILLARS */}

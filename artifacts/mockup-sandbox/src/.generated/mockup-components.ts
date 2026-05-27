@@ -7,6 +7,7 @@ export const modules: ModuleMap = {
   "./components/mockups/nfgn-home/HomeA.tsx": () => import("../components/mockups/nfgn-home/HomeA.tsx"),
   "./components/mockups/nfgn-home/HomeB.tsx": () => import("../components/mockups/nfgn-home/HomeB.tsx"),
   "./components/mockups/nfgn-home/HomeC.tsx": () => import("../components/mockups/nfgn-home/HomeC.tsx"),
+  "./components/mockups/nfgn-home/HomeD.tsx": () => import("../components/mockups/nfgn-home/HomeD.tsx"),
   "./components/mockups/nfgn-home/Redesign.tsx": () => import("../components/mockups/nfgn-home/Redesign.tsx"),
   "./components/mockups/nfgn-shop/ShopRedesign.tsx": () => import("../components/mockups/nfgn-shop/ShopRedesign.tsx"),
   "./components/mockups/nfgn-theme-compare/Dark.tsx": () => import("../components/mockups/nfgn-theme-compare/Dark.tsx"),

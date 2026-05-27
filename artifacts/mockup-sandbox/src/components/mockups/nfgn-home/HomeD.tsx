@@ -147,13 +147,16 @@ export function HomeD() {
           <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom,rgba(0,0,0,0.3) 0%,rgba(0,0,0,0.55) 50%,rgba(0,0,0,0.75) 100%)" }} />
         </div>
 
-        {/* Centered hero text — identical to Variation C */}
-        <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6 pt-20 pb-16">
-          {/* Eyebrow pill — matching Variation C */}
-          <div className="inline-flex items-center gap-3 mb-10 px-5 py-2.5 rounded-full border text-white text-xs font-bold tracking-widest" style={{ background: "rgba(255,255,255,0.1)", backdropFilter: "blur(8px)", borderColor: "rgba(255,255,255,0.2)" }}>
+        {/* Eyebrow pill — pinned near the top of the hero, inside the dark band */}
+        <div className="relative z-10 flex justify-center pt-6">
+          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full border text-white text-sm font-bold tracking-widest" style={{ background: "rgba(255,255,255,0.1)", backdropFilter: "blur(8px)", borderColor: "rgba(255,255,255,0.2)" }}>
             <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: GOLD }} />
             NEW ORLEANS, LOUISIANA · FOUNDED 2013
           </div>
+        </div>
+
+        {/* Centered hero text — identical to Variation C */}
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6 pb-16">
 
           {/* Title — identical sizing and colour split to Variation C */}
           <h1 className="text-white font-black leading-none mb-4" style={{ fontSize: "clamp(48px,7vw,96px)" }}>

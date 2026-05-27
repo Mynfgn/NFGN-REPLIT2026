@@ -1,469 +1,344 @@
 import { Link } from "wouter";
+import { useEffect, useState } from "react";
 import {
   ArrowRight, Leaf, Users, TrendingUp, Trophy, Globe, Zap,
-  Star, ChevronRight, Play, Shield, Building2, Activity, Network,
-  DollarSign, Heart, Sparkles, CalendarDays,
+  Network, Sparkles, CalendarDays, ChevronRight, Star,
+  MapPin, Phone, Mail,
 } from "lucide-react";
 
 const GOLD = "#C9A84C";
-const GOLD_LIGHT = "rgba(201,168,76,0.12)";
-const GOLD_MED = "rgba(201,168,76,0.25)";
-const GREEN = "#2D6A4F";
-const DARK = "#0a0a0a";
-const DARK2 = "#111111";
-const DARK3 = "#1a1a1a";
+const BLACK = "#0a0a0a";
+const GRAY = "#f5f5f5";
+const GRAY2 = "#e8e8e8";
+const DARK_TEXT = "#1a1a1a";
+const MID_TEXT = "#555555";
+const I = "/images/";
 
-function HeroSection() {
-  return (
-    <section className="relative overflow-hidden" style={{ background: DARK, minHeight: "90vh" }}>
-      {/* Background grid */}
-      <div className="absolute inset-0" style={{
-        backgroundImage: `linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px)`,
-        backgroundSize: "60px 60px",
-      }} />
-
-      {/* Glowing orbs */}
-      <div className="absolute top-20 left-1/4 w-96 h-96 rounded-full opacity-10 pointer-events-none" style={{ background: `radial-gradient(circle, ${GOLD} 0%, transparent 70%)`, filter: "blur(60px)" }} />
-      <div className="absolute bottom-20 right-1/4 w-64 h-64 rounded-full opacity-10 pointer-events-none" style={{ background: `radial-gradient(circle, ${GREEN} 0%, transparent 70%)`, filter: "blur(80px)" }} />
-
-      <div className="relative z-10 flex flex-col items-center justify-center text-center px-6 py-28" style={{ minHeight: "90vh" }}>
-        {/* Eyebrow */}
-        <div className="flex items-center gap-2 mb-6 px-4 py-2 rounded-full" style={{ background: GOLD_LIGHT, border: `1px solid ${GOLD_MED}` }}>
-          <span className="h-1.5 w-1.5 rounded-full" style={{ background: GOLD }} />
-          <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: GOLD }}>Community · Wellness · Wealth · Sports</span>
-        </div>
-
-        {/* Main headline */}
-        <h1 className="font-serif font-black leading-none mb-6" style={{ fontSize: "clamp(48px, 8vw, 96px)", color: "#fff" }}>
-          More Than<br />
-          <span style={{ color: GOLD, fontStyle: "italic" }}>A Network.</span><br />
-          <span style={{ color: "rgba(255,255,255,0.85)" }}>A Movement.</span>
-        </h1>
-
-        <p className="text-sm md:text-base mb-18 max-w-lg leading-relaxed text-center mx-auto" style={{ color: "rgba(255,255,255,0.55)" }}>
-          New Face Global Network unites naturopathic wellness, professional booking, business opportunity, and sports — powered by the industry's most innovative money circulation system.
-        </p>
-
-        <div className="flex flex-col sm:flex-row gap-4 mb-20">
-          <Link href="/join" className="inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-bold rounded-sm" style={{ background: GOLD, color: DARK }}>
-            Join The Network <ArrowRight className="h-5 w-5" />
-          </Link>
-          <Link href="/shop" className="inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold rounded-sm" style={{ border: "1px solid rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.8)", background: "transparent" }}>
-            <Play className="h-4 w-4" style={{ color: GOLD }} /> Shop Collection
-          </Link>
-        </div>
-
-        {/* Stats bar */}
-        <div className="w-full max-w-3xl grid grid-cols-3" style={{ border: "1px solid rgba(201,168,76,0.2)", background: "rgba(255,255,255,0.02)" }}>
-          {[
-            { num: "10K+", label: "Active Members" },
-            { num: "$2M+", label: "Circulated Annually" },
-            { num: "9", label: "Business Pillars" },
-          ].map((s, i) => (
-            <div key={s.label} className="text-center py-6 px-4" style={{ borderRight: i < 2 ? "1px solid rgba(201,168,76,0.15)" : "none" }}>
-              <div className="text-3xl font-serif font-black mb-1" style={{ color: GOLD }}>{s.num}</div>
-              <div className="text-xs tracking-widest uppercase" style={{ color: "rgba(255,255,255,0.4)" }}>{s.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function PillarsSection() {
-  const pillars = [
-    {
-      icon: <Leaf className="h-7 w-7" />,
-      number: "01",
-      title: "Naturopathic Workshops, Products & Services",
-      desc: "World-class naturopathic health products, workshops, and wellness services — including Medical Benefit Packages. Invest in your whole-body health with our curated offerings.",
-      cta: "Shop Collection",
-      href: "/shop",
-      accent: GOLD,
-    },
-    {
-      icon: <Users className="h-7 w-7" />,
-      number: "02",
-      title: "Book-A-Professional",
-      desc: "Connect with certified wellness professionals, naturopaths, coaches, and consultants. Book one-on-one sessions directly through our integrated platform.",
-      cta: "Browse Professionals",
-      href: "/book",
-      accent: GREEN,
-    },
-    {
-      icon: <TrendingUp className="h-7 w-7" />,
-      number: "03",
-      title: "Business Opportunity",
-      desc: "Join the most innovative compensation network in the industry. Build your business, grow your community, and participate in real money circulation.",
-      cta: "Explore Opportunity",
-      href: "/join",
-      accent: GOLD,
-    },
-    {
-      icon: <Trophy className="h-7 w-7" />,
-      number: "04",
-      title: "NFGN Sports",
-      desc: "Where athletics meets community building. Support local sports organizations, schools, and teams through our network — wellness meets competition.",
-      cta: "Learn More",
-      href: "/about",
-      accent: GREEN,
-    },
-    {
-      icon: <Sparkles className="h-7 w-7" />,
-      number: "05",
-      title: "NFGN Handmade Soaps, Lotions & Candles",
-      desc: "Handcrafted with love — our curated line of handmade soaps, candles, lotions, and artisan goods. Natural ingredients, beautiful results, and small-business heart at the core.",
-      cta: "Browse Products",
-      href: "/shop",
-      accent: GOLD,
-    },
-    {
-      icon: <CalendarDays className="h-7 w-7" />,
-      number: "06",
-      title: "Special Events",
-      desc: "Exclusive NFGN live events, community gatherings, and pop-ups. Connect face-to-face with the network, celebrate milestones, and grow together in person.",
-      cta: "View Events",
-      href: "/about",
-      accent: GREEN,
-    },
-    {
-      icon: <Globe className="h-7 w-7" />,
-      number: "07",
-      title: "Travel Discounts, Events & More",
-      desc: "Members-only travel deals, group retreats, and exclusive getaways. Save on flights, hotels, and experiences while building lasting connections around the world.",
-      cta: "Explore Travel",
-      href: "/about",
-      accent: GOLD,
-    },
-    {
-      icon: <Zap className="h-7 w-7" />,
-      number: "08",
-      title: "Workshops & Training",
-      desc: "Ongoing education, professional development workshops, and skill-building training sessions designed to elevate every member personally and professionally.",
-      cta: "View Workshops",
-      href: "/about",
-      accent: GREEN,
-    },
-    {
-      icon: <Network className="h-7 w-7" />,
-      number: "09",
-      title: "Money Circulation & Community Building",
-      desc: "The heartbeat of NFGN — our proprietary money circulation system keeps wealth flowing within our community. Build together, earn together, and lift every member higher.",
-      cta: "Join The Network",
-      href: "/join",
-      accent: GOLD,
-    },
-  ];
-
-  return (
-    <section style={{ background: DARK2 }} className="py-24 px-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-16">
-          <span className="text-xs font-bold tracking-[0.25em] uppercase" style={{ color: GOLD }}>What We Do</span>
-          <h2 className="text-4xl md:text-5xl font-serif font-black text-white mt-3 mb-4">Nine Pillars.<br />One Powerful Network.</h2>
-          <p className="text-lg max-w-xl mx-auto" style={{ color: "rgba(255,255,255,0.45)" }}>
-            Every arm of NFGN is designed to create value — for your health, your community, your wallet, and your lifestyle.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3">
-          {pillars.map((p, i) => (
-            <Link key={p.number} href={p.href}>
-              <div className="group relative overflow-hidden p-8 cursor-pointer transition-all duration-300 h-full"
-                style={{
-                  border: "1px solid rgba(255,255,255,0.06)",
-                  background: i % 2 === 0 ? "rgba(255,255,255,0.01)" : "rgba(255,255,255,0.02)",
-                }}>
-                {/* Hover glow */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                  style={{ background: `radial-gradient(circle at 20% 50%, ${p.accent}12, transparent 70%)` }} />
-
-                <div className="relative z-10">
-                  <div className="flex items-start justify-between mb-8">
-                    <div className="h-14 w-14 flex items-center justify-center rounded-sm" style={{ background: `${p.accent}15`, color: p.accent, border: `1px solid ${p.accent}30` }}>
-                      {p.icon}
-                    </div>
-                    <span className="font-serif font-black text-5xl" style={{ color: "rgba(255,255,255,0.04)" }}>{p.number}</span>
-                  </div>
-
-                  <h3 className="text-xl font-bold text-white mb-3">{p.title}</h3>
-                  <p className="leading-relaxed mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>{p.desc}</p>
-
-                  <div className="flex items-center gap-2 font-semibold text-sm group-hover:gap-3 transition-all" style={{ color: p.accent }}>
-                    {p.cta} <ChevronRight className="h-4 w-4" />
-                  </div>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function PaymentGridSection() {
-  return (
-    <section className="py-24 px-6 relative overflow-hidden" style={{ background: DARK }}>
-      <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(ellipse at 50% 100%, ${GREEN}18, transparent 60%)` }} />
-
-      <div className="relative z-10 max-w-6xl mx-auto">
-        <div className="grid md:grid-cols-2 gap-16 items-center">
-          {/* Left copy */}
-          <div>
-            <span className="text-xs font-bold tracking-[0.25em] uppercase" style={{ color: GOLD }}>Our Flagship Feature</span>
-            <h2 className="text-4xl md:text-5xl font-serif font-black text-white mt-3 mb-6 leading-tight">
-              2-Down By Infinity<br />
-              <span style={{ color: GOLD }}>Multi Point Payment Grid</span>
-            </h2>
-            <p className="text-lg leading-relaxed mb-6" style={{ color: "rgba(255,255,255,0.55)" }}>
-              The financial engine behind NFGN. Our revolutionary grid system creates real money circulation that benefits individuals, schools, nonprofits, sports organizations, and local businesses — both in the United States and abroad.
-            </p>
-            <div className="space-y-4 mb-8">
-              {[
-                { icon: <Globe className="h-4 w-4" />, text: "US & international money circulation" },
-                { icon: <Building2 className="h-4 w-4" />, text: "Supports schools, nonprofits & local businesses" },
-                { icon: <Network className="h-4 w-4" />, text: "Infinite depth — no earning ceiling" },
-                { icon: <Shield className="h-4 w-4" />, text: "Transparent, trackable compensation" },
-              ].map((item) => (
-                <div key={item.text} className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-sm flex items-center justify-center flex-shrink-0" style={{ background: GOLD_LIGHT, color: GOLD }}>
-                    {item.icon}
-                  </div>
-                  <span style={{ color: "rgba(255,255,255,0.7)" }}>{item.text}</span>
-                </div>
-              ))}
-            </div>
-            <Link href="/join" className="inline-flex items-center gap-2 px-7 py-3.5 font-bold text-sm rounded-sm" style={{ background: GOLD, color: DARK }}>
-              Learn How It Works <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-
-          {/* Right: Grid diagram */}
-          <div className="relative">
-            <div className="rounded-sm p-8" style={{ background: DARK3, border: "1px solid rgba(201,168,76,0.2)" }}>
-              <div className="text-center mb-4">
-                <span className="text-xs font-bold tracking-widest uppercase" style={{ color: GOLD }}>Your Grid Structure</span>
-              </div>
-
-              {/* Radial SVG diagram */}
-              <div className="flex justify-center">
-                <svg viewBox="0 0 340 340" width="100%" style={{ maxWidth: 320 }} aria-label="Grid structure diagram">
-                  {/* Orbital rings */}
-                  <circle cx="170" cy="170" r="75" fill="none" stroke={`${GOLD}18`} strokeWidth="1" strokeDasharray="4 4" />
-                  <circle cx="170" cy="170" r="138" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" strokeDasharray="4 4" />
-
-                  {/* Spoke lines — YOU to L1 (4 nodes at 0°, 90°, 180°, 270°) */}
-                  {[[170,95],[245,170],[170,245],[95,170]].map(([x,y], i) => (
-                    <line key={`sl1-${i}`} x1="170" y1="170" x2={x} y2={y}
-                      stroke={`${GOLD}35`} strokeWidth="1.5" />
-                  ))}
-
-                  {/* Spoke lines — YOU to L2 (6 nodes at 0°,60°,120°,180°,240°,300°) */}
-                  {[0,60,120,180,240,300].map((deg, i) => {
-                    const rad = (deg * Math.PI) / 180;
-                    const x = 170 + 138 * Math.cos(rad);
-                    const y = 170 + 138 * Math.sin(rad);
-                    return <line key={`sl2-${i}`} x1="170" y1="170" x2={x} y2={y}
-                      stroke="rgba(255,255,255,0.08)" strokeWidth="1" />;
-                  })}
-
-                  {/* L1 nodes — 4 at cardinal positions, radius 75 */}
-                  {[[170,95],[245,170],[170,245],[95,170]].map(([x,y], i) => (
-                    <g key={`l1-${i}`}>
-                      <circle cx={x} cy={y} r="22" fill={`${GREEN}35`} stroke={`${GREEN}90`} strokeWidth="1.5" />
-                      <text x={x} y={y+1} textAnchor="middle" dominantBaseline="middle"
-                        fontSize="10" fontWeight="700" fill="#6EE7A0">L1</text>
-                    </g>
-                  ))}
-
-                  {/* L2 nodes — 6 at 60° intervals, radius 138 */}
-                  {[0,60,120,180,240,300].map((deg, i) => {
-                    const rad = (deg * Math.PI) / 180;
-                    const x = 170 + 138 * Math.cos(rad);
-                    const y = 170 + 138 * Math.sin(rad);
-                    return (
-                      <g key={`l2-${i}`}>
-                        <circle cx={x} cy={y} r="18" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.18)" strokeWidth="1.5" />
-                        <text x={x} y={y+1} textAnchor="middle" dominantBaseline="middle"
-                          fontSize="9" fontWeight="600" fill="rgba(255,255,255,0.6)">L2</text>
-                      </g>
-                    );
-                  })}
-
-                  {/* Center — YOU */}
-                  <circle cx="170" cy="170" r="32" fill={GOLD} />
-                  <text x="170" y="171" textAnchor="middle" dominantBaseline="middle"
-                    fontSize="11" fontWeight="800" fill={DARK}>YOU</text>
-                </svg>
-              </div>
-
-              {/* Counts + infinity */}
-              <div className="flex justify-center gap-6 mt-2 mb-3">
-                <div className="text-center">
-                  <div className="text-lg font-serif font-black" style={{ color: "#6EE7A0" }}>4</div>
-                  <div className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Level 1</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-lg font-serif font-black" style={{ color: "rgba(255,255,255,0.5)" }}>6</div>
-                  <div className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Level 2</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-lg font-serif font-black" style={{ color: `${GOLD}90` }}>∞</div>
-                  <div className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Depth</div>
-                </div>
-              </div>
-              <p className="text-center text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Infinite depth, infinite potential</p>
-
-              {/* Legend */}
-              <div className="mt-5 pt-4 grid grid-cols-2 gap-3" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full" style={{ background: GOLD }} />
-                  <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>You earn commissions</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full" style={{ background: GREEN }} />
-                  <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>Money circulates</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function CommunitySection() {
-  const communities = [
-    { icon: <Users className="h-6 w-6" />, title: "Individuals", desc: "Build real income by sharing products and services you believe in." },
-    { icon: <Building2 className="h-6 w-6" />, title: "Schools", desc: "Fundraise and create sustainable revenue streams for educational programs." },
-    { icon: <Heart className="h-6 w-6" />, title: "Nonprofits", desc: "Access ongoing funding and community support through the NFGN grid." },
-    { icon: <Trophy className="h-6 w-6" />, title: "Sports Orgs", desc: "Fund teams, leagues, and athletic programs across the country and beyond." },
-    { icon: <DollarSign className="h-6 w-6" />, title: "Local Businesses", desc: "Plug into the NFGN ecosystem and expand your customer base organically." },
-    { icon: <Globe className="h-6 w-6" />, title: "International", desc: "Global reach — money circulation crosses US borders seamlessly." },
-  ];
-
-  return (
-    <section className="py-24 px-6" style={{ background: DARK2 }}>
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-16">
-          <span className="text-xs font-bold tracking-[0.25em] uppercase" style={{ color: GOLD }}>Who Benefits</span>
-          <h2 className="text-4xl md:text-5xl font-serif font-black text-white mt-3 mb-4">Money Circulation<br />For Everyone</h2>
-          <p className="text-lg max-w-xl mx-auto" style={{ color: "rgba(255,255,255,0.45)" }}>
-            NFGN isn't just for entrepreneurs. Our grid creates wealth pathways for entire communities.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-3">
-          {communities.map((c) => (
-            <div key={c.title} className="group p-8 text-center" style={{ border: "1px solid rgba(255,255,255,0.05)" }}>
-              <div className="h-12 w-12 rounded-sm flex items-center justify-center mx-auto mb-4 transition-all group-hover:scale-110 duration-300" style={{ background: GOLD_LIGHT, color: GOLD }}>
-                {c.icon}
-              </div>
-              <h3 className="font-bold text-white mb-2">{c.title}</h3>
-              <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>{c.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function SportsSection() {
-  return (
-    <section className="py-24 px-6 relative overflow-hidden" style={{ background: DARK }}>
-      <div className="absolute inset-0 pointer-events-none" style={{ background: `linear-gradient(135deg, ${GREEN}12, transparent 60%)` }} />
-      <div className="relative z-10 max-w-6xl mx-auto">
-        <div className="rounded-sm overflow-hidden" style={{ border: `1px solid ${GREEN}40`, background: `${GREEN}08` }}>
-          <div className="p-12 md:p-16 grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="h-8 w-8 rounded-sm flex items-center justify-center" style={{ background: GREEN, color: "#fff" }}>
-                  <Trophy className="h-4 w-4" />
-                </div>
-                <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: "#6EE7A0" }}>Now Launching</span>
-              </div>
-              <h2 className="text-4xl md:text-5xl font-serif font-black text-white mb-4 leading-tight">
-                NFGN<br /><span style={{ color: "#6EE7A0" }}>Sports</span>
-              </h2>
-              <p className="text-lg leading-relaxed mb-8" style={{ color: "rgba(255,255,255,0.55)" }}>
-                Where health, community, and athletics converge. NFGN Sports supports local teams, school programs, and youth athletics while embedding them into our money circulation ecosystem.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                {["Youth Programs", "School Teams", "Local Leagues", "Sports Nonprofits"].map((tag) => (
-                  <span key={tag} className="text-xs px-3 py-1.5 rounded-full font-medium" style={{ background: `${GREEN}20`, color: "#6EE7A0", border: `1px solid ${GREEN}40` }}>
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div className="flex flex-col gap-4">
-              {[
-                { icon: <Activity className="h-5 w-5" />, title: "Athlete Support Programs", desc: "Fund training, equipment, and travel for athletes at every level." },
-                { icon: <Users className="h-5 w-5" />, title: "Team Fundraising Grid", desc: "Teams plug into NFGN's payment grid and generate ongoing income." },
-                { icon: <Zap className="h-5 w-5" />, title: "Wellness Integration", desc: "Athletes access NFGN naturopathic products at member pricing." },
-              ].map((item) => (
-                <div key={item.title} className="flex items-start gap-4 p-5 rounded-sm" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                  <div className="h-10 w-10 rounded-sm flex items-center justify-center flex-shrink-0" style={{ background: `${GREEN}25`, color: "#6EE7A0" }}>
-                    {item.icon}
-                  </div>
-                  <div>
-                    <div className="font-bold text-white mb-1 text-sm">{item.title}</div>
-                    <div className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>{item.desc}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function CtaSection() {
-  return (
-    <section className="py-28 px-6 relative overflow-hidden" style={{ background: DARK }}>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] rounded-full opacity-15 pointer-events-none" style={{ background: `radial-gradient(ellipse, ${GOLD}, transparent 70%)`, filter: "blur(60px)" }} />
-
-      <div className="relative z-10 max-w-3xl mx-auto text-center">
-        <div className="flex justify-center mb-6">
-          <div className="flex">
-            {[...Array(5)].map((_, i) => <Star key={i} className="h-5 w-5" style={{ color: GOLD }} fill={GOLD} />)}
-          </div>
-        </div>
-        <h2 className="text-4xl md:text-6xl font-serif font-black text-white mb-6 leading-tight">
-          Ready to join the<br /><span style={{ color: GOLD, fontStyle: "italic" }}>New Face Movement?</span>
-        </h2>
-        <p className="text-xl mb-10" style={{ color: "rgba(255,255,255,0.5)" }}>
-          Join thousands of members building health, wealth, and community through the most innovative network in the industry.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/join" className="inline-flex items-center justify-center gap-2 px-10 py-4 text-base font-black rounded-sm" style={{ background: GOLD, color: DARK }}>
-            Start Your Journey <ArrowRight className="h-5 w-5" />
-          </Link>
-          <Link href="/about" className="inline-flex items-center justify-center gap-2 px-10 py-4 text-base font-semibold rounded-sm" style={{ border: "1px solid rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.7)", background: "transparent" }}>
-            View Business Plan
-          </Link>
-        </div>
-        <p className="mt-6 text-sm" style={{ color: "rgba(255,255,255,0.3)" }}>No obligation. No pressure. Just opportunity.</p>
-      </div>
-    </section>
-  );
-}
+const pillars = [
+  {
+    icon: <Leaf className="h-6 w-6" />,
+    number: "01",
+    title: "Naturopathic Workshops, Products & Services",
+    desc: "World-class naturopathic health products, workshops, and wellness services — including Medical Benefit Packages. Invest in your whole-body health with our curated offerings.",
+    cta: "Shop Collection",
+    href: "/shop",
+    img: `${I}offer-wellness.png`,
+  },
+  {
+    icon: <Users className="h-6 w-6" />,
+    number: "02",
+    title: "Book-A-Professional",
+    desc: "Connect with certified wellness professionals, naturopaths, coaches, and consultants. Book one-on-one sessions directly through our integrated platform.",
+    cta: "Browse Professionals",
+    href: "/book",
+    img: `${I}consultation.png`,
+  },
+  {
+    icon: <TrendingUp className="h-6 w-6" />,
+    number: "03",
+    title: "Business Opportunity",
+    desc: "Join the most innovative compensation network in the industry. Build your business, grow your community, and participate in real money circulation.",
+    cta: "Explore Opportunity",
+    href: "/join",
+    img: `${I}offer-training.png`,
+  },
+  {
+    icon: <Trophy className="h-6 w-6" />,
+    number: "04",
+    title: "NFGN Sports",
+    desc: "Where athletics meets community building. Support local sports organizations, schools, and teams through our network — wellness meets competition.",
+    cta: "Learn More",
+    href: "/about",
+    img: `${I}offer-sports.png`,
+  },
+  {
+    icon: <Sparkles className="h-6 w-6" />,
+    number: "05",
+    title: "NFGN Handmade Soaps, Lotions & Candles",
+    desc: "Handcrafted with love — our curated line of handmade soaps, candles, lotions, and artisan goods. Natural ingredients, beautiful results, and small-business heart at the core.",
+    cta: "Browse Products",
+    href: "/shop",
+    img: `${I}offer-soaps.png`,
+  },
+  {
+    icon: <CalendarDays className="h-6 w-6" />,
+    number: "06",
+    title: "Special Events",
+    desc: "Exclusive NFGN live events, community gatherings, and pop-ups. Connect face-to-face with the network, celebrate milestones, and grow together in person.",
+    cta: "View Events",
+    href: "/about",
+    img: `${I}pillar-events.png`,
+  },
+  {
+    icon: <Globe className="h-6 w-6" />,
+    number: "07",
+    title: "Travel Discounts, Events & More",
+    desc: "Members-only travel deals, group retreats, and exclusive getaways. Save on flights, hotels, and experiences while building lasting connections around the world.",
+    cta: "Explore Travel",
+    href: "/about",
+    img: `${I}pillar-travel.png`,
+  },
+  {
+    icon: <Zap className="h-6 w-6" />,
+    number: "08",
+    title: "Workshops & Training",
+    desc: "Ongoing education, professional development workshops, and skill-building training sessions designed to elevate every member personally and professionally.",
+    cta: "View Workshops",
+    href: "/about",
+    img: `${I}offer-training.png`,
+  },
+  {
+    icon: <Network className="h-6 w-6" />,
+    number: "09",
+    title: "Money Circulation & Community Building",
+    desc: "The heartbeat of NFGN — our proprietary money circulation system keeps wealth flowing within our community. Build together, earn together, and lift every member higher.",
+    cta: "Join The Network",
+    href: "/join",
+    img: `${I}community-event.png`,
+  },
+];
 
 export function Home() {
+  const [hoveredPillar, setHoveredPillar] = useState<number | null>(null);
+
+  useEffect(() => {
+    const l = document.createElement("link");
+    l.rel = "stylesheet";
+    l.href = "https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap";
+    document.head.appendChild(l);
+    return () => { document.head.removeChild(l); };
+  }, []);
+
   return (
-    <div style={{ fontFamily: "system-ui, sans-serif" }}>
-      <HeroSection />
-      <PillarsSection />
-      <PaymentGridSection />
-      <CommunitySection />
-      <SportsSection />
-      <CtaSection />
+    <div style={{ fontFamily: "'Poppins', sans-serif", background: "#fff", color: DARK_TEXT }} className="overflow-x-hidden">
+
+      {/* HERO */}
+      <section className="relative min-h-screen flex flex-col">
+        <div className="absolute inset-0">
+          <img
+            src={`${I}hero-community-diverse.png`}
+            alt="NFGN Community"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom,rgba(0,0,0,0.3) 0%,rgba(0,0,0,0.55) 50%,rgba(0,0,0,0.75) 100%)" }} />
+        </div>
+
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6 pt-12 pb-16">
+          <div className="inline-flex items-center gap-3 mb-10 px-5 py-2.5 rounded-full border text-white text-xs font-bold tracking-widest" style={{ background: "rgba(255,255,255,0.1)", backdropFilter: "blur(8px)", borderColor: "rgba(255,255,255,0.2)" }}>
+            <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: GOLD }} />
+            NEW ORLEANS, LOUISIANA · FOUNDED 2013
+          </div>
+
+          <h1 className="text-white font-black leading-none mb-4" style={{ fontSize: "clamp(48px,7vw,96px)" }}>
+            Building A New
+          </h1>
+          <h1 className="font-black leading-none mb-4" style={{ fontSize: "clamp(48px,7vw,96px)", color: GOLD }}>
+            Community
+          </h1>
+          <h1 className="text-white font-black leading-none mb-8" style={{ fontSize: "clamp(36px,5vw,72px)" }}>
+            Of Health &amp; Wellness
+          </h1>
+
+          <p className="text-xl max-w-2xl mb-12 leading-relaxed" style={{ color: "rgba(255,255,255,0.75)" }}>
+            A faith-rooted movement guided by a <strong className="text-white">GOD First · Help First</strong> philosophy — uniting naturopathic wellness, community connection, and personal growth.
+          </p>
+
+          <div className="flex flex-wrap justify-center gap-5">
+            <Link href="/join" className="inline-flex items-center gap-3 font-black px-10 py-5 rounded-full text-lg shadow-2xl hover:-translate-y-1 transition-all" style={{ background: GOLD, color: BLACK }}>
+              Become a Member <ArrowRight className="h-5 w-5" />
+            </Link>
+            <Link href="/shop" className="inline-flex items-center gap-3 font-bold px-10 py-5 rounded-full text-lg border-2 text-white hover:bg-white/10 transition-all" style={{ backdropFilter: "blur(4px)", borderColor: "rgba(255,255,255,0.3)" }}>
+              Shop Now <ArrowRight className="h-5 w-5" />
+            </Link>
+          </div>
+        </div>
+
+        <div className="relative z-10 border-t" style={{ background: "rgba(255,255,255,0.1)", backdropFilter: "blur(12px)", borderColor: "rgba(255,255,255,0.2)" }}>
+          <div className="max-w-5xl mx-auto px-6 grid grid-cols-4">
+            {[
+              { num: "10K+", label: "Active Members" },
+              { num: "$2M+", label: "Community Circulated" },
+              { num: "9", label: "Business Pillars" },
+              { num: "2013", label: "Year Founded" },
+            ].map((s, i) => (
+              <div key={s.label} className="text-center py-6 px-4" style={{ borderRight: i < 3 ? "1px solid rgba(255,255,255,0.2)" : "none" }}>
+                <div className="text-3xl font-black text-white mb-1">{s.num}</div>
+                <div className="text-xs tracking-widest uppercase" style={{ color: "rgba(255,255,255,0.5)" }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* PILLARS */}
+      <section style={{ background: GRAY }} className="py-24 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <span className="text-xs font-black tracking-[0.25em] uppercase" style={{ color: GOLD }}>What We Do</span>
+            <h2 className="text-4xl md:text-5xl font-black mt-3 mb-4" style={{ color: BLACK }}>
+              Nine Pillars.<br />One Powerful Network.
+            </h2>
+            <p className="text-lg max-w-xl mx-auto" style={{ color: MID_TEXT }}>
+              Every arm of NFGN is designed to create value — for your health, your community, your wallet, and your lifestyle.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3">
+            {pillars.map((p, i) => (
+              <div
+                key={p.number}
+                className="group relative overflow-hidden cursor-pointer transition-all duration-300 bg-white"
+                style={{
+                  border: "1px solid #e0e0e0",
+                  boxShadow: hoveredPillar === i ? "0 12px 40px rgba(0,0,0,0.12)" : "none",
+                  transform: hoveredPillar === i ? "translateY(-4px)" : "none",
+                }}
+                onMouseEnter={() => setHoveredPillar(i)}
+                onMouseLeave={() => setHoveredPillar(null)}
+              >
+                <div className="relative h-48 overflow-hidden">
+                  <img
+                    src={p.img}
+                    alt={p.title}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div
+                    className="absolute inset-0 transition-opacity duration-300"
+                    style={{
+                      background: "linear-gradient(to top, rgba(201,168,76,0.5), transparent)",
+                      opacity: hoveredPillar === i ? 1 : 0,
+                    }}
+                  />
+                  <div
+                    className="absolute top-3 right-3 w-9 h-9 rounded-sm flex items-center justify-center font-black text-sm"
+                    style={{ background: BLACK, color: GOLD }}
+                  >
+                    {p.number}
+                  </div>
+                </div>
+
+                <div className="p-7">
+                  <div
+                    className="h-12 w-12 flex items-center justify-center rounded-sm mb-5 transition-colors duration-300"
+                    style={{
+                      background: hoveredPillar === i ? GOLD : GRAY2,
+                      color: hoveredPillar === i ? BLACK : GOLD,
+                    }}
+                  >
+                    {p.icon}
+                  </div>
+
+                  <h3 className="text-base font-black mb-3" style={{ color: BLACK }}>{p.title}</h3>
+                  <p className="text-sm leading-relaxed mb-5" style={{ color: MID_TEXT }}>{p.desc}</p>
+
+                  <Link
+                    href={p.href}
+                    className="flex items-center gap-2 font-bold text-sm group-hover:gap-3 transition-all"
+                    style={{ color: GOLD }}
+                  >
+                    {p.cta} <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAITH COMMUNITY */}
+      <section className="py-24 px-6" style={{ background: "#fff" }}>
+        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+          <div>
+            <span className="text-xs font-black tracking-[0.25em] uppercase" style={{ color: GOLD }}>A Faith Based Community</span>
+            <h2 className="text-4xl font-black mt-3 mb-5 leading-tight" style={{ color: BLACK }}>
+              GOD First.<br />Help First.
+            </h2>
+            <p className="text-base leading-relaxed mb-5" style={{ color: MID_TEXT }}>
+              Founded in 2013 in New Orleans, Louisiana, New Face Global Network was built on a simple but powerful principle: when we put God first and serve others first, everything else follows.
+            </p>
+            <p className="text-base leading-relaxed mb-8" style={{ color: MID_TEXT }}>
+              Our CEO &amp; Founder Joe Marcelino has intentionally cultivated a culture that places service, integrity, and faith at the center of every decision — from local neighborhoods to international communities.
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { emoji: "🙏", t: "Faith-Centered" },
+                { emoji: "❤️", t: "Service-First" },
+                { emoji: "🏛️", t: "New Orleans, 2013" },
+                { emoji: "🌍", t: "Global Impact" },
+              ].map((f, i) => (
+                <div key={i} className="flex items-center gap-3 p-4 rounded-sm border" style={{ borderColor: GRAY2, background: GRAY }}>
+                  <span className="text-xl">{f.emoji}</span>
+                  <span className="font-bold text-sm" style={{ color: BLACK }}>{f.t}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="relative">
+            <div className="rounded-sm overflow-hidden h-[420px] shadow-xl" style={{ border: `3px solid ${GOLD}` }}>
+              <img src={`${I}pillar-faith.png`} alt="Faith Community" className="w-full h-full object-cover" />
+            </div>
+            <div className="absolute -bottom-5 -left-5 p-5 rounded-sm shadow-xl max-w-[260px]" style={{ background: BLACK }}>
+              <p className="text-sm font-medium leading-relaxed italic mb-2" style={{ color: "#fff" }}>
+                "A dollar spent within your community becomes two."
+              </p>
+              <p className="text-xs font-bold" style={{ color: GOLD }}>— Joe Marcelino, Founder &amp; CEO</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SPORTS */}
+      <section className="py-0" style={{ background: GRAY }}>
+        <div className="grid lg:grid-cols-2">
+          <div className="relative h-72 lg:h-auto overflow-hidden">
+            <img src={`${I}offer-sports.png`} alt="NFGN Sports" className="w-full h-full object-cover" />
+          </div>
+          <div className="px-12 py-16 flex flex-col justify-center" style={{ background: BLACK }}>
+            <span className="text-xs font-black tracking-[0.2em] uppercase mb-4" style={{ color: GOLD }}>Community Athletics</span>
+            <h2 className="text-4xl font-black mb-4 leading-tight" style={{ color: "#fff" }}>
+              NFGN Sports
+            </h2>
+            <p className="leading-relaxed mb-8" style={{ color: "rgba(255,255,255,0.65)" }}>
+              NFGN Sports empowers youth athletes, school teams, and community leagues — building character, discipline, and community pride on and off the field.
+            </p>
+            <div className="flex flex-wrap gap-3 mb-8">
+              {["Youth Programs", "School Teams", "Community Leagues", "Skills Camps"].map((t) => (
+                <span key={t} className="text-xs px-3 py-1.5 rounded-full font-bold border" style={{ borderColor: GOLD + "50", color: GOLD, background: GOLD + "10" }}>
+                  {t}
+                </span>
+              ))}
+            </div>
+            <Link href="/about" className="inline-flex items-center gap-2 self-start font-bold px-7 py-3.5 rounded-sm transition-all hover:opacity-90" style={{ background: GOLD, color: BLACK }}>
+              Explore Sports <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-24 px-6 text-center" style={{ background: "#fff" }}>
+        <div className="max-w-3xl mx-auto">
+          <div className="flex justify-center gap-1 mb-6">
+            {[...Array(5)].map((_, i) => <Star key={i} className="h-5 w-5" style={{ color: GOLD, fill: GOLD }} />)}
+          </div>
+          <h2 className="text-4xl md:text-5xl font-black mb-5 leading-tight" style={{ color: BLACK }}>
+            Ready to Join the<br />
+            <span style={{ color: GOLD }}>New Face Movement?</span>
+          </h2>
+          <p className="text-lg mb-10" style={{ color: MID_TEXT }}>
+            Become a member of a faith-rooted, wellness-focused community that grows together.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link href="/join" className="inline-flex items-center gap-2 font-black px-9 py-4 rounded-sm text-lg shadow-lg hover:-translate-y-0.5 transition-all" style={{ background: BLACK, color: "#fff" }}>
+              Become a Member <ArrowRight className="h-5 w-5" />
+            </Link>
+            <Link href="/shop" className="inline-flex items-center gap-2 font-bold px-9 py-4 rounded-sm text-lg border-2 hover:bg-gray-50 transition-all" style={{ borderColor: GOLD, color: GOLD }}>
+              Shop Products
+            </Link>
+          </div>
+        </div>
+      </section>
+
     </div>
   );
 }

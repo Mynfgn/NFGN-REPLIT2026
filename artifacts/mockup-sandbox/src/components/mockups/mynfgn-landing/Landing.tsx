@@ -161,19 +161,36 @@ export function Landing() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
-              { title: "Health & Wellness", desc: "Naturopathic consultations & holistic care", icon: <HeartPulse />, color: "border-[#16a34a]", bg: "bg-green-50", text: "text-[#16a34a]" },
-              { title: "NFGN Sports", desc: "Youth programs & athletic development", icon: <Activity />, color: "border-[#fbbf24]", bg: "bg-yellow-50", text: "text-[#d97706]" },
-              { title: "Handmade Soaps", desc: "Artisan soaps with natural ingredients", icon: <Droplet />, color: "border-pink-400", bg: "bg-pink-50", text: "text-pink-500" },
-              { title: "Herbal Products", desc: "Tinctures, supplements & remedies", icon: <Leaf />, color: "border-[#2D6A4F]", bg: "bg-emerald-50", text: "text-[#2D6A4F]" },
-              { title: "Candles", desc: "Soy candles for aromatherapy & self-care", icon: <Flame />, color: "border-amber-500", bg: "bg-amber-50", text: "text-amber-600" },
-              { title: "Business Training", desc: "Workshops, mentorship & consultation", icon: <Briefcase />, color: "border-teal-500", bg: "bg-teal-50", text: "text-teal-600" }
+              { title: "Health & Wellness", desc: "Naturopathic consultations & holistic care", icon: <HeartPulse />, color: "border-[#16a34a]", bg: "bg-green-50", text: "text-[#16a34a]", img: "/__mockup/images/offer-wellness.png", badge: "NFGN" },
+              { title: "NFGN Sports", desc: "Youth programs & athletic development", icon: <Activity />, color: "border-[#fbbf24]", bg: "bg-yellow-50", text: "text-[#d97706]", img: "/__mockup/images/offer-sports.png", badge: "NFGN Sports" },
+              { title: "Handmade Soaps", desc: "Artisan soaps with natural ingredients", icon: <Droplet />, color: "border-pink-400", bg: "bg-pink-50", text: "text-pink-500", img: "/__mockup/images/offer-soaps.png", badge: "MARCELINO" },
+              { title: "Herbal Products", desc: "Tinctures, supplements & remedies", icon: <Leaf />, color: "border-[#2D6A4F]", bg: "bg-emerald-50", text: "text-[#2D6A4F]", img: "/__mockup/images/offer-herbal.png", badge: "RENEW" },
+              { title: "Candles", desc: "Soy candles for aromatherapy & self-care", icon: <Flame />, color: "border-amber-500", bg: "bg-amber-50", text: "text-amber-600", img: "/__mockup/images/offer-candles.png", badge: "IGNITE" },
+              { title: "Business Training", desc: "Workshops, mentorship & consultation", icon: <Briefcase />, color: "border-teal-500", bg: "bg-teal-50", text: "text-teal-600", img: "/__mockup/images/offer-training.png", badge: "NFGN" }
             ].map((feature, idx) => (
-              <div key={idx} className={`bg-white rounded-2xl p-8 shadow-sm hover:shadow-xl transition-shadow duration-300 border-t-4 ${feature.color}`}>
-                <div className={`w-14 h-14 rounded-xl ${feature.bg} ${feature.text} flex items-center justify-center mb-6`}>
-                  {React.cloneElement(feature.icon as React.ReactElement, { size: 28 })}
+              <div key={idx} className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-t-4 ${feature.color} group`}>
+                {/* Card image */}
+                <div className="relative h-48 overflow-hidden">
+                  <img
+                    src={feature.img}
+                    alt={feature.title}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  {/* Brand badge overlay */}
+                  <div className="absolute top-3 left-3">
+                    <span className="bg-black/70 backdrop-blur-sm text-white text-xs font-black tracking-widest uppercase px-3 py-1 rounded-full" style={{ letterSpacing: "0.15em" }}>
+                      {feature.badge}
+                    </span>
+                  </div>
                 </div>
-                <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                <p className="text-gray-600 font-medium">{feature.desc}</p>
+                {/* Card body */}
+                <div className="p-6">
+                  <div className={`w-11 h-11 rounded-xl ${feature.bg} ${feature.text} flex items-center justify-center mb-4`}>
+                    {React.cloneElement(feature.icon as React.ReactElement, { size: 22 })}
+                  </div>
+                  <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
+                  <p className="text-gray-600 font-medium text-sm leading-relaxed">{feature.desc}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -257,7 +274,7 @@ export function Landing() {
             </div>
             <div className="relative">
               <div className="absolute -inset-4 bg-gradient-to-r from-[#fbbf24] to-[#16a34a] rounded-3xl blur-xl opacity-30"></div>
-              <img src="/__mockup/images/sports-team.png" alt="NFGN Sports Team" className="relative rounded-3xl shadow-2xl border-4 border-gray-800 w-full h-[500px] object-cover grayscale hover:grayscale-0 transition-all duration-700" />
+              <img src="/__mockup/images/offer-sports.png" alt="NFGN Sports Team" className="relative rounded-3xl shadow-2xl border-4 border-gray-800 w-full h-[500px] object-cover hover:scale-105 transition-all duration-700" />
             </div>
           </div>
         </div>

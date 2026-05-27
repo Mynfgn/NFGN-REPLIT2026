@@ -54,6 +54,42 @@ uri = "file://artifacts/mockup-sandbox/public/images/teamwork.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "9peyhC8fxZhe-WSkMKsD5"
+uri = "file://artifacts/mockup-sandbox/public/images/offer-soaps.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "RZHqr70Phz3XdKnbv4meY"
+uri = "file://artifacts/mockup-sandbox/public/images/offer-herbal.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "pBqmxwQita9d78xY_6LRD"
+uri = "file://artifacts/mockup-sandbox/public/images/offer-candles.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "jBrrMAev-0LKmluuMNhZS"
+uri = "file://artifacts/mockup-sandbox/public/images/offer-sports.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "zGn1pZRXJh2K3na9GorbU"
+uri = "file://artifacts/mockup-sandbox/public/images/offer-wellness.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "llF8A8BQb9BXwea4NN8J1"
+uri = "file://artifacts/mockup-sandbox/public/images/offer-training.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "ThLpw-C-p0MEK0l4tCicI"
 uri = "file://artifacts/nfgn/public/icons/icon-512.png"

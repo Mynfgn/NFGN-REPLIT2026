@@ -90,6 +90,24 @@ uri = "file://artifacts/mockup-sandbox/public/images/offer-training.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "pD4AZG9LK6FyK9Jw7GGek"
+uri = "file://artifacts/mockup-sandbox/public/images/product-ignite.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "1gFGhHNRMorojHZZbkVtV"
+uri = "file://artifacts/mockup-sandbox/public/images/product-lotion.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "UYccPb5CNRutnvyJNCyzF"
+uri = "file://artifacts/mockup-sandbox/public/images/community-event.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "ThLpw-C-p0MEK0l4tCicI"
 uri = "file://artifacts/nfgn/public/icons/icon-512.png"

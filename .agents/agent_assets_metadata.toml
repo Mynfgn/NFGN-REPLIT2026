@@ -6,6 +6,54 @@ uri = "file://artifacts/nfgn/public/pro-member-registration-badge.png"
 type = "image"
 title = "NFGN pro member premium badge"
 
+[[generated]]
+id = "rfNegY6NvCJelyIzGSnxo"
+uri = "file://artifacts/mockup-sandbox/public/images/hero-community.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "6MUU-HnQO1zjR-DZ7d7FB"
+uri = "file://artifacts/mockup-sandbox/public/images/sports-team.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "SKo_IPNSMK44O1C9F1I4I"
+uri = "file://artifacts/mockup-sandbox/public/images/herbal-soaps.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "9ucIyD73SJJdeRz-K4fqw"
+uri = "file://artifacts/mockup-sandbox/public/images/candles.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "noEYxhq6-YDxKXi5OY7X_"
+uri = "file://artifacts/mockup-sandbox/public/images/workshop.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "sip3kis0N0w-SyqQZnhKb"
+uri = "file://artifacts/mockup-sandbox/public/images/herbal-products.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "7gI_wX4XvEBKk_Hh4fhLG"
+uri = "file://artifacts/mockup-sandbox/public/images/consultation.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "OoyodE9kb95LItOxlgVkP"
+uri = "file://artifacts/mockup-sandbox/public/images/teamwork.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "ThLpw-C-p0MEK0l4tCicI"
 uri = "file://artifacts/nfgn/public/icons/icon-512.png"

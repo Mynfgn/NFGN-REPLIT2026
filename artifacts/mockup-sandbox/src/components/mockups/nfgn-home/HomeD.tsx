@@ -148,7 +148,7 @@ export function HomeD() {
         </div>
 
         {/* Centered hero text — identical to Variation C */}
-        <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6 pt-20 pb-16">
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6 pt-12 pb-16">
           {/* Eyebrow pill — matching Variation C */}
           <div className="inline-flex items-center gap-3 mb-10 px-5 py-2.5 rounded-full border text-white text-xs font-bold tracking-widest" style={{ background: "rgba(255,255,255,0.1)", backdropFilter: "blur(8px)", borderColor: "rgba(255,255,255,0.2)" }}>
             <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: GOLD }} />

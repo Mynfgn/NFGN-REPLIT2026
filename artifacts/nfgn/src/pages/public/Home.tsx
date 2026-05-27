@@ -129,11 +129,11 @@ export function Home() {
         {/* Hero content */}
         <div className="relative z-10 flex flex-col items-center justify-center text-center w-full px-6 py-12">
 
-          {/* Single unified heading block — first, so it sits over any dark sky */}
-          <h1 className="font-black text-center leading-[1.05] mb-5" style={{ fontSize: "clamp(44px, 6.5vw, 90px)", letterSpacing: "-0.02em" }}>
-            <span className="block text-white">Building A New</span>
-            <span className="block" style={{ color: GOLD }}>Community</span>
-            <span className="block text-white" style={{ fontSize: "clamp(32px, 4.5vw, 64px)", fontWeight: 700, letterSpacing: 0 }}>
+          {/* Single unified heading block */}
+          <h1 className="font-black text-center leading-[1.1] mb-5" style={{ fontSize: "clamp(36px, 5.5vw, 80px)", letterSpacing: "-0.02em" }}>
+            <span className="block text-white">Welcome To The</span>
+            <span className="block" style={{ color: GOLD }}>NFGN Community</span>
+            <span className="block text-white" style={{ fontSize: "clamp(28px, 4vw, 60px)", fontWeight: 700, letterSpacing: 0 }}>
               Of Health &amp; Wellness
             </span>
           </h1>

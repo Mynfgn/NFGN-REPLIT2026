@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
   Leaf, Users, TrendingUp, Trophy, Sparkles, CalendarDays,
   Globe, Zap, Heart, ArrowRight, CheckCircle2, Star,
-  MapPin, Phone, Mail, Menu, X, Quote, Play
+  MapPin, Phone, Mail, Menu, X, Quote
 } from "lucide-react";
 
 const G = "#2D6A4F";
@@ -97,7 +97,7 @@ export function HomeC() {
               Become a Member <ArrowRight className="w-5 h-5"/>
             </a>
             <a href="#" className="inline-flex items-center gap-3 font-bold px-10 py-5 rounded-full text-lg border-2 border-white/30 text-white backdrop-blur hover:bg-white/10 transition-all">
-              <Play className="w-5 h-5 fill-white"/> Watch Our Story
+              Shop Now <ArrowRight className="w-5 h-5"/>
             </a>
           </div>
         </div>

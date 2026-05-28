@@ -138,6 +138,30 @@ uri = "file://artifacts/mockup-sandbox/public/images/hero-community-diverse.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "mHCwvIJrM4HwsGVRSxrTa"
+uri = "file://attached_assets/generated_images/nfgn_elite_basketball_team_8ee7.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "o4z1BfMivzlmZqc1zUwj6"
+uri = "file://attached_assets/generated_images/diverse_group_of_people_657c.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "y4BiWKiA2fIgVx3jLlOCp"
+uri = "file://attached_assets/generated_images/professional_naturopath_or_wellness_5a31.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "ZSTL2KhKY__-9aJNRFmkd"
+uri = "file://attached_assets/generated_images/luxury_travel_collage_tropical_3d32.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "ThLpw-C-p0MEK0l4tCicI"
 uri = "file://artifacts/nfgn/public/icons/icon-512.png"

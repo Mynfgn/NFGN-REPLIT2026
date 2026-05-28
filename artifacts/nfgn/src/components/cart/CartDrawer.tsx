@@ -52,7 +52,7 @@ import { customFetch } from "@/lib/custom-fetch";
 import { resolveImageSrc } from "@/lib/image";
 
 /* ── Types ─────────────────────────────────────────────────────── */
-type PaymentMethod = "square" | "cash_app" | "paypal" | "cod";
+type PaymentMethod = "authorizenet" | "square" | "cash_app" | "paypal" | "cod";
 
 type ShippingForm = {
   fullName: string;
@@ -81,8 +81,20 @@ const PAYMENT_METHODS: {
   icon: React.ReactNode;
 }[] = [
   {
-    id: "square",
+    id: "authorizenet",
     label: "Credit / Debit Card",
+    sub: "Powered by Authorize.net — Secure & Encrypted",
+    accentColor: "#C9A84C",
+    activeBg: "#1a1200",
+    icon: (
+      <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #0a0a0a, #1a1200)", border: "1px solid #C9A84C" }}>
+        <CreditCard className="h-5 w-5" style={{ color: "#C9A84C" }} />
+      </div>
+    ),
+  },
+  {
+    id: "square",
+    label: "Credit / Debit Card (Square)",
     sub: "Powered by Square — Secure & Encrypted",
     accentColor: "#C9A84C",
     activeBg: "#1a1200",
@@ -406,6 +418,10 @@ export function CartDrawer() {
   const [squareError, setSquareError] = useState<string | null>(null);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const cardContainerRef = useRef<HTMLDivElement>(null);
+  /* Authorize.net Accept.js state */
+  const [anetCard, setAnetCard] = useState({ number: "", expiry: "", cvv: "", zip: "" });
+  const [anetError, setAnetError] = useState<string | null>(null);
+  const [anetLoading, setAnetLoading] = useState(false);
   const squareInitializingRef = useRef(false);
   const [cashAppSection, setCashAppSection] = useState<"button" | "manual">("button");
   const [cashAppPay, setCashAppPay] = useState<any>(null);
@@ -500,6 +516,9 @@ export function CartDrawer() {
         setSigSubmitting(false);
         setSquareError(null);
         setPaymentProcessing(false);
+        setAnetCard({ number: "", expiry: "", cvv: "", zip: "" });
+        setAnetError(null);
+        setAnetLoading(false);
       }, 300);
     }
   }
@@ -524,6 +543,19 @@ export function CartDrawer() {
     setOptimisticQtys(q => { const copy = { ...q }; delete copy[itemId]; return copy; });
     removeItem.mutate({ itemId });
   }
+
+  /* ── Authorize.net Accept.js config fetch ──────────────────────── */
+  useEffect(() => {
+    if (view === "checkout" && paymentMethod === "authorizenet") {
+      customFetch("/api/payments/authorizenet/config")
+        .then(r => r.json())
+        .then((cfg: any) => {
+          if (cfg.apiLoginID) (window as any).__ANET_LOGIN_ID__ = cfg.apiLoginID;
+          if (cfg.clientKey) (window as any).__ANET_CLIENT_KEY__ = cfg.clientKey;
+        })
+        .catch(() => {});
+    }
+  }, [view, paymentMethod]);
 
   /* ── Square Web Payments SDK init ─────────────────────────────── */
   const initSquare = useCallback(async () => {
@@ -786,8 +818,13 @@ export function CartDrawer() {
   }
 
   function cardValid() {
-    if (paymentMethod !== "square") return true;
-    return squareReady;
+    if (paymentMethod === "square") return squareReady;
+    if (paymentMethod === "authorizenet") {
+      const rawNum = anetCard.number.replace(/\s/g, "");
+      const [expMonth, expYear] = anetCard.expiry.split("/").map(s => s.trim());
+      return rawNum.length >= 13 && !!expMonth && !!expYear && anetCard.cvv.length >= 3;
+    }
+    return true;
   }
 
   async function applyPromoCode() {
@@ -852,6 +889,72 @@ export function CartDrawer() {
     const addr = isPickup
       ? `PICKUP — ${shipping.fullName}${shipping.phone ? " | " + shipping.phone : ""}`
       : `${shipping.fullName}, ${shipping.address}, ${shipping.city}, ${shipping.state} ${shipping.zip}${shipping.phone ? " | " + shipping.phone : ""}`;
+
+    /* ── Authorize.net ─────────────────────────────────────────── */
+    if (paymentMethod === "authorizenet") {
+      const rawNum = anetCard.number.replace(/\s/g, "");
+      const [expMonth, expYear] = anetCard.expiry.split("/").map(s => s.trim());
+      if (!rawNum || rawNum.length < 13 || !expMonth || !expYear || !anetCard.cvv) {
+        toast({ title: "Card details incomplete", description: "Please fill in all card fields.", variant: "destructive" });
+        return;
+      }
+      setAnetError(null);
+      setAnetLoading(true);
+      setPaymentProcessing(true);
+      try {
+        // Load Accept.js from Authorize.net CDN
+        if (!(window as any).Accept) {
+          await new Promise<void>((resolve, reject) => {
+            const s = document.createElement("script");
+            s.src = "https://js.authorize.net/v1/Accept.js";
+            s.charset = "utf-8";
+            s.onload = () => resolve();
+            s.onerror = () => reject(new Error("Failed to load Accept.js"));
+            document.head.appendChild(s);
+          });
+        }
+        const tokenResult = await new Promise<{ opaqueData: { dataDescriptor: string; dataValue: string } }>((resolve, reject) => {
+          (window as any).Accept.dispatchData(
+            {
+              authData: { clientKey: (window as any).__ANET_CLIENT_KEY__ ?? "", apiLoginID: (window as any).__ANET_LOGIN_ID__ ?? "" },
+              cardData: { cardNumber: rawNum, month: expMonth, year: expYear.length === 2 ? "20" + expYear : expYear, cardCode: anetCard.cvv, zip: anetCard.zip },
+            },
+            (response: any) => {
+              if (response.messages.resultCode === "Ok") {
+                resolve({ opaqueData: response.opaqueData });
+              } else {
+                reject(new Error(response.messages.message?.[0]?.text ?? "Card tokenization failed"));
+              }
+            }
+          );
+        });
+        const payRes = await customFetch("/api/payments/authorizenet/process", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            opaqueDataDescriptor: tokenResult.opaqueData.dataDescriptor,
+            opaqueDataValue: tokenResult.opaqueData.dataValue,
+            amount: realFinalDue,
+            note: `NFGN Order — ${shipping.fullName}`,
+          }),
+        });
+        const payData = await payRes.json();
+        if (!payRes.ok) {
+          setAnetError(payData.error ?? "Payment declined. Please check your card details.");
+          toast({ title: "Payment declined", description: payData.error ?? "Please try a different card.", variant: "destructive" });
+          setAnetLoading(false);
+          setPaymentProcessing(false);
+          return;
+        }
+        createOrder.mutate({ data: { paymentMethod: "card", shippingAddress: addr, promoCode: promoApplied?.code || promoCode || undefined, squarePaymentId: payData.transactionId, walletAmount: walletApplied, isPickup } } as any);
+      } catch (err: any) {
+        setAnetError(err?.message ?? "Payment error. Please try again.");
+        toast({ title: "Payment error", description: err?.message ?? "Something went wrong.", variant: "destructive" });
+        setAnetLoading(false);
+        setPaymentProcessing(false);
+      }
+      return;
+    }
 
     if (paymentMethod === "square") {
       if (!squareCard || !squareReady) {
@@ -1246,6 +1349,84 @@ export function CartDrawer() {
               </section>
 
               {/* ── STEP 4: Payment Details (per method) ── */}
+
+              {/* Authorize.net Card */}
+              {paymentMethod === "authorizenet" && (
+                <section className="rounded-xl p-4 space-y-4" style={{ background: "linear-gradient(135deg, #1a1200, #0d0d0d)", border: "1.5px solid #C9A84C" }}>
+                  <div className="flex items-start gap-2">
+                    <Shield className="h-4 w-4 mt-0.5 flex-shrink-0" style={{ color: "#C9A84C" }} />
+                    <div>
+                      <p className="font-semibold text-sm text-white">Secure Card Payment — Powered by Authorize.net</p>
+                      <p className="text-xs mt-0.5" style={{ color: "rgba(201,168,76,0.75)" }}>
+                        Your card is tokenized by Authorize.net before reaching our server. Card data never touches NFGN directly — fully PCI-DSS compliant.
+                      </p>
+                    </div>
+                  </div>
+                  <hr style={{ borderColor: "rgba(201,168,76,0.2)" }} />
+                  {anetError && (
+                    <div className="rounded-lg p-3 text-xs" style={{ background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.4)", color: "#fca5a5" }}>{anetError}</div>
+                  )}
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-semibold mb-1" style={{ color: "rgba(201,168,76,0.85)" }}>Card Number</label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="1234 5678 9012 3456"
+                        maxLength={19}
+                        value={anetCard.number}
+                        onChange={e => setAnetCard(c => ({ ...c, number: fmtCard(e.target.value) }))}
+                        className="w-full rounded-lg px-3 py-2.5 text-sm font-mono tracking-widest outline-none border focus:ring-2"
+                        style={{ background: "#fff", borderColor: "rgba(201,168,76,0.4)", color: "#0a0a0a" }}
+                      />
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="col-span-1">
+                        <label className="block text-xs font-semibold mb-1" style={{ color: "rgba(201,168,76,0.85)" }}>Expiry</label>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="MM/YY"
+                          maxLength={5}
+                          value={anetCard.expiry}
+                          onChange={e => setAnetCard(c => ({ ...c, expiry: fmtExpiry(e.target.value) }))}
+                          className="w-full rounded-lg px-3 py-2.5 text-sm font-mono outline-none border focus:ring-2"
+                          style={{ background: "#fff", borderColor: "rgba(201,168,76,0.4)", color: "#0a0a0a" }}
+                        />
+                      </div>
+                      <div className="col-span-1">
+                        <label className="block text-xs font-semibold mb-1" style={{ color: "rgba(201,168,76,0.85)" }}>CVV</label>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="123"
+                          maxLength={4}
+                          value={anetCard.cvv}
+                          onChange={e => setAnetCard(c => ({ ...c, cvv: e.target.value.replace(/\D/g, "").slice(0, 4) }))}
+                          className="w-full rounded-lg px-3 py-2.5 text-sm font-mono outline-none border focus:ring-2"
+                          style={{ background: "#fff", borderColor: "rgba(201,168,76,0.4)", color: "#0a0a0a" }}
+                        />
+                      </div>
+                      <div className="col-span-1">
+                        <label className="block text-xs font-semibold mb-1" style={{ color: "rgba(201,168,76,0.85)" }}>ZIP</label>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="30301"
+                          maxLength={10}
+                          value={anetCard.zip}
+                          onChange={e => setAnetCard(c => ({ ...c, zip: e.target.value.replace(/\D/g, "").slice(0, 10) }))}
+                          className="w-full rounded-lg px-3 py-2.5 text-sm font-mono outline-none border focus:ring-2"
+                          style={{ background: "#fff", borderColor: "rgba(201,168,76,0.4)", color: "#0a0a0a" }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-[10px] flex items-center gap-1" style={{ color: "rgba(201,168,76,0.6)" }}>
+                    <Shield className="h-3 w-3" /> Visa · Mastercard · Amex · Discover accepted
+                  </p>
+                </section>
+              )}
 
               {/* Square Card */}
               {paymentMethod === "square" && (

@@ -182,7 +182,7 @@ export function HomeD() {
 
         {/* Stats bar — matching Variation C */}
         <div className="relative z-10 border-t" style={{ background: "rgba(255,255,255,0.1)", backdropFilter: "blur(12px)", borderColor: "rgba(255,255,255,0.2)" }}>
-          <div className="max-w-5xl mx-auto px-6 grid grid-cols-4 divide-x" style={{ divideColor: "rgba(255,255,255,0.2)" }}>
+          <div className="max-w-5xl mx-auto px-6 grid grid-cols-4 divide-x">
             {[
               { num: "10K+", label: "Active Members" },
               { num: "$2M+", label: "Community Circulated" },

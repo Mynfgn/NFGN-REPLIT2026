@@ -25,4 +25,21 @@ export interface CreateProductBody {
   ingredients?: string | null;
   /** @nullable */
   benefits?: string | null;
+  isDonation?: boolean;
+  isChurchDonation?: boolean;
+  /** @nullable */
+  churchName?: string | null;
+  /** @nullable */
+  donationRecipientType?: string | null;
+  /** @nullable */
+  donationRecipientName?: string | null;
+  donationMinAmount?: number;
+  /** Percentage of donation that goes to the charity/org (50–95, default 80). The remaining (100 - giftCharityPercent)% is the commissionable member pool. */
+  giftCharityPercent?: number;
+  isNonProfit?: boolean;
+  isSports?: boolean;
+  isWeddingRegistry?: boolean;
+  isHolidayRegistry?: boolean;
+  isProExclusive?: boolean;
+  isDownloadable?: boolean;
 }

@@ -226,6 +226,24 @@ export const GetReplicatedPageResponse = zod.object({
       isProPackage: zod.boolean(),
       status: zod.string(),
       commissionRate: zod.number(),
+      isDonation: zod.boolean().optional(),
+      isChurchDonation: zod.boolean().optional(),
+      churchName: zod.string().nullish(),
+      donationRecipientType: zod.string().nullish(),
+      donationRecipientName: zod.string().nullish(),
+      donationMinAmount: zod.number().nullish(),
+      giftCharityPercent: zod
+        .number()
+        .nullish()
+        .describe(
+          "Percentage of donation that goes directly to the charity\/org (default 80). The remaining (100 - giftCharityPercent)% funds the referral compensation pool.",
+        ),
+      isNonProfit: zod.boolean().optional(),
+      isSports: zod.boolean().optional(),
+      isWeddingRegistry: zod.boolean().optional(),
+      isHolidayRegistry: zod.boolean().optional(),
+      isProExclusive: zod.boolean().optional(),
+      isDownloadable: zod.boolean().optional(),
       createdAt: zod.string(),
     }),
   ),
@@ -337,6 +355,24 @@ export const ListProductsResponse = zod.object({
       isProPackage: zod.boolean(),
       status: zod.string(),
       commissionRate: zod.number(),
+      isDonation: zod.boolean().optional(),
+      isChurchDonation: zod.boolean().optional(),
+      churchName: zod.string().nullish(),
+      donationRecipientType: zod.string().nullish(),
+      donationRecipientName: zod.string().nullish(),
+      donationMinAmount: zod.number().nullish(),
+      giftCharityPercent: zod
+        .number()
+        .nullish()
+        .describe(
+          "Percentage of donation that goes directly to the charity\/org (default 80). The remaining (100 - giftCharityPercent)% funds the referral compensation pool.",
+        ),
+      isNonProfit: zod.boolean().optional(),
+      isSports: zod.boolean().optional(),
+      isWeddingRegistry: zod.boolean().optional(),
+      isHolidayRegistry: zod.boolean().optional(),
+      isProExclusive: zod.boolean().optional(),
+      isDownloadable: zod.boolean().optional(),
       createdAt: zod.string(),
     }),
   ),
@@ -362,6 +398,24 @@ export const CreateProductBody = zod.object({
   commissionRate: zod.number(),
   ingredients: zod.string().nullish(),
   benefits: zod.string().nullish(),
+  isDonation: zod.boolean().optional(),
+  isChurchDonation: zod.boolean().optional(),
+  churchName: zod.string().nullish(),
+  donationRecipientType: zod.string().nullish(),
+  donationRecipientName: zod.string().nullish(),
+  donationMinAmount: zod.number().optional(),
+  giftCharityPercent: zod
+    .number()
+    .optional()
+    .describe(
+      "Percentage of donation that goes to the charity\/org (50–95, default 80). The remaining (100 - giftCharityPercent)% is the commissionable member pool.",
+    ),
+  isNonProfit: zod.boolean().optional(),
+  isSports: zod.boolean().optional(),
+  isWeddingRegistry: zod.boolean().optional(),
+  isHolidayRegistry: zod.boolean().optional(),
+  isProExclusive: zod.boolean().optional(),
+  isDownloadable: zod.boolean().optional(),
 });
 
 /**
@@ -404,6 +458,24 @@ export const GetProductResponse = zod.object({
       isProPackage: zod.boolean(),
       status: zod.string(),
       commissionRate: zod.number(),
+      isDonation: zod.boolean().optional(),
+      isChurchDonation: zod.boolean().optional(),
+      churchName: zod.string().nullish(),
+      donationRecipientType: zod.string().nullish(),
+      donationRecipientName: zod.string().nullish(),
+      donationMinAmount: zod.number().nullish(),
+      giftCharityPercent: zod
+        .number()
+        .nullish()
+        .describe(
+          "Percentage of donation that goes directly to the charity\/org (default 80). The remaining (100 - giftCharityPercent)% funds the referral compensation pool.",
+        ),
+      isNonProfit: zod.boolean().optional(),
+      isSports: zod.boolean().optional(),
+      isWeddingRegistry: zod.boolean().optional(),
+      isHolidayRegistry: zod.boolean().optional(),
+      isProExclusive: zod.boolean().optional(),
+      isDownloadable: zod.boolean().optional(),
       createdAt: zod.string(),
     }),
   ),
@@ -431,6 +503,24 @@ export const UpdateProductBody = zod.object({
   commissionRate: zod.number(),
   ingredients: zod.string().nullish(),
   benefits: zod.string().nullish(),
+  isDonation: zod.boolean().optional(),
+  isChurchDonation: zod.boolean().optional(),
+  churchName: zod.string().nullish(),
+  donationRecipientType: zod.string().nullish(),
+  donationRecipientName: zod.string().nullish(),
+  donationMinAmount: zod.number().optional(),
+  giftCharityPercent: zod
+    .number()
+    .optional()
+    .describe(
+      "Percentage of donation that goes to the charity\/org (50–95, default 80). The remaining (100 - giftCharityPercent)% is the commissionable member pool.",
+    ),
+  isNonProfit: zod.boolean().optional(),
+  isSports: zod.boolean().optional(),
+  isWeddingRegistry: zod.boolean().optional(),
+  isHolidayRegistry: zod.boolean().optional(),
+  isProExclusive: zod.boolean().optional(),
+  isDownloadable: zod.boolean().optional(),
 });
 
 export const UpdateProductResponse = zod.object({
@@ -448,6 +538,24 @@ export const UpdateProductResponse = zod.object({
   isProPackage: zod.boolean(),
   status: zod.string(),
   commissionRate: zod.number(),
+  isDonation: zod.boolean().optional(),
+  isChurchDonation: zod.boolean().optional(),
+  churchName: zod.string().nullish(),
+  donationRecipientType: zod.string().nullish(),
+  donationRecipientName: zod.string().nullish(),
+  donationMinAmount: zod.number().nullish(),
+  giftCharityPercent: zod
+    .number()
+    .nullish()
+    .describe(
+      "Percentage of donation that goes directly to the charity\/org (default 80). The remaining (100 - giftCharityPercent)% funds the referral compensation pool.",
+    ),
+  isNonProfit: zod.boolean().optional(),
+  isSports: zod.boolean().optional(),
+  isWeddingRegistry: zod.boolean().optional(),
+  isHolidayRegistry: zod.boolean().optional(),
+  isProExclusive: zod.boolean().optional(),
+  isDownloadable: zod.boolean().optional(),
   createdAt: zod.string(),
 });
 
@@ -498,6 +606,24 @@ export const GetProductBySlugResponse = zod.object({
       isProPackage: zod.boolean(),
       status: zod.string(),
       commissionRate: zod.number(),
+      isDonation: zod.boolean().optional(),
+      isChurchDonation: zod.boolean().optional(),
+      churchName: zod.string().nullish(),
+      donationRecipientType: zod.string().nullish(),
+      donationRecipientName: zod.string().nullish(),
+      donationMinAmount: zod.number().nullish(),
+      giftCharityPercent: zod
+        .number()
+        .nullish()
+        .describe(
+          "Percentage of donation that goes directly to the charity\/org (default 80). The remaining (100 - giftCharityPercent)% funds the referral compensation pool.",
+        ),
+      isNonProfit: zod.boolean().optional(),
+      isSports: zod.boolean().optional(),
+      isWeddingRegistry: zod.boolean().optional(),
+      isHolidayRegistry: zod.boolean().optional(),
+      isProExclusive: zod.boolean().optional(),
+      isDownloadable: zod.boolean().optional(),
       createdAt: zod.string(),
     }),
   ),

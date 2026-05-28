@@ -25,5 +25,26 @@ export interface Product {
   isProPackage: boolean;
   status: string;
   commissionRate: number;
+  isDonation?: boolean;
+  isChurchDonation?: boolean;
+  /** @nullable */
+  churchName?: string | null;
+  /** @nullable */
+  donationRecipientType?: string | null;
+  /** @nullable */
+  donationRecipientName?: string | null;
+  /** @nullable */
+  donationMinAmount?: number | null;
+  /**
+   * Percentage of donation that goes directly to the charity/org (default 80). The remaining (100 - giftCharityPercent)% funds the referral compensation pool.
+   * @nullable
+   */
+  giftCharityPercent?: number | null;
+  isNonProfit?: boolean;
+  isSports?: boolean;
+  isWeddingRegistry?: boolean;
+  isHolidayRegistry?: boolean;
+  isProExclusive?: boolean;
+  isDownloadable?: boolean;
   createdAt: string;
 }

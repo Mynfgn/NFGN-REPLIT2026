@@ -198,6 +198,12 @@ uri = "file://attached_assets/generated_images/elegant_luxury_product_lifestyle_
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "MPQ9p8KgZq6-HoSKuLu6P"
+uri = "file://attached_assets/generated_images/elegant_luxury_wellness_product_71ae.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "ThLpw-C-p0MEK0l4tCicI"
 uri = "file://artifacts/nfgn/public/icons/icon-512.png"

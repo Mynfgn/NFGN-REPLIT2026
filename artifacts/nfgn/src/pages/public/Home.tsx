@@ -267,7 +267,7 @@ export function Home() {
               <span style={{ color: YELLOW }}>Championship</span> Culture
             </h2>
             <p className="leading-relaxed mb-8" style={{ color: "rgba(255,255,255,0.7)", maxWidth: 440 }}>
-              The NFGN Sports squad embodies the spirit of our network — teamwork, discipline, and community pride. From youth leagues to championship courts, we build winners on and off the floor.
+              The NFGN Sports culture embodies the spirit of our network — teamwork, discipline, and community pride. From youth leagues to championship courts, we build winners on and off the floor.
             </p>
             <div className="flex flex-wrap gap-3 mb-8">
               {["Youth Programs", "NFGN Sports Team", "Skills Camps", "School Partnerships"].map((t) => (

@@ -64,7 +64,7 @@ const pillars = [
     desc: "Handcrafted with all-natural ingredients — our artisan soaps, luxurious lotions, and aromatherapy candles bring wellness into your daily self-care routine.",
     cta: "Shop Artisan Goods",
     href: "/shop",
-    img: `${I}herbal-soaps.png`,
+    img: `${I}marcelino-soaps-lotions-candles.png`,
     imgClass: "object-cover",
   },
   {

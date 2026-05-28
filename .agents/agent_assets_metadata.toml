@@ -162,6 +162,18 @@ uri = "file://attached_assets/generated_images/luxury_travel_collage_tropical_3d
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "OFiO6dD5YwjZ9TP6KHr8C"
+uri = "file://artifacts/nfgn/public/images/marcelino-soaps-lotions-candles.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "H2I0XuXXKxoZGqM4ZqBDE"
+uri = "file://attached_assets/generated_images/elegant_artisan_handmade_soap_6827.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "ThLpw-C-p0MEK0l4tCicI"
 uri = "file://artifacts/nfgn/public/icons/icon-512.png"

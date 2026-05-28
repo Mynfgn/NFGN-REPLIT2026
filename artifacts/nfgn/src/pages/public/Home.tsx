@@ -254,7 +254,7 @@ export function Home() {
       {/* ── NFGN SPORTS ──────────────────────────────────────────────── */}
       <section className="relative overflow-hidden" style={{ background: BLACK, minHeight: 480 }}>
         <div className="absolute inset-0">
-          <img src={`${I}nfgn-elite-championship.png`} alt="NFGN Elite Championship" className="w-full h-full object-cover" style={{ objectPosition: "center 30%" }} />
+          <img src={`${I}nfgn-sports-huddle.png`} alt="NFGN Sports Team Huddle" className="w-full h-full object-cover" style={{ objectPosition: "center 30%" }} />
           <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(0,0,0,0.85) 40%, rgba(0,0,0,0.3) 100%)" }} />
         </div>
         <div className="relative z-10 max-w-6xl mx-auto px-8 py-20 grid md:grid-cols-2 gap-12 items-center">
@@ -263,14 +263,14 @@ export function Home() {
               <Trophy className="h-3.5 w-3.5" /> NFGN Sports Program
             </div>
             <h2 className="font-black leading-tight mb-5 text-white" style={{ fontSize: "clamp(32px, 4vw, 56px)" }}>
-              NFGN Elite —<br />
+              NFGN Sports —<br />
               <span style={{ color: YELLOW }}>Championship</span> Culture
             </h2>
             <p className="leading-relaxed mb-8" style={{ color: "rgba(255,255,255,0.7)", maxWidth: 440 }}>
-              The NFGN Elite squad embodies the spirit of our network — teamwork, discipline, and community pride. From youth leagues to championship courts, we build winners on and off the floor.
+              The NFGN Sports squad embodies the spirit of our network — teamwork, discipline, and community pride. From youth leagues to championship courts, we build winners on and off the floor.
             </p>
             <div className="flex flex-wrap gap-3 mb-8">
-              {["Youth Programs", "NFGN Elite Team", "Skills Camps", "School Partnerships"].map((t) => (
+              {["Youth Programs", "NFGN Sports Team", "Skills Camps", "School Partnerships"].map((t) => (
                 <span key={t} className="text-xs font-bold px-3 py-1.5 rounded-full" style={{ background: "rgba(245,193,0,0.12)", border: `1px solid ${YELLOW}40`, color: YELLOW }}>
                   {t}
                 </span>

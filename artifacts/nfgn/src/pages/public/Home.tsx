@@ -473,7 +473,7 @@ export function Home() {
       <section className="py-0" style={{ background: WHITE }}>
         <div className="grid lg:grid-cols-2">
           <div className="relative overflow-hidden" style={{ minHeight: 360 }}>
-            <img src={`${I}herbal-soaps.png`} alt="NFGN Artisan Soaps & Lotions" className="w-full h-full object-cover" style={{ minHeight: 360 }} />
+            <img src={`${I}marcelino-renew-majestic-products.png`} alt="Marcelino RENEW & Majestic Soaps and Lotions" className="w-full h-full object-cover" style={{ minHeight: 360 }} />
             <div className="absolute inset-0" style={{ background: "linear-gradient(to right, transparent 50%, rgba(245,245,245,0.2))" }} />
           </div>
           <div className="px-12 py-16 flex flex-col justify-center" style={{ background: GRAY }}>

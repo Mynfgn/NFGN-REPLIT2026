@@ -401,7 +401,7 @@ export function CartDrawer() {
   const [sigEmpty, setSigEmpty] = useState(true);
   const [sigAgreed, setSigAgreed] = useState(false);
   const [sigSubmitting, setSigSubmitting] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("square");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("authorizenet");
   const [promoCode, setPromoCode] = useState("");
   const [promoValidating, setPromoValidating] = useState(false);
   const [promoApplied, setPromoApplied] = useState<{ discountType: string; discountValue: number; code: string } | null>(null);
@@ -939,7 +939,7 @@ export function CartDrawer() {
           setPaymentProcessing(false);
           return;
         }
-        createOrder.mutate({ data: { paymentMethod: "card", shippingAddress: addr, promoCode: promoApplied?.code || promoCode || undefined, squarePaymentId: payData.transactionId, walletAmount: walletApplied, isPickup } } as any);
+        createOrder.mutate({ data: { paymentMethod: "authorizenet", shippingAddress: addr, promoCode: promoApplied?.code || promoCode || undefined, squarePaymentId: payData.transactionId, walletAmount: walletApplied, isPickup } } as any);
       } catch (err: any) {
         setAnetError(err?.message ?? "Payment error. Please try again.");
         toast({ title: "Payment error", description: err?.message ?? "Something went wrong.", variant: "destructive" });

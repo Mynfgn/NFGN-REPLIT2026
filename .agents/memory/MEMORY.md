@@ -1,1 +1,2 @@
 - [Production blank page fix](production-blank-page.md) — runtimeErrorOverlay must be dev-only in vite.config.ts or it breaks the published app.
+- [Authorize.net Accept.js constraints](authorizenet-accept-js.md) — static script tag required; fails in iframes; sandbox/prod credentials are separate; Client Key ≠ Transaction Key

@@ -544,24 +544,7 @@ export function CartDrawer() {
     removeItem.mutate({ itemId });
   }
 
-  /* ── Authorize.net: pre-load Accept.js script when card tab is active ── */
-  useEffect(() => {
-    if (view !== "checkout" || paymentMethod !== "authorizenet") return;
-    if ((window as any).__anetScriptLoading || (window as any).Accept) return;
-    (window as any).__anetScriptLoading = true;
-    customFetch("/api/payments/authorizenet/config")
-      .then(r => r.json())
-      .then((cfg: any) => {
-        const url = cfg.acceptJsUrl ?? "https://jstest.authorize.net/v1/Accept.js";
-        const s = document.createElement("script");
-        s.src = url;
-        s.charset = "utf-8";
-        s.onload = () => { (window as any).__anetScriptLoading = false; };
-        s.onerror = () => { (window as any).__anetScriptLoading = false; };
-        document.head.appendChild(s);
-      })
-      .catch(() => { (window as any).__anetScriptLoading = false; });
-  }, [view, paymentMethod]);
+  /* Accept.js is loaded statically in index.html — no dynamic injection needed */
 
   /* ── Square Web Payments SDK init ─────────────────────────────── */
   const initSquare = useCallback(async () => {
@@ -915,23 +898,8 @@ export function CartDrawer() {
           throw new Error("Payment configuration unavailable. Please contact support.");
         }
 
-        // Load Accept.js from the server-provided URL (sandbox vs production).
-        // If the URL changed (e.g. sandbox → production), wipe the cached Accept object
-        // so we always use the tokenizer that matches the current credentials.
-        const loadedUrl = (window as any).__anetAcceptJsUrl;
-        if (loadedUrl !== cfg.acceptJsUrl) {
-          (window as any).Accept = undefined;
-          (window as any).__anetAcceptJsUrl = cfg.acceptJsUrl;
-        }
         if (!(window as any).Accept) {
-          await new Promise<void>((resolve, reject) => {
-            const s = document.createElement("script");
-            s.src = cfg.acceptJsUrl;
-            s.charset = "utf-8";
-            s.onload = () => resolve();
-            s.onerror = () => reject(new Error("Failed to load payment script. Please check your connection and try again."));
-            document.head.appendChild(s);
-          });
+          throw new Error("Payment script not loaded. Please refresh the page and try again.");
         }
 
         const tokenResult = await new Promise<{ opaqueData: { dataDescriptor: string; dataValue: string } }>((resolve, reject) => {

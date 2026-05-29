@@ -5,7 +5,15 @@ const router: IRouter = Router();
 
 const API_LOGIN_ID = process.env.AUTHORIZENET_API_LOGIN_ID!;
 const TRANSACTION_KEY = process.env.AUTHORIZENET_TRANSACTION_KEY!;
-const ANET_URL = "https://api.authorize.net/xml/v1/request.api";
+
+// Use sandbox unless AUTHORIZENET_SANDBOX is explicitly "false"
+const IS_SANDBOX = process.env.AUTHORIZENET_SANDBOX !== "false";
+const ANET_API_URL = IS_SANDBOX
+  ? "https://apitest.authorize.net/xml/v1/request.api"
+  : "https://api.authorize.net/xml/v1/request.api";
+const ANET_ACCEPT_JS_URL = IS_SANDBOX
+  ? "https://jstest.authorize.net/v1/Accept.js"
+  : "https://js.authorize.net/v1/Accept.js";
 
 router.post("/payments/authorizenet/process", requireAuth, async (req, res) => {
   try {
@@ -44,16 +52,15 @@ router.post("/payments/authorizenet/process", requireAuth, async (req, res) => {
       },
     };
 
-    const response = await fetch(ANET_URL, {
+    const response = await fetch(ANET_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
 
-    const data = await response.json() as any;
-
-    // Authorize.net prepends a BOM character — strip it
-    const result = typeof data === "string" ? JSON.parse(data.replace(/^\uFEFF/, "")) : data;
+    const raw = await response.text();
+    // Authorize.net prepends a UTF-8 BOM — strip it before parsing
+    const result = JSON.parse(raw.replace(/^\uFEFF/, "")) as any;
 
     const txResponse = result?.transactionResponse;
     const messages = result?.messages;
@@ -82,6 +89,8 @@ router.get("/payments/authorizenet/config", (_req, res) => {
   res.json({
     apiLoginID: process.env.AUTHORIZENET_API_LOGIN_ID,
     clientKey: process.env.AUTHORIZENET_CLIENT_KEY,
+    acceptJsUrl: ANET_ACCEPT_JS_URL,
+    isSandbox: IS_SANDBOX,
   });
 });
 

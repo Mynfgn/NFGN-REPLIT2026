@@ -544,17 +544,23 @@ export function CartDrawer() {
     removeItem.mutate({ itemId });
   }
 
-  /* ── Authorize.net Accept.js config fetch ──────────────────────── */
+  /* ── Authorize.net: pre-load Accept.js script when card tab is active ── */
   useEffect(() => {
-    if (view === "checkout" && paymentMethod === "authorizenet") {
-      customFetch("/api/payments/authorizenet/config")
-        .then(r => r.json())
-        .then((cfg: any) => {
-          if (cfg.apiLoginID) (window as any).__ANET_LOGIN_ID__ = cfg.apiLoginID;
-          if (cfg.clientKey) (window as any).__ANET_CLIENT_KEY__ = cfg.clientKey;
-        })
-        .catch(() => {});
-    }
+    if (view !== "checkout" || paymentMethod !== "authorizenet") return;
+    if ((window as any).__anetScriptLoading || (window as any).Accept) return;
+    (window as any).__anetScriptLoading = true;
+    customFetch("/api/payments/authorizenet/config")
+      .then(r => r.json())
+      .then((cfg: any) => {
+        const url = cfg.acceptJsUrl ?? "https://jstest.authorize.net/v1/Accept.js";
+        const s = document.createElement("script");
+        s.src = url;
+        s.charset = "utf-8";
+        s.onload = () => { (window as any).__anetScriptLoading = false; };
+        s.onerror = () => { (window as any).__anetScriptLoading = false; };
+        document.head.appendChild(s);
+      })
+      .catch(() => { (window as any).__anetScriptLoading = false; });
   }, [view, paymentMethod]);
 
   /* ── Square Web Payments SDK init ─────────────────────────────── */
@@ -902,21 +908,29 @@ export function CartDrawer() {
       setAnetLoading(true);
       setPaymentProcessing(true);
       try {
-        // Load Accept.js from Authorize.net CDN
+        // Fetch credentials fresh — never rely on stale window globals
+        const cfgRes = await customFetch("/api/payments/authorizenet/config");
+        const cfg = await cfgRes.json() as { apiLoginID: string; clientKey: string; acceptJsUrl: string };
+        if (!cfg.apiLoginID || !cfg.clientKey) {
+          throw new Error("Payment configuration unavailable. Please contact support.");
+        }
+
+        // Load Accept.js from the server-provided URL (sandbox vs production)
         if (!(window as any).Accept) {
           await new Promise<void>((resolve, reject) => {
             const s = document.createElement("script");
-            s.src = "https://js.authorize.net/v1/Accept.js";
+            s.src = cfg.acceptJsUrl;
             s.charset = "utf-8";
             s.onload = () => resolve();
-            s.onerror = () => reject(new Error("Failed to load Accept.js"));
+            s.onerror = () => reject(new Error("Failed to load payment script. Please check your connection and try again."));
             document.head.appendChild(s);
           });
         }
+
         const tokenResult = await new Promise<{ opaqueData: { dataDescriptor: string; dataValue: string } }>((resolve, reject) => {
           (window as any).Accept.dispatchData(
             {
-              authData: { clientKey: (window as any).__ANET_CLIENT_KEY__ ?? "", apiLoginID: (window as any).__ANET_LOGIN_ID__ ?? "" },
+              authData: { clientKey: cfg.clientKey, apiLoginID: cfg.apiLoginID },
               cardData: { cardNumber: rawNum, month: expMonth, year: expYear.length === 2 ? "20" + expYear : expYear, cardCode: anetCard.cvv, zip: anetCard.zip },
             },
             (response: any) => {

@@ -915,7 +915,14 @@ export function CartDrawer() {
           throw new Error("Payment configuration unavailable. Please contact support.");
         }
 
-        // Load Accept.js from the server-provided URL (sandbox vs production)
+        // Load Accept.js from the server-provided URL (sandbox vs production).
+        // If the URL changed (e.g. sandbox → production), wipe the cached Accept object
+        // so we always use the tokenizer that matches the current credentials.
+        const loadedUrl = (window as any).__anetAcceptJsUrl;
+        if (loadedUrl !== cfg.acceptJsUrl) {
+          (window as any).Accept = undefined;
+          (window as any).__anetAcceptJsUrl = cfg.acceptJsUrl;
+        }
         if (!(window as any).Accept) {
           await new Promise<void>((resolve, reject) => {
             const s = document.createElement("script");
@@ -937,7 +944,11 @@ export function CartDrawer() {
               if (response.messages.resultCode === "Ok") {
                 resolve({ opaqueData: response.opaqueData });
               } else {
-                reject(new Error(response.messages.message?.[0]?.text ?? "Card tokenization failed"));
+                const msg = response.messages.message;
+                const errorCode = msg?.[0]?.code ?? "";
+                const errorText = msg?.[0]?.text ?? "Card tokenization failed";
+                console.error("[Authorize.net] dispatchData error:", JSON.stringify(response.messages));
+                reject(new Error(errorCode ? `${errorText} (code: ${errorCode})` : errorText));
               }
             }
           );

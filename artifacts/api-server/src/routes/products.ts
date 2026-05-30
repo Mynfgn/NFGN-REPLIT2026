@@ -51,6 +51,8 @@ function formatProduct(p: typeof productsTable.$inferSelect, categoryName?: stri
     isChurchDonation: p.isChurchDonation,
     churchName: p.churchName ?? null,
     giftCharityPercent: p.giftCharityPercent ?? "80",
+    subscriptionEnabled: p.subscriptionEnabled,
+    subscriptionDiscountPercent: parseFloat(p.subscriptionDiscountPercent ?? "10"),
     sortOrder: p.sortOrder ?? 0,
     createdAt: p.createdAt.toISOString(),
   };
@@ -123,7 +125,7 @@ router.get("/products/admin-all", requireAdmin, async (req, res): Promise<void> 
 });
 
 router.post("/products", requireAdmin, async (req, res): Promise<void> => {
-  const { name, slug, description, price, comparePrice, image, images, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isHolidayRegistry, holidayCategory, isProExclusive, proExclusiveCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize, isDonation, donationRecipientType, donationRecipientName, donationMinAmount, isChurchDonation, churchName, giftCharityPercent, sortOrder } = req.body;
+  const { name, slug, description, price, comparePrice, image, images, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isHolidayRegistry, holidayCategory, isProExclusive, proExclusiveCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize, isDonation, donationRecipientType, donationRecipientName, donationMinAmount, isChurchDonation, churchName, giftCharityPercent, subscriptionEnabled, subscriptionDiscountPercent, sortOrder } = req.body;
   if (!name || !slug || !description || price == null) {
     res.status(400).json({ error: "Missing required fields" });
     return;
@@ -175,6 +177,8 @@ router.post("/products", requireAdmin, async (req, res): Promise<void> => {
     isChurchDonation: (isNonProfit || isDonation) ? (isChurchDonation ?? false) : false,
     churchName: isChurchDonation ? (churchName ?? undefined) : undefined,
     giftCharityPercent: (isDonation || isChurchDonation) && giftCharityPercent != null ? String(giftCharityPercent) : "80",
+    subscriptionEnabled: !!(subscriptionEnabled),
+    subscriptionDiscountPercent: String(subscriptionDiscountPercent != null ? subscriptionDiscountPercent : 10),
     sortOrder: sortOrder != null ? Number(sortOrder) : 0,
     status: "active",
   }).returning();
@@ -271,7 +275,7 @@ router.patch("/products/:id", requireAdmin, async (req, res): Promise<void> => {
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
   const updates: Partial<typeof productsTable.$inferInsert> = {};
-  const { name, slug, description, price, comparePrice, image, images, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isHolidayRegistry, holidayCategory, isProExclusive, proExclusiveCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize, isDonation, donationRecipientType, donationRecipientName, donationMinAmount, isChurchDonation, churchName, giftCharityPercent, status, sortOrder } = req.body;
+  const { name, slug, description, price, comparePrice, image, images, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isHolidayRegistry, holidayCategory, isProExclusive, proExclusiveCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize, isDonation, donationRecipientType, donationRecipientName, donationMinAmount, isChurchDonation, churchName, giftCharityPercent, subscriptionEnabled, subscriptionDiscountPercent, status, sortOrder } = req.body;
   if (name) updates.name = name;
   if (slug) updates.slug = slug;
   if (description) updates.description = description;
@@ -324,6 +328,8 @@ router.patch("/products/:id", requireAdmin, async (req, res): Promise<void> => {
   if (isChurchDonation !== undefined) updates.isChurchDonation = eligibleForChurch ? isChurchDonation : false;
   if (churchName !== undefined) updates.churchName = isChurchDonation ? (churchName ?? undefined) : undefined;
   if (giftCharityPercent != null) updates.giftCharityPercent = String(giftCharityPercent);
+  if (subscriptionEnabled !== undefined) updates.subscriptionEnabled = !!(subscriptionEnabled);
+  if (subscriptionDiscountPercent != null) updates.subscriptionDiscountPercent = String(subscriptionDiscountPercent);
 
   const [updated] = await db.update(productsTable).set(updates).where(eq(productsTable.id, id)).returning();
   if (!updated) { res.status(404).json({ error: "Not found" }); return; }

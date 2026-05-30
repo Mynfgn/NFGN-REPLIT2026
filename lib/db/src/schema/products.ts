@@ -89,6 +89,12 @@ export const productsTable = pgTable("products", {
   // Admin-adjustable per product. Does NOT apply to physical non-profit products.
   giftCharityPercent: numeric("gift_charity_percent", { precision: 5, scale: 2 }).notNull().default("80"),
 
+  // Subscription / Autoship — admin opt-in per product
+  // subscriptionEnabled: product is available for "Subscribe & Save" on the Shop page
+  // subscriptionDiscountPercent: the % discount applied to every subscriber reorder (default 10)
+  subscriptionEnabled: boolean("subscription_enabled").notNull().default(false),
+  subscriptionDiscountPercent: numeric("subscription_discount_percent", { precision: 5, scale: 2 }).notNull().default("10"),
+
   // Pro Member Exclusive product — hidden from public; only visible/purchasable by Pro Members
   isProExclusive: boolean("is_pro_exclusive").notNull().default(false),
   // Sub-section within the Pro Member Exclusive store

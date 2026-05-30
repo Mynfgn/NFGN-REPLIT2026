@@ -65,6 +65,10 @@ router.post("/subscriptions", requireAuth, async (req, res): Promise<void> => {
 
   const [product] = await db.select().from(productsTable).where(eq(productsTable.id, productId)).limit(1);
   if (!product) { res.status(404).json({ error: "Product not found" }); return; }
+  if (!product.subscriptionEnabled) {
+    res.status(400).json({ error: "This product is not available for subscription." });
+    return;
+  }
 
   const [existing] = await db
     .select()
@@ -83,6 +87,7 @@ router.post("/subscriptions", requireAuth, async (req, res): Promise<void> => {
 
   const validFreqs = ["monthly", "bimonthly", "quarterly"];
   const freq = validFreqs.includes(frequency) ? frequency : "monthly";
+  const discountPct = parseFloat(product.subscriptionDiscountPercent ?? "10") || 10;
 
   const [created] = await db.insert(subscriptionsTable).values({
     userId,
@@ -92,7 +97,7 @@ router.post("/subscriptions", requireAuth, async (req, res): Promise<void> => {
     quantity,
     frequency: freq,
     unitPrice: product.price,
-    discountPct: "10",
+    discountPct: String(discountPct),
     status: "active",
     nextOrderAt: daysFromNow(freqDays(freq)),
     shippingAddress: shippingAddress ?? null,

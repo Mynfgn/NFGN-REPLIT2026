@@ -62,6 +62,8 @@ type Product = {
   donationRecipientName?: string | null;
   churchName?: string | null;
   giftCharityPercent?: string | number | null;
+  subscriptionEnabled?: boolean | null;
+  subscriptionDiscountPercent?: number | null;
   stock?: number | null;
   description?: string | null;
 };
@@ -360,12 +362,12 @@ function ProductCard({
             )}
             {outOfStock ? "Out of Stock" : "Add to Cart"}
           </button>
-          {!outOfStock && !product.isProPackage && !product.isDonation && onSubscribe && (
+          {!outOfStock && product.subscriptionEnabled && onSubscribe && (
             <button
               onClick={e => onSubscribe(e, product)}
               style={{ marginTop: 6, width: "100%", padding: "7px 0", background: "transparent", color: "#2D6A4F", border: "1.5px solid #2D6A4F", borderRadius: 7, fontWeight: 700, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}
             >
-              <Sparkles size={11} /> Subscribe & Save 10%
+              <Sparkles size={11} /> Subscribe & Save {product.subscriptionDiscountPercent ?? 10}%
             </button>
           )}
         </div>
@@ -917,7 +919,7 @@ export function Shop() {
       setSubscribeTarget(null);
       toast({
         title: "Subscription created!",
-        description: `${subscribeTarget.name} will ship ${subscribeFreq === "monthly" ? "monthly" : subscribeFreq === "bimonthly" ? "every 2 months" : "quarterly"} at 10% off.`,
+        description: `${subscribeTarget.name} will ship ${subscribeFreq === "monthly" ? "monthly" : subscribeFreq === "bimonthly" ? "every 2 months" : "quarterly"} at ${subscribeTarget.subscriptionDiscountPercent ?? 10}% off.`,
       });
     } catch {
       toast({ title: "Something went wrong", variant: "destructive" });
@@ -960,7 +962,7 @@ export function Shop() {
       <Dialog open={!!subscribeTarget} onOpenChange={open => { if (!open) setSubscribeTarget(null); }}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle className="font-serif text-lg">Subscribe & Save 10%</DialogTitle>
+            <DialogTitle className="font-serif text-lg">Subscribe & Save {subscribeTarget?.subscriptionDiscountPercent ?? 10}%</DialogTitle>
           </DialogHeader>
           {subscribeTarget && (
             <div className="space-y-4">
@@ -972,10 +974,10 @@ export function Shop() {
                   <p className="font-semibold text-sm leading-tight">{subscribeTarget.name}</p>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-base font-bold" style={{ color: GOLD }}>
-                      ${(subscribeTarget.price * 0.9).toFixed(2)}
+                      ${(subscribeTarget.price * (1 - (subscribeTarget.subscriptionDiscountPercent ?? 10) / 100)).toFixed(2)}
                     </span>
                     <span className="text-xs text-muted-foreground line-through">${subscribeTarget.price.toFixed(2)}</span>
-                    <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full">Save 10%</span>
+                    <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full">Save {subscribeTarget.subscriptionDiscountPercent ?? 10}%</span>
                   </div>
                 </div>
               </div>
@@ -1200,12 +1202,12 @@ export function Shop() {
                           {addingId === product.id ? <Loader2 size={13} className="animate-spin" /> : <ShoppingCart size={13} />}
                           {outOfStock ? "Out of Stock" : "Add to Cart"}
                         </button>
-                        {!outOfStock && !product.isProPackage && !product.isDonation && (
+                        {!outOfStock && product.subscriptionEnabled && (
                           <button
                             onClick={e => handleOpenSubscribe(e, product)}
                             style={{ marginTop: 6, width: "100%", padding: "7px 0", background: "transparent", color: "#2D6A4F", border: "1.5px solid #2D6A4F", borderRadius: 7, fontWeight: 700, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}
                           >
-                            <Sparkles size={11} /> Subscribe & Save 10%
+                            <Sparkles size={11} /> Subscribe & Save {product.subscriptionDiscountPercent ?? 10}%
                           </button>
                         )}
                       </div>

@@ -70,6 +70,8 @@ interface Product {
   isChurchDonation: boolean;
   churchName: string | null;
   giftCharityPercent?: string | number | null;
+  subscriptionEnabled: boolean;
+  subscriptionDiscountPercent: string | number;
   dollarCreditEligible: boolean;
   refundPolicy: string;
   proMemberDiscountEligible: boolean;
@@ -202,6 +204,8 @@ const EMPTY_FORM = {
   isChurchDonation: false,
   churchName: "",
   giftCharityPercent: "80",
+  subscriptionEnabled: false,
+  subscriptionDiscountPercent: "10",
   ingredients: "",
   benefits: "",
   dollarCreditEligible: false,
@@ -426,6 +430,8 @@ export function AdminProductsPage() {
       isChurchDonation: p.isChurchDonation ?? false,
       churchName: p.churchName ?? "",
       giftCharityPercent: String(p.giftCharityPercent ?? "80"),
+      subscriptionEnabled: (p as any).subscriptionEnabled ?? false,
+      subscriptionDiscountPercent: String((p as any).subscriptionDiscountPercent ?? "10"),
       ingredients: "",
       benefits: "",
       dollarCreditEligible: p.dollarCreditEligible ?? false,
@@ -494,6 +500,8 @@ export function AdminProductsPage() {
         isChurchDonation: (form.isNonProfit || form.isDonation) ? form.isChurchDonation : false,
         churchName: form.isChurchDonation ? (form.churchName || null) : null,
         giftCharityPercent: (form.isDonation || form.isChurchDonation) ? (parseFloat(form.giftCharityPercent) || 80) : undefined,
+        subscriptionEnabled: form.subscriptionEnabled,
+        subscriptionDiscountPercent: parseFloat(String(form.subscriptionDiscountPercent)) || 10,
         ingredients: form.ingredients || null,
         benefits: form.benefits || null,
         dollarCreditEligible: form.dollarCreditEligible,
@@ -1376,6 +1384,44 @@ export function AdminProductsPage() {
                   <div className="text-xs rounded-lg px-3 py-2 font-medium" style={{ background: "rgba(124,58,237,0.10)", color: "#7c3aed", border: "1px solid rgba(124,58,237,0.25)" }}>
                     🔒 This product is <strong>invisible to non-Pro Members</strong>. It will only appear in the <strong>Pro Member Exclusive</strong> store section for verified Pro Members.
                   </div>
+                </div>
+              )}
+            </div>
+
+            {/* Subscription / Autoship */}
+            <div className={`rounded-lg p-4 border-2 space-y-4 transition-all`} style={{ borderColor: "#2D6A4F60", background: "#2D6A4F06" }}>
+              <div className="flex items-start gap-3">
+                <Switch
+                  checked={form.subscriptionEnabled}
+                  onCheckedChange={v => setForm(f => ({ ...f, subscriptionEnabled: v }))}
+                  id="subscriptionEnabled"
+                />
+                <div>
+                  <Label htmlFor="subscriptionEnabled" className="cursor-pointer font-semibold flex items-center gap-1.5">
+                    <RefreshCw className="h-4 w-4" style={{ color: "#2D6A4F" }} />
+                    Subscribe & Save Eligible
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Customers can subscribe to receive this product on a recurring schedule at a discount. The button appears on product cards in the Shop.
+                  </p>
+                </div>
+              </div>
+              {form.subscriptionEnabled && (
+                <div className="space-y-2 pt-1 border-t border-dashed" style={{ borderColor: "rgba(45,106,79,0.3)" }}>
+                  <Label>Subscriber Discount %</Label>
+                  <div className="flex items-center gap-3">
+                    <Input
+                      type="number"
+                      min={1}
+                      max={50}
+                      step={1}
+                      value={form.subscriptionDiscountPercent}
+                      onChange={e => setForm(f => ({ ...f, subscriptionDiscountPercent: e.target.value }))}
+                      className="w-28"
+                    />
+                    <span className="text-sm text-muted-foreground">% off the regular price on every reorder</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Default is 10%. Can be set from 1% to 50%.</p>
                 </div>
               )}
             </div>

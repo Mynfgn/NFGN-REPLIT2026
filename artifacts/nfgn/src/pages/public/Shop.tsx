@@ -220,11 +220,13 @@ function ProductCard({
   accentColor,
   onAdd,
   adding,
+  onSubscribe,
 }: {
   product: Product;
   accentColor: string;
   onAdd: (e: React.MouseEvent, id: number) => void;
   adding: boolean;
+  onSubscribe?: (e: React.MouseEvent, product: Product) => void;
 }) {
   const [hover, setHover] = useState(false);
   const img = resolveImageSrc(product.image);
@@ -358,6 +360,14 @@ function ProductCard({
             )}
             {outOfStock ? "Out of Stock" : "Add to Cart"}
           </button>
+          {!outOfStock && !product.isProPackage && !product.isDonation && onSubscribe && (
+            <button
+              onClick={e => onSubscribe(e, product)}
+              style={{ marginTop: 6, width: "100%", padding: "7px 0", background: "transparent", color: "#2D6A4F", border: "1.5px solid #2D6A4F", borderRadius: 7, fontWeight: 700, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}
+            >
+              <Sparkles size={11} /> Subscribe & Save 10%
+            </button>
+          )}
         </div>
       </div>
     </Link>
@@ -609,11 +619,13 @@ function CategorySection({
   products,
   onAdd,
   addingId,
+  onSubscribe,
 }: {
   group: (typeof CATEGORY_GROUPS)[0];
   products: Product[];
   onAdd: (e: React.MouseEvent, id: number) => void;
   addingId: number | null;
+  onSubscribe?: (e: React.MouseEvent, product: Product) => void;
 }) {
   if (products.length === 0) return null;
   return (
@@ -672,6 +684,7 @@ function CategorySection({
             accentColor={group.accentColor}
             onAdd={onAdd}
             adding={addingId === p.id}
+            onSubscribe={onSubscribe}
           />
         ))}
       </div>
@@ -1264,6 +1277,7 @@ export function Shop() {
                 products={herbalGroup.products}
                 onAdd={handleAddToCart}
                 addingId={addingId}
+                onSubscribe={handleOpenSubscribe}
               />
             )
           )}
@@ -1316,7 +1330,7 @@ export function Shop() {
       {!isLoading && soapsGroup.products.length > 0 && (
         <div style={{ background: GREY_50, paddingBottom: 8 }}>
           <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto" }}>
-            <CategorySection group={soapsGroup.group} products={soapsGroup.products} onAdd={handleAddToCart} addingId={addingId} />
+            <CategorySection group={soapsGroup.group} products={soapsGroup.products} onAdd={handleAddToCart} addingId={addingId} onSubscribe={handleOpenSubscribe} />
           </div>
         </div>
       )}
@@ -1368,13 +1382,13 @@ export function Shop() {
         <div style={{ background: GREY_50, paddingBottom: 72 }}>
           <div className="px-4 md:px-8" style={{ maxWidth: 1200, margin: "0 auto" }}>
             {candlesGroup.products.length > 0 && (
-              <CategorySection group={candlesGroup.group} products={candlesGroup.products} onAdd={handleAddToCart} addingId={addingId} />
+              <CategorySection group={candlesGroup.group} products={candlesGroup.products} onAdd={handleAddToCart} addingId={addingId} onSubscribe={handleOpenSubscribe} />
             )}
             {booksGroup.products.length > 0 && (
-              <CategorySection group={booksGroup.group} products={booksGroup.products} onAdd={handleAddToCart} addingId={addingId} />
+              <CategorySection group={booksGroup.group} products={booksGroup.products} onAdd={handleAddToCart} addingId={addingId} onSubscribe={handleOpenSubscribe} />
             )}
             {sportsGroup.products.length > 0 && (
-              <CategorySection group={sportsGroup.group} products={sportsGroup.products} onAdd={handleAddToCart} addingId={addingId} />
+              <CategorySection group={sportsGroup.group} products={sportsGroup.products} onAdd={handleAddToCart} addingId={addingId} onSubscribe={handleOpenSubscribe} />
             )}
             {uncategorized.length > 0 && (
               <CategorySection
@@ -1382,6 +1396,7 @@ export function Shop() {
                 products={uncategorized}
                 onAdd={handleAddToCart}
                 addingId={addingId}
+                onSubscribe={handleOpenSubscribe}
               />
             )}
             {regularProducts.length === 0 && weddingProducts.length === 0 && holidayProducts.length === 0 && (

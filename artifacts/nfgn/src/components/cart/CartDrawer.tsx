@@ -906,7 +906,7 @@ export function CartDrawer() {
           (window as any).Accept.dispatchData(
             {
               authData: { clientKey: cfg.clientKey, apiLoginID: cfg.apiLoginID },
-              cardData: { cardNumber: rawNum, month: expMonth, year: expYear.length === 2 ? "20" + expYear : expYear, cardCode: anetCard.cvv, zip: anetCard.zip },
+              cardData: { cardNumber: rawNum, month: expMonth, year: expYear.length === 2 ? "20" + expYear : expYear, cardCode: anetCard.cvv },
             },
             (response: any) => {
               if (response.messages.resultCode === "Ok") {
@@ -1396,19 +1396,6 @@ export function CartDrawer() {
                           maxLength={4}
                           value={anetCard.cvv}
                           onChange={e => setAnetCard(c => ({ ...c, cvv: e.target.value.replace(/\D/g, "").slice(0, 4) }))}
-                          className="w-full rounded-lg px-3 py-2.5 text-sm font-mono outline-none border focus:ring-2"
-                          style={{ background: "#fff", borderColor: "rgba(201,168,76,0.4)", color: "#0a0a0a" }}
-                        />
-                      </div>
-                      <div className="col-span-1">
-                        <label className="block text-xs font-semibold mb-1" style={{ color: "rgba(201,168,76,0.85)" }}>ZIP</label>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          placeholder="30301"
-                          maxLength={10}
-                          value={anetCard.zip}
-                          onChange={e => setAnetCard(c => ({ ...c, zip: e.target.value.replace(/\D/g, "").slice(0, 10) }))}
                           className="w-full rounded-lg px-3 py-2.5 text-sm font-mono outline-none border focus:ring-2"
                           style={{ background: "#fff", borderColor: "rgba(201,168,76,0.4)", color: "#0a0a0a" }}
                         />

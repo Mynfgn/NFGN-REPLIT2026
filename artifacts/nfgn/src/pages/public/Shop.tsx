@@ -810,6 +810,9 @@ export function Shop() {
   const { isAuthenticated, token } = useAuth();
   const qc = useQueryClient();
   const [addingId, setAddingId] = useState<number | null>(null);
+  const [subscribeTarget, setSubscribeTarget] = useState<Product | null>(null);
+  const [subscribeFreq, setSubscribeFreq] = useState("monthly");
+  const [subscribing, setSubscribing] = useState(false);
 
   // Fetch current user to know if they are a Pro Member
   const { data: currentUser } = useQuery<{ role: string; isProMember: boolean; firstName: string }>({
@@ -874,6 +877,42 @@ export function Shop() {
     addToCart.mutate({ data: { productId, quantity: 1 } });
   };
 
+  const handleOpenSubscribe = (e: React.MouseEvent, product: Product) => {
+    e.preventDefault();
+    if (!isAuthenticated) {
+      toast({ title: "Sign in required", description: "Please sign in to subscribe." });
+      return;
+    }
+    setSubscribeFreq("monthly");
+    setSubscribeTarget(product);
+  };
+
+  const handleConfirmSubscribe = async () => {
+    if (!subscribeTarget) return;
+    setSubscribing(true);
+    try {
+      const res = await customFetch("/api/subscriptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: subscribeTarget.id, frequency: subscribeFreq, quantity: 1 }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast({ title: data.error ?? "Could not subscribe", variant: "destructive" });
+        return;
+      }
+      setSubscribeTarget(null);
+      toast({
+        title: "Subscription created!",
+        description: `${subscribeTarget.name} will ship ${subscribeFreq === "monthly" ? "monthly" : subscribeFreq === "bimonthly" ? "every 2 months" : "quarterly"} at 10% off.`,
+      });
+    } catch {
+      toast({ title: "Something went wrong", variant: "destructive" });
+    } finally {
+      setSubscribing(false);
+    }
+  };
+
   const products: Product[] = data?.products ?? [];
   const sportsProducts = products.filter((p) => p.isSports && !p.isProPackage);
   const nonProfitProducts = products.filter((p) => p.isNonProfit && !p.isProPackage && !p.isSports && !p.isChurchDonation);
@@ -903,6 +942,59 @@ export function Shop() {
 
   return (
     <div style={{ fontFamily: "'Inter','Segoe UI',sans-serif", minHeight: "100vh", background: "#fff" }}>
+
+      {/* ── Subscribe & Save Dialog ───────────────────────── */}
+      <Dialog open={!!subscribeTarget} onOpenChange={open => { if (!open) setSubscribeTarget(null); }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-lg">Subscribe & Save 10%</DialogTitle>
+          </DialogHeader>
+          {subscribeTarget && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border">
+                {subscribeTarget.image && (
+                  <img src={subscribeTarget.image} alt={subscribeTarget.name} className="w-12 h-12 rounded-lg object-cover" />
+                )}
+                <div>
+                  <p className="font-semibold text-sm leading-tight">{subscribeTarget.name}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-base font-bold" style={{ color: GOLD }}>
+                      ${(subscribeTarget.price * 0.9).toFixed(2)}
+                    </span>
+                    <span className="text-xs text-muted-foreground line-through">${subscribeTarget.price.toFixed(2)}</span>
+                    <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full">Save 10%</span>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold">Delivery Frequency</Label>
+                <Select value={subscribeFreq} onValueChange={setSubscribeFreq}>
+                  <SelectTrigger className="border-[#C9A84C]/50 focus:ring-[#C9A84C]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="monthly">Monthly (every 30 days)</SelectItem>
+                    <SelectItem value="bimonthly">Every 2 Months (every 60 days)</SelectItem>
+                    <SelectItem value="quarterly">Quarterly (every 90 days)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">Pause, skip, or cancel anytime from your dashboard.</p>
+              </div>
+            </div>
+          )}
+          <DialogFooter className="gap-2">
+            <Button variant="outline" size="sm" onClick={() => setSubscribeTarget(null)} disabled={subscribing}>Cancel</Button>
+            <Button
+              size="sm"
+              onClick={handleConfirmSubscribe}
+              disabled={subscribing}
+              style={{ background: GOLD, color: "#000", fontWeight: 700 }}
+            >
+              {subscribing ? <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />Subscribing…</> : "Confirm Subscription"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* ── Back To Admin bar ─────────────────────────────── */}
       {fromAdmin && (
@@ -1090,11 +1182,19 @@ export function Shop() {
                         <button
                           onClick={e => { e.preventDefault(); handleAddToCart(e, product.id); }}
                           disabled={outOfStock || addingId === product.id}
-                          style={{ marginTop: 12, width: "100%", padding: "9px 0", background: outOfStock ? "transparent" : "transparent", color: outOfStock ? "#9ca3af" : GOLD, border: `1.5px solid ${outOfStock ? "#e5e7eb" : GOLD}`, borderRadius: 7, fontWeight: 700, fontSize: 12, cursor: outOfStock ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                          style={{ marginTop: 12, width: "100%", padding: "9px 0", background: "transparent", color: outOfStock ? "#9ca3af" : GOLD, border: `1.5px solid ${outOfStock ? "#e5e7eb" : GOLD}`, borderRadius: 7, fontWeight: 700, fontSize: 12, cursor: outOfStock ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
                         >
                           {addingId === product.id ? <Loader2 size={13} className="animate-spin" /> : <ShoppingCart size={13} />}
                           {outOfStock ? "Out of Stock" : "Add to Cart"}
                         </button>
+                        {!outOfStock && !product.isProPackage && !product.isDonation && (
+                          <button
+                            onClick={e => handleOpenSubscribe(e, product)}
+                            style={{ marginTop: 6, width: "100%", padding: "7px 0", background: "transparent", color: "#2D6A4F", border: "1.5px solid #2D6A4F", borderRadius: 7, fontWeight: 700, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}
+                          >
+                            <Sparkles size={11} /> Subscribe & Save 10%
+                          </button>
+                        )}
                       </div>
                     </div>
                   </Link>

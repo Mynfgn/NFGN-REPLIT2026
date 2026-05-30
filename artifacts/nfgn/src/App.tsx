@@ -50,6 +50,7 @@ import { MemberReportsPage } from "@/pages/dashboard/Reports";
 import { BasicTrainingPage } from "@/pages/dashboard/BasicTraining";
 import { MailboxPage } from "@/pages/dashboard/Mailbox";
 import { CompPlanPage } from "@/pages/dashboard/CompPlan";
+import { SubscriptionsPage } from "@/pages/dashboard/Subscriptions";
 
 // Admin Pages
 import { AdminDashboard } from "@/pages/admin/AdminDashboard";
@@ -294,6 +295,11 @@ function Router() {
       <Route path="/dashboard/reports">
         <RequireAuth>
           <DashboardLayout><MemberReportsPage /></DashboardLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/dashboard/subscriptions">
+        <RequireAuth>
+          <DashboardLayout><SubscriptionsPage /></DashboardLayout>
         </RequireAuth>
       </Route>
 

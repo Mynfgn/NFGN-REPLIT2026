@@ -1,2 +1,2 @@
-- [Production blank page fix](production-blank-page.md) — runtimeErrorOverlay must be dev-only in vite.config.ts or it breaks the published app.
-- [Authorize.net Accept.js constraints](authorizenet-accept-js.md) — static script tag required; fails in iframes; sandbox/prod credentials are separate; Client Key ≠ Transaction Key
+- [Authorize.net Accept.js constraints](authorizenet-accept-js.md) — must be static script tag in index.html; dynamic injection = E_WC_03; fails inside iframes
+- [Subscription feature](subscription-feature.md) — subscriptionsTable added; route at /api/subscriptions; dashboard at /dashboard/subscriptions

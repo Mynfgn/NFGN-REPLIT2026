@@ -26,6 +26,7 @@ import bookingPayoutsRouter from "./booking-payouts";
 import proPackagesRouter from "./pro-packages";
 import bannersRouter from "./banners";
 import nonprofitRequestsRouter from "./nonprofit-requests";
+import subscriptionsRouter from "./subscriptions";
 
 const router: IRouter = Router();
 
@@ -56,5 +57,6 @@ router.use(bookingPayoutsRouter);
 router.use(proPackagesRouter);
 router.use(bannersRouter);
 router.use(nonprofitRequestsRouter);
+router.use(subscriptionsRouter);
 
 export default router;

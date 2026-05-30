@@ -1430,7 +1430,7 @@ export function Shop() {
               <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 16, background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.35)", padding: "6px 16px", borderRadius: 99 }}>
                 <Trophy size={13} color={GOLD} />
                 <span style={{ color: GOLD, fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>NFGN SPORTS</span>
-                <span style={{ color: "rgba(201,168,76,0.6)", fontSize: 10, fontWeight: 600, letterSpacing: "0.05em" }}>· Public Store</span>
+                <span style={{ color: "rgba(201,168,76,0.6)", fontSize: 10, fontWeight: 600, letterSpacing: "0.05em" }}>· Public Shop</span>
               </div>
               <h2 style={{ color: "#fff", fontSize: "clamp(30px, 5vw, 46px)", fontWeight: 900, margin: "0 0 12px", fontFamily: "serif", lineHeight: 1.1 }}>
                 Game On. <span style={{ color: GOLD }}>Compete. Win.</span>
@@ -1571,7 +1571,7 @@ export function Shop() {
                   <span style={{ color: "#a78bfa", fontSize: 11, fontWeight: 800, letterSpacing: "0.22em", textTransform: "uppercase" }}>Pro Members Only</span>
                 </div>
                 <h2 style={{ color: "#fff", fontSize: "clamp(30px, 5vw, 52px)", fontWeight: 900, margin: "0 0 14px", fontFamily: "serif", lineHeight: 1.08 }}>
-                  Pro Member <span style={{ color: "#a78bfa" }}>Exclusive Store</span>
+                  Pro Member <span style={{ color: "#a78bfa" }}>Exclusive Shop</span>
                 </h2>
                 <p style={{ color: "#9a9a9a", fontSize: 16, maxWidth: 640, margin: 0, lineHeight: 1.65 }}>
                   Welcome back, <strong style={{ color: "#c4b5fd" }}>{currentUser?.firstName ?? "Pro Member"}</strong>. Your exclusive access unlocks 7 premium benefit categories — trips, medical packages, naturopathic care, mental wellness, and more — available only to verified NFGN Pro Members.
@@ -1700,10 +1700,10 @@ export function Shop() {
               <span style={{ color: "#a78bfa", fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>Members Only</span>
             </div>
             <h2 style={{ color: "#fff", fontSize: "clamp(26px, 4vw, 42px)", fontWeight: 900, margin: "0 0 16px", fontFamily: "serif", lineHeight: 1.15 }}>
-              Pro Member <span style={{ color: "#a78bfa" }}>Exclusive Store</span>
+              Pro Member <span style={{ color: "#a78bfa" }}>Exclusive Shop</span>
             </h2>
             <p style={{ color: "#9a9a9a", fontSize: 15, margin: "0 auto 28px", lineHeight: 1.65, maxWidth: 520 }}>
-              Pro Members unlock a private store with exclusive access to member trips, medical benefit packages, naturopathic & herbal products, mental health care, exclusive discounts, and premium health & wellness services — not available anywhere else.
+              Pro Members unlock a private shop with exclusive access to member trips, medical benefit packages, naturopathic & herbal products, mental health care, exclusive discounts, and premium health & wellness services — not available anywhere else.
             </p>
             {/* Lock icon grid */}
             <div style={{ display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap", marginBottom: 32 }}>

@@ -615,7 +615,7 @@ export function AdminProductsPage() {
         body: JSON.stringify({ status: newStatus }),
       });
       if (res.ok) {
-        toast.success(`"${p.name}" ${newStatus === "active" ? "activated — now visible in the Store" : "deactivated — hidden from the Store"}.`);
+        toast.success(`"${p.name}" ${newStatus === "active" ? "activated — now visible in the Shop" : "deactivated — hidden from the Shop"}.`);
         fetchProducts();
       } else {
         toast.error("Failed to update status");
@@ -961,7 +961,7 @@ export function AdminProductsPage() {
                           <Button
                             variant="ghost" size="icon"
                             className={`h-8 w-8 ${p.status === "active" ? "text-amber-500 hover:text-amber-600 hover:bg-amber-50" : "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"}`}
-                            title={p.status === "active" ? "Deactivate (hide from Store)" : "Activate (show in Store)"}
+                            title={p.status === "active" ? "Deactivate (hide from Shop)" : "Activate (show in Shop)"}
                             disabled={togglingStatus === p.id}
                             onClick={() => handleToggleStatus(p)}
                           >
@@ -1356,7 +1356,7 @@ export function AdminProductsPage() {
               {form.isProExclusive && (
                 <div className="space-y-3 pt-1 border-t border-dashed" style={{ borderColor: "rgba(124,58,237,0.3)" }}>
                   <div className="space-y-1.5">
-                    <Label>Pro Store Section <span className="text-destructive">*</span></Label>
+                    <Label>Pro Shop Section <span className="text-destructive">*</span></Label>
                     <Select
                       value={form.proExclusiveCategory || "none"}
                       onValueChange={v => setForm(f => ({ ...f, proExclusiveCategory: v === "none" ? "" : v }))}
@@ -1946,7 +1946,7 @@ export function AdminProductsPage() {
               <div className="space-y-3">
                 <p>
                   This will <strong>permanently remove</strong> <strong>"{deleteTarget?.name}"</strong> from the database. This action cannot be undone.
-                  If you only want to hide it from the Store temporarily, use the <strong>Deactivate</strong> button instead.
+                  If you only want to hide it from the Shop temporarily, use the <strong>Deactivate</strong> button instead.
                 </p>
                 {checkingLinks && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">

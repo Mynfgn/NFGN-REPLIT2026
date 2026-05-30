@@ -406,8 +406,8 @@ export function AdminCategoriesPage() {
             </div>
 
             <div className="border-t pt-4 space-y-4">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Pro Store Section (optional)</p>
-              <p className="text-xs text-muted-foreground -mt-2">If this category appears as a Pro Store section on the Shop page, you can override its headline and filter tags here.</p>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Pro Shop Section (optional)</p>
+              <p className="text-xs text-muted-foreground -mt-2">If this category appears as a Pro Shop section on the Shop page, you can override its headline and filter tags here.</p>
 
               <div className="space-y-1.5">
                 <Label>Section Headline <span className="text-muted-foreground text-xs">(optional)</span></Label>

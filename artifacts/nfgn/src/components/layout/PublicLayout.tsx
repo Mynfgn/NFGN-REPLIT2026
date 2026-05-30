@@ -20,7 +20,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
   const itemCount = cart?.itemCount ?? 0;
 
   const navLinks = [
-    { name: "Store", href: "/shop" },
+    { name: "Shop", href: "/shop" },
     { name: "Book-A-Pro", href: "/book" },
     { name: "Gifts & Donations", href: "/give" },
     { name: "Join Us", href: "/join" },

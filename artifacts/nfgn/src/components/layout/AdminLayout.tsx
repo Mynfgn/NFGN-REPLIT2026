@@ -66,7 +66,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { name: "Users", href: "/admin/users", icon: Users },
     { name: "Register", href: "/dashboard/register-new-pro", icon: UserPlus },
-    { name: "Store", href: "/shop?from=admin", icon: Store },
+    { name: "Shop", href: "/shop?from=admin", icon: Store },
     {
       name: "Products",
       href: "/admin/products",

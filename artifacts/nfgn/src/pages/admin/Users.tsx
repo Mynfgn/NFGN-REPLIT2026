@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Search, Loader2, Star, Users, SlidersHorizontal, Link2, AlertCircle, CheckCircle2, KeyRound, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { Search, Loader2, Star, Users, SlidersHorizontal, Link2, AlertCircle, CheckCircle2, KeyRound, Eye, EyeOff, ShieldCheck, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { roleLabel } from "@/lib/labels";
 import { customFetch } from "@/lib/custom-fetch";
@@ -38,6 +38,10 @@ export function UsersPage() {
   const [pwdError, setPwdError] = useState("");
   const [showNewPwd, setShowNewPwd] = useState(false);
   const [showConfirmPwd, setShowConfirmPwd] = useState(false);
+  const [emailUser, setEmailUser] = useState<any | null>(null);
+  const [newEmail, setNewEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [savingEmail, setSavingEmail] = useState(false);
   const { toast } = useToast();
 
   const { data, isLoading, refetch } = useListUsers({ page, limit: 20, search: search || undefined, role: role !== "all" ? role : undefined });
@@ -219,6 +223,9 @@ export function UsersPage() {
                       </Button>
                       <Button variant="outline" size="sm" className="text-xs h-7 gap-1 border-amber-200 text-amber-700 hover:bg-amber-50" onClick={() => { setRefCodeUser(user); setNewRefCode(user.referralCode ?? ""); setRefCodeError(""); }}>
                         <Link2 className="h-3 w-3" /> Change Ref Code
+                      </Button>
+                      <Button variant="outline" size="sm" className="text-xs h-7 gap-1 border-purple-200 text-purple-700 hover:bg-purple-50" onClick={() => { setEmailUser(user); setNewEmail(user.email ?? ""); setEmailError(""); }}>
+                        <Mail className="h-3 w-3" /> Edit Email
                       </Button>
                       <Button variant="outline" size="sm" className="text-xs h-7 gap-1 border-red-200 text-red-700 hover:bg-red-50" onClick={() => { setPwdUser(user); setNewPwd(""); setConfirmPwd(""); setPwdError(""); }}>
                         <KeyRound className="h-3 w-3" /> Change Password
@@ -402,6 +409,87 @@ export function UsersPage() {
                     ? <Loader2 className="h-4 w-4 animate-spin" />
                     : <KeyRound className="h-4 w-4" />}
                   Set New Password
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Email Modal */}
+      <Dialog open={!!emailUser} onOpenChange={() => { setEmailUser(null); setEmailError(""); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5 text-purple-600" />
+              Edit Email Address
+            </DialogTitle>
+          </DialogHeader>
+          {emailUser && (
+            <div className="space-y-4">
+              <div className="bg-muted/40 rounded-lg p-3 text-sm">
+                <p className="font-bold">{emailUser.firstName} {emailUser.lastName}</p>
+                <p className="text-muted-foreground text-xs">Current: <span className="font-mono">{emailUser.email}</span></p>
+              </div>
+
+              <div className="rounded-lg bg-purple-50 border border-purple-200 p-3 text-xs text-purple-900 space-y-1">
+                <p className="font-semibold text-purple-800">Note</p>
+                <ul className="list-disc list-inside space-y-0.5 leading-relaxed">
+                  <li>The member will use the new address to log in.</li>
+                  <li>The new address must not already be in use.</li>
+                  <li>Notify the member of this change.</li>
+                </ul>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="new-email">New Email Address</Label>
+                <Input
+                  id="new-email"
+                  type="email"
+                  placeholder="name@example.com"
+                  value={newEmail}
+                  onChange={e => { setNewEmail(e.target.value); setEmailError(""); }}
+                />
+                {emailError && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />{emailError}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-2 pt-1">
+                <Button variant="outline" className="flex-1" onClick={() => { setEmailUser(null); setEmailError(""); }}>
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1 gap-1.5 bg-purple-600 hover:bg-purple-700 text-white"
+                  disabled={savingEmail || !newEmail.trim() || newEmail.trim() === emailUser.email}
+                  onClick={async () => {
+                    const trimmed = newEmail.trim().toLowerCase();
+                    if (!trimmed.includes("@") || !trimmed.includes(".")) {
+                      setEmailError("Please enter a valid email address."); return;
+                    }
+                    setSavingEmail(true);
+                    try {
+                      const res = await customFetch(`/api/users/${emailUser.id}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ email: trimmed }),
+                      });
+                      const body = await res.json();
+                      if (!res.ok) { setEmailError(body.error ?? "Failed to update email."); return; }
+                      toast({ title: "Email updated", description: `${emailUser.firstName}'s email is now ${trimmed}.` });
+                      setEmailUser(null);
+                      refetch();
+                    } catch {
+                      setEmailError("Something went wrong. Please try again.");
+                    } finally {
+                      setSavingEmail(false);
+                    }
+                  }}
+                >
+                  {savingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+                  Save Email
                 </Button>
               </div>
             </div>

@@ -107,7 +107,7 @@ router.patch("/users/:id", requireAuth, async (req, res): Promise<void> => {
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
   const {
-    firstName, lastName, phone, avatar, role, status,
+    firstName, lastName, phone, avatar, role, status, email,
     gender, dateOfBirth,
     addressLine1, addressLine2, city, state, zip, country,
     bankName, bankAccountNumber, bankRoutingNumber, bankAccountType,
@@ -123,6 +123,22 @@ router.patch("/users/:id", requireAuth, async (req, res): Promise<void> => {
   }
 
   const updateData: Partial<typeof usersTable.$inferInsert> = {};
+
+  // Email — admin only, must be unique
+  if (email && ["super_admin", "admin"].includes(currentUser.role)) {
+    const normalised = email.trim().toLowerCase();
+    const [existing] = await db
+      .select({ id: usersTable.id })
+      .from(usersTable)
+      .where(eq(usersTable.email, normalised))
+      .limit(1);
+    if (existing && existing.id !== id) {
+      res.status(409).json({ error: "That email address is already in use by another account." });
+      return;
+    }
+    updateData.email = normalised;
+  }
+
   if (firstName) updateData.firstName = firstName;
   if (lastName) updateData.lastName = lastName;
   if (phone !== undefined) updateData.phone = phone;

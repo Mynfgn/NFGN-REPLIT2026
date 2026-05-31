@@ -27,6 +27,7 @@ import proPackagesRouter from "./pro-packages";
 import bannersRouter from "./banners";
 import nonprofitRequestsRouter from "./nonprofit-requests";
 import subscriptionsRouter from "./subscriptions";
+import paygRouter from "./payg";
 
 const router: IRouter = Router();
 
@@ -58,5 +59,6 @@ router.use(proPackagesRouter);
 router.use(bannersRouter);
 router.use(nonprofitRequestsRouter);
 router.use(subscriptionsRouter);
+router.use(paygRouter);
 
 export default router;

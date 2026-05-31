@@ -56,3 +56,65 @@ export const professionalAvailabilityTable = pgTable("professional_availability"
 export const insertBookingSchema = createInsertSchema(bookingsTable).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertBooking = z.infer<typeof insertBookingSchema>;
 export type Booking = typeof bookingsTable.$inferSelect;
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Pay As You Go (PAYG)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Up to 4 services offered by a Pro Member provider */
+export const paygServicesTable = pgTable("payg_services", {
+  id: serial("id").primaryKey(),
+  providerId: integer("provider_id").notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  price: numeric("price", { precision: 10, scale: 2 }).notNull(),
+  cv: numeric("cv", { precision: 10, scale: 2 }).notNull().default("0"),
+  isActive: boolean("is_active").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+});
+
+/** Provider availability windows — date + open/close time + chair count */
+export const paygAvailabilityTable = pgTable("payg_availability", {
+  id: serial("id").primaryKey(),
+  providerId: integer("provider_id").notNull(),
+  availableDate: date("available_date").notNull(),
+  startTime: text("start_time").notNull(),   // "HH:MM" 24-hr
+  endTime: text("end_time").notNull(),        // "HH:MM" 24-hr
+  maxChairs: integer("max_chairs").notNull().default(1),
+  notes: text("notes"),
+  isBlocked: boolean("is_blocked").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** Customer PAYG bookings */
+export const paygBookingsTable = pgTable("payg_bookings", {
+  id: serial("id").primaryKey(),
+  customerId: integer("customer_id").notNull(),
+  providerId: integer("provider_id").notNull(),
+  serviceId: integer("service_id"),
+  availabilityId: integer("availability_id"),
+  bookingDate: date("booking_date").notNull(),
+  startTime: text("start_time").notNull(),
+  numHours: numeric("num_hours", { precision: 4, scale: 1 }).notNull().default("2"),
+  serviceName: text("service_name").notNull(),
+  providerName: text("provider_name").notNull(),
+  unitPrice: numeric("unit_price", { precision: 10, scale: 2 }).notNull(),
+  totalPrice: numeric("total_price", { precision: 10, scale: 2 }).notNull(),
+  cvGenerated: numeric("cv_generated", { precision: 10, scale: 2 }).notNull().default("0"),
+  status: text("status").notNull().default("pending"),          // pending | approved | completed | cancelled
+  paymentStatus: text("payment_status").notNull().default("pending"), // pending | paid
+  paymentMethod: text("payment_method"),
+  paymentLink: text("payment_link"),
+  notes: text("notes"),
+  adminNote: text("admin_note"),
+  cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+});
+
+export type PaygService = typeof paygServicesTable.$inferSelect;
+export type PaygAvailability = typeof paygAvailabilityTable.$inferSelect;
+export type PaygBooking = typeof paygBookingsTable.$inferSelect;

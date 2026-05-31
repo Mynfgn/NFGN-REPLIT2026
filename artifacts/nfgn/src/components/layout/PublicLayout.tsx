@@ -13,17 +13,23 @@ export function PublicLayout({ children }: { children: ReactNode }) {
   const { cartOpen, setCartOpen } = useCartStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [bookAProOpen, setBookAProOpen] = useState(false);
   const [location] = useLocation();
   const aboutRef = useRef<HTMLDivElement>(null);
+  const bookAProRef = useRef<HTMLDivElement>(null);
 
   const { data: cart } = useGetCart({ query: { enabled: isAuthenticated } as any });
   const itemCount = cart?.itemCount ?? 0;
 
   const navLinks = [
     { name: "Shop", href: "/shop" },
-    { name: "Book-A-Pro", href: "/book" },
     { name: "Gifts & Donations", href: "/give" },
     { name: "Join Us", href: "/join" },
+  ];
+
+  const bookAProLinks = [
+    { name: "Browse Professionals", href: "/book" },
+    { name: "Pay As You Go", href: "/pay-as-you-go" },
   ];
 
   const aboutLinks = [
@@ -36,12 +42,16 @@ export function PublicLayout({ children }: { children: ReactNode }) {
       if (aboutRef.current && !aboutRef.current.contains(e.target as Node)) {
         setAboutOpen(false);
       }
+      if (bookAProRef.current && !bookAProRef.current.contains(e.target as Node)) {
+        setBookAProOpen(false);
+      }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const isAboutActive = location === "/about" || location === "/contact";
+  const isBookAProActive = location === "/book" || location === "/pay-as-you-go";
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground selection:bg-primary selection:text-primary-foreground overflow-x-hidden">
@@ -63,6 +73,33 @@ export function PublicLayout({ children }: { children: ReactNode }) {
                   {link.name}
                 </Link>
               ))}
+
+              {/* Book-A-Pro dropdown */}
+              <div ref={bookAProRef} style={{ position: "relative" }}>
+                <button
+                  onClick={() => setBookAProOpen((o) => !o)}
+                  className={`text-sm font-medium transition-colors hover:text-primary flex items-center gap-1 ${
+                    isBookAProActive ? "text-primary" : "text-muted-foreground"
+                  }`}
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                >
+                  Book-A-Pro
+                  <ChevronDown size={13} style={{ transition: "transform 0.18s", transform: bookAProOpen ? "rotate(180deg)" : "rotate(0deg)" }} />
+                </button>
+                {bookAProOpen && (
+                  <div style={{ position: "absolute", top: "calc(100% + 10px)", left: "50%", transform: "translateX(-50%)", background: "#0a0a0a", border: "1px solid rgba(201,168,76,0.25)", borderRadius: 10, minWidth: 190, boxShadow: "0 8px 32px rgba(0,0,0,0.5)", overflow: "hidden", zIndex: 100 }}>
+                    {bookAProLinks.map((link, i) => (
+                      <Link key={link.href} href={link.href} onClick={() => setBookAProOpen(false)}
+                        style={{ display: "block", padding: "11px 18px", fontSize: 13, fontWeight: 500, color: location === link.href ? "#C9A84C" : "#ccc", borderBottom: i < bookAProLinks.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none", transition: "color 0.15s, background 0.15s", textDecoration: "none" }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "#C9A84C"; (e.currentTarget as HTMLElement).style.background = "rgba(201,168,76,0.07)"; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = location === link.href ? "#C9A84C" : "#ccc"; (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                      >
+                        {link.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {/* About dropdown */}
               <div ref={aboutRef} style={{ position: "relative" }}>
@@ -187,6 +224,14 @@ export function PublicLayout({ children }: { children: ReactNode }) {
                   {link.name}
                 </Link>
               ))}
+              {bookAProLinks.map((link) => (
+                <Link key={link.href} href={link.href}
+                  className={`text-sm font-medium ${location === link.href ? "text-primary" : "text-foreground"}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {link.name}
+                </Link>
+              ))}
               {aboutLinks.map((link) => (
                 <Link
                   key={link.href}
@@ -232,7 +277,8 @@ export function PublicLayout({ children }: { children: ReactNode }) {
             <h4 className="font-bold mb-4 uppercase tracking-wider text-sm text-primary">Shop</h4>
             <ul className="space-y-2 text-sm text-gray-400">
               <li><Link href="/shop" className="hover:text-white transition-colors">All Products</Link></li>
-              <li><Link href="/book" className="hover:text-white transition-colors">Book A Pro</Link></li>
+              <li><Link href="/book" className="hover:text-white transition-colors">Browse Professionals</Link></li>
+              <li><Link href="/pay-as-you-go" className="hover:text-white transition-colors">Pay As You Go</Link></li>
             </ul>
           </div>
           <div>

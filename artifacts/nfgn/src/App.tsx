@@ -51,6 +51,9 @@ import { BasicTrainingPage } from "@/pages/dashboard/BasicTraining";
 import { MailboxPage } from "@/pages/dashboard/Mailbox";
 import { CompPlanPage } from "@/pages/dashboard/CompPlan";
 import { SubscriptionsPage } from "@/pages/dashboard/Subscriptions";
+import { PayAsYouGoPage } from "@/pages/public/PayAsYouGo";
+import { PaygProviderPage } from "@/pages/dashboard/PaygProvider";
+import { PaygBookingsPage } from "@/pages/dashboard/PaygBookings";
 
 // Admin Pages
 import { AdminDashboard } from "@/pages/admin/AdminDashboard";
@@ -154,6 +157,9 @@ function Router() {
       </Route>
       <Route path="/give">
         <PublicLayout><ChurchesAndNonProfits /></PublicLayout>
+      </Route>
+      <Route path="/pay-as-you-go">
+        <PublicLayout><PayAsYouGoPage /></PublicLayout>
       </Route>
       <Route path="/about">
         <PublicLayout><About /></PublicLayout>
@@ -300,6 +306,16 @@ function Router() {
       <Route path="/dashboard/subscriptions">
         <RequireAuth>
           <DashboardLayout><SubscriptionsPage /></DashboardLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/dashboard/payg-provider">
+        <RequireAuth>
+          <DashboardLayout><PaygProviderPage /></DashboardLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/dashboard/payg-bookings">
+        <RequireAuth>
+          <DashboardLayout><PaygBookingsPage /></DashboardLayout>
         </RequireAuth>
       </Route>
 

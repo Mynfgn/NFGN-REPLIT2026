@@ -368,6 +368,74 @@ export function booking8hrReminderHtml(opts: {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+//  Pay As You Go Booking Confirmation
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface PaygBookingOpts {
+  role: "customer" | "provider" | "admin";
+  customerName: string;
+  customerEmail: string;
+  providerName: string;
+  providerEmail: string;
+  serviceName: string;
+  bookingDate: string;
+  startTime: string;
+  numHours: number;
+  unitPrice: number;
+  totalPrice: number;
+  cvGenerated: number;
+  bookingId: number;
+}
+
+export function paygBookingConfirmationHtml(opts: PaygBookingOpts): string {
+  const policyNotice = `
+    <div class="detail-box" style="border-left:4px solid #C9A84C; background:#fffdf5;">
+      <p><strong>📋 Booking Policy Reminder</strong></p>
+      <p>All Pay As You Go bookings must be purchased at least <strong>48 hours in advance</strong> for scheduling and payment processing purposes. Same-day bookings require corporate approval. <strong>Once paid, all purchases are non-refundable.</strong></p>
+    </div>`;
+
+  const details = `
+    <div class="detail-box">
+      <p><strong>Booking #:</strong> PAYG-${String(opts.bookingId).padStart(4, "0")}</p>
+      <p><strong>Service:</strong> ${opts.serviceName}</p>
+      ${opts.role !== "provider" ? `<p><strong>Provider:</strong> ${opts.providerName}</p>` : ""}
+      ${opts.role !== "customer" ? `<p><strong>Customer:</strong> ${opts.customerName} (${opts.customerEmail})</p>` : ""}
+      <p><strong>Date:</strong> ${opts.bookingDate}</p>
+      <p><strong>Start Time:</strong> ${opts.startTime}</p>
+      <p><strong>Duration:</strong> ${opts.numHours} hour${opts.numHours !== 1 ? "s" : ""}</p>
+      <p><strong>Rate:</strong> $${opts.unitPrice.toFixed(2)}/hr</p>
+      <p><strong>Total Due:</strong> $${opts.totalPrice.toFixed(2)}</p>
+      <p><strong>CV Generated:</strong> ${opts.cvGenerated.toFixed(2)} CV</p>
+      <p><strong>Status:</strong> Pending confirmation</p>
+    </div>`;
+
+  if (opts.role === "customer") {
+    return wrap(`
+      <p>Hi ${opts.customerName},</p>
+      <p>Your Pay As You Go booking has been received and is <strong>pending confirmation</strong> from ${opts.providerName}.</p>
+      ${details}
+      ${policyNotice}
+      <p>You will receive a follow-up email once your booking is confirmed. Visit your dashboard to track status.</p>
+      <a class="cta" href="https://mynfgn.com/dashboard/payg-bookings">View My Bookings</a>
+    `, "PAYG Booking Received 🎉");
+  }
+  if (opts.role === "provider") {
+    return wrap(`
+      <p>Hi ${opts.providerName},</p>
+      <p>You have a new Pay As You Go booking request from <strong>${opts.customerName}</strong>.</p>
+      ${details}
+      <p>Please log in to your dashboard to approve or manage this booking.</p>
+      <a class="cta" href="https://mynfgn.com/dashboard/payg-provider">Manage Bookings</a>
+    `, "New PAYG Booking Request");
+  }
+  return wrap(`
+    <p>A new Pay As You Go booking has been submitted on the NFGN platform.</p>
+    ${details}
+    <a class="cta" href="https://mynfgn.com/admin/payg">View in Admin</a>
+  `, "New PAYG Booking — Admin Alert");
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 //  Password Reset Email
 // ─────────────────────────────────────────────────────────────────────────────
 

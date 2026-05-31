@@ -53,6 +53,7 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
       { name: "Orders",             href: "/dashboard/orders",       icon: ShoppingBag },
       { name: "Subscriptions",     href: "/dashboard/subscriptions", icon: RefreshCw },
       { name: "Bookings",           href: "/dashboard/bookings",     icon: Calendar },
+      { name: "Pay As You Go",      href: "/dashboard/payg-bookings", icon: Zap },
       { name: "My Referral Link",   href: "/dashboard/referral",     icon: Link2 },
       { name: "Get the App",        href: "/dashboard/tools/get-the-app", icon: Home },
       { name: "Send A Gift/Donation", href: "/shop?section=giving",       icon: Heart },
@@ -297,7 +298,20 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
     if (!hasProviderSection) {
       visibleSections.push({
         label: "My Professional Services",
-        items: [{ name: "Manage Availability", href: "/dashboard/pro-availability", icon: CalendarDays }],
+        items: [
+          { name: "Manage Availability", href: "/dashboard/pro-availability", icon: CalendarDays },
+          { name: "Pay As You Go Back-Office", href: "/dashboard/payg-provider", icon: Zap },
+        ],
+      });
+    }
+  }
+  // Any pro member can access PAYG provider tools (not just Book-A-Pro providers)
+  if (user?.role === "pro_member" && !(user as any)?.isBookAProProvider) {
+    const hasPaygSection = visibleSections.some(s => s.label === "Pay As You Go");
+    if (!hasPaygSection) {
+      visibleSections.push({
+        label: "Pay As You Go",
+        items: [{ name: "PAYG Back-Office", href: "/dashboard/payg-provider", icon: Zap }],
       });
     }
   }

@@ -1,0 +1,99 @@
+Under the Book-A-Professional main menu, create a dropdown menu tab titled:
+Pay As You Go
+Create a full Pay As You Go service page with the following content, booking logic, provider back-office tools, and admin product/CV updates.
+Pay As You Go Service Description
+Pay As You Go was originally designed for salon owners renting out chairs to hair stylists and barbers, also known as booth rentals, who need a professional location to perform their services.
+For example, if a salon owner has an available chair, they can rent that chair by the hour with a 2-hour minimum requirement.
+Pricing example:
+First 2 hours: $5.75 per hour
+Every additional hour that same day: $4.75 per hour
+Maximum rental per stylist per day: 8 hours
+One 8-hour rental period is called 1 Block of Time
+2 Blocks of Time = 16 hours
+A stylist can only purchase 1 Block of Time per day
+The first 2 hours will always be charged at $5.75 each
+Additional hours after the first 2 hours are charged at $4.75 each
+If more than 8 hours are needed, additional hours must be requested or purchased at the time of purchase, subject to approval
+Booking Rules
+The customer must be able to:
+Select a provider/location
+Select an available service
+Pick an available appointment date
+Pick an available start time
+Choose the number of rental hours
+View total price before checkout
+Purchase and confirm the booking online
+Booking must be made at least 48 hours in advance.
+Same-day bookings are not allowed without corporate/admin approval.
+Once paid, the purchase is non-refundable.
+Display this notice clearly before checkout:
+“All Pay As You Go bookings must be purchased at least 48 hours in advance for scheduling and payment processing purposes. Same-day bookings require corporate approval. Once paid, all purchases are non-refundable.”
+Provider Back Office Requirements
+Providers must be Pro Members in order to offer Pay As You Go availability.
+Do not place availability controls only inside the admin panel. Providers must have a dedicated area inside their own back office/dashboard where they can update their available dates and times.
+Add a provider back-office section titled:
+Pay As You Go Availability
+Providers should be able to:
+Add available dates
+Add available start and end times
+Mark unavailable dates/times
+Set chair/booth/location availability
+View bookings purchased by customers
+See pending, approved, completed, and canceled bookings
+Manage up to 4 services they offer
+Enter the price they want to charge for each service
+Provider Services
+Each Pro Member provider can offer up to 4 services.
+Each service must include:
+Service name
+Service description
+Service price
+CV value
+Active/inactive status
+CV should be calculated automatically using:
+CV = Service Price x 0.10
+Examples:
+$100 service x 0.10 = 10 CV
+$50 service x 0.10 = 5 CV
+$40 service x 0.10 = 4 CV
+Make sure the system calculates CV correctly.
+Admin Product Input Page Update
+In the admin dashboard, update the Add Product / Product Input page so admin can create multi-service products that include:
+Product/service name
+Description
+Category
+Provider type
+Price
+CV value
+Multiple service options
+Active/inactive status
+Pro Member only toggle
+Pay As You Go booking toggle
+Add support for multiple service prices and CV values under the same product/service listing.
+The admin should be able to input or review:
+Service 1 name, price, CV
+Service 2 name, price, CV
+Service 3 name, price, CV
+Service 4 name, price, CV
+CV should auto-calculate based on the dollar amount using:
+CV = Price x 0.10
+Payment and Checkout
+At checkout, display:
+Provider name
+Location/chair/booth selected
+Date selected
+Start time
+Total hours
+Price breakdown
+Total amount due
+CV generated
+Non-refundable notice
+48-hour booking policy
+After purchase, send confirmation to:
+Customer
+Provider
+Admin
+Important Fix
+Make sure the math is correct:
+$40 x .10 = 4 CV, not 40 CV.
+Build this feature cleanly, mobile-responsive, and consistent with the current MYNFGN.COM / NFGN design style.

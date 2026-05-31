@@ -100,7 +100,7 @@ router.get("/payg/providers/:id/availability", async (req, res): Promise<void> =
 // ─── AUTH: create a PAYG booking ─────────────────────────────────────────────
 
 router.post("/payg/bookings", requireAuth, async (req, res): Promise<void> => {
-  const userId = (req as any).userId as number;
+  const userId = (req as any).user.id as number;
   const { providerId, serviceId, availabilityId, bookingDate, startTime, numHours, notes, paymentMethod } = req.body;
 
   if (!providerId || !serviceId || !bookingDate || !startTime || !numHours) {
@@ -188,7 +188,7 @@ router.post("/payg/bookings", requireAuth, async (req, res): Promise<void> => {
 // ─── AUTH: customer's own PAYG bookings ───────────────────────────────────────
 
 router.get("/payg/my-bookings", requireAuth, async (req, res): Promise<void> => {
-  const userId = (req as any).userId as number;
+  const userId = (req as any).user.id as number;
   const bookings = await db
     .select()
     .from(paygBookingsTable)
@@ -200,7 +200,7 @@ router.get("/payg/my-bookings", requireAuth, async (req, res): Promise<void> => 
 // ─── PROVIDER: my services ────────────────────────────────────────────────────
 
 router.get("/payg/provider/services", requireAuth, async (req, res): Promise<void> => {
-  const userId = (req as any).userId as number;
+  const userId = (req as any).user.id as number;
   const services = await db
     .select()
     .from(paygServicesTable)
@@ -210,7 +210,7 @@ router.get("/payg/provider/services", requireAuth, async (req, res): Promise<voi
 });
 
 router.post("/payg/provider/services", requireAuth, async (req, res): Promise<void> => {
-  const userId = (req as any).userId as number;
+  const userId = (req as any).user.id as number;
   const existing = await db.select({ id: paygServicesTable.id }).from(paygServicesTable).where(eq(paygServicesTable.providerId, userId));
   if (existing.length >= 4) {
     res.status(400).json({ error: "Maximum of 4 services allowed per provider." });
@@ -233,7 +233,7 @@ router.post("/payg/provider/services", requireAuth, async (req, res): Promise<vo
 });
 
 router.patch("/payg/provider/services/:id", requireAuth, async (req, res): Promise<void> => {
-  const userId = (req as any).userId as number;
+  const userId = (req as any).user.id as number;
   const id = parseInt(req.params.id as string);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
   const { name, description, price, isActive } = req.body;
@@ -256,7 +256,7 @@ router.patch("/payg/provider/services/:id", requireAuth, async (req, res): Promi
 });
 
 router.delete("/payg/provider/services/:id", requireAuth, async (req, res): Promise<void> => {
-  const userId = (req as any).userId as number;
+  const userId = (req as any).user.id as number;
   const id = parseInt(req.params.id as string);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
   await db.delete(paygServicesTable).where(and(eq(paygServicesTable.id, id), eq(paygServicesTable.providerId, userId)));
@@ -266,7 +266,7 @@ router.delete("/payg/provider/services/:id", requireAuth, async (req, res): Prom
 // ─── PROVIDER: my availability ────────────────────────────────────────────────
 
 router.get("/payg/provider/availability", requireAuth, async (req, res): Promise<void> => {
-  const userId = (req as any).userId as number;
+  const userId = (req as any).user.id as number;
   const today = new Date().toISOString().split("T")[0];
   const slots = await db
     .select()
@@ -277,7 +277,7 @@ router.get("/payg/provider/availability", requireAuth, async (req, res): Promise
 });
 
 router.post("/payg/provider/availability", requireAuth, async (req, res): Promise<void> => {
-  const userId = (req as any).userId as number;
+  const userId = (req as any).user.id as number;
   const { availableDate, startTime, endTime, maxChairs, notes, isBlocked } = req.body;
   if (!availableDate || !startTime || !endTime) {
     res.status(400).json({ error: "availableDate, startTime, endTime required" });
@@ -296,7 +296,7 @@ router.post("/payg/provider/availability", requireAuth, async (req, res): Promis
 });
 
 router.patch("/payg/provider/availability/:id", requireAuth, async (req, res): Promise<void> => {
-  const userId = (req as any).userId as number;
+  const userId = (req as any).user.id as number;
   const id = parseInt(req.params.id as string);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
   const { startTime, endTime, maxChairs, notes, isBlocked } = req.body;
@@ -316,7 +316,7 @@ router.patch("/payg/provider/availability/:id", requireAuth, async (req, res): P
 });
 
 router.delete("/payg/provider/availability/:id", requireAuth, async (req, res): Promise<void> => {
-  const userId = (req as any).userId as number;
+  const userId = (req as any).user.id as number;
   const id = parseInt(req.params.id as string);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
   await db.delete(paygAvailabilityTable).where(and(eq(paygAvailabilityTable.id, id), eq(paygAvailabilityTable.providerId, userId)));
@@ -326,7 +326,7 @@ router.delete("/payg/provider/availability/:id", requireAuth, async (req, res): 
 // ─── PROVIDER: received bookings ─────────────────────────────────────────────
 
 router.get("/payg/provider/bookings", requireAuth, async (req, res): Promise<void> => {
-  const userId = (req as any).userId as number;
+  const userId = (req as any).user.id as number;
   const bookings = await db
     .select()
     .from(paygBookingsTable)
@@ -336,7 +336,7 @@ router.get("/payg/provider/bookings", requireAuth, async (req, res): Promise<voi
 });
 
 router.patch("/payg/provider/bookings/:id", requireAuth, async (req, res): Promise<void> => {
-  const userId = (req as any).userId as number;
+  const userId = (req as any).user.id as number;
   const id = parseInt(req.params.id as string);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
   const { status, adminNote } = req.body;

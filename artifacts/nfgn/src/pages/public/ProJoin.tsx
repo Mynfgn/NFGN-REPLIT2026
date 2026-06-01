@@ -484,7 +484,7 @@ export function ProJoin() {
 
                         <div className="p-4">
                           {/* Name */}
-                          <h3 className="font-bold text-base leading-snug mb-3" style={{ color: isSelected ? "#C9A84C" : "#fff" }}>
+                          <h3 className="font-bold text-base leading-snug mb-3" style={{ color: isSelected ? "#C9A84C" : "var(--foreground)" }}>
                             {pkg.name}
                           </h3>
 

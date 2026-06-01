@@ -2,8 +2,9 @@ import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import {
   paygServicesTable, paygAvailabilityTable, paygBookingsTable, usersTable,
+  paygProviderApplicationsTable,
 } from "@workspace/db/schema";
-import { eq, and, desc, asc, gte } from "drizzle-orm";
+import { eq, and, desc, asc, gte, inArray } from "drizzle-orm";
 import { requireAuth, requireAdmin } from "../lib/auth";
 import { sendEmail } from "../lib/mailer";
 import { paygBookingConfirmationHtml } from "../lib/mailer";
@@ -26,14 +27,22 @@ function isAtLeast48HoursAhead(bookingDate: string, startTime: string): boolean 
   return diffMs >= 48 * 60 * 60 * 1000;
 }
 
-// ─── PUBLIC: list PAYG providers ──────────────────────────────────────────────
+// ─── PUBLIC: list PAYG providers (approved only) ──────────────────────────────
 
 router.get("/payg/providers", async (req, res): Promise<void> => {
-  // Pro members who have at least one active PAYG service
+  // Only approved providers with at least one active service
+  const approvedApps = await db
+    .select({ userId: paygProviderApplicationsTable.userId })
+    .from(paygProviderApplicationsTable)
+    .where(eq(paygProviderApplicationsTable.status, "approved"));
+
+  if (!approvedApps.length) { res.json({ providers: [] }); return; }
+  const approvedIds = approvedApps.map(a => a.userId);
+
   const rows = await db
     .selectDistinct({ userId: paygServicesTable.providerId })
     .from(paygServicesTable)
-    .where(eq(paygServicesTable.isActive, true));
+    .where(and(eq(paygServicesTable.isActive, true), inArray(paygServicesTable.providerId, approvedIds)));
 
   if (!rows.length) { res.json({ providers: [] }); return; }
 
@@ -211,6 +220,24 @@ router.get("/payg/provider/services", requireAuth, async (req, res): Promise<voi
 
 router.post("/payg/provider/services", requireAuth, async (req, res): Promise<void> => {
   const userId = (req as any).user.id as number;
+  const user = (req as any).user;
+
+  // Enforce: only approved pro members may create services
+  if (user.role !== "pro_member" && user.role !== "admin" && user.role !== "super_admin" && user.role !== "store_admin") {
+    res.status(403).json({ error: "Only Pro Members may offer Pay As You Go services. Please upgrade your account." });
+    return;
+  }
+  if (user.role === "pro_member") {
+    const [app] = await db.select({ status: paygProviderApplicationsTable.status })
+      .from(paygProviderApplicationsTable)
+      .where(eq(paygProviderApplicationsTable.userId, userId))
+      .limit(1);
+    if (!app || app.status !== "approved") {
+      res.status(403).json({ error: "Your Provider Verification must be approved before you can create services." });
+      return;
+    }
+  }
+
   const existing = await db.select({ id: paygServicesTable.id }).from(paygServicesTable).where(eq(paygServicesTable.providerId, userId));
   if (existing.length >= 4) {
     res.status(400).json({ error: "Maximum of 4 services allowed per provider." });
@@ -352,6 +379,155 @@ router.patch("/payg/provider/bookings/:id", requireAuth, async (req, res): Promi
     .returning();
   if (!updated) { res.status(404).json({ error: "Not found" }); return; }
   res.json({ booking: updated });
+});
+
+// ─── PROVIDER APPLICATION: get own ────────────────────────────────────────────
+
+router.get("/payg/provider/application", requireAuth, async (req, res): Promise<void> => {
+  const userId = (req as any).user.id as number;
+  const [app] = await db.select().from(paygProviderApplicationsTable)
+    .where(eq(paygProviderApplicationsTable.userId, userId)).limit(1);
+  res.json({ application: app ?? null });
+});
+
+// ─── PROVIDER APPLICATION: create/update draft ────────────────────────────────
+
+router.post("/payg/provider/application", requireAuth, async (req, res): Promise<void> => {
+  const userId = (req as any).user.id as number;
+  const user = (req as any).user;
+  if (user.role !== "pro_member" && user.role !== "admin" && user.role !== "super_admin") {
+    res.status(403).json({ error: "Only Pro Members may apply to offer Pay As You Go services." });
+    return;
+  }
+  const [existing] = await db.select({ id: paygProviderApplicationsTable.id })
+    .from(paygProviderApplicationsTable).where(eq(paygProviderApplicationsTable.userId, userId)).limit(1);
+  if (existing) {
+    res.status(409).json({ error: "Application already exists. Use PATCH to update." });
+    return;
+  }
+  const [app] = await db.insert(paygProviderApplicationsTable).values({ userId, status: "draft" }).returning();
+  res.status(201).json({ application: app });
+});
+
+router.patch("/payg/provider/application", requireAuth, async (req, res): Promise<void> => {
+  const userId = (req as any).user.id as number;
+  const [existing] = await db.select().from(paygProviderApplicationsTable)
+    .where(eq(paygProviderApplicationsTable.userId, userId)).limit(1);
+  if (!existing) { res.status(404).json({ error: "No application found" }); return; }
+  // Only allow editing in non-locked states
+  const editableStatuses = ["draft", "pending_submission", "additional_info_requested"];
+  if (!editableStatuses.includes(existing.status)) {
+    res.status(400).json({ error: `Cannot edit application in '${existing.status}' status.` });
+    return;
+  }
+  const {
+    businessName, businessAddress, city, state, zipCode, country,
+    businessPhone, businessEmail, website, businessDescription, businessType,
+    facebook, instagram, googleBusiness, otherListings,
+    ownerName, ownerContact,
+    businessLicense, certifications, licenses, insurance, taxDocs,
+    locationPhotos, certifiedAccurate,
+  } = req.body;
+  const updates: Partial<typeof paygProviderApplicationsTable.$inferInsert> = {};
+  if (businessName !== undefined) updates.businessName = businessName;
+  if (businessAddress !== undefined) updates.businessAddress = businessAddress;
+  if (city !== undefined) updates.city = city;
+  if (state !== undefined) updates.state = state;
+  if (zipCode !== undefined) updates.zipCode = zipCode;
+  if (country !== undefined) updates.country = country;
+  if (businessPhone !== undefined) updates.businessPhone = businessPhone;
+  if (businessEmail !== undefined) updates.businessEmail = businessEmail;
+  if (website !== undefined) updates.website = website;
+  if (businessDescription !== undefined) updates.businessDescription = businessDescription;
+  if (businessType !== undefined) updates.businessType = businessType;
+  if (facebook !== undefined) updates.facebook = facebook;
+  if (instagram !== undefined) updates.instagram = instagram;
+  if (googleBusiness !== undefined) updates.googleBusiness = googleBusiness;
+  if (otherListings !== undefined) updates.otherListings = otherListings;
+  if (ownerName !== undefined) updates.ownerName = ownerName;
+  if (ownerContact !== undefined) updates.ownerContact = ownerContact;
+  if (businessLicense !== undefined) updates.businessLicense = businessLicense;
+  if (Array.isArray(certifications)) updates.certifications = certifications;
+  if (Array.isArray(licenses)) updates.licenses = licenses;
+  if (insurance !== undefined) updates.insurance = insurance;
+  if (Array.isArray(taxDocs)) updates.taxDocs = taxDocs;
+  if (Array.isArray(locationPhotos)) updates.locationPhotos = locationPhotos;
+  if (certifiedAccurate !== undefined) updates.certifiedAccurate = !!certifiedAccurate;
+  const [updated] = await db.update(paygProviderApplicationsTable)
+    .set(updates)
+    .where(eq(paygProviderApplicationsTable.userId, userId))
+    .returning();
+  res.json({ application: updated });
+});
+
+// ─── PROVIDER APPLICATION: submit for review ──────────────────────────────────
+
+router.post("/payg/provider/application/submit", requireAuth, async (req, res): Promise<void> => {
+  const userId = (req as any).user.id as number;
+  const [existing] = await db.select().from(paygProviderApplicationsTable)
+    .where(eq(paygProviderApplicationsTable.userId, userId)).limit(1);
+  if (!existing) { res.status(404).json({ error: "No application found" }); return; }
+  const editableStatuses = ["draft", "pending_submission", "additional_info_requested"];
+  if (!editableStatuses.includes(existing.status)) {
+    res.status(400).json({ error: "Application cannot be submitted in its current status." });
+    return;
+  }
+  // Require minimum fields
+  if (!existing.businessName || !existing.businessAddress || !existing.city || !existing.state ||
+      !existing.businessPhone || !existing.ownerName || !existing.certifiedAccurate) {
+    res.status(400).json({ error: "Please complete all required fields before submitting." });
+    return;
+  }
+  const [updated] = await db.update(paygProviderApplicationsTable)
+    .set({ status: "pending_review", submittedAt: new Date() })
+    .where(eq(paygProviderApplicationsTable.userId, userId))
+    .returning();
+  res.json({ application: updated });
+});
+
+// ─── ADMIN: list all provider applications ────────────────────────────────────
+
+router.get("/admin/payg/providers", requireAdmin, async (req, res): Promise<void> => {
+  const apps = await db.select().from(paygProviderApplicationsTable)
+    .orderBy(desc(paygProviderApplicationsTable.createdAt));
+  if (!apps.length) { res.json({ applications: [] }); return; }
+
+  const userIds = apps.map(a => a.userId);
+  const users = await db.select({
+    id: usersTable.id,
+    firstName: usersTable.firstName,
+    lastName: usersTable.lastName,
+    email: usersTable.email,
+    role: usersTable.role,
+  }).from(usersTable).where(inArray(usersTable.id, userIds));
+
+  const userMap = new Map(users.map(u => [u.id, u]));
+  const result = apps.map(a => {
+    const u = userMap.get(a.userId);
+    return { ...a, userFirstName: u?.firstName, userLastName: u?.lastName, userEmail: u?.email, userRole: u?.role };
+  });
+  res.json({ applications: result });
+});
+
+// ─── ADMIN: update provider application status ────────────────────────────────
+
+router.patch("/admin/payg/providers/:id", requireAdmin, async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id as string);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const adminUserId = (req as any).user.id as number;
+  const { status, adminNotes } = req.body;
+  const validStatuses = ["draft", "pending_submission", "pending_review", "additional_info_requested", "approved", "rejected", "suspended"];
+  const updates: Partial<typeof paygProviderApplicationsTable.$inferInsert> = {};
+  if (status && validStatuses.includes(status)) {
+    updates.status = status;
+    updates.reviewedAt = new Date();
+    updates.reviewedById = adminUserId;
+  }
+  if (adminNotes !== undefined) updates.adminNotes = adminNotes;
+  const [updated] = await db.update(paygProviderApplicationsTable)
+    .set(updates).where(eq(paygProviderApplicationsTable.id, id)).returning();
+  if (!updated) { res.status(404).json({ error: "Not found" }); return; }
+  res.json({ application: updated });
 });
 
 // ─── ADMIN: all PAYG bookings ─────────────────────────────────────────────────

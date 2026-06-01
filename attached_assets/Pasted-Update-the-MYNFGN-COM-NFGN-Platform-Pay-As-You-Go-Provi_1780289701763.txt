@@ -1,0 +1,140 @@
+Update the MYNFGN.COM / NFGN Platform.
+Pay As You Go Provider Eligibility Requirements
+Add a mandatory provider verification and approval process before any Pay As You Go services can be published or offered on the NFGN platform.
+Provider Eligibility Rule
+ONLY approved Pro Member Business Accounts may offer Pay As You Go services.
+Examples include, but are not limited to:
+Hair Salons
+Barber Shops
+Nail Salons
+Day Spas
+Massage Therapy Businesses
+Wellness Centers
+Fitness Studios
+Dance Studios
+Tutoring Centers
+Photography Studios
+Event Venues
+Professional Service Providers
+Other approved service-based businesses
+Free Member accounts are NOT eligible to offer Pay As You Go services.
+If a Free Member attempts to create a Pay As You Go service, display a notification encouraging them to upgrade to a Pro Membership.
+Important Provider Alert
+At the very beginning of the Pay As You Go setup process, display the following alert:
+IMPORTANT NOTICE
+Before your Pay As You Go services can be listed on the NFGN platform, your business must successfully complete the NFGN Provider Verification and Approval Process.
+Only verified and approved Pro Member business accounts are permitted to offer Pay As You Go services.
+Your business must have a legitimate operating business location before services can be made available to the public.
+Business locations may include:
+Commercial locations
+Professional office locations
+Salon suites
+Shared workspaces
+Home-based businesses (where legally permitted)
+Mobile service businesses (subject to approval)
+Approval is required before any service listings can go live.
+Approval Time Notice
+Display this warning in a highlighted notification box:
+APPROVAL REQUIRED
+Provider approval can take up to fourteen (14) business days.
+Services will remain in "Pending Approval" status until reviewed and approved by NFGN.
+Providers may not accept bookings, payments, appointments, or reservations through the NFGN platform until approval has been granted.
+Required Verification Information
+During provider setup, require the following information:
+Business Information
+Business Name
+Business Address
+City
+State
+Zip Code
+Country
+Business Phone Number
+Business Email Address
+Website URL (if available)
+Social Media Links (optional)
+Business Description
+Ownership Information
+Owner Name
+Contact Information
+Pro Member Account Verification
+Business Documentation
+Allow providers to upload:
+Business License (if applicable)
+Professional Certifications
+Professional Licenses
+Insurance Documents (optional)
+Tax Documents (optional)
+Required Location Verification
+Require providers to upload photographs of their location.
+Display the following instructions:
+Location Verification Requirements
+Please provide clear photos of your business location.
+Examples include:
+Exterior entrance
+Reception area
+Waiting area
+Service area
+Treatment rooms
+Salon stations
+Barber stations
+Massage rooms
+Equipment areas
+Home-based business setup (if applicable)
+NFGN reserves the right to request additional verification photos if necessary.
+Website and Online Presence Verification
+If a provider has a website, require:
+Website URL
+Business Facebook Page
+Instagram Page
+Google Business Profile
+Other online business listings
+These fields should be optional but strongly encouraged.
+Fraud Prevention Notice
+Display the following legal notice prominently during setup:
+LEGAL NOTICE
+All information submitted to NFGN must be truthful, accurate, and complete.
+By submitting information through this platform, you certify that all information provided is true and correct to the best of your knowledge.
+Providing false, misleading, fraudulent, stolen, or fabricated information may result in:
+Immediate denial of approval
+Removal from the NFGN platform
+Suspension of account privileges
+Permanent account termination
+Loss of commissions and earnings
+Reporting to applicable authorities
+Civil legal action where permitted by law
+NFGN reserves the right to investigate any submitted information and verify business legitimacy before granting approval.
+Provider Status Workflow
+Create the following provider approval statuses:
+Draft
+Pending Submission
+Pending Review
+Additional Information Requested
+Approved
+Rejected
+Suspended
+Only providers with an "Approved" status may publish Pay As You Go services.
+Admin Approval Area
+Create a new admin section:
+Admin Dashboard → NFGN → Pay As You Go Provider Approvals
+Admin should be able to:
+Review provider applications
+View uploaded documents
+View uploaded location photos
+Verify Pro Membership status
+Approve providers
+Reject providers
+Request additional information
+Suspend providers
+Add internal notes
+Track approval dates
+Service Publishing Restrictions
+Prevent any Pay As You Go service from becoming publicly visible until:
+✓ Provider is a Pro Member
+✓ Provider verification is complete
+✓ Provider status is Approved
+✓ Required documents have been submitted
+✓ Required photos have been submitted
+✓ NFGN approval has been granted
+Only after all requirements have been met should the system activate the provider's Pay As You Go listings.
+Final Requirement
+Create a professional, mobile-responsive onboarding and verification process that protects customers, protects NFGN, and ensures that only legitimate businesses are allowed to offer Pay As You Go services on the platform.

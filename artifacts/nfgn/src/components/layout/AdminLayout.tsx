@@ -9,7 +9,7 @@ import {
   MessageSquare, Tag, BarChart, LogOut, Menu, X,
   ShieldCheck, Network, Star, Percent, Gift, Home, Clock, UserCircle,
   ChevronDown, ChevronRight, Briefcase, PackageCheck, Store, Megaphone,
-  FileDown, List, Trophy, Heart, Gem, DollarSign, HandHeart, UserPlus,
+  FileDown, List, Trophy, Heart, Gem, DollarSign, HandHeart, UserPlus, Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -41,10 +41,12 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   const isOrdersSection = location.startsWith("/admin/orders");
   const isCommissionsSection = location.startsWith("/admin/referral-commissions") || location.startsWith("/admin/bonuses") || location.startsWith("/admin/bpp") || location.startsWith("/admin/commissions") || location.startsWith("/admin/pro-booking-commissions");
   const isProductsSection = location.startsWith("/admin/products");
+  const isNFGNSection = location.startsWith("/admin/payg");
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     Orders: isOrdersSection,
     Commissions: isCommissionsSection,
     Products: isProductsSection,
+    NFGN: isNFGNSection,
   });
 
   const handleLogout = () => {
@@ -108,6 +110,15 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       ],
     },
     { name: "Payouts", href: "/admin/payouts", icon: Banknote },
+    {
+      name: "NFGN",
+      href: "/admin/payg/providers",
+      icon: Zap,
+      exact: true,
+      children: [
+        { name: "Pay As You Go Provider Approvals", href: "/admin/payg/providers", icon: ShieldCheck },
+      ],
+    },
     { name: "Bookings", href: "/admin/bookings", icon: Calendar },
     { name: "Book-A-Professional", href: "/admin/professionals", icon: Users },
     { name: "Messages", href: "/admin/messages", icon: MessageSquare },

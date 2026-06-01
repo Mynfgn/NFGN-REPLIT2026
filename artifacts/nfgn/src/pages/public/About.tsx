@@ -138,8 +138,14 @@ export function About() {
               </div>
               <p>
                 Joe Marcelino is a multi-faceted visionary whose life's work spans natural medicine, 
-                entrepreneurship, and financial innovation. As a <strong className="text-foreground">Naturopathic Practitioner</strong>, 
-                he brings decades of expertise in holistic health to every product and service NFGN offers.
+                entrepreneurship, and financial innovation. As a <strong className="text-foreground">Traditional Naturopathic Practitioner</strong>, 
+                he brings decades of experience and knowledge in holistic health and wellness to every product, service, and program offered through NFGN. Originally from the Caribbean, he was raised with a deep appreciation for the healing power of nature and understands the value of natural foods, herbs, roots, minerals, and vitamins in supporting overall health and well-being.
+              </p>
+              <p>
+                His passion is helping individuals improve their quality of life through education, lifestyle changes, proper nutrition, and natural wellness solutions. Drawing upon traditional naturopathic principles and years of practical experience, he is committed to empowering others to take a proactive approach to their health while embracing the benefits that nature has to offer.
+              </p>
+              <p>
+                Through NFGN, his mission is to provide high-quality products, wellness education, and supportive services designed to help individuals transform their mind, body, and spirit while pursuing healthier, more fulfilling lives.
               </p>
               <p>
                 As an <strong className="text-foreground">Author and Coach</strong>, Joe has guided countless individuals 

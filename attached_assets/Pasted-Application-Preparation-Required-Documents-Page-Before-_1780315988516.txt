@@ -1,0 +1,122 @@
+Application Preparation & Required Documents Page
+Before the applicant is allowed to begin the Pay As You Go Provider Application, create a mandatory introductory page titled:
+Before You Begin
+Display the following message:
+IMPORTANT: Please Read Before Starting Your Application
+To help speed up the review and approval process, please gather all required information and documents before beginning this application.
+The Pay As You Go Provider Application must be completed in its entirety before it can be submitted for review.
+Provider approval may take up to fourteen (14) business days.
+Incomplete applications will not be reviewed.
+Only approved Pro Member business accounts may offer Pay As You Go services on the NFGN platform.
+Required Information
+Please have the following information available:
+Business Information
+Business Name
+Business Address
+City
+State
+Zip Code
+Country
+Business Phone Number
+Business Email Address
+Website URL (if applicable)
+Social Media Links (if applicable)
+Owner Information
+Owner Name
+Contact Information
+Government-Issued Identification (if requested)
+Business Verification
+Please prepare copies of any applicable:
+Business License
+Occupational License
+Professional License
+Cosmetology License
+Barber License
+Massage Therapy License
+Esthetician License
+Nail Technician License
+Business Registration Documents
+Insurance Documentation
+Other Professional Certifications
+Location Verification Photos
+Please prepare clear photographs of:
+Business Entrance
+Reception Area
+Waiting Area
+Service Area
+Workstations
+Equipment
+Treatment Rooms
+Salon Chairs
+Barber Chairs
+Massage Rooms
+Home-Based Business Setup (if applicable)
+Online Presence Verification
+If available:
+Website Address
+Facebook Business Page
+Instagram Business Page
+Google Business Profile
+Other Professional Listings
+Required Acknowledgment
+Require applicants to check the following boxes before proceeding:
+☐ I understand that only approved Pro Member business accounts may offer Pay As You Go services.
+☐ I understand that approval may take up to fourteen (14) business days.
+☐ I understand that my application will not be reviewed until all required information is submitted.
+☐ I understand that false or misleading information may result in denial, suspension, account termination, and possible legal action.
+☐ I understand that my services cannot go live until approved by NFGN.
+Do not allow the applicant to continue until all acknowledgment boxes have been checked.
+Multi-Step Application Validation Rules
+Create a strict multi-step application workflow.
+Mandatory Completion Requirement
+Applicants may NOT move to the next page until the current page has been fully completed.
+Every required field must pass validation before the "Next" button becomes active.
+Examples:
+Missing required fields = cannot continue
+Missing uploads = cannot continue
+Missing signatures = cannot continue
+Missing acknowledgments = cannot continue
+Missing photos = cannot continue
+Display validation messages directly below each missing field.
+Progress Tracking
+Display progress at the top of every page.
+Example:
+Step 1 of 8
+Step 2 of 8
+Step 3 of 8
+Show completion percentage.
+Example:
+25% Complete
+50% Complete
+75% Complete
+100% Complete
+Save Progress Feature
+Allow applicants to:
+Save Progress
+Exit Application
+Return Later
+Incomplete applications should remain in Draft status.
+Admin Exception Rules
+IMPORTANT:
+Only Admin users shall have unrestricted navigation privileges.
+Admin users should be able to:
+Open any application page
+Skip pages
+Navigate forward
+Navigate backward
+Review incomplete applications
+Edit application records
+Request corrections
+Applicants, Providers, and Members may NOT bypass validation requirements.
+Only Admin accounts may view or navigate incomplete sections without completing them.
+Final Submission Lock
+Once the application has been submitted:
+Lock the application from editing.
+Change status to:
+Submitted
+Pending Review
+Applicants may only edit the application again if Admin changes the status to:
+Additional Information Requested
+At that point, unlock only the sections requiring correction.
+Final Requirement
+Create a professional, secure, step-by-step onboarding experience that ensures complete applications, improves approval quality, reduces fraud, and prevents applicants from skipping required sections while preserving full administrative review privileges for NFGN administrators.

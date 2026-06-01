@@ -1,0 +1,157 @@
+Update the MYNFGN.COM / NFGN platform registration system.
+Add the following NFGN SPORTS Coach & Team Registration Questions to both the Free Member Registration Form and the Pro Member Registration Form.
+New Registration Questions
+Add a section titled:
+NFGN SPORTS Coach / Team Registration
+Include the following fields:
+Are you an NFGN SPORTS Coach wanting to register your team?
+Yes / No
+Are you the Head Coach?
+Yes / No
+Are you the Primary Contact Person?
+Yes / No
+What is the name of your team?
+Text input field
+What type of team is this?
+Male
+Female
+Co-Ed
+Use checkboxes or a single-choice option. Prefer single-choice radio buttons unless multiple selections are necessary.
+What is the age group or grade?
+Add a dropdown selector allowing the coach to choose either:
+Age Group
+Grade Level
+If Age Group is selected, show age options such as:
+5U, 6U, 7U, 8U, 9U, 10U, 11U, 12U, 13U, 14U, 15U, 16U, 17U, 18U
+If Grade Level is selected, show grade options such as:
+Kindergarten
+1st Grade
+2nd Grade
+3rd Grade
+4th Grade
+5th Grade
+6th Grade
+7th Grade
+8th Grade
+9th Grade
+10th Grade
+11th Grade
+12th Grade
+What type of sports team is this?
+Create a dropdown menu with options including:
+Basketball
+Football
+Flag Football
+Volleyball
+Soccer
+Dance
+Baseball
+Softball
+Gymnastics
+Swimming
+Track & Field
+Cheerleading
+Wrestling
+Other
+If “Other” is selected, show a text input field where they can enter the sport or activity.
+Important Coach Notice
+Add this note clearly inside the registration form:
+Important Note To Coaches:
+Free accounts have limited features. Please consider upgrading immediately or as soon as possible to access the full benefits, tools, visibility, back-office features, team management tools, marketing benefits, and NFGN SPORTS opportunities available to Pro Members.
+Team Approval System
+Create an approval area in the admin dashboard under:
+Admin Dashboard → NFGN Sports → Team Approval
+This section should allow admin to review whether the team or organization is legitimate before approval.
+Admin should be able to view:
+Coach name
+Coach email
+Phone number
+Membership type: Free or Pro
+Team name
+Team gender/type: Male, Female, or Co-Ed
+Age group or grade level
+Sport type
+Head Coach status
+Primary Contact status
+Date submitted
+Approval status
+Approval status options:
+Pending Review
+Approved
+Rejected
+Needs More Information
+Admin should be able to add internal notes before approving or rejecting a team.
+Team Visibility After Approval
+Once approved, the team or organization name should become available inside any product, ticket, event registration, sponsorship, donation, or player registration dropdown where customers must select the name of their team.
+Example dropdown title:
+Select Your Team / Organization
+Only approved teams should appear in this dropdown.
+Pending, rejected, or incomplete teams should not be publicly selectable.
+Team ID Number
+Every approved NFGN SPORTS team or organization must automatically be issued a unique:
+Team ID Number
+Use the abbreviation:
+TIN
+The Team ID Number should be used to link players, purchases, sponsorships, ticket sales, genealogy placement, team databases, discounts, special entry, and product sales to the correct team or organization.
+Suggested Team ID format:
+NFGN-TIN-000001
+Each new approved team should receive the next available number.
+Player ID Number
+Every NFGN SPORTS player must be issued a unique:
+Player ID Number
+Suggested Player ID format:
+NFGN-PIN-000001
+The Player ID Number should support multiple uses, including:
+Ticket sales
+Sponsorships
+Linking players to their proper team
+Genealogy tree placement
+Database tracking
+Product sales
+Discounts
+Special entry
+Purchases
+Event registration
+Fundraising
+Team performance tracking
+Player-To-Team Linking
+Create logic so every player can be linked to the correct approved team using the Team ID Number.
+Player records should include:
+Player name
+Player ID Number
+Team ID Number
+Team name
+Age group or grade
+Sport type
+Parent or guardian contact information if applicable
+Registration date
+Active/inactive status
+Provider / Coach Dashboard
+In the coach or member dashboard, approved coaches should be able to see:
+Their approved team name
+Team ID Number
+Approval status
+Player list
+Player ID Numbers
+Linked ticket sales
+Linked sponsorships
+Linked product sales
+Linked event registrations
+Free members should see limited team features.
+Pro Members should see full team management features.
+Database Requirements
+Create or update database tables/collections for:
+Sports teams
+Team approval status
+Team ID Numbers
+Sports players
+Player ID Numbers
+Player-to-team linking
+Coach-to-team linking
+Product/ticket/team dropdown linking
+Sponsorship/team linking
+Sales/team/player tracking
+Final Requirement
+Make sure this feature is mobile-responsive, clean, easy to use, and consistent with the current MYNFGN.COM / NFGN platform design.
+Do not break the current Free Member or Pro Member registration process.
+Make sure the NFGN SPORTS Coach / Team Registration questions are optional unless the member selects “Yes” to being an NFGN SPORTS Coach wanting to register a team.

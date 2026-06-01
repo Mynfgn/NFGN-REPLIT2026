@@ -88,6 +88,7 @@ import { AdminProfilePage } from "@/pages/admin/AdminProfile";
 import { AdminNonprofitRequestsPage } from "@/pages/admin/NonprofitRequests";
 import { AdminProPackagesPage } from "@/pages/admin/ProPackages";
 import { AdminBannerMessagesPage } from "@/pages/admin/BannerMessages";
+import { AdminSportsTeamsPage } from "@/pages/admin/SportsTeams";
 
 // Stubs for pages still being built
 const Stub = ({ name }: { name: string }) => (
@@ -403,6 +404,11 @@ function Router() {
       <Route path="/admin/nonprofit-requests">
         <RequireAuth requireAdmin>
           <AdminLayout><AdminNonprofitRequestsPage /></AdminLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/admin/sports-teams">
+        <RequireAuth requireAdmin>
+          <AdminLayout><AdminSportsTeamsPage /></AdminLayout>
         </RequireAuth>
       </Route>
       <Route path="/admin/categories">

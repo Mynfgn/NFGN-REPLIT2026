@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, usersTable, walletsTable, genealogyNodesTable, notificationsTable, professionalsTable, ordersTable, orderItemsTable, productsTable, proPackagesTable, appSettingsTable, messagesTable, passwordResetTokensTable } from "@workspace/db";
+import { db, usersTable, walletsTable, genealogyNodesTable, notificationsTable, professionalsTable, ordersTable, orderItemsTable, productsTable, proPackagesTable, appSettingsTable, messagesTable, passwordResetTokensTable, sportsTeamsTable } from "@workspace/db";
 import { eq, count, sql, and, gt } from "drizzle-orm";
 import crypto from "crypto";
 import { hashPassword, verifyPassword, generateToken, generateReferralCode, requireAuth } from "../lib/auth";
@@ -116,6 +116,15 @@ router.post("/auth/register", async (req, res): Promise<void> => {
   const sportsSport: string | undefined = req.body.sportsSport ?? undefined;
   const sportsCoach: string | undefined = req.body.sportsCoach ?? undefined;
   const sportsTeam: string | undefined = req.body.sportsTeam ?? undefined;
+  const isCoach: boolean = req.body.isCoach === true || req.body.isCoach === "true";
+  const coachIsHeadCoach: boolean = req.body.coachIsHeadCoach === true || req.body.coachIsHeadCoach === "true";
+  const coachIsPrimaryContact: boolean = req.body.coachIsPrimaryContact === true || req.body.coachIsPrimaryContact === "true";
+  const coachTeamName: string | undefined = req.body.coachTeamName ?? undefined;
+  const coachTeamType: string | undefined = req.body.coachTeamType ?? undefined;
+  const coachAgeGroupType: string | undefined = req.body.coachAgeGroupType ?? undefined;
+  const coachAgeGroup: string | undefined = req.body.coachAgeGroup ?? undefined;
+  const coachSport: string | undefined = req.body.coachSport ?? undefined;
+  const coachSportOther: string | undefined = req.body.coachSportOther ?? undefined;
 
   const [existing] = await db.select().from(usersTable).where(sql`lower(${usersTable.email}) = lower(${email})`);
   if (existing) {
@@ -160,9 +169,37 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     sportsSport: isSportsPlayer && sportsSport ? sportsSport : undefined,
     sportsCoach: isSportsPlayer && sportsCoach ? sportsCoach : undefined,
     sportsTeam: isSportsPlayer && sportsTeam ? sportsTeam : undefined,
+    isCoach,
   }).returning();
 
   await db.insert(walletsTable).values({ userId: newUser.id });
+
+  // 🏅 Generate PIN for sports players
+  if (isSportsPlayer) {
+    try {
+      const [countRow] = await db.select({ count: sql<number>`count(*)` }).from(usersTable).where(sql`pin is not null`);
+      const nextNum = (Number(countRow?.count ?? 0) + 1).toString().padStart(6, "0");
+      await db.update(usersTable).set({ pin: `NFGN-PIN-${nextNum}` }).where(eq(usersTable.id, newUser.id));
+    } catch { /* Non-blocking */ }
+  }
+
+  // 🏆 Create team registration if coach
+  if (isCoach && coachTeamName && coachTeamType && coachAgeGroup && coachSport) {
+    try {
+      await db.insert(sportsTeamsTable).values({
+        coachUserId: newUser.id,
+        teamName: coachTeamName,
+        sport: coachSport,
+        sportOther: coachSport === "Other" ? (coachSportOther ?? null) : null,
+        teamType: coachTeamType,
+        ageGroupType: coachAgeGroupType ?? "age_group",
+        ageGroup: coachAgeGroup,
+        isHeadCoach: coachIsHeadCoach,
+        isPrimaryContact: coachIsPrimaryContact,
+        approvalStatus: "pending",
+      });
+    } catch { /* Non-blocking */ }
+  }
 
   // 📋 Auto-create professional record if registering as Book-A-Pro provider
   if (isBookAProProvider && bookAProCategory) {
@@ -271,6 +308,15 @@ router.post("/auth/register-pro", async (req, res): Promise<void> => {
   const sportsSport: string | undefined = req.body.sportsSport ?? undefined;
   const sportsCoach: string | undefined = req.body.sportsCoach ?? undefined;
   const sportsTeam: string | undefined = req.body.sportsTeam ?? undefined;
+  const isCoach: boolean = req.body.isCoach === true || req.body.isCoach === "true";
+  const coachIsHeadCoach: boolean = req.body.coachIsHeadCoach === true || req.body.coachIsHeadCoach === "true";
+  const coachIsPrimaryContact: boolean = req.body.coachIsPrimaryContact === true || req.body.coachIsPrimaryContact === "true";
+  const coachTeamName: string | undefined = req.body.coachTeamName ?? undefined;
+  const coachTeamType: string | undefined = req.body.coachTeamType ?? undefined;
+  const coachAgeGroupType: string | undefined = req.body.coachAgeGroupType ?? undefined;
+  const coachAgeGroup: string | undefined = req.body.coachAgeGroup ?? undefined;
+  const coachSport: string | undefined = req.body.coachSport ?? undefined;
+  const coachSportOther: string | undefined = req.body.coachSportOther ?? undefined;
 
   const [existing] = await db.select().from(usersTable).where(sql`lower(${usersTable.email}) = lower(${email})`);
   if (existing) {
@@ -349,9 +395,37 @@ router.post("/auth/register-pro", async (req, res): Promise<void> => {
     sportsSport: isSportsPlayer && sportsSport ? sportsSport : undefined,
     sportsCoach: isSportsPlayer && sportsCoach ? sportsCoach : undefined,
     sportsTeam: isSportsPlayer && sportsTeam ? sportsTeam : undefined,
+    isCoach,
   }).returning();
 
   await db.insert(walletsTable).values({ userId: newUser.id });
+
+  // 🏅 Generate PIN for sports players
+  if (isSportsPlayer) {
+    try {
+      const [countRow] = await db.select({ count: sql<number>`count(*)` }).from(usersTable).where(sql`pin is not null`);
+      const nextNum = (Number(countRow?.count ?? 0) + 1).toString().padStart(6, "0");
+      await db.update(usersTable).set({ pin: `NFGN-PIN-${nextNum}` }).where(eq(usersTable.id, newUser.id));
+    } catch { /* Non-blocking */ }
+  }
+
+  // 🏆 Create team registration if coach
+  if (isCoach && coachTeamName && coachTeamType && coachAgeGroup && coachSport) {
+    try {
+      await db.insert(sportsTeamsTable).values({
+        coachUserId: newUser.id,
+        teamName: coachTeamName,
+        sport: coachSport,
+        sportOther: coachSport === "Other" ? (coachSportOther ?? null) : null,
+        teamType: coachTeamType,
+        ageGroupType: coachAgeGroupType ?? "age_group",
+        ageGroup: coachAgeGroup,
+        isHeadCoach: coachIsHeadCoach,
+        isPrimaryContact: coachIsPrimaryContact,
+        approvalStatus: "pending",
+      });
+    } catch { /* Non-blocking */ }
+  }
 
   if (isBookAProProvider && bookAProCategory) {
     try {

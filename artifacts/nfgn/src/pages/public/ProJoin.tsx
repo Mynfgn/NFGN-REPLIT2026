@@ -19,7 +19,7 @@ import {
   CheckCircle, Star, Loader2, UserCircle2, Briefcase,
   CreditCard, Truck, Smartphone, DollarSign, Package,
   ShoppingCart, ArrowRight, LogIn, UserPlus, HelpCircle,
-  Trophy, Upload,
+  Trophy, Upload, Users,
 } from "lucide-react";
 import { BAP_CATEGORIES } from "@/lib/bapCategories";
 
@@ -96,6 +96,16 @@ export function ProJoin() {
   const [bapSubServices, setBapSubServices] = useState<string[]>([]);
   const [bapCustomService, setBapCustomService] = useState("");
   const [bapBio, setBapBio] = useState("");
+
+  const [isCoach, setIsCoach] = useState(false);
+  const [coachIsHeadCoach, setCoachIsHeadCoach] = useState(true);
+  const [coachIsPrimaryContact, setCoachIsPrimaryContact] = useState(true);
+  const [coachTeamName, setCoachTeamName] = useState("");
+  const [coachTeamType, setCoachTeamType] = useState("male");
+  const [coachAgeGroupType, setCoachAgeGroupType] = useState("age_group");
+  const [coachAgeGroup, setCoachAgeGroup] = useState("");
+  const [coachSport, setCoachSport] = useState("");
+  const [coachSportOther, setCoachSportOther] = useState("");
 
   const [isSportsPlayer, setIsSportsPlayer] = useState(false);
   const [sportsDateOfBirth, setSportsDateOfBirth] = useState("");
@@ -372,6 +382,17 @@ export function ProJoin() {
         if (sportsSport) body.sportsSport = sportsSport;
         if (sportsCoach.trim()) body.sportsCoach = sportsCoach.trim();
         if (sportsTeam.trim()) body.sportsTeam = sportsTeam.trim();
+      }
+      if (isCoach && coachTeamName.trim() && coachTeamType && coachAgeGroup && coachSport) {
+        body.isCoach = true;
+        body.coachIsHeadCoach = coachIsHeadCoach;
+        body.coachIsPrimaryContact = coachIsPrimaryContact;
+        body.coachTeamName = coachTeamName.trim();
+        body.coachTeamType = coachTeamType;
+        body.coachAgeGroupType = coachAgeGroupType;
+        body.coachAgeGroup = coachAgeGroup;
+        body.coachSport = coachSport;
+        if (coachSportOther.trim()) body.coachSportOther = coachSportOther.trim();
       }
 
       const res = await fetch("/api/auth/register-pro", {
@@ -865,6 +886,111 @@ export function ProJoin() {
                   <FormMessage />
                 </FormItem>
               )} />
+            </section>
+
+            {/* ── NFGN SPORTS Coach / Team Registration ─────────────── */}
+            <section className="space-y-4">
+              <div className="rounded-xl border-2 border-dashed overflow-hidden" style={{ borderColor: isCoach ? "#C9A84C" : "rgba(201,168,76,0.4)" }}>
+                <div className="flex items-center justify-between px-4 py-3" style={{ background: isCoach ? "rgba(201,168,76,0.06)" : "rgba(201,168,76,0.03)" }}>
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: isCoach ? "#C9A84C" : "rgba(201,168,76,0.15)" }}>
+                      <Users className="h-4 w-4" style={{ color: isCoach ? "#000" : "#C9A84C" }} />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">NFGN SPORTS Coach / Team Registration</p>
+                      <p className="text-xs text-muted-foreground">Are you an NFGN SPORTS Coach wanting to register your team?</p>
+                    </div>
+                  </div>
+                  <Switch checked={isCoach} onCheckedChange={v => { setIsCoach(v); if (!v) { setCoachIsHeadCoach(true); setCoachIsPrimaryContact(true); setCoachTeamName(""); setCoachTeamType("male"); setCoachAgeGroupType("age_group"); setCoachAgeGroup(""); setCoachSport(""); setCoachSportOther(""); } }} />
+                </div>
+
+                {isCoach && (
+                  <div className="px-4 pb-4 pt-3 space-y-4 bg-white dark:bg-background">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Are you the Head Coach?</label>
+                        <div className="flex gap-2">
+                          {[{ val: true, label: "Yes" }, { val: false, label: "No" }].map(opt => (
+                            <button key={String(opt.val)} type="button" onClick={() => setCoachIsHeadCoach(opt.val)}
+                              className="flex-1 py-2 rounded-lg text-sm font-bold transition-all"
+                              style={{ background: coachIsHeadCoach === opt.val ? "#C9A84C" : "rgba(255,255,255,0.05)", color: coachIsHeadCoach === opt.val ? "#000" : "#aaa", border: `1.5px solid ${coachIsHeadCoach === opt.val ? "#C9A84C" : "rgba(255,255,255,0.12)"}` }}
+                            >{opt.label}</button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Are you the Primary Contact?</label>
+                        <div className="flex gap-2">
+                          {[{ val: true, label: "Yes" }, { val: false, label: "No" }].map(opt => (
+                            <button key={String(opt.val)} type="button" onClick={() => setCoachIsPrimaryContact(opt.val)}
+                              className="flex-1 py-2 rounded-lg text-sm font-bold transition-all"
+                              style={{ background: coachIsPrimaryContact === opt.val ? "#C9A84C" : "rgba(255,255,255,0.05)", color: coachIsPrimaryContact === opt.val ? "#000" : "#aaa", border: `1.5px solid ${coachIsPrimaryContact === opt.val ? "#C9A84C" : "rgba(255,255,255,0.12)"}` }}
+                            >{opt.label}</button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium">Team Name <span className="text-destructive">*</span></label>
+                      <Input value={coachTeamName} onChange={e => setCoachTeamName(e.target.value)} placeholder="e.g. Eagles Basketball" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Team Type <span className="text-destructive">*</span></label>
+                      <div className="flex gap-2">
+                        {[{ val: "male", label: "Male" }, { val: "female", label: "Female" }, { val: "co_ed", label: "Co-Ed" }].map(opt => (
+                          <button key={opt.val} type="button" onClick={() => setCoachTeamType(opt.val)}
+                            className="flex-1 py-2 rounded-lg text-sm font-bold transition-all"
+                            style={{ background: coachTeamType === opt.val ? "#C9A84C" : "rgba(255,255,255,0.05)", color: coachTeamType === opt.val ? "#000" : "#aaa", border: `1.5px solid ${coachTeamType === opt.val ? "#C9A84C" : "rgba(255,255,255,0.12)"}` }}
+                          >{opt.label}</button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Age Group or Grade Level <span className="text-destructive">*</span></label>
+                      <div className="flex gap-2 mb-2">
+                        {[{ val: "age_group", label: "Age Group" }, { val: "grade_level", label: "Grade Level" }].map(opt => (
+                          <button key={opt.val} type="button" onClick={() => { setCoachAgeGroupType(opt.val); setCoachAgeGroup(""); }}
+                            className="flex-1 py-2 rounded-lg text-sm font-bold transition-all"
+                            style={{ background: coachAgeGroupType === opt.val ? "#C9A84C" : "rgba(255,255,255,0.05)", color: coachAgeGroupType === opt.val ? "#000" : "#aaa", border: `1.5px solid ${coachAgeGroupType === opt.val ? "#C9A84C" : "rgba(255,255,255,0.12)"}` }}
+                          >{opt.label}</button>
+                        ))}
+                      </div>
+                      <select value={coachAgeGroup} onChange={e => setCoachAgeGroup(e.target.value)}
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                        <option value="">— Select {coachAgeGroupType === "age_group" ? "age group" : "grade level"} —</option>
+                        {coachAgeGroupType === "age_group"
+                          ? ["5U","6U","7U","8U","9U","10U","11U","12U","13U","14U","15U","16U","17U","18U"].map(a => <option key={a} value={a}>{a}</option>)
+                          : ["Kindergarten","1st Grade","2nd Grade","3rd Grade","4th Grade","5th Grade","6th Grade","7th Grade","8th Grade","9th Grade","10th Grade","11th Grade","12th Grade"].map(g => <option key={g} value={g}>{g}</option>)
+                        }
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium">Sport <span className="text-destructive">*</span></label>
+                      <select value={coachSport} onChange={e => setCoachSport(e.target.value)}
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                        <option value="">— Select sport —</option>
+                        {["Basketball","Football","Flag Football","Volleyball","Soccer","Dance","Baseball","Softball","Gymnastics","Swimming","Track & Field","Cheerleading","Wrestling","Other"].map(s => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                      {coachSport === "Other" && (
+                        <Input value={coachSportOther} onChange={e => setCoachSportOther(e.target.value)} placeholder="Enter sport or activity" className="mt-2" />
+                      )}
+                    </div>
+
+                    <div className="rounded-lg p-3" style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.22)" }}>
+                      <p className="text-xs font-bold mb-1" style={{ color: "#C9A84C" }}>⚠️ Important Note To Coaches:</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Free accounts have limited features. Please consider upgrading immediately or as soon as possible to access the full benefits, tools, visibility, back-office features, team management tools, marketing benefits, and NFGN SPORTS opportunities available to <strong>Pro Members</strong>.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </section>
 
             {/* Order Summary + Submit */}

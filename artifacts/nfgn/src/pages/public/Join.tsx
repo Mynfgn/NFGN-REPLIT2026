@@ -67,6 +67,17 @@ export function Join() {
   const [uploadingSportsCert, setUploadingSportsCert] = useState(false);
   const sportsCertInputRef = useRef<HTMLInputElement>(null);
 
+  // Coach / Team registration state
+  const [isCoach, setIsCoach] = useState(false);
+  const [coachIsHeadCoach, setCoachIsHeadCoach] = useState(true);
+  const [coachIsPrimaryContact, setCoachIsPrimaryContact] = useState(true);
+  const [coachTeamName, setCoachTeamName] = useState("");
+  const [coachTeamType, setCoachTeamType] = useState("male");
+  const [coachAgeGroupType, setCoachAgeGroupType] = useState("age_group");
+  const [coachAgeGroup, setCoachAgeGroup] = useState("");
+  const [coachSport, setCoachSport] = useState("");
+  const [coachSportOther, setCoachSportOther] = useState("");
+
   async function lookupSponsor(code: string) {
     if (!code.trim()) { setSponsorInfo(null); return; }
     setSponsorLoading(true);
@@ -125,6 +136,17 @@ export function Join() {
       if (sportsSport) extraFields.sportsSport = sportsSport;
       if (sportsCoach.trim()) extraFields.sportsCoach = sportsCoach.trim();
       if (sportsTeam.trim()) extraFields.sportsTeam = sportsTeam.trim();
+    }
+    if (isCoach && coachTeamName.trim() && coachTeamType && coachAgeGroup && coachSport) {
+      extraFields.isCoach = true;
+      extraFields.coachIsHeadCoach = coachIsHeadCoach;
+      extraFields.coachIsPrimaryContact = coachIsPrimaryContact;
+      extraFields.coachTeamName = coachTeamName.trim();
+      extraFields.coachTeamType = coachTeamType;
+      extraFields.coachAgeGroupType = coachAgeGroupType;
+      extraFields.coachAgeGroup = coachAgeGroup;
+      extraFields.coachSport = coachSport;
+      if (coachSportOther.trim()) extraFields.coachSportOther = coachSportOther.trim();
     }
     registerMutation.mutate({ data: { ...data, ...extraFields } }, {
       onSuccess: async (response) => {
@@ -593,6 +615,114 @@ export function Join() {
                               </span>
                             )}
                           </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* ── NFGN SPORTS Coach / Team Registration ─────────────── */}
+                <div
+                  style={{
+                    border: `1.5px solid ${isCoach ? GOLD : "rgba(201,168,76,0.25)"}`,
+                    borderRadius: 12,
+                    overflow: "hidden",
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: isCoach ? "rgba(201,168,76,0.06)" : "transparent" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 8, background: isCoach ? GOLD : "rgba(201,168,76,0.12)", display: "flex", alignItems: "center", justifyContent: "center", transition: "background 0.2s", flexShrink: 0 }}>
+                        <Users size={18} color={isCoach ? "#000" : GOLD} />
+                      </div>
+                      <div>
+                        <p style={{ color: "var(--foreground)", fontSize: 14, fontWeight: 700, margin: 0 }}>NFGN SPORTS Coach / Team Registration</p>
+                        <p style={{ color: "#888", fontSize: 12, margin: 0 }}>Register your team and apply for NFGN SPORTS recognition</p>
+                      </div>
+                    </div>
+                    <Switch checked={isCoach} onCheckedChange={v => { setIsCoach(v); if (!v) { setCoachIsHeadCoach(true); setCoachIsPrimaryContact(true); setCoachTeamName(""); setCoachTeamType("male"); setCoachAgeGroupType("age_group"); setCoachAgeGroup(""); setCoachSport(""); setCoachSportOther(""); } }} />
+                  </div>
+
+                  {isCoach && (
+                    <div style={{ padding: "12px 16px 16px", borderTop: "1px dashed rgba(201,168,76,0.3)", background: "var(--background)" }}>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Are you the Head Coach?</label>
+                            <div className="flex gap-2">
+                              {[{ val: true, label: "Yes" }, { val: false, label: "No" }].map(opt => (
+                                <button key={String(opt.val)} type="button" onClick={() => setCoachIsHeadCoach(opt.val)}
+                                  style={{ flex: 1, padding: "8px 0", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", background: coachIsHeadCoach === opt.val ? GOLD : "rgba(255,255,255,0.05)", color: coachIsHeadCoach === opt.val ? "#000" : "#aaa", border: `1.5px solid ${coachIsHeadCoach === opt.val ? GOLD : "rgba(255,255,255,0.12)"}`, transition: "all 0.18s" }}
+                                >{opt.label}</button>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Are you the Primary Contact?</label>
+                            <div className="flex gap-2">
+                              {[{ val: true, label: "Yes" }, { val: false, label: "No" }].map(opt => (
+                                <button key={String(opt.val)} type="button" onClick={() => setCoachIsPrimaryContact(opt.val)}
+                                  style={{ flex: 1, padding: "8px 0", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", background: coachIsPrimaryContact === opt.val ? GOLD : "rgba(255,255,255,0.05)", color: coachIsPrimaryContact === opt.val ? "#000" : "#aaa", border: `1.5px solid ${coachIsPrimaryContact === opt.val ? GOLD : "rgba(255,255,255,0.12)"}`, transition: "all 0.18s" }}
+                                >{opt.label}</button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-sm font-medium">Team Name <span className="text-destructive">*</span></label>
+                          <Input value={coachTeamName} onChange={e => setCoachTeamName(e.target.value)} placeholder="e.g. Eagles Basketball" />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Team Type <span className="text-destructive">*</span></label>
+                          <div className="flex gap-2">
+                            {[{ val: "male", label: "Male" }, { val: "female", label: "Female" }, { val: "co_ed", label: "Co-Ed" }].map(opt => (
+                              <button key={opt.val} type="button" onClick={() => setCoachTeamType(opt.val)}
+                                style={{ flex: 1, padding: "8px 0", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", background: coachTeamType === opt.val ? GOLD : "rgba(255,255,255,0.05)", color: coachTeamType === opt.val ? "#000" : "#aaa", border: `1.5px solid ${coachTeamType === opt.val ? GOLD : "rgba(255,255,255,0.12)"}`, transition: "all 0.18s" }}
+                              >{opt.label}</button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Age Group or Grade Level <span className="text-destructive">*</span></label>
+                          <div className="flex gap-2 mb-2">
+                            {[{ val: "age_group", label: "Age Group" }, { val: "grade_level", label: "Grade Level" }].map(opt => (
+                              <button key={opt.val} type="button" onClick={() => { setCoachAgeGroupType(opt.val); setCoachAgeGroup(""); }}
+                                style={{ flex: 1, padding: "8px 0", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", background: coachAgeGroupType === opt.val ? GOLD : "rgba(255,255,255,0.05)", color: coachAgeGroupType === opt.val ? "#000" : "#aaa", border: `1.5px solid ${coachAgeGroupType === opt.val ? GOLD : "rgba(255,255,255,0.12)"}`, transition: "all 0.18s" }}
+                              >{opt.label}</button>
+                            ))}
+                          </div>
+                          <select value={coachAgeGroup} onChange={e => setCoachAgeGroup(e.target.value)}
+                            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                            <option value="">— Select {coachAgeGroupType === "age_group" ? "age group" : "grade level"} —</option>
+                            {coachAgeGroupType === "age_group"
+                              ? ["5U","6U","7U","8U","9U","10U","11U","12U","13U","14U","15U","16U","17U","18U"].map(a => <option key={a} value={a}>{a}</option>)
+                              : ["Kindergarten","1st Grade","2nd Grade","3rd Grade","4th Grade","5th Grade","6th Grade","7th Grade","8th Grade","9th Grade","10th Grade","11th Grade","12th Grade"].map(g => <option key={g} value={g}>{g}</option>)
+                            }
+                          </select>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-sm font-medium">Sport <span className="text-destructive">*</span></label>
+                          <select value={coachSport} onChange={e => setCoachSport(e.target.value)}
+                            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                            <option value="">— Select sport —</option>
+                            {["Basketball","Football","Flag Football","Volleyball","Soccer","Dance","Baseball","Softball","Gymnastics","Swimming","Track & Field","Cheerleading","Wrestling","Other"].map(s => (
+                              <option key={s} value={s}>{s}</option>
+                            ))}
+                          </select>
+                          {coachSport === "Other" && (
+                            <Input value={coachSportOther} onChange={e => setCoachSportOther(e.target.value)} placeholder="Enter sport or activity" className="mt-2" />
+                          )}
+                        </div>
+
+                        <div style={{ padding: "12px 14px", background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.22)", borderRadius: 8 }}>
+                          <p style={{ color: GOLD, fontSize: 12, fontWeight: 700, margin: "0 0 4px" }}>⚠️ Important Note To Coaches:</p>
+                          <p style={{ color: "#888", fontSize: 12, margin: 0, lineHeight: 1.6 }}>
+                            Free accounts have limited features. Please consider upgrading immediately or as soon as possible to access the full benefits, tools, visibility, back-office features, team management tools, marketing benefits, and NFGN SPORTS opportunities available to <strong style={{ color: "#ccc" }}>Pro Members</strong>.
+                          </p>
                         </div>
                       </div>
                     </div>

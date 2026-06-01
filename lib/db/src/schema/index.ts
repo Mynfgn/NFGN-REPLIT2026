@@ -17,3 +17,4 @@ export * from "./reviews";
 export * from "./nonprofit_requests";
 export * from "./password_reset_tokens";
 export * from "./subscriptions";
+export * from "./sports_teams";

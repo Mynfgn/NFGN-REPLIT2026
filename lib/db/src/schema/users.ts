@@ -68,6 +68,10 @@ export const usersTable = pgTable("users", {
   sportsSport: text("sports_sport"),
   sportsCoach: text("sports_coach"),
   sportsTeam: text("sports_team"),
+  pin: text("pin"),
+
+  // NFGN Sports coach registration
+  isCoach: boolean("is_coach").notNull().default(false),
 });
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({ id: true, createdAt: true, updatedAt: true });

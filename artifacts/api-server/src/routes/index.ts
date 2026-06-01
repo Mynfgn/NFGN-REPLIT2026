@@ -28,6 +28,7 @@ import bannersRouter from "./banners";
 import nonprofitRequestsRouter from "./nonprofit-requests";
 import subscriptionsRouter from "./subscriptions";
 import paygRouter from "./payg";
+import sportsTeamsRouter from "./sports-teams";
 
 const router: IRouter = Router();
 
@@ -60,5 +61,6 @@ router.use(bannersRouter);
 router.use(nonprofitRequestsRouter);
 router.use(subscriptionsRouter);
 router.use(paygRouter);
+router.use(sportsTeamsRouter);
 
 export default router;

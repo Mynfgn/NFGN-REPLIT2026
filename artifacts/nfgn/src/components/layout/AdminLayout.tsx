@@ -78,6 +78,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
         { name: "NFGN Sports", href: "/admin/products/sports", icon: Trophy },
         { name: "Non-Profit Organizations", href: "/admin/products/nonprofit", icon: Heart },
         { name: "Nonprofit Requests", href: "/admin/nonprofit-requests", icon: HandHeart },
+        { name: "Sports Team Approval", href: "/admin/sports-teams", icon: Trophy },
         { name: "Special Events Registry", href: "/admin/products/wedding", icon: Gem },
         { name: "Donations & Gifts", href: "/admin/products/donations", icon: DollarSign },
       ],

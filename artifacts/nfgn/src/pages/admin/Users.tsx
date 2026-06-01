@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { useListUsers, useUpgradeToPro } from "@workspace/api-client-react";
+import { useListUsers, useUpgradeToPro, useGetMe } from "@workspace/api-client-react";
 import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Search, Loader2, Star, Users, SlidersHorizontal, Link2, AlertCircle, CheckCircle2, KeyRound, Eye, EyeOff, ShieldCheck, Mail } from "lucide-react";
+import { Search, Loader2, Star, SlidersHorizontal, Link2, AlertCircle, CheckCircle2, KeyRound, Eye, EyeOff, ShieldCheck, Mail, UserX, UserCheck, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { roleLabel } from "@/lib/labels";
 import { customFetch } from "@/lib/custom-fetch";
@@ -42,7 +42,16 @@ export function UsersPage() {
   const [newEmail, setNewEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [savingEmail, setSavingEmail] = useState(false);
+
+  // Deactivate / Reactivate / Delete
+  const [deactivateUser, setDeactivateUser] = useState<any | null>(null);
+  const [deleteUser, setDeleteUser] = useState<any | null>(null);
+  const [deleteConfirmEmail, setDeleteConfirmEmail] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+
   const { toast } = useToast();
+  const { data: me } = useGetMe();
+  const isSuperAdmin = me?.role === "super_admin";
 
   const { data, isLoading, refetch } = useListUsers({ page, limit: 20, search: search || undefined, role: role !== "all" ? role : undefined });
   const upgradePro = useUpgradeToPro();
@@ -124,6 +133,54 @@ export function UsersPage() {
     onError: (e: any) => {
       setRefCodeError(e.message);
     },
+  });
+
+  const deactivateMutation = useMutation({
+    mutationFn: async (userId: number) => {
+      const res = await customFetch(`/api/users/${userId}/deactivate`, { method: "POST" });
+      if (!res.ok) { const b = await res.json().catch(() => ({})); throw new Error(b.error ?? "Failed"); }
+      return res.json();
+    },
+    onSuccess: (_, userId) => {
+      toast({ title: "Account deactivated", description: "The member can no longer log in." });
+      setDeactivateUser(null);
+      refetch();
+    },
+    onError: (e: any) => toast({ variant: "destructive", title: "Error", description: e.message }),
+  });
+
+  const reactivateMutation = useMutation({
+    mutationFn: async (userId: number) => {
+      const res = await customFetch(`/api/users/${userId}/reactivate`, { method: "POST" });
+      if (!res.ok) { const b = await res.json().catch(() => ({})); throw new Error(b.error ?? "Failed"); }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Account reactivated", description: "The member can now log in again." });
+      refetch();
+    },
+    onError: (e: any) => toast({ variant: "destructive", title: "Error", description: e.message }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async ({ userId, confirmEmail }: { userId: number; confirmEmail: string }) => {
+      const res = await customFetch(`/api/users/${userId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirmEmail }),
+      });
+      if (res.status === 204) return;
+      const b = await res.json().catch(() => ({}));
+      throw new Error(b.error ?? "Failed to delete account");
+    },
+    onSuccess: () => {
+      toast({ title: "Account permanently deleted" });
+      setDeleteUser(null);
+      setDeleteConfirmEmail("");
+      setDeleteError("");
+      refetch();
+    },
+    onError: (e: any) => setDeleteError(e.message),
   });
 
   const users = data?.users ?? [];
@@ -212,8 +269,10 @@ export function UsersPage() {
                       )}
                     </div>
                     <div className="text-right text-sm flex-shrink-0 flex flex-col items-end gap-1">
-                      <Badge variant={user.status === "active" ? "default" : "destructive"}>{user.status}</Badge>
-                      {!user.isProMember && (user as any).proMemberStatus !== "pending_approval" && ["customer", "affiliate"].includes(user.role) && (
+                      <Badge variant={user.status === "active" ? "default" : "destructive"}>
+                        {user.status === "inactive" ? "Deactivated" : user.status}
+                      </Badge>
+                      {!user.isProMember && (user as any).proMemberStatus !== "pending_approval" && ["customer", "affiliate"].includes(user.role) && user.status === "active" && (
                         <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => handleUpgrade(user.id, `${user.firstName} ${user.lastName}`)}>
                           <Star className="h-3 w-3 mr-1" /> Upgrade Pro
                         </Button>
@@ -230,6 +289,25 @@ export function UsersPage() {
                       <Button variant="outline" size="sm" className="text-xs h-7 gap-1 border-red-200 text-red-700 hover:bg-red-50" onClick={() => { setPwdUser(user); setNewPwd(""); setConfirmPwd(""); setPwdError(""); }}>
                         <KeyRound className="h-3 w-3" /> Change Password
                       </Button>
+                      {user.status === "active" ? (
+                        <Button variant="outline" size="sm" className="text-xs h-7 gap-1 border-orange-200 text-orange-700 hover:bg-orange-50"
+                          onClick={() => setDeactivateUser(user)}>
+                          <UserX className="h-3 w-3" /> Deactivate
+                        </Button>
+                      ) : (
+                        <Button variant="outline" size="sm" className="text-xs h-7 gap-1 border-green-200 text-green-700 hover:bg-green-50"
+                          onClick={() => reactivateMutation.mutate(user.id)}
+                          disabled={reactivateMutation.isPending}>
+                          {reactivateMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <UserCheck className="h-3 w-3" />}
+                          Reactivate
+                        </Button>
+                      )}
+                      {isSuperAdmin && user.id !== me?.id && (
+                        <Button variant="outline" size="sm" className="text-xs h-7 gap-1 border-red-400 text-red-700 bg-red-50 hover:bg-red-100"
+                          onClick={() => { setDeleteUser(user); setDeleteConfirmEmail(""); setDeleteError(""); }}>
+                          <Trash2 className="h-3 w-3" /> Delete Account
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -562,6 +640,105 @@ export function UsersPage() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Deactivate Confirmation Dialog */}
+      <Dialog open={!!deactivateUser} onOpenChange={() => setDeactivateUser(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserX className="h-5 w-5 text-orange-600" />
+              Deactivate Account
+            </DialogTitle>
+          </DialogHeader>
+          {deactivateUser && (
+            <div className="space-y-4">
+              <div className="bg-muted/40 rounded-lg p-3 text-sm">
+                <p className="font-bold">{deactivateUser.firstName} {deactivateUser.lastName}</p>
+                <p className="text-muted-foreground text-xs">{deactivateUser.email}</p>
+                <p className="text-xs mt-1">Role: <span className="font-semibold">{roleLabel(deactivateUser.role)}</span></p>
+              </div>
+              <div className="rounded-lg bg-orange-50 border border-orange-200 p-3 text-xs text-orange-900 space-y-1">
+                <p className="font-semibold text-orange-800">What deactivation does:</p>
+                <ul className="list-disc list-inside space-y-0.5 leading-relaxed">
+                  <li>Immediately blocks the member from logging in.</li>
+                  <li>All historical data is preserved — orders, commissions, wallet, downline.</li>
+                  <li>The member will see "Account is inactive" if they try to log in.</li>
+                  <li>You can reactivate the account at any time.</li>
+                </ul>
+              </div>
+              <p className="text-sm text-muted-foreground">Are you sure you want to deactivate <strong>{deactivateUser.firstName} {deactivateUser.lastName}</strong>'s account?</p>
+            </div>
+          )}
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDeactivateUser(null)}>Cancel</Button>
+            <Button
+              className="gap-1.5 bg-orange-600 hover:bg-orange-700 text-white"
+              onClick={() => deactivateMutation.mutate(deactivateUser.id)}
+              disabled={deactivateMutation.isPending}
+            >
+              {deactivateMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserX className="h-4 w-4" />}
+              Deactivate Account
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Hard Delete Dialog — Super Admin only */}
+      <Dialog open={!!deleteUser} onOpenChange={() => { setDeleteUser(null); setDeleteConfirmEmail(""); setDeleteError(""); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-700">
+              <Trash2 className="h-5 w-5" />
+              Permanently Delete Account
+            </DialogTitle>
+          </DialogHeader>
+          {deleteUser && (
+            <div className="space-y-4">
+              <div className="bg-muted/40 rounded-lg p-3 text-sm">
+                <p className="font-bold">{deleteUser.firstName} {deleteUser.lastName}</p>
+                <p className="text-muted-foreground text-xs font-mono">{deleteUser.email}</p>
+              </div>
+              <div className="rounded-lg bg-red-50 border border-red-300 p-3 text-xs text-red-900 space-y-1">
+                <p className="font-bold text-red-800">⚠ This action is irreversible.</p>
+                <ul className="list-disc list-inside space-y-0.5 leading-relaxed">
+                  <li>The account and login credentials will be permanently removed.</li>
+                  <li>Financial records (orders, commissions, wallet) may become orphaned.</li>
+                  <li>Downline members will lose their upline reference.</li>
+                  <li>This cannot be undone. Use deactivation instead whenever possible.</li>
+                </ul>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold text-red-700">
+                  Type the member's email address to confirm:
+                </Label>
+                <Input
+                  value={deleteConfirmEmail}
+                  onChange={e => { setDeleteConfirmEmail(e.target.value); setDeleteError(""); }}
+                  placeholder={deleteUser.email}
+                  className={deleteError ? "border-red-400 focus-visible:ring-red-400" : ""}
+                />
+                {deleteError && (
+                  <p className="text-xs text-red-600 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3 flex-shrink-0" /> {deleteError}
+                  </p>
+                )}
+                <p className="text-[10px] text-muted-foreground">Must match exactly: <span className="font-mono font-semibold">{deleteUser.email}</span></p>
+              </div>
+            </div>
+          )}
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setDeleteUser(null); setDeleteConfirmEmail(""); setDeleteError(""); }}>Cancel</Button>
+            <Button
+              className="gap-1.5 bg-red-700 hover:bg-red-800 text-white"
+              onClick={() => deleteMutation.mutate({ userId: deleteUser.id, confirmEmail: deleteConfirmEmail })}
+              disabled={deleteMutation.isPending || !deleteConfirmEmail.trim()}
+            >
+              {deleteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              Permanently Delete
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

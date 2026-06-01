@@ -62,6 +62,17 @@ export async function requireAdmin(req: Request, res: Response, next: NextFuncti
   });
 }
 
+export async function requireSuperAdmin(req: Request, res: Response, next: NextFunction): Promise<void> {
+  await requireAuth(req, res, async () => {
+    const user = (req as Request & { user: { role: string } }).user;
+    if (user.role !== "super_admin") {
+      res.status(403).json({ error: "Super admin access required" });
+      return;
+    }
+    next();
+  });
+}
+
 export function generateReferralCode(firstName: string, lastName: string): string {
   const base = (firstName.charAt(0) + lastName).toLowerCase().replace(/[^a-z0-9]/g, "");
   const suffix = Math.random().toString(36).substring(2, 7).toUpperCase();

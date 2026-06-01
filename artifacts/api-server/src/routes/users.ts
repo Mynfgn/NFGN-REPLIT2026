@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db, usersTable, walletsTable, commissionsTable, ordersTable, genealogyNodesTable, professionalsTable } from "@workspace/db";
 import { eq, like, and, or, sql, count } from "drizzle-orm";
-import { requireAuth, requireAdmin } from "../lib/auth";
+import { requireAuth, requireAdmin, requireSuperAdmin } from "../lib/auth";
 
 const router: IRouter = Router();
 
@@ -179,9 +179,54 @@ router.patch("/users/:id", requireAuth, async (req, res): Promise<void> => {
   res.json(formatUser(updated, sponsorName));
 });
 
-router.delete("/users/:id", requireAdmin, async (req, res): Promise<void> => {
+// ── Deactivate (soft-delete) ──────────────────────────────────────────────────
+router.post("/users/:id/deactivate", requireAdmin, async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const caller = (req as any).user as typeof usersTable.$inferSelect;
+
+  if (caller.id === id) {
+    res.status(400).json({ error: "You cannot deactivate your own account." }); return;
+  }
+
+  const [target] = await db.select().from(usersTable).where(eq(usersTable.id, id));
+  if (!target) { res.status(404).json({ error: "User not found" }); return; }
+
+  // Only super_admin can deactivate other admins
+  if (["super_admin", "admin", "store_admin"].includes(target.role) && caller.role !== "super_admin") {
+    res.status(403).json({ error: "Only a Super Admin can deactivate an admin account." }); return;
+  }
+
+  const [updated] = await db.update(usersTable).set({ status: "inactive" }).where(eq(usersTable.id, id)).returning();
+  res.json({ id: updated.id, status: updated.status });
+});
+
+// ── Reactivate ────────────────────────────────────────────────────────────────
+router.post("/users/:id/reactivate", requireAdmin, async (req, res): Promise<void> => {
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const [updated] = await db.update(usersTable).set({ status: "active" }).where(eq(usersTable.id, id)).returning();
+  if (!updated) { res.status(404).json({ error: "User not found" }); return; }
+  res.json({ id: updated.id, status: updated.status });
+});
+
+// ── Hard delete — super_admin only, requires email confirmation ───────────────
+router.delete("/users/:id", requireSuperAdmin, async (req, res): Promise<void> => {
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const caller = (req as any).user as typeof usersTable.$inferSelect;
+  if (caller.id === id) { res.status(400).json({ error: "You cannot delete your own account." }); return; }
+
+  const [target] = await db.select().from(usersTable).where(eq(usersTable.id, id));
+  if (!target) { res.status(404).json({ error: "User not found" }); return; }
+
+  const { confirmEmail } = req.body as { confirmEmail?: string };
+  if (!confirmEmail || confirmEmail.toLowerCase() !== target.email.toLowerCase()) {
+    res.status(400).json({ error: "Email confirmation does not match. Enter the member's exact email address to confirm deletion." }); return;
+  }
 
   await db.delete(usersTable).where(eq(usersTable.id, id));
   res.sendStatus(204);

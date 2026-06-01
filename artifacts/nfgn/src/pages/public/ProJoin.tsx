@@ -102,6 +102,9 @@ export function ProJoin() {
   const [sportsSchool, setSportsSchool] = useState("");
   const [sportsGrade, setSportsGrade] = useState("");
   const [sportsBirthCertUrl, setSportsBirthCertUrl] = useState("");
+  const [sportsSport, setSportsSport] = useState("");
+  const [sportsCoach, setSportsCoach] = useState("");
+  const [sportsTeam, setSportsTeam] = useState("");
   const [uploadingSportsCert, setUploadingSportsCert] = useState(false);
   const sportsCertInputRef = useRef<HTMLInputElement>(null);
 
@@ -366,6 +369,9 @@ export function ProJoin() {
         if (sportsSchool.trim()) body.sportsSchool = sportsSchool.trim();
         if (sportsGrade) body.sportsGrade = sportsGrade;
         if (sportsBirthCertUrl) body.sportsBirthCertificateUrl = sportsBirthCertUrl;
+        if (sportsSport) body.sportsSport = sportsSport;
+        if (sportsCoach.trim()) body.sportsCoach = sportsCoach.trim();
+        if (sportsTeam.trim()) body.sportsTeam = sportsTeam.trim();
       }
 
       const res = await fetch("/api/auth/register-pro", {
@@ -594,7 +600,7 @@ export function ProJoin() {
                     </div>
                     <Switch
                       checked={isSportsPlayer}
-                      onCheckedChange={v => { setIsSportsPlayer(v); if (!v) { setSportsDateOfBirth(""); setSportsSchool(""); setSportsGrade(""); setSportsBirthCertUrl(""); } }}
+                      onCheckedChange={v => { setIsSportsPlayer(v); if (!v) { setSportsDateOfBirth(""); setSportsSchool(""); setSportsGrade(""); setSportsBirthCertUrl(""); setSportsSport(""); setSportsCoach(""); setSportsTeam(""); } }}
                     />
                   </div>
                   {isSportsPlayer && (
@@ -642,6 +648,37 @@ export function ProJoin() {
                           </optgroup>
                         </select>
                         <p className="text-xs text-muted-foreground">Select your current grade in school or year in college.</p>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-sm font-medium">Sport / Activity</label>
+                        <select
+                          value={sportsSport}
+                          onChange={e => setSportsSport(e.target.value)}
+                          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        >
+                          <option value="">— Select your sport —</option>
+                          {["Basketball","Football (American)","Soccer","Baseball","Softball","Volleyball","Tennis","Swimming / Diving","Track & Field","Cross Country","Wrestling","Boxing / MMA","Gymnastics","Cheerleading / Dance","Golf","Hockey","Lacrosse","Bowling","Martial Arts","Other"].map(s => (
+                            <option key={s} value={s}>{s}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-sm font-medium">Who's your coach? <span className="text-muted-foreground font-normal">(optional)</span></label>
+                          <Input
+                            value={sportsCoach}
+                            onChange={e => setSportsCoach(e.target.value)}
+                            placeholder="Coach's name"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-sm font-medium">Team, Club, or Organization <span className="text-muted-foreground font-normal">(optional)</span></label>
+                          <Input
+                            value={sportsTeam}
+                            onChange={e => setSportsTeam(e.target.value)}
+                            placeholder="e.g. Eagles Basketball Club"
+                          />
+                        </div>
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-sm font-medium flex items-center gap-1.5">

@@ -65,6 +65,9 @@ export const usersTable = pgTable("users", {
   sportsSchool: text("sports_school"),
   sportsGrade: text("sports_grade"),
   sportsBirthCertificateUrl: text("sports_birth_certificate_url"),
+  sportsSport: text("sports_sport"),
+  sportsCoach: text("sports_coach"),
+  sportsTeam: text("sports_team"),
 });
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({ id: true, createdAt: true, updatedAt: true });

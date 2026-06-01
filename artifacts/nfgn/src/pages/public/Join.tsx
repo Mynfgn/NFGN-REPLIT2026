@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -11,7 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Star, Users, TrendingUp, Loader2, UserCircle2, Church, HandHeart } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { CheckCircle, Star, Users, TrendingUp, Loader2, UserCircle2, Church, HandHeart, Trophy, Upload } from "lucide-react";
 
 const GOLD = "#C9A84C";
 
@@ -53,6 +54,18 @@ export function Join() {
   const [npWebsite, setNpWebsite] = useState("");
   const [npDescription, setNpDescription] = useState("");
   const [npSubmitting, setNpSubmitting] = useState(false);
+
+  // Sports player state
+  const [isSportsPlayer, setIsSportsPlayer] = useState(false);
+  const [sportsDateOfBirth, setSportsDateOfBirth] = useState("");
+  const [sportsSchool, setSportsSchool] = useState("");
+  const [sportsGrade, setSportsGrade] = useState("");
+  const [sportsBirthCertUrl, setSportsBirthCertUrl] = useState("");
+  const [sportsSport, setSportsSport] = useState("");
+  const [sportsCoach, setSportsCoach] = useState("");
+  const [sportsTeam, setSportsTeam] = useState("");
+  const [uploadingSportsCert, setUploadingSportsCert] = useState(false);
+  const sportsCertInputRef = useRef<HTMLInputElement>(null);
 
   async function lookupSponsor(code: string) {
     if (!code.trim()) { setSponsorInfo(null); return; }
@@ -102,7 +115,18 @@ export function Join() {
   }
 
   function onSubmit(data: RegisterFormValues) {
-    registerMutation.mutate({ data: { ...data, role: "customer" } }, {
+    const extraFields: Record<string, any> = { role: "customer" };
+    if (isSportsPlayer) {
+      extraFields.isSportsPlayer = true;
+      if (sportsDateOfBirth) extraFields.sportsDateOfBirth = sportsDateOfBirth;
+      if (sportsSchool.trim()) extraFields.sportsSchool = sportsSchool.trim();
+      if (sportsGrade) extraFields.sportsGrade = sportsGrade;
+      if (sportsBirthCertUrl) extraFields.sportsBirthCertificateUrl = sportsBirthCertUrl;
+      if (sportsSport) extraFields.sportsSport = sportsSport;
+      if (sportsCoach.trim()) extraFields.sportsCoach = sportsCoach.trim();
+      if (sportsTeam.trim()) extraFields.sportsTeam = sportsTeam.trim();
+    }
+    registerMutation.mutate({ data: { ...data, ...extraFields } }, {
       onSuccess: async (response) => {
         login(response.token);
 
@@ -388,6 +412,188 @@ export function Join() {
                         <p style={{ color: "#888", fontSize: 12, margin: 0, lineHeight: 1.6 }}>
                           After registration, your application will be reviewed by the NFGN team. Once approved, your organization will be listed on the <strong style={{ color: "#ccc" }}>Gifts & Donations</strong> page and a QR code will be generated for member donations. <strong style={{ color: "#ccc" }}>No Pro Membership is required</strong> — this listing is completely free.
                         </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* ── NFGN Sports Player Toggle ─────────────────── */}
+                <div
+                  style={{
+                    border: `1.5px solid ${isSportsPlayer ? GOLD : "rgba(201,168,76,0.25)"}`,
+                    borderRadius: 12,
+                    overflow: "hidden",
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      padding: "12px 16px",
+                      background: isSportsPlayer ? "rgba(201,168,76,0.06)" : "transparent",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{
+                        width: 36, height: 36, borderRadius: 8,
+                        background: isSportsPlayer ? GOLD : "rgba(201,168,76,0.12)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        transition: "background 0.2s", flexShrink: 0,
+                      }}>
+                        <Trophy size={18} color={isSportsPlayer ? "#000" : GOLD} />
+                      </div>
+                      <div>
+                        <p style={{ color: "var(--foreground)", fontSize: 14, fontWeight: 700, margin: 0 }}>
+                          Are you an NFGN SPORTS Player?
+                        </p>
+                        <p style={{ color: "#888", fontSize: 12, margin: 0 }}>
+                          Register your player profile for tournaments and eligibility verification
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={isSportsPlayer}
+                      onCheckedChange={v => {
+                        setIsSportsPlayer(v);
+                        if (!v) {
+                          setSportsDateOfBirth(""); setSportsSchool(""); setSportsGrade("");
+                          setSportsBirthCertUrl(""); setSportsSport(""); setSportsCoach(""); setSportsTeam("");
+                        }
+                      }}
+                    />
+                  </div>
+
+                  {isSportsPlayer && (
+                    <div style={{ padding: "12px 16px 16px", borderTop: `1px dashed rgba(201,168,76,0.3)`, background: "var(--background)" }}>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <label className="text-sm font-medium">Date of Birth</label>
+                            <Input
+                              type="date"
+                              value={sportsDateOfBirth}
+                              onChange={e => setSportsDateOfBirth(e.target.value)}
+                              max={new Date().toISOString().split("T")[0]}
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-sm font-medium">School or College <span className="text-muted-foreground font-normal">(if any)</span></label>
+                            <Input
+                              value={sportsSchool}
+                              onChange={e => setSportsSchool(e.target.value)}
+                              placeholder="e.g. Jefferson High School"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-sm font-medium">Grade or Year</label>
+                          <select
+                            value={sportsGrade}
+                            onChange={e => setSportsGrade(e.target.value)}
+                            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                          >
+                            <option value="">— Select grade or year —</option>
+                            <optgroup label="K–12">
+                              {["Kindergarten","1st Grade","2nd Grade","3rd Grade","4th Grade","5th Grade","6th Grade","7th Grade","8th Grade","9th Grade (Freshman)","10th Grade (Sophomore)","11th Grade (Junior)","12th Grade (Senior)"].map(g => (
+                                <option key={g} value={g}>{g}</option>
+                              ))}
+                            </optgroup>
+                            <optgroup label="College / University">
+                              {["College Freshman (Year 1)","College Sophomore (Year 2)","College Junior (Year 3)","College Senior (Year 4)","Graduate Student","Post-Graduate"].map(g => (
+                                <option key={g} value={g}>{g}</option>
+                              ))}
+                            </optgroup>
+                            <optgroup label="Other">
+                              <option value="Not Currently Enrolled">Not Currently Enrolled</option>
+                              <option value="Adult / Community League">Adult / Community League</option>
+                            </optgroup>
+                          </select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-sm font-medium">Sport / Activity</label>
+                          <select
+                            value={sportsSport}
+                            onChange={e => setSportsSport(e.target.value)}
+                            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                          >
+                            <option value="">— Select your sport —</option>
+                            {["Basketball","Football (American)","Soccer","Baseball","Softball","Volleyball","Tennis","Swimming / Diving","Track & Field","Cross Country","Wrestling","Boxing / MMA","Gymnastics","Cheerleading / Dance","Golf","Hockey","Lacrosse","Bowling","Martial Arts","Other"].map(s => (
+                              <option key={s} value={s}>{s}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <label className="text-sm font-medium">Who's your coach? <span className="text-muted-foreground font-normal">(optional)</span></label>
+                            <Input
+                              value={sportsCoach}
+                              onChange={e => setSportsCoach(e.target.value)}
+                              placeholder="Coach's name"
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-sm font-medium">Team, Club, or Organization <span className="text-muted-foreground font-normal">(optional)</span></label>
+                            <Input
+                              value={sportsTeam}
+                              onChange={e => setSportsTeam(e.target.value)}
+                              placeholder="e.g. Eagles Basketball Club"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-sm font-medium flex items-center gap-1.5">
+                            <Upload className="h-3.5 w-3.5 text-primary" />
+                            Birth Certificate / Proof of Eligibility <span className="text-muted-foreground font-normal">(optional)</span>
+                          </label>
+                          <p className="text-xs text-muted-foreground">Upload a birth certificate, photo ID, or other document required for tournament eligibility. Accepted: JPG, PNG, PDF.</p>
+                          <input
+                            ref={sportsCertInputRef}
+                            type="file"
+                            accept="image/*,.pdf"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              setUploadingSportsCert(true);
+                              try {
+                                const formData = new FormData();
+                                formData.append("file", file);
+                                const res = await fetch("/api/storage/upload", { method: "POST", body: formData });
+                                if (res.ok) {
+                                  const data = await res.json();
+                                  setSportsBirthCertUrl(data.objectPath ?? "");
+                                  toast({ title: "Document uploaded!", description: "Your eligibility document has been saved." });
+                                } else {
+                                  toast({ variant: "destructive", title: "Upload failed", description: "Please try again." });
+                                }
+                              } catch {
+                                toast({ variant: "destructive", title: "Upload failed", description: "Network error." });
+                              } finally {
+                                setUploadingSportsCert(false);
+                                if (sportsCertInputRef.current) sportsCertInputRef.current.value = "";
+                              }
+                            }}
+                          />
+                          <div className="flex items-center gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => sportsCertInputRef.current?.click()}
+                              disabled={uploadingSportsCert}
+                              className="gap-2"
+                            >
+                              {uploadingSportsCert
+                                ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Uploading…</>
+                                : <><Upload className="h-3.5 w-3.5" /> Upload Document</>}
+                            </Button>
+                            {sportsBirthCertUrl && (
+                              <span className="text-xs text-green-600 font-medium flex items-center gap-1">
+                                <CheckCircle className="h-3.5 w-3.5" /> Document uploaded
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}

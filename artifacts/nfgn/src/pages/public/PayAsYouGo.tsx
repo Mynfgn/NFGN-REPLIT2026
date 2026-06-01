@@ -183,6 +183,64 @@ export function PayAsYouGoPage() {
         </div>
       </section>
 
+      {/* ── Providers ─────────────────────────────────────────────────── */}
+      <section style={{ padding: "56px 0" }}>
+        <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 24px" }}>
+          <h2 style={{ fontFamily: "'Georgia',serif", fontSize: 28, fontWeight: 800, marginBottom: 8 }}>Available Providers</h2>
+          <p style={{ color: "#666", marginBottom: 36, fontSize: 14 }}>Pro Members offering Pay As You Go professional space rental.</p>
+
+          {loadingProviders ? (
+            <div style={{ textAlign: "center", padding: 48 }}><Loader2 className="animate-spin mx-auto" style={{ color: GOLD }} size={32} /></div>
+          ) : providers.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "56px 24px", background: "#fafafa", borderRadius: 16, border: "1px solid #eee" }}>
+              <Zap size={36} style={{ color: "#ddd", margin: "0 auto 16px" }} />
+              <h3 style={{ fontWeight: 700, fontSize: 18, marginBottom: 8 }}>No Providers Yet</h3>
+              <p style={{ color: "#888", fontSize: 14, marginBottom: 20 }}>Pro Members can set up Pay As You Go services from their dashboard.</p>
+              {!isAuthenticated && <Link href="/join"><Button style={{ background: GOLD, color: DARK, fontWeight: 700 }}>Join as a Pro Member</Button></Link>}
+            </div>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
+              {providers.map(p => (
+                <div key={p.id} style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e5e5", overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.05)", transition: "box-shadow 0.2s" }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.boxShadow = "0 6px 24px rgba(0,0,0,0.10)"}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 12px rgba(0,0,0,0.05)"}
+                >
+                  <div style={{ background: DARK, padding: "24px 20px 20px", textAlign: "center" }}>
+                    {p.profileImage
+                      ? <img src={p.profileImage} alt={p.fullName} style={{ width: 60, height: 60, borderRadius: "50%", objectFit: "cover", border: `3px solid ${GOLD}`, margin: "0 auto 12px" }} />
+                      : <div style={{ width: 60, height: 60, borderRadius: "50%", background: `${GOLD}22`, border: `3px solid ${GOLD}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px", fontSize: 22, fontWeight: 800, color: GOLD }}>{p.fullName.charAt(0)}</div>
+                    }
+                    <div style={{ fontWeight: 800, fontSize: 16, color: "#fff" }}>{p.fullName}</div>
+                    {p.bookAProCategory && <div style={{ fontSize: 12, color: GOLD, marginTop: 4, fontWeight: 600 }}>{p.bookAProCategory}</div>}
+                    {p.location && <div style={{ fontSize: 12, color: "#888", marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}><MapPin size={11} />{p.location}</div>}
+                  </div>
+                  <div style={{ padding: "16px 20px 20px" }}>
+                    {p.bookAProBio && <p style={{ fontSize: 13, color: "#555", lineHeight: 1.6, marginBottom: 14 }}>{p.bookAProBio}</p>}
+                    <Button
+                      onClick={() => openBooking(p)}
+                      style={{ width: "100%", background: GOLD, color: DARK, fontWeight: 700 }}
+                    >
+                      Book This Provider <ChevronRight size={14} />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Pro member CTA */}
+          <div style={{ marginTop: 48, background: DARK, borderRadius: 16, padding: "32px 28px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: 18, color: "#fff", marginBottom: 6 }}>Are You a Pro Member?</div>
+              <div style={{ fontSize: 14, color: "#aaa" }}>Offer Pay As You Go services and earn CV from every booking.</div>
+            </div>
+            <Link href="/dashboard/payg-provider">
+              <Button variant="outline" style={{ borderColor: GOLD, color: GOLD, fontWeight: 700 }}>Set Up My Services</Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ── What Is PAYG ─────────────────────────────────────────────── */}
       <section style={{ padding: "64px 0", background: "#fff", borderBottom: "1px solid #eee" }}>
         <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px" }}>
@@ -434,64 +492,6 @@ export function PayAsYouGoPage() {
               <Button variant="outline" style={{ borderColor: "rgba(255,255,255,0.3)", color: "#fff", padding: "12px 28px" }}>
                 Browse Book-A-Pro <ChevronRight size={14} />
               </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Providers ─────────────────────────────────────────────────── */}
-      <section style={{ padding: "56px 0" }}>
-        <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 24px" }}>
-          <h2 style={{ fontFamily: "'Georgia',serif", fontSize: 28, fontWeight: 800, marginBottom: 8 }}>Available Providers</h2>
-          <p style={{ color: "#666", marginBottom: 36, fontSize: 14 }}>Pro Members offering Pay As You Go professional space rental.</p>
-
-          {loadingProviders ? (
-            <div style={{ textAlign: "center", padding: 48 }}><Loader2 className="animate-spin mx-auto" style={{ color: GOLD }} size={32} /></div>
-          ) : providers.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "56px 24px", background: "#fafafa", borderRadius: 16, border: "1px solid #eee" }}>
-              <Zap size={36} style={{ color: "#ddd", margin: "0 auto 16px" }} />
-              <h3 style={{ fontWeight: 700, fontSize: 18, marginBottom: 8 }}>No Providers Yet</h3>
-              <p style={{ color: "#888", fontSize: 14, marginBottom: 20 }}>Pro Members can set up Pay As You Go services from their dashboard.</p>
-              {!isAuthenticated && <Link href="/join"><Button style={{ background: GOLD, color: DARK, fontWeight: 700 }}>Join as a Pro Member</Button></Link>}
-            </div>
-          ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
-              {providers.map(p => (
-                <div key={p.id} style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e5e5", overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.05)", transition: "box-shadow 0.2s" }}
-                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.boxShadow = "0 6px 24px rgba(0,0,0,0.10)"}
-                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 12px rgba(0,0,0,0.05)"}
-                >
-                  <div style={{ background: DARK, padding: "24px 20px 20px", textAlign: "center" }}>
-                    {p.profileImage
-                      ? <img src={p.profileImage} alt={p.fullName} style={{ width: 60, height: 60, borderRadius: "50%", objectFit: "cover", border: `3px solid ${GOLD}`, margin: "0 auto 12px" }} />
-                      : <div style={{ width: 60, height: 60, borderRadius: "50%", background: `${GOLD}22`, border: `3px solid ${GOLD}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px", fontSize: 22, fontWeight: 800, color: GOLD }}>{p.fullName.charAt(0)}</div>
-                    }
-                    <div style={{ fontWeight: 800, fontSize: 16, color: "#fff" }}>{p.fullName}</div>
-                    {p.bookAProCategory && <div style={{ fontSize: 12, color: GOLD, marginTop: 4, fontWeight: 600 }}>{p.bookAProCategory}</div>}
-                    {p.location && <div style={{ fontSize: 12, color: "#888", marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}><MapPin size={11} />{p.location}</div>}
-                  </div>
-                  <div style={{ padding: "16px 20px 20px" }}>
-                    {p.bookAProBio && <p style={{ fontSize: 13, color: "#555", lineHeight: 1.6, marginBottom: 14 }}>{p.bookAProBio}</p>}
-                    <Button
-                      onClick={() => openBooking(p)}
-                      style={{ width: "100%", background: GOLD, color: DARK, fontWeight: 700 }}
-                    >
-                      Book This Provider <ChevronRight size={14} />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Pro member CTA */}
-          <div style={{ marginTop: 48, background: DARK, borderRadius: 16, padding: "32px 28px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: 18, color: "#fff", marginBottom: 6 }}>Are You a Pro Member?</div>
-              <div style={{ fontSize: 14, color: "#aaa" }}>Offer Pay As You Go services and earn CV from every booking.</div>
-            </div>
-            <Link href="/dashboard/payg-provider">
-              <Button variant="outline" style={{ borderColor: GOLD, color: GOLD, fontWeight: 700 }}>Set Up My Services</Button>
             </Link>
           </div>
         </div>

@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, MapPin, Clock, DollarSign, Zap, AlertCircle, CheckCircle2, Star, ChevronRight } from "lucide-react";
+import { Loader2, MapPin, Clock, DollarSign, Zap, AlertCircle, CheckCircle2, Star, ChevronRight, TrendingUp, Users, Scissors, Wrench, Music, Camera, BookOpen, Heart, Dumbbell, Briefcase } from "lucide-react";
 import { Link } from "wouter";
 
 const GOLD = "#C9A84C";
@@ -179,6 +179,262 @@ export function PayAsYouGoPage() {
                 <div style={{ fontSize: 13, color: "#666", lineHeight: 1.5 }}>{step.desc}</div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── What Is PAYG ─────────────────────────────────────────────── */}
+      <section style={{ padding: "64px 0", background: "#fff", borderBottom: "1px solid #eee" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
+            <div>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: `${GOLD}15`, border: `1px solid ${GOLD}40`, borderRadius: 99, padding: "5px 14px", fontSize: 11, fontWeight: 700, color: GOLD, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 16 }}>
+                <Zap size={11} /> About The Program
+              </div>
+              <h2 style={{ fontFamily: "'Georgia',serif", fontSize: 30, fontWeight: 900, lineHeight: 1.2, marginBottom: 16 }}>
+                What Is NFGN's Pay As You Go Program?
+              </h2>
+              <p style={{ fontSize: 15, color: "#444", lineHeight: 1.8, marginBottom: 14 }}>
+                NFGN's Pay As You Go (PAYG) Program is a unique booking and referral platform that operates within the NFGN Book-A-Professional system. PAYG was designed to <strong>connect customers with qualified service providers</strong> while creating additional income opportunities for professionals, business owners, and referring members.
+              </p>
+              <p style={{ fontSize: 15, color: "#444", lineHeight: 1.8 }}>
+                Unlike traditional service directories, PAYG combines <strong>professional service bookings, product sales, referral commissions, and business development</strong> into one system. The goal is simple: help professionals increase their income, help customers find trusted service providers, and create additional earning opportunities throughout the NFGN network.
+              </p>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {[
+                { icon: Users, title: "Connect Customers & Providers", desc: "PAYG bridges the gap between customers seeking trusted professionals and qualified service providers ready to serve them." },
+                { icon: DollarSign, title: "Referral Commissions Built In", desc: "Every booking creates commission opportunities for referring members throughout the NFGN network." },
+                { icon: TrendingUp, title: "Business Development Platform", desc: "More than a booking tool — PAYG is a complete business-building ecosystem for professionals and entrepreneurs." },
+              ].map(({ icon: Icon, title, desc }) => (
+                <div key={title} style={{ display: "flex", gap: 14, padding: "16px 18px", background: "#fafafa", borderRadius: 12, border: "1px solid #eee" }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: `${GOLD}15`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Icon size={18} style={{ color: GOLD }} />
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{title}</div>
+                    <div style={{ fontSize: 13, color: "#666", lineHeight: 1.6 }}>{desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── How It Started ────────────────────────────────────────────── */}
+      <section style={{ padding: "64px 0", background: DARK, color: "#fff" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px" }}>
+          <div style={{ textAlign: "center", marginBottom: 48 }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: `${GOLD}18`, border: `1px solid ${GOLD}40`, borderRadius: 99, padding: "5px 14px", fontSize: 11, fontWeight: 700, color: GOLD, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 16 }}>
+              The Origin Story
+            </div>
+            <h2 style={{ fontFamily: "'Georgia',serif", fontSize: 30, fontWeight: 900, color: "#fff", marginBottom: 16 }}>How It Started</h2>
+            <p style={{ fontSize: 15, color: "#aaa", maxWidth: 640, margin: "0 auto", lineHeight: 1.8 }}>
+              The development of the Pay As You Go Program began in <strong style={{ color: GOLD }}>November 2014</strong> by <strong style={{ color: "#fff" }}>Joe Marcelino</strong>, Founder of New Face Global Network (NFGN).
+            </p>
+          </div>
+
+          <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "32px 36px", marginBottom: 32 }}>
+            <p style={{ fontSize: 15, color: "#ccc", lineHeight: 1.9, marginBottom: 16 }}>
+              At the time, NFGN was marketing and selling hair extensions and beauty-related products. Joe noticed that many cosmetologists and hairstylists were purchasing hair bundles and products through the company, but there was <strong style={{ color: "#fff" }}>no organized system to connect those professionals with customers</strong> who needed installation and beauty services.
+            </p>
+            <div style={{ background: `${GOLD}12`, border: `1px solid ${GOLD}30`, borderRadius: 12, padding: "20px 24px", margin: "20px 0" }}>
+              <p style={{ fontSize: 16, fontStyle: "italic", color: GOLD, margin: 0, lineHeight: 1.7, fontFamily: "'Georgia',serif" }}>
+                "If a customer purchased hair extensions from NFGN, why not refer that customer to an NFGN-affiliated cosmetologist who could install the hair?"
+              </p>
+              <p style={{ fontSize: 12, color: "#aaa", margin: "10px 0 0", fontWeight: 600 }}>— Joe Marcelino, Founder & CEO</p>
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 14 }}>
+            {[
+              { label: "The customer", value: "Receives professional service" },
+              { label: "The cosmetologist", value: "Gains a new client" },
+              { label: "The cosmetologist", value: "Sells more products" },
+              { label: "The referring member", value: "Earns referral commissions" },
+              { label: "NFGN", value: "Increases product movement & satisfaction" },
+            ].map(({ label, value }) => (
+              <div key={value} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: "14px 16px", border: "1px solid rgba(255,255,255,0.07)" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: GOLD, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>{label}</div>
+                <div style={{ fontSize: 13, color: "#ddd", lineHeight: 1.5 }}>{value}</div>
+              </div>
+            ))}
+          </div>
+          <p style={{ fontSize: 14, color: "#888", textAlign: "center", marginTop: 24 }}>What began as a simple referral concept quickly evolved into a much larger business model.</p>
+        </div>
+      </section>
+
+      {/* ── The Evolution ─────────────────────────────────────────────── */}
+      <section style={{ padding: "64px 0", background: "#fafafa", borderBottom: "1px solid #eee" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px" }}>
+          <div style={{ textAlign: "center", marginBottom: 44 }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: `${GOLD}15`, border: `1px solid ${GOLD}40`, borderRadius: 99, padding: "5px 14px", fontSize: 11, fontWeight: 700, color: GOLD, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 16 }}>
+              The Evolution
+            </div>
+            <h2 style={{ fontFamily: "'Georgia',serif", fontSize: 30, fontWeight: 900, marginBottom: 14 }}>The Evolution of PAYG</h2>
+            <p style={{ fontSize: 15, color: "#555", maxWidth: 620, margin: "0 auto", lineHeight: 1.8 }}>
+              As the network expanded, Joe realized that the same concept could be applied to many different professions and industries. PAYG eventually expanded <strong>far beyond cosmetology and beauty services</strong> to create a complete Book-A-Professional Marketplace.
+            </p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 12, marginBottom: 40 }}>
+            {[
+              { icon: Scissors, label: "Book A Barber" },
+              { icon: Wrench, label: "Book A Mechanic" },
+              { icon: Wrench, label: "Book A Carpenter" },
+              { icon: Heart, label: "Book A Therapist" },
+              { icon: Heart, label: "Book A Massage Therapist" },
+              { icon: Dumbbell, label: "Book A Personal Trainer" },
+              { icon: BookOpen, label: "Book A Tutor" },
+              { icon: Camera, label: "Book A Photographer" },
+              { icon: Music, label: "Book A DJ" },
+              { icon: Briefcase, label: "Book A Consultant" },
+              { icon: Heart, label: "Book A Naturopathic Practitioner" },
+              { icon: Star, label: "Book A Coach" },
+            ].map(({ icon: Icon, label }) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 10, background: "#fff", borderRadius: 10, padding: "12px 14px", border: "1px solid #eee" }}>
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: `${GOLD}12`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Icon size={14} style={{ color: GOLD }} />
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "#333" }}>{label}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ background: `${GOLD}10`, border: `1px solid ${GOLD}30`, borderRadius: 14, padding: "20px 24px", textAlign: "center" }}>
+            <p style={{ fontSize: 14, color: "#555", margin: 0, lineHeight: 1.7 }}>
+              <strong style={{ color: DARK }}>And many other professional services.</strong> The result was the creation of a complete <strong>Book-A-Professional Marketplace</strong> where customers could locate, schedule, and purchase services from qualified professionals while supporting the entire NFGN ecosystem.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Why PAYG Is Powerful ──────────────────────────────────────── */}
+      <section style={{ padding: "64px 0", background: "#fff", borderBottom: "1px solid #eee" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px" }}>
+          <div style={{ textAlign: "center", marginBottom: 44 }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: `${GOLD}15`, border: `1px solid ${GOLD}40`, borderRadius: 99, padding: "5px 14px", fontSize: 11, fontWeight: 700, color: GOLD, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 16 }}>
+              For Salon Owners
+            </div>
+            <h2 style={{ fontFamily: "'Georgia',serif", fontSize: 30, fontWeight: 900, marginBottom: 14 }}>Why PAYG Is So Powerful For Salon Owners</h2>
+            <p style={{ fontSize: 15, color: "#555", maxWidth: 620, margin: "0 auto", lineHeight: 1.8 }}>
+              One of the biggest challenges salon owners face is managing traditional booth rentals. Instead of relying solely on monthly agreements, PAYG offers a smarter, more flexible solution.
+            </p>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32, alignItems: "start" }}>
+            <div>
+              <h3 style={{ fontWeight: 800, fontSize: 16, color: "#B91C1C", marginBottom: 14 }}>Traditional Booth Rental Challenges</h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {["Missed payments", "Vacant chairs", "Unused space", "Long-term commitments", "Administrative headaches"].map(item => (
+                  <div key={item} style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", background: "#fff5f5", borderRadius: 8, border: "1px solid #fecaca" }}>
+                    <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#fca5a5", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <AlertCircle size={11} style={{ color: "#991B1B" }} />
+                    </div>
+                    <span style={{ fontSize: 13, color: "#7f1d1d", fontWeight: 600 }}>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <h3 style={{ fontWeight: 800, fontSize: 16, color: "#166534", marginBottom: 14 }}>PAYG Advantages</h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {["Monetize unused chairs", "Increase occupancy rates", "Generate revenue from empty workstations", "Reduce financial risk", "Create flexible opportunities for stylists"].map(item => (
+                  <div key={item} style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", background: "#f0fdf4", borderRadius: 8, border: "1px solid #bbf7d0" }}>
+                    <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#86efac", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <CheckCircle2 size={11} style={{ color: "#166534" }} />
+                    </div>
+                    <span style={{ fontSize: 13, color: "#14532d", fontWeight: 600 }}>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ marginTop: 32, background: DARK, borderRadius: 14, padding: "24px 28px", textAlign: "center" }}>
+            <p style={{ fontFamily: "'Georgia',serif", fontSize: 18, fontStyle: "italic", color: "#fff", margin: "0 0 6px", lineHeight: 1.6 }}>
+              "A chair that sits empty generates no revenue.<br />A chair rented through PAYG creates income immediately."
+            </p>
+            <p style={{ fontSize: 12, color: GOLD, fontWeight: 700, margin: 0, letterSpacing: "0.05em" }}>— THE PAYG PRINCIPLE</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Reduce Overhead + Multiple Streams ───────────────────────── */}
+      <section style={{ padding: "64px 0", background: "#fafafa", borderBottom: "1px solid #eee" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40 }}>
+            {/* Reduce Overhead */}
+            <div>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: `${GOLD}15`, border: `1px solid ${GOLD}40`, borderRadius: 99, padding: "4px 12px", fontSize: 10, fontWeight: 700, color: GOLD, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 14 }}>
+                Reduce Overhead
+              </div>
+              <h3 style={{ fontFamily: "'Georgia',serif", fontSize: 22, fontWeight: 900, marginBottom: 12, lineHeight: 1.3 }}>Helping Professionals Reduce Overhead</h3>
+              <p style={{ fontSize: 14, color: "#555", lineHeight: 1.8, marginBottom: 16 }}>
+                A cosmetologist may not be ready to commit to a full-time booth rental. Through PAYG, they can <strong>rent space only when needed</strong>, serve their clients, and keep more of their profits.
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {["Grow their clientele", "Build their brand", "Increase profitability", "Minimize unnecessary expenses", "Scale at their own pace"].map(item => (
+                  <div key={item} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#333" }}>
+                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: GOLD, flexShrink: 0 }} />
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Multiple Streams */}
+            <div>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: `${GOLD}15`, border: `1px solid ${GOLD}40`, borderRadius: 99, padding: "4px 12px", fontSize: 10, fontWeight: 700, color: GOLD, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 14 }}>
+                Multiple Income Streams
+              </div>
+              <h3 style={{ fontFamily: "'Georgia',serif", fontSize: 22, fontWeight: 900, marginBottom: 12, lineHeight: 1.3 }}>Creating Multiple Streams of Income</h3>
+              <p style={{ fontSize: 14, color: "#555", lineHeight: 1.8, marginBottom: 16 }}>
+                A cosmetologist performs a hairstyle service for $50. Traditionally, the transaction ends there. Within NFGN, that same customer may also purchase:
+              </p>
+              <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #eee", padding: "14px 16px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                  {["Handmade soaps", "Handmade candles", "Herbal wellness products", "Weight-loss programs", "Health consultations", "Travel services", "Educational courses", "Memberships", "Special events", "Additional services"].map(item => (
+                    <div key={item} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#555" }}>
+                      <CheckCircle2 size={11} style={{ color: GOLD, flexShrink: 0 }} />
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <p style={{ fontSize: 13, color: "#888", marginTop: 12, lineHeight: 1.6 }}>
+                This creates the opportunity for <strong style={{ color: DARK }}>long-term residual income</strong> and ongoing customer relationships — the cosmetologist earns even when no one is sitting in their chair.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Future of PAYG ────────────────────────────────────────────── */}
+      <section style={{ padding: "64px 0", background: DARK, color: "#fff" }}>
+        <div style={{ maxWidth: 760, margin: "0 auto", padding: "0 24px", textAlign: "center" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: `${GOLD}18`, border: `1px solid ${GOLD}40`, borderRadius: 99, padding: "5px 14px", fontSize: 11, fontWeight: 700, color: GOLD, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 20 }}>
+            <TrendingUp size={11} /> The Future
+          </div>
+          <h2 style={{ fontFamily: "'Georgia',serif", fontSize: 30, fontWeight: 900, color: "#fff", marginBottom: 20 }}>The Future of PAYG</h2>
+          <p style={{ fontSize: 16, color: "#bbb", lineHeight: 1.9, marginBottom: 20 }}>
+            Today, Pay As You Go continues to evolve as one of the most innovative components of the NFGN platform. Its purpose remains the same as it was in 2014: to connect customers with professionals, help business owners generate additional revenue, increase product movement throughout the network, reward referrals, and create opportunities for individuals to build stronger and more sustainable incomes.
+          </p>
+          <div style={{ background: `${GOLD}12`, border: `1px solid ${GOLD}35`, borderRadius: 14, padding: "24px 28px", marginBottom: 32 }}>
+            <p style={{ fontFamily: "'Georgia',serif", fontSize: 18, color: "#fff", lineHeight: 1.7, margin: 0, fontStyle: "italic" }}>
+              "PAYG is more than a booking system. It is a business-building platform designed to help professionals, entrepreneurs, and service providers expand their reach, increase their earnings, and participate in a thriving network of products, services, and opportunities."
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
+            <Link href="/join">
+              <Button style={{ background: GOLD, color: DARK, fontWeight: 800, padding: "12px 28px" }}>
+                Join as a Pro Member <ChevronRight size={14} />
+              </Button>
+            </Link>
+            <Link href="/book">
+              <Button variant="outline" style={{ borderColor: "rgba(255,255,255,0.3)", color: "#fff", padding: "12px 28px" }}>
+                Browse Book-A-Pro <ChevronRight size={14} />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>

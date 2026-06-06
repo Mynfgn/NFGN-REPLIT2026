@@ -154,7 +154,7 @@ function TerminologySection() {
 
       {/* ── Income Stream Abbreviations ─────────────────────── */}
       <TermGroup title="Income Streams & Abbreviations" color="#3b82f6">
-        <TermCell term="Referral Commission" abbr="RC" def="A fixed dollar amount earned per unit sold, set individually on each product by administration. It is not a percentage of the sale price. The exact RC dollar amount is listed on each product. Earned by all active members — no Pro Member status required." />
+        <TermCell term="Referral Commission" abbr="RC" def="A percentage of the product's sale price, set per product by administration. Your earned RC shows as a dollar amount in your commission report (e.g. 10% on a $59.99 product = $6.00). Earned by all active members — no Pro Member status required." />
         <TermCell term="Product Sales Commission" abbr="PSC" def="Up to 24% earned across 9 levels of your downline on product purchases. Pro Members only. Level 2 always pays the highest rate (24%) — double the Level 1 rate of 12%." />
         <TermCell term="Pro Member Retail Commission" abbr="PMRC" def="Up to 22% earned across 5 levels when someone in your downline purchases a Pro Member Registration Package. Pro Members only. Separate from PSC." />
         <TermCell term="Core Leadership Bonus" abbr="CLB" def="A one-time $100 bonus triggered when you personally enroll 9 qualified Level 1 Pro Members (each with 150+ cumulative CV). A fast-start milestone reward." />
@@ -301,7 +301,7 @@ function OverviewSection() {
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-blue-900 space-y-1">
-            <p><strong>Amount:</strong> Flat dollar amount per unit — set per product</p>
+            <p><strong>Rate:</strong> % of sale price — set per product by admin</p>
             <p><strong>Who earns:</strong> All active members (customer or Pro)</p>
             <p><strong>Trigger:</strong> Any time your direct referral places an order</p>
           </CardContent>
@@ -500,13 +500,13 @@ function RCSection() {
           </div>
           <div>
             <h2 className="font-serif font-bold text-xl">Referral Commission (RC)</h2>
-            <p className="text-white/70 text-xs">Earn a fixed dollar amount per unit sold — the RC amount is set individually on each product</p>
+            <p className="text-white/70 text-xs">Earn a percentage of every sale your direct referrals make — rate is set per product by administration</p>
           </div>
         </div>
         <div className="grid grid-cols-3 gap-3 mt-4">
           <div className="rounded-lg bg-white/10 p-3 text-center">
-            <p className="text-2xl font-black">$ Flat</p>
-            <p className="text-white/70 text-[10px] uppercase tracking-wide mt-0.5">Per Unit Sold</p>
+            <p className="text-2xl font-black">%</p>
+            <p className="text-white/70 text-[10px] uppercase tracking-wide mt-0.5">Per Product</p>
           </div>
           <div className="rounded-lg bg-white/10 p-3 text-center">
             <p className="text-2xl font-black">L1</p>
@@ -523,8 +523,8 @@ function RCSection() {
         <CardHeader className="pb-2"><CardTitle className="text-sm">How It Works</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <Bullet>Share your unique referral link with anyone — friends, family, social media followers.</Bullet>
-          <Bullet>When your direct referral buys a product, you earn the fixed dollar RC amount assigned to that product — regardless of the sale price.</Bullet>
-          <Bullet>RC is a flat dollar amount per unit sold, not a percentage. Each product has its own RC amount set by administration and shown on the product listing.</Bullet>
+          <Bullet>When your direct referral buys a product, you earn the RC percentage assigned to that product — applied to the sale price. Your report shows this as a dollar amount.</Bullet>
+          <Bullet>Every product has its own RC rate (%) set by administration. For example, 10% on a $59.99 product = $6.00 earned.</Bullet>
           <Bullet>This applies to products, services, and Pro Member packages purchased by your direct referral.</Bullet>
           <Bullet>No special rank or Pro Member status required — all active members earn RC.</Bullet>
           <Bullet>Commissions are credited to your NFGN E-Wallet and paid according to the payout schedule.</Bullet>
@@ -532,17 +532,17 @@ function RCSection() {
       </Card>
 
       <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm">Example Earnings — How Flat RC Amounts Work</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="text-sm">Example Earnings</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Because RC is a fixed dollar amount per unit (not a % of the price), your earnings are predictable and don't change with discounts or order totals. Each product has its own RC amount — examples:
+            RC is a percentage of the sale price — so the dollar amount you earn depends on both the product's RC rate and its price. Each product has its own rate set by administration:
           </p>
           <div className="rounded-xl bg-muted p-4 space-y-2 text-sm">
             {[
-              { desc: "Product A — RC set at $6.00/unit",        earn: "$6.00",  sub: "You earn $6.00 regardless of product price" },
-              { desc: "Product B — RC set at $1.50/unit (×3)",   earn: "$4.50",  sub: "3 units × $1.50 flat RC" },
-              { desc: "Pro Package — RC set at $20.00/unit",     earn: "$20.00", sub: "Fixed RC on the Pro Package product" },
-              { desc: "Mixed order: 2 products",                 earn: "$7.50",  sub: "$6.00 + $1.50 — each product's flat RC added" },
+              { desc: "Product at $59.99 — RC rate 10%",   earn: "$6.00",  sub: "$59.99 × 10% = $6.00 credited to your wallet" },
+              { desc: "Product at $29.99 — RC rate 5%",    earn: "$1.50",  sub: "$29.99 × 5% = $1.50 credited to your wallet" },
+              { desc: "Pro Package at $199 — RC rate 10%", earn: "$19.90", sub: "$199 × 10% = $19.90 credited to your wallet" },
+              { desc: "Mixed order: 2 products",           earn: "$7.50",  sub: "$6.00 + $1.50 — each product's rate applied separately" },
             ].map(e => (
               <div key={e.desc} className="border-b last:border-0 pb-2 last:pb-0">
                 <div className="flex justify-between">
@@ -554,15 +554,15 @@ function RCSection() {
             ))}
           </div>
           <div className="rounded-xl bg-blue-50 border border-blue-200 p-3 text-xs text-blue-900">
-            <p className="font-semibold mb-1">How to find a product's RC amount</p>
-            <p>Each product listing in the Shop shows its RC dollar amount. Use the <strong>Comm. Calculator</strong> in your dashboard — enter any Product ID to instantly see the exact RC dollars per unit sold.</p>
+            <p className="font-semibold mb-1">How to find a product's RC rate</p>
+            <p>Use the <strong>Comm. Calculator</strong> in your dashboard — enter any Product ID to instantly see the RC dollar amount per sale at that product's current rate and price.</p>
           </div>
         </CardContent>
       </Card>
 
       <InfoBox color="blue">
         <p className="font-semibold">Key Rules</p>
-        <p>RC applies only to your <strong>direct (Level 1)</strong> referrals' purchases. You earn the flat dollar RC amount set on each product — it is not a percentage of the sale price. Purchases by their downline are covered by PSC (for Pro Members).</p>
+        <p>RC applies only to your <strong>direct (Level 1)</strong> referrals' purchases, calculated as a percentage of each product's sale price. The rate is set per product by administration. Purchases by their downline are covered by PSC (for Pro Members).</p>
       </InfoBox>
     </div>
   );

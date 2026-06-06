@@ -82,10 +82,8 @@ export function CalculatorPage() {
 
   const price    = product?.price ?? 0;
   const isProPkg = product?.isProPackage ?? false;
-  // RC per unit: flat dollar amount (default) OR percent × price
-  const rcPerUnit = product
-    ? (product.commissionType === "percent" ? price * (product.commissionRate / 100) : product.commissionAmount)
-    : price * RC;
+  // RC per unit: commissionRate (%) × price → dollar amount per unit sold
+  const rcPerUnit = product ? price * (product.commissionRate / 100) : price * RC;
   const commPerSalePersonal = rcPerUnit + price * (isProPkg ? L1C : SC);
   const commL2PerSale       = isProPkg ? price * L2C : 0;
   const levels = product ? buildLevels(l1Size, dupFactor, avgPurchases, price, isProPkg, rcPerUnit) : [];
@@ -205,9 +203,9 @@ export function CalculatorPage() {
               </div>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 {[
-                  { label: "Referral Commission (RC)", pct: fmtUsd(rcPerUnit) + " flat", amt: rcPerUnit, sub: "Fixed dollar amount per unit sold", bg: GREEN_M,  border: GREEN,    val: GREEN_D  },
+                  { label: "Referral Commission (RC)", pct: `${product.commissionRate}%`, amt: rcPerUnit, sub: "% of sale price → dollar amount", bg: GREEN_M,  border: GREEN,    val: GREEN_D  },
                   { label: isProPkg ? "Level 1 Commission" : "Sales Commission", pct: "10%", amt: price * (isProPkg ? L1C : SC), sub: isProPkg ? "Your L1 buys Pro Package" : "Regular product sale", bg: YELLOW_M, border: YELLOW_B, val: YELLOW },
-                  { label: "Your Total Per Direct Sale", pct: "RC + 10%", amt: commPerSalePersonal, sub: "Combined (RC flat + Sales/L1%)",  bg: GREEN,    border: GREEN_D,  val: WHITE,  bold: true },
+                  { label: "Your Total Per Direct Sale", pct: `${product.commissionRate + 10}%`, amt: commPerSalePersonal, sub: "Combined RC% + Sales/L1%",  bg: GREEN,    border: GREEN_D,  val: WHITE,  bold: true },
                   ...(isProPkg ? [{ label: "Level 2 Commission", pct: "20%", amt: commL2PerSale, sub: "Your L2 buys Pro Package", bg: ORANGE_M, border: ORANGE_B, val: ORANGE }] : []),
                 ].map(item => (
                   <div key={item.label} style={{ flex: "1 1 150px", padding: "14px 16px", background: item.bg, borderRadius: 12, border: `2px solid ${item.border}` }}>

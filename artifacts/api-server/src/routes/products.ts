@@ -127,7 +127,7 @@ router.get("/products/admin-all", requireAdmin, async (req, res): Promise<void> 
 });
 
 router.post("/products", requireAdmin, async (req, res): Promise<void> => {
-  const { name, slug, description, price, comparePrice, image, images, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isHolidayRegistry, holidayCategory, isProExclusive, proExclusiveCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize, isDonation, donationRecipientType, donationRecipientName, donationMinAmount, isChurchDonation, churchName, giftCharityPercent, subscriptionEnabled, subscriptionDiscountPercent, sortOrder } = req.body;
+  const { name, slug, description, price, comparePrice, image, images, categoryId, stock, featured, isProPackage, commissionRate, commissionAmount, commissionType, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isHolidayRegistry, holidayCategory, isProExclusive, proExclusiveCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize, isDonation, donationRecipientType, donationRecipientName, donationMinAmount, isChurchDonation, churchName, giftCharityPercent, subscriptionEnabled, subscriptionDiscountPercent, sortOrder } = req.body;
   if (!name || !slug || !description || price == null) {
     res.status(400).json({ error: "Missing required fields" });
     return;
@@ -148,6 +148,8 @@ router.post("/products", requireAdmin, async (req, res): Promise<void> => {
     featured: featured ?? false,
     isProPackage: isProPackage ?? false,
     commissionRate: String(commissionRate ?? 10),
+    commissionAmount: commissionAmount != null ? String(commissionAmount) : "0",
+    commissionType: commissionType ?? "flat",
     cv: cv ?? 0,
     ingredients: ingredients ?? undefined,
     benefits: benefits ?? undefined,
@@ -277,7 +279,7 @@ router.patch("/products/:id", requireAdmin, async (req, res): Promise<void> => {
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
   const updates: Partial<typeof productsTable.$inferInsert> = {};
-  const { name, slug, description, price, comparePrice, image, images, categoryId, stock, featured, isProPackage, commissionRate, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isHolidayRegistry, holidayCategory, isProExclusive, proExclusiveCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize, isDonation, donationRecipientType, donationRecipientName, donationMinAmount, isChurchDonation, churchName, giftCharityPercent, subscriptionEnabled, subscriptionDiscountPercent, status, sortOrder } = req.body;
+  const { name, slug, description, price, comparePrice, image, images, categoryId, stock, featured, isProPackage, commissionRate, commissionAmount, commissionType, cv, ingredients, benefits, dollarCreditEligible, refundPolicy, proMemberDiscountEligible, proMemberDiscountPercent, shippingFee, handlingFee, isSports, sportsCategory, teamOrganizationName, isNonProfit, nonProfitCategory, isWeddingRegistry, weddingRegistryCategory, isHolidayRegistry, holidayCategory, isProExclusive, proExclusiveCategory, isDownloadable, downloadUrl, downloadFileName, downloadFileSize, isDonation, donationRecipientType, donationRecipientName, donationMinAmount, isChurchDonation, churchName, giftCharityPercent, subscriptionEnabled, subscriptionDiscountPercent, status, sortOrder } = req.body;
   if (name) updates.name = name;
   if (slug) updates.slug = slug;
   if (description) updates.description = description;
@@ -298,6 +300,8 @@ router.patch("/products/:id", requireAdmin, async (req, res): Promise<void> => {
     }
   }
   if (commissionRate != null) updates.commissionRate = String(commissionRate);
+  if (commissionAmount != null) updates.commissionAmount = String(commissionAmount);
+  if (commissionType != null) updates.commissionType = commissionType;
   if (cv != null) updates.cv = cv;
   if (ingredients !== undefined) updates.ingredients = ingredients;
   if (benefits !== undefined) updates.benefits = benefits;

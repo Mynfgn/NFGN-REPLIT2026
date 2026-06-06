@@ -297,7 +297,7 @@ export function ProductDetail() {
               NFGN-{String(product.id).padStart(5, "0")}
             </span>
             {(() => {
-              const rcAmt = product.price * product.commissionRate / 100;
+              const rcAmt = product.commissionAmount;
               const rcStr = rcAmt.toFixed(2);
               const cvStr = String(product.cv);
               const idStr = String(product.id).padStart(5, "0");

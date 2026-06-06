@@ -45,6 +45,7 @@ interface Product {
   isProPackage: boolean;
   status: string;
   commissionRate: number;
+  commissionAmount: number;
   cv: number;
   shippingFee: number;
   handlingFee: number;
@@ -179,6 +180,7 @@ const EMPTY_FORM = {
   featured: false,
   isProPackage: false,
   commissionRate: "10",
+  commissionAmount: "0",
   cv: "0",
   shippingFee: "9.99",
   handlingFee: "5.00",
@@ -405,6 +407,7 @@ export function AdminProductsPage() {
       featured: p.featured,
       isProPackage: p.isProPackage,
       commissionRate: String(p.commissionRate),
+      commissionAmount: String((p as any).commissionAmount ?? 0),
       cv: String(p.cv ?? 0),
       shippingFee: String(p.shippingFee ?? "9.99"),
       handlingFee: String(p.handlingFee ?? "5.00"),
@@ -475,6 +478,8 @@ export function AdminProductsPage() {
         featured: form.featured,
         isProPackage: form.isProPackage,
         commissionRate: parseFloat(form.commissionRate) || 10,
+        commissionAmount: parseFloat(form.commissionAmount) || 0,
+        commissionType: "flat",
         cv: parseInt(form.cv) || 0,
         shippingFee: parseFloat(form.shippingFee) || 9.99,
         handlingFee: parseFloat(form.handlingFee) || 5.00,
@@ -902,7 +907,7 @@ export function AdminProductsPage() {
                         <Badge variant="outline" className="font-mono">{p.cv ?? 0}</Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="secondary">{p.commissionRate}%</Badge>
+                        <Badge variant="secondary">RC ${((p as any).commissionAmount ?? 0).toFixed(2)}</Badge>
                       </TableCell>
                       <TableCell>{p.stock}</TableCell>
                       <TableCell>
@@ -1142,17 +1147,16 @@ export function AdminProductsPage() {
                 )}
               </div>
               <div className="space-y-1.5">
-                <Label>Referral Commission Rate (%)</Label>
+                <Label>RC Amount ($) — Fixed dollar amount per unit sold</Label>
                 <Input
                   type="number"
                   min="0"
-                  max="100"
-                  step="0.5"
-                  value={form.commissionRate}
-                  onChange={e => setForm(f => ({ ...f, commissionRate: e.target.value }))}
-                  placeholder="10"
+                  step="0.01"
+                  value={form.commissionAmount}
+                  onChange={e => setForm(f => ({ ...f, commissionAmount: e.target.value }))}
+                  placeholder="0.00"
                 />
-                <p className="text-xs text-muted-foreground">Percentage paid to the referring member on sale of this product.</p>
+                <p className="text-xs text-muted-foreground">Fixed dollar RC paid to the referring member per unit sold of this product (e.g. 6.00 = $6.00 per unit).</p>
               </div>
             </div>
 

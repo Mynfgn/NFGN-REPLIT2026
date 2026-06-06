@@ -323,6 +323,7 @@ export function AdminProductsPage() {
   const [duplicating, setDuplicating] = useState<number | null>(null);
   const [togglingStatus, setTogglingStatus] = useState<number | null>(null);
   const [sortingId, setSortingId] = useState<number | null>(null);
+  const [rcSavingId, setRcSavingId] = useState<number | null>(null);
 
   const [qrProduct, setQrProduct] = useState<Product | null>(null);
   const [qrCopied, setQrCopied] = useState(false);
@@ -640,6 +641,25 @@ export function AdminProductsPage() {
     }
   };
 
+  const handleUpdateRc = async (p: Product, value: string) => {
+    const parsed = parseFloat(parseFloat(value).toFixed(2));
+    if (isNaN(parsed) || parsed === ((p as any).commissionAmount ?? 0)) return;
+    setRcSavingId(p.id);
+    try {
+      await customFetch(`/api/products/${p.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ commissionAmount: parsed, commissionType: "flat" }),
+      });
+      setProducts(prev => prev.map(x => x.id === p.id ? { ...x, commissionAmount: parsed } : x));
+      toast.success(`RC updated to $${parsed.toFixed(2)}`);
+    } catch {
+      toast.error("Failed to update RC amount");
+    } finally {
+      setRcSavingId(null);
+    }
+  };
+
   const handleUpdateSortOrder = async (p: Product, value: string) => {
     const parsed = parseInt(value);
     if (isNaN(parsed) || parsed === p.sortOrder) return;
@@ -907,7 +927,19 @@ export function AdminProductsPage() {
                         <Badge variant="outline" className="font-mono">{p.cv ?? 0}</Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="secondary">RC ${((p as any).commissionAmount ?? 0).toFixed(2)}</Badge>
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-muted-foreground font-medium">RC $</span>
+                          <input
+                            type="number"
+                            defaultValue={((p as any).commissionAmount ?? 0).toFixed(2)}
+                            onBlur={e => handleUpdateRc(p, e.target.value)}
+                            onKeyDown={e => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                            disabled={rcSavingId === p.id}
+                            className="w-16 text-xs border rounded px-1 py-0.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
+                            min={0}
+                            step={0.01}
+                          />
+                        </div>
                       </TableCell>
                       <TableCell>{p.stock}</TableCell>
                       <TableCell>

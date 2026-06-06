@@ -80,6 +80,11 @@ export function OrdersPage() {
                     <div className="mb-3 space-y-0.5">
                       {order.items.map((item: any) => (
                         <p key={item.id} className="text-xs text-muted-foreground">
+                          {item.productId && (
+                            <span className="font-mono font-bold mr-1.5" style={{ color: "#9a7a2e" }}>
+                              NFGN-{String(item.productId).padStart(5, "0")}
+                            </span>
+                          )}
                           {item.productName} × {item.quantity} — ${item.total.toFixed(2)}
                           {(item.cvTotal ?? 0) > 0 && (
                             <span className="ml-1 text-blue-700 font-semibold">{item.cvTotal} CV</span>

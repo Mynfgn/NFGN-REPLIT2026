@@ -320,9 +320,14 @@ function ProductCard({
 
         {/* Info */}
         <div style={{ padding: "14px 14px 16px", flex: 1, display: "flex", flexDirection: "column", gap: 5 }}>
-          <p style={{ fontSize: 11, fontWeight: 700, color: accentColor, letterSpacing: "0.1em", textTransform: "uppercase", margin: 0 }}>
-            {product.categoryName || "Wellness"}
-          </p>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4 }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: accentColor, letterSpacing: "0.1em", textTransform: "uppercase", margin: 0 }}>
+              {product.categoryName || "Wellness"}
+            </p>
+            <span style={{ fontSize: 10, fontWeight: 700, fontFamily: "monospace", color: "#9a7a2e", background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.3)", borderRadius: 4, padding: "1px 5px", whiteSpace: "nowrap" }}>
+              NFGN-{String(product.id).padStart(5, "0")}
+            </span>
+          </div>
           <h4 style={{ fontSize: 14, fontWeight: 700, color: "#1a1a1a", lineHeight: 1.3, flex: 1, margin: 0 }}>
             {product.name}
           </h4>

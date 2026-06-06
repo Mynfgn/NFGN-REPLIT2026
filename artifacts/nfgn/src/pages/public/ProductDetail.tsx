@@ -289,6 +289,11 @@ export function ProductDetail() {
             </div>
           )}
 
+          {/* Product ID */}
+          <span className="inline-block font-mono text-xs font-bold px-2 py-0.5 rounded" style={{ background: "rgba(201,168,76,0.12)", color: "#9a7a2e", border: "1px solid rgba(201,168,76,0.3)" }}>
+            NFGN-{String(product.id).padStart(5, "0")}
+          </span>
+
           {/* Name */}
           <h1 className="text-3xl md:text-4xl font-serif font-bold leading-tight">{product.name}</h1>
 

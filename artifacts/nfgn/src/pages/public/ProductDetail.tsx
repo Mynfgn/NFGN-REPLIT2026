@@ -33,6 +33,8 @@ interface Product {
   isProPackage: boolean;
   status: string;
   commissionRate: number;
+  commissionType: string;
+  commissionAmount: number;
   cv: number;
   ingredients: string | null;
   benefits: string | null;
@@ -289,10 +291,30 @@ export function ProductDetail() {
             </div>
           )}
 
-          {/* Product ID */}
-          <span className="inline-block font-mono text-xs font-bold px-2 py-0.5 rounded" style={{ background: "rgba(201,168,76,0.12)", color: "#9a7a2e", border: "1px solid rgba(201,168,76,0.3)" }}>
-            NFGN-{String(product.id).padStart(5, "0")}
-          </span>
+          {/* Product ID + Compensation Code */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-block font-mono text-xs font-bold px-2 py-0.5 rounded" style={{ background: "rgba(201,168,76,0.12)", color: "#9a7a2e", border: "1px solid rgba(201,168,76,0.3)" }}>
+              NFGN-{String(product.id).padStart(5, "0")}
+            </span>
+            {(() => {
+              const rcAmt = product.commissionType === "percent"
+                ? (product.price * product.commissionRate / 100)
+                : product.commissionAmount;
+              const rcStr = rcAmt.toFixed(2);
+              const cvStr = String(product.cv);
+              const idStr = String(product.id).padStart(5, "0");
+              const code = `NFRC${rcStr}S${cvStr}CV-${idStr}`;
+              return (
+                <span
+                  title="Compensation Code: NF=New Face · RC=Referral Commission · S=Separator · CV=Commissionable Volume · ID"
+                  className="inline-block font-mono text-xs font-bold px-2 py-0.5 rounded cursor-help"
+                  style={{ background: "rgba(45,106,79,0.12)", color: "#2D6A4F", border: "1px solid rgba(45,106,79,0.3)" }}
+                >
+                  {code}
+                </span>
+              );
+            })()}
+          </div>
 
           {/* Name */}
           <h1 className="text-3xl md:text-4xl font-serif font-bold leading-tight">{product.name}</h1>

@@ -154,7 +154,7 @@ function TerminologySection() {
 
       {/* ── Income Stream Abbreviations ─────────────────────── */}
       <TermGroup title="Income Streams & Abbreviations" color="#3b82f6">
-        <TermCell term="Referral Commission" abbr="RC" def="10% earned on every purchase made by your direct (Level 1) referrals. Earned by all active members — no Pro Member status required." />
+        <TermCell term="Referral Commission" abbr="RC" def="A per-product commission earned on every purchase made by your direct (Level 1) referrals. The rate is set individually on each product by administration — it is not a flat percentage across all products. Check any product listing for its exact Referral Commission Rate. Earned by all active members — no Pro Member status required." />
         <TermCell term="Product Sales Commission" abbr="PSC" def="Up to 24% earned across 9 levels of your downline on product purchases. Pro Members only. Level 2 always pays the highest rate (24%) — double the Level 1 rate of 12%." />
         <TermCell term="Pro Member Retail Commission" abbr="PMRC" def="Up to 22% earned across 5 levels when someone in your downline purchases a Pro Member Registration Package. Pro Members only. Separate from PSC." />
         <TermCell term="Core Leadership Bonus" abbr="CLB" def="A one-time $100 bonus triggered when you personally enroll 9 qualified Level 1 Pro Members (each with 150+ cumulative CV). A fast-start milestone reward." />
@@ -301,7 +301,7 @@ function OverviewSection() {
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-blue-900 space-y-1">
-            <p><strong>Rate:</strong> 10% flat on all direct referral orders</p>
+            <p><strong>Rate:</strong> Set per product — varies by product listing</p>
             <p><strong>Who earns:</strong> All active members (customer or Pro)</p>
             <p><strong>Trigger:</strong> Any time your direct referral places an order</p>
           </CardContent>
@@ -370,7 +370,7 @@ function OverviewSection() {
         <CardContent className="text-sm space-y-2">
           <div className="rounded-xl bg-muted p-4 space-y-2">
             {[
-              { label: "RC — 10% on $3,000 direct referral sales", val: "$300" },
+              { label: "RC — referral commissions on $3,000 in direct referral sales", val: "$300" },
               { label: "PSC — 9-level team product sales ($8,000 volume)", val: "$960" },
               { label: "PMRC — 3 new Pro Members across L1–L3", val: "$440" },
               { label: "MCB — 1 cycle of 7 L2 Pro Members", val: "$200" },
@@ -500,13 +500,13 @@ function RCSection() {
           </div>
           <div>
             <h2 className="font-serif font-bold text-xl">Referral Commission (RC)</h2>
-            <p className="text-white/70 text-xs">Earn 10% every time your direct referrals shop</p>
+            <p className="text-white/70 text-xs">Earn your referral commission every time your direct referrals shop — rate is set per product</p>
           </div>
         </div>
         <div className="grid grid-cols-3 gap-3 mt-4">
           <div className="rounded-lg bg-white/10 p-3 text-center">
-            <p className="text-2xl font-black">10%</p>
-            <p className="text-white/70 text-[10px] uppercase tracking-wide mt-0.5">Flat Rate</p>
+            <p className="text-2xl font-black">Varies</p>
+            <p className="text-white/70 text-[10px] uppercase tracking-wide mt-0.5">Per Product</p>
           </div>
           <div className="rounded-lg bg-white/10 p-3 text-center">
             <p className="text-2xl font-black">L1</p>
@@ -523,7 +523,8 @@ function RCSection() {
         <CardHeader className="pb-2"><CardTitle className="text-sm">How It Works</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <Bullet>Share your unique referral link with anyone — friends, family, social media followers.</Bullet>
-          <Bullet>When someone clicks your link and places an order, you earn 10% of their order total.</Bullet>
+          <Bullet>When someone clicks your link and places an order, you earn the Referral Commission Rate assigned to each product they purchase.</Bullet>
+          <Bullet>Every product has its own Referral Commission Rate — set by administration and shown on the product listing. Rates are not the same across all products.</Bullet>
           <Bullet>This applies to products, services, and Pro Member packages purchased by your direct referral.</Bullet>
           <Bullet>No special rank or Pro Member status required — all active members earn RC.</Bullet>
           <Bullet>Commissions are credited to your NFGN E-Wallet and paid according to the payout schedule.</Bullet>
@@ -531,27 +532,37 @@ function RCSection() {
       </Card>
 
       <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm">Example Earnings</CardTitle></CardHeader>
-        <CardContent>
+        <CardHeader className="pb-2"><CardTitle className="text-sm">Example Earnings — How Per-Product Rates Work</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Because every product has its own Referral Commission Rate, your actual RC earnings depend on <strong>which products</strong> your referral buys — not just the order total. Here are some examples using different rates:
+          </p>
           <div className="rounded-xl bg-muted p-4 space-y-2 text-sm">
             {[
-              { desc: "Referral purchases $50 product", earn: "$5.00" },
-              { desc: "Referral purchases $150 product bundle", earn: "$15.00" },
-              { desc: "Referral purchases $200 Pro Package", earn: "$20.00" },
-              { desc: "Referral places $500 monthly order", earn: "$50.00" },
+              { desc: "Product A — $59.99 at 10% RC",          earn: "$6.00",  sub: "RC rate on this item: 10%" },
+              { desc: "Product B — $12.99 at 2.5% RC",         earn: "$0.33",  sub: "RC rate on this item: 2.5%" },
+              { desc: "Product C — $200 Pro Package at 10% RC", earn: "$20.00", sub: "RC rate on this item: 10%" },
+              { desc: "Mixed order: $300 total, avg 8% RC",     earn: "$24.00", sub: "Each line item calculated at its own rate" },
             ].map(e => (
-              <div key={e.desc} className="flex justify-between border-b last:border-0 pb-2 last:pb-0">
-                <span className="text-muted-foreground text-xs">{e.desc}</span>
-                <span className="font-bold text-foreground text-xs">{e.earn}</span>
+              <div key={e.desc} className="border-b last:border-0 pb-2 last:pb-0">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground text-xs">{e.desc}</span>
+                  <span className="font-bold text-foreground text-xs">{e.earn}</span>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-0.5 italic">{e.sub}</p>
               </div>
             ))}
+          </div>
+          <div className="rounded-xl bg-blue-50 border border-blue-200 p-3 text-xs text-blue-900">
+            <p className="font-semibold mb-1">How to find a product's RC rate</p>
+            <p>Each product in the Shop displays its Referral Commission Rate. You can also use the <strong>Comm. Calculator</strong> in your dashboard — enter any Product ID to instantly see the exact RC amount per sale.</p>
           </div>
         </CardContent>
       </Card>
 
       <InfoBox color="blue">
         <p className="font-semibold">Key Rules</p>
-        <p>RC applies only to your <strong>direct (Level 1)</strong> referrals' purchases. Purchases by their downline are covered by PSC (for Pro Members).</p>
+        <p>RC applies only to your <strong>direct (Level 1)</strong> referrals' purchases, calculated at each product's individual Referral Commission Rate. Purchases by their downline are covered by PSC (for Pro Members).</p>
       </InfoBox>
     </div>
   );

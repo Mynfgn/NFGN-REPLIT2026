@@ -31,7 +31,7 @@ function fmtId(id: number)  { return `NFGN-${String(id).padStart(5, "0")}`; }
 function fmtUsd(n: number)  { return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 function fmtNum(n: number)  { return n.toLocaleString("en-US"); }
 
-interface CalcProduct { id: number; name: string; price: number; cv: number; isProPackage: boolean; }
+interface CalcProduct { id: number; name: string; price: number; cv: number; isProPackage: boolean; commissionRate: number; }
 
 function parseProductId(raw: string): number | null {
   const c = raw.trim().replace(/^nfgn-0*/i, "").replace(/^0+/, "") || "0";
@@ -39,14 +39,14 @@ function parseProductId(raw: string): number | null {
   return isNaN(n) || n <= 0 ? null : n;
 }
 
-function buildLevels(l1Size: number, dup: number, avgPurchases: number, price: number, isProPkg: boolean) {
+function buildLevels(l1Size: number, dup: number, avgPurchases: number, price: number, isProPkg: boolean, rcRate: number) {
   const levels: { level: number; size: number; monthlyUnits: number; yourComm: number; orgComm: number; label: string; }[] = [];
   for (let i = 1; i <= 9; i++) {
     const size = i === 1 ? l1Size : levels[i - 2].size * dup;
     const monthlyUnits = size * avgPurchases;
-    const rateForYou   = i === 1 ? (RC + (isProPkg ? L1C : SC)) : (i === 2 && isProPkg) ? L2C : 0;
+    const rateForYou   = i === 1 ? (rcRate + (isProPkg ? L1C : SC)) : (i === 2 && isProPkg) ? L2C : 0;
     const yourComm     = monthlyUnits * price * rateForYou;
-    const orgComm      = monthlyUnits * price * (RC + (isProPkg ? L1C : SC));
+    const orgComm      = monthlyUnits * price * (rcRate + (isProPkg ? L1C : SC));
     const label = i === 1 ? "Direct Referrals" : i === 2 ? "Their Referrals" : `Generation ${i}`;
     levels.push({ level: i, size, monthlyUnits, yourComm, orgComm, label });
   }
@@ -72,16 +72,17 @@ export function CalculatorPage() {
       const res = await customFetch(`/api/products/${id}`);
       if (!res.ok) { setLookupError(`Product "${idInput.trim()}" not found.`); setProduct(null); return; }
       const d = await res.json();
-      setProduct({ id: d.id, name: d.name, price: parseFloat(d.price), cv: d.cv ?? 0, isProPackage: !!d.isProPackage });
+      setProduct({ id: d.id, name: d.name, price: parseFloat(d.price), cv: d.cv ?? 0, isProPackage: !!d.isProPackage, commissionRate: parseFloat(d.commissionRate) || 10 });
     } catch { setLookupError("Failed to load product. Please try again."); }
     finally   { setLookupLoading(false); }
   }
 
   const price    = product?.price ?? 0;
   const isProPkg = product?.isProPackage ?? false;
-  const commPerSalePersonal = price * (RC + (isProPkg ? L1C : SC));
+  const rcRate   = product ? (product.commissionRate / 100) : RC;   // per-product RC rate
+  const commPerSalePersonal = price * (rcRate + (isProPkg ? L1C : SC));
   const commL2PerSale       = isProPkg ? price * L2C : 0;
-  const levels = product ? buildLevels(l1Size, dupFactor, avgPurchases, price, isProPkg) : [];
+  const levels = product ? buildLevels(l1Size, dupFactor, avgPurchases, price, isProPkg, rcRate) : [];
 
   const myPersonalEarnings = personalSales * commPerSalePersonal;
   const myL1Earnings       = levels[0]?.yourComm ?? 0;
@@ -182,7 +183,7 @@ export function CalculatorPage() {
                 {[
                   { label: "Price",     value: fmtUsd(product.price), bg: GREEN_D,  text: YELLOW_B },
                   { label: "PV / CV",   value: String(product.cv),    bg: YELLOW_B, text: GREEN_D  },
-                  { label: "RC / sale", value: fmtUsd(price * RC),    bg: ORANGE_B, text: WHITE    },
+                  { label: `RC ${product.commissionRate}% / sale`, value: fmtUsd(price * rcRate), bg: ORANGE_B, text: WHITE },
                 ].map(s => (
                   <div key={s.label} style={{ textAlign: "center", background: s.bg, borderRadius: 12, padding: "10px 18px", minWidth: 80 }}>
                     <div style={{ fontSize: 10, fontWeight: 700, color: s.text + "bb", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 2 }}>{s.label}</div>
@@ -198,9 +199,9 @@ export function CalculatorPage() {
               </div>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 {[
-                  { label: "Referral Commission (RC)", pct: "10%", amt: price * RC,                              sub: "On every direct purchase",        bg: GREEN_M,  border: GREEN,    val: GREEN_D  },
+                  { label: "Referral Commission (RC)", pct: `${product.commissionRate}%`, amt: price * rcRate,  sub: "On every direct purchase",        bg: GREEN_M,  border: GREEN,    val: GREEN_D  },
                   { label: isProPkg ? "Level 1 Commission" : "Sales Commission", pct: "10%", amt: price * (isProPkg ? L1C : SC), sub: isProPkg ? "Your L1 buys Pro Package" : "Regular product sale", bg: YELLOW_M, border: YELLOW_B, val: YELLOW },
-                  { label: "Your Total Per Direct Sale", pct: "20%", amt: commPerSalePersonal,                   sub: "Combined (RC + Sales/L1)",         bg: GREEN,    border: GREEN_D,  val: WHITE,  bold: true },
+                  { label: "Your Total Per Direct Sale", pct: `${product.commissionRate + 10}%`, amt: commPerSalePersonal, sub: "Combined (RC + Sales/L1)",  bg: GREEN,    border: GREEN_D,  val: WHITE,  bold: true },
                   ...(isProPkg ? [{ label: "Level 2 Commission", pct: "20%", amt: commL2PerSale, sub: "Your L2 buys Pro Package", bg: ORANGE_M, border: ORANGE_B, val: ORANGE }] : []),
                 ].map(item => (
                   <div key={item.label} style={{ flex: "1 1 150px", padding: "14px 16px", background: item.bg, borderRadius: 12, border: `2px solid ${item.border}` }}>

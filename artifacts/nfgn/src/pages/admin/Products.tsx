@@ -829,6 +829,7 @@ export function AdminProductsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-14">Image</TableHead>
+                  <TableHead>Product ID</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Price</TableHead>
                   <TableHead>CV</TableHead>
@@ -877,6 +878,11 @@ export function AdminProductsPage() {
                         <div className="h-10 w-10 rounded border bg-muted items-center justify-center" style={{ display: getImageSrc(p.image) ? "none" : "flex" }}>
                           <Package className="h-4 w-4 text-muted-foreground" />
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-mono text-xs font-bold px-2 py-0.5 rounded" style={{ background: "rgba(201,168,76,0.12)", color: "#9a7a2e", border: "1px solid rgba(201,168,76,0.3)" }}>
+                          NFGN-{String(p.id).padStart(5, "0")}
+                        </span>
                       </TableCell>
                       <TableCell>
                         <div>

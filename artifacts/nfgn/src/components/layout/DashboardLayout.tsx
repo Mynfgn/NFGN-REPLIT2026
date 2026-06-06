@@ -9,7 +9,7 @@ import {
   BarChart3, LogOut, Menu, X, UserPlus, ArrowRightLeft,
   TrendingUp, Wrench, Home, Star, BookOpen, DollarSign,
   ChevronDown, ChevronRight, ShieldCheck, Link2, Sparkles,
-  CreditCard, Zap, Store, CalendarDays, Heart, RefreshCw,
+  CreditCard, Zap, Store, CalendarDays, Heart, RefreshCw, Calculator,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { roleLabel, tierLabel } from "@/lib/labels";
@@ -128,6 +128,7 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
           { name: "Vision Goals & Dreams Sheet", href: "/dashboard/tools/vision-goals" },
         ],
       },
+      { name: "Comm. Calculator", href: "/dashboard/calculator", icon: Calculator, minTier: "pro_member" },
       { name: "Reports", href: "/dashboard/reports", icon: BarChart3, minTier: "pro_member" },
     ],
   },

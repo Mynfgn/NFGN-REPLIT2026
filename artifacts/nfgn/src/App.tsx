@@ -54,6 +54,7 @@ import { SubscriptionsPage } from "@/pages/dashboard/Subscriptions";
 import { PayAsYouGoPage } from "@/pages/public/PayAsYouGo";
 import { PaygProviderPage } from "@/pages/dashboard/PaygProvider";
 import { PaygBookingsPage } from "@/pages/dashboard/PaygBookings";
+import { CalculatorPage } from "@/pages/dashboard/Calculator";
 
 // Admin Pages
 import { AdminDashboard } from "@/pages/admin/AdminDashboard";
@@ -318,6 +319,11 @@ function Router() {
       <Route path="/dashboard/payg-bookings">
         <RequireAuth>
           <DashboardLayout><PaygBookingsPage /></DashboardLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/dashboard/calculator">
+        <RequireAuth>
+          <DashboardLayout><CalculatorPage /></DashboardLayout>
         </RequireAuth>
       </Route>
 

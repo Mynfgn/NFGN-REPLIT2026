@@ -154,7 +154,7 @@ function TerminologySection() {
 
       {/* ── Income Stream Abbreviations ─────────────────────── */}
       <TermGroup title="Income Streams & Abbreviations" color="#3b82f6">
-        <TermCell term="Referral Commission" abbr="RC" def="A per-product commission earned on every purchase made by your direct (Level 1) referrals. The rate is set individually on each product by administration — it is not a flat percentage across all products. Check any product listing for its exact Referral Commission Rate. Earned by all active members — no Pro Member status required." />
+        <TermCell term="Referral Commission" abbr="RC" def="A fixed dollar amount earned per unit sold, set individually on each product by administration. It is not a percentage of the sale price. The exact RC dollar amount is listed on each product. Earned by all active members — no Pro Member status required." />
         <TermCell term="Product Sales Commission" abbr="PSC" def="Up to 24% earned across 9 levels of your downline on product purchases. Pro Members only. Level 2 always pays the highest rate (24%) — double the Level 1 rate of 12%." />
         <TermCell term="Pro Member Retail Commission" abbr="PMRC" def="Up to 22% earned across 5 levels when someone in your downline purchases a Pro Member Registration Package. Pro Members only. Separate from PSC." />
         <TermCell term="Core Leadership Bonus" abbr="CLB" def="A one-time $100 bonus triggered when you personally enroll 9 qualified Level 1 Pro Members (each with 150+ cumulative CV). A fast-start milestone reward." />
@@ -301,7 +301,7 @@ function OverviewSection() {
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-blue-900 space-y-1">
-            <p><strong>Rate:</strong> Set per product — varies by product listing</p>
+            <p><strong>Amount:</strong> Flat dollar amount per unit — set per product</p>
             <p><strong>Who earns:</strong> All active members (customer or Pro)</p>
             <p><strong>Trigger:</strong> Any time your direct referral places an order</p>
           </CardContent>
@@ -500,13 +500,13 @@ function RCSection() {
           </div>
           <div>
             <h2 className="font-serif font-bold text-xl">Referral Commission (RC)</h2>
-            <p className="text-white/70 text-xs">Earn your referral commission every time your direct referrals shop — rate is set per product</p>
+            <p className="text-white/70 text-xs">Earn a fixed dollar amount per unit sold — the RC amount is set individually on each product</p>
           </div>
         </div>
         <div className="grid grid-cols-3 gap-3 mt-4">
           <div className="rounded-lg bg-white/10 p-3 text-center">
-            <p className="text-2xl font-black">Varies</p>
-            <p className="text-white/70 text-[10px] uppercase tracking-wide mt-0.5">Per Product</p>
+            <p className="text-2xl font-black">$ Flat</p>
+            <p className="text-white/70 text-[10px] uppercase tracking-wide mt-0.5">Per Unit Sold</p>
           </div>
           <div className="rounded-lg bg-white/10 p-3 text-center">
             <p className="text-2xl font-black">L1</p>
@@ -523,8 +523,8 @@ function RCSection() {
         <CardHeader className="pb-2"><CardTitle className="text-sm">How It Works</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <Bullet>Share your unique referral link with anyone — friends, family, social media followers.</Bullet>
-          <Bullet>When someone clicks your link and places an order, you earn the Referral Commission Rate assigned to each product they purchase.</Bullet>
-          <Bullet>Every product has its own Referral Commission Rate — set by administration and shown on the product listing. Rates are not the same across all products.</Bullet>
+          <Bullet>When your direct referral buys a product, you earn the fixed dollar RC amount assigned to that product — regardless of the sale price.</Bullet>
+          <Bullet>RC is a flat dollar amount per unit sold, not a percentage. Each product has its own RC amount set by administration and shown on the product listing.</Bullet>
           <Bullet>This applies to products, services, and Pro Member packages purchased by your direct referral.</Bullet>
           <Bullet>No special rank or Pro Member status required — all active members earn RC.</Bullet>
           <Bullet>Commissions are credited to your NFGN E-Wallet and paid according to the payout schedule.</Bullet>
@@ -532,17 +532,17 @@ function RCSection() {
       </Card>
 
       <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm">Example Earnings — How Per-Product Rates Work</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="text-sm">Example Earnings — How Flat RC Amounts Work</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Because every product has its own Referral Commission Rate, your actual RC earnings depend on <strong>which products</strong> your referral buys — not just the order total. Here are some examples using different rates:
+            Because RC is a fixed dollar amount per unit (not a % of the price), your earnings are predictable and don't change with discounts or order totals. Each product has its own RC amount — examples:
           </p>
           <div className="rounded-xl bg-muted p-4 space-y-2 text-sm">
             {[
-              { desc: "Product A — $59.99 at 10% RC",          earn: "$6.00",  sub: "RC rate on this item: 10%" },
-              { desc: "Product B — $12.99 at 2.5% RC",         earn: "$0.33",  sub: "RC rate on this item: 2.5%" },
-              { desc: "Product C — $200 Pro Package at 10% RC", earn: "$20.00", sub: "RC rate on this item: 10%" },
-              { desc: "Mixed order: $300 total, avg 8% RC",     earn: "$24.00", sub: "Each line item calculated at its own rate" },
+              { desc: "Product A — RC set at $6.00/unit",        earn: "$6.00",  sub: "You earn $6.00 regardless of product price" },
+              { desc: "Product B — RC set at $1.50/unit (×3)",   earn: "$4.50",  sub: "3 units × $1.50 flat RC" },
+              { desc: "Pro Package — RC set at $20.00/unit",     earn: "$20.00", sub: "Fixed RC on the Pro Package product" },
+              { desc: "Mixed order: 2 products",                 earn: "$7.50",  sub: "$6.00 + $1.50 — each product's flat RC added" },
             ].map(e => (
               <div key={e.desc} className="border-b last:border-0 pb-2 last:pb-0">
                 <div className="flex justify-between">
@@ -554,15 +554,15 @@ function RCSection() {
             ))}
           </div>
           <div className="rounded-xl bg-blue-50 border border-blue-200 p-3 text-xs text-blue-900">
-            <p className="font-semibold mb-1">How to find a product's RC rate</p>
-            <p>Each product in the Shop displays its Referral Commission Rate. You can also use the <strong>Comm. Calculator</strong> in your dashboard — enter any Product ID to instantly see the exact RC amount per sale.</p>
+            <p className="font-semibold mb-1">How to find a product's RC amount</p>
+            <p>Each product listing in the Shop shows its RC dollar amount. Use the <strong>Comm. Calculator</strong> in your dashboard — enter any Product ID to instantly see the exact RC dollars per unit sold.</p>
           </div>
         </CardContent>
       </Card>
 
       <InfoBox color="blue">
         <p className="font-semibold">Key Rules</p>
-        <p>RC applies only to your <strong>direct (Level 1)</strong> referrals' purchases, calculated at each product's individual Referral Commission Rate. Purchases by their downline are covered by PSC (for Pro Members).</p>
+        <p>RC applies only to your <strong>direct (Level 1)</strong> referrals' purchases. You earn the flat dollar RC amount set on each product — it is not a percentage of the sale price. Purchases by their downline are covered by PSC (for Pro Members).</p>
       </InfoBox>
     </div>
   );

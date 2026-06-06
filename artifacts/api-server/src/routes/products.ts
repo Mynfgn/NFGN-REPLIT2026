@@ -22,6 +22,8 @@ function formatProduct(p: typeof productsTable.$inferSelect, categoryName?: stri
     isProPackage: p.isProPackage,
     status: p.status,
     commissionRate: parseFloat(p.commissionRate),
+    commissionType: p.commissionType,
+    commissionAmount: parseFloat(p.commissionAmount ?? "0"),
     cv: p.cv,
     dollarCreditEligible: p.dollarCreditEligible,
     refundPolicy: p.refundPolicy,

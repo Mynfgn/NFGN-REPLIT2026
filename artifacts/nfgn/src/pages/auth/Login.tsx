@@ -16,7 +16,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -28,6 +29,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export function Login() {
   const { login } = useAuth();
   const { toast } = useToast();
+  const [showPassword, setShowPassword] = useState(false);
   const loginMutation = useLogin();
 
   const form = useForm<LoginFormValues>({
@@ -115,7 +117,17 @@ export function Login() {
                         </Link>
                       </div>
                       <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} />
+                        <div className="relative">
+                          <Input type={showPassword ? "text" : "password"} placeholder="••••••••" className="pr-10" {...field} />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(v => !v)}
+                            className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground"
+                            tabIndex={-1}
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>

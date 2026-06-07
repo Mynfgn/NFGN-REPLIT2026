@@ -541,7 +541,10 @@ export function CalculatorPage() {
                 </td>
                 {/* Comm % */}
                 <td style={{ padding: "10px 10px" }}>
-                  <span style={{ fontSize: 10, fontWeight: 800, color: WHITE, background: ORANGE_B, padding: "2px 7px", borderRadius: 5 }}>RC flat</span>
+                  <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", background: ORANGE_B, borderRadius: 7, padding: "5px 9px", minWidth: 44 }}>
+                    <span style={{ fontSize: 9, fontWeight: 900, color: WHITE, letterSpacing: "0.06em", lineHeight: 1 }}>RC</span>
+                    <span style={{ fontSize: 13, fontWeight: 900, color: WHITE, lineHeight: 1.2, marginTop: 2 }}>FLAT</span>
+                  </div>
                 </td>
                 <td style={{ padding: "10px 10px", color: "#aaa", fontSize: 12 }}>—</td>
                 <td style={{ padding: "10px 10px", color: "#aaa", fontSize: 12 }}>—</td>
@@ -574,14 +577,15 @@ export function CalculatorPage() {
                       <div style={{ fontWeight: 900, color: isYours ? GREEN_D : "#9ca3af", fontSize: 13 }}>L{lv.level}</div>
                       <div style={{ fontSize: 10, color: isYours ? "#555" : "#c4c4c4", marginTop: 1 }}>{lv.label}</div>
                     </td>
-                    {/* Comm % — rate badge + dollar per unit */}
+                    {/* Comm % — stacked badge + dollar per unit */}
                     <td style={{ padding: "9px 10px" }}>
                       {ratePct > 0 ? (
                         <div>
-                          <span style={{ fontSize: 10, fontWeight: 800, color: WHITE, background: rateColor, padding: "2px 7px", borderRadius: 5 }}>
-                            {ratePct}% PSC
-                          </span>
-                          <div style={{ fontSize: 10, color: "#6b7280", marginTop: 3 }}>
+                          <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", background: rateColor, borderRadius: 7, padding: "5px 9px", minWidth: 44 }}>
+                            <span style={{ fontSize: 9, fontWeight: 900, color: WHITE, letterSpacing: "0.06em", lineHeight: 1 }}>PSC</span>
+                            <span style={{ fontSize: 13, fontWeight: 900, color: WHITE, lineHeight: 1.2, marginTop: 2 }}>{ratePct}%</span>
+                          </div>
+                          <div style={{ fontSize: 10, color: "#6b7280", marginTop: 4 }}>
                             {fmtUsd(dollarPerUnit)}/unit
                           </div>
                         </div>

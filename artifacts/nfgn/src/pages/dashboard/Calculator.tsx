@@ -518,16 +518,16 @@ export function CalculatorPage() {
             <thead>
               <tr style={{ background: `linear-gradient(135deg, ${GREEN_D}, #166534)` }}>
                 {[
-                  { h: "Level / Description",  w: "14%"  },
-                  { h: "Comm %",               w: "8%"   },
-                  { h: "× Multiplier",         w: "12%"  },
-                  { h: "Team Size",            w: "8%"   },
-                  { h: "Mo. Units",            w: "8%"   },
-                  { h: "Monthly GV",           w: "11%"  },
-                  { h: "Your Commission",      w: "22%"  },
-                  { h: "Your Level Totals",   w: "17%"  },
-                ].map(({ h, w }) => (
-                  <th key={h} style={{ padding: "11px 10px", textAlign: "left", fontSize: 9, fontWeight: 900, color: YELLOW_B, letterSpacing: "0.06em", whiteSpace: "nowrap", textTransform: "uppercase", width: w }}>{h}</th>
+                  { h: "Level / Description",  w: "14%", align: "left"   },
+                  { h: "Comm %",               w: "8%",  align: "left"   },
+                  { h: "× Multiplier",         w: "12%", align: "center" },
+                  { h: "Team Size",            w: "8%",  align: "center" },
+                  { h: "Mo. Units",            w: "8%",  align: "center" },
+                  { h: "Monthly GV",           w: "11%", align: "center" },
+                  { h: "Your Commission",      w: "22%", align: "left"   },
+                  { h: "Your Level Totals",    w: "17%", align: "left"   },
+                ].map(({ h, w, align }) => (
+                  <th key={h} style={{ padding: "11px 10px", textAlign: align as React.CSSProperties["textAlign"], fontSize: 9, fontWeight: 900, color: YELLOW_B, letterSpacing: "0.06em", whiteSpace: "nowrap", textTransform: "uppercase", width: w }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -546,10 +546,10 @@ export function CalculatorPage() {
                     <span style={{ fontSize: 13, fontWeight: 900, color: WHITE, lineHeight: 1.2, marginTop: 2 }}>FLAT</span>
                   </div>
                 </td>
-                <td style={{ padding: "10px 10px", color: "#aaa", fontSize: 12 }}>—</td>
-                <td style={{ padding: "10px 10px", color: "#aaa", fontSize: 12 }}>—</td>
-                <td style={{ padding: "10px 10px", fontWeight: 800, color: ORANGE }}>{personalSales}</td>
-                <td style={{ padding: "10px 10px" }}>
+                <td style={{ padding: "10px 10px", color: "#aaa", fontSize: 12, textAlign: "center" }}>—</td>
+                <td style={{ padding: "10px 10px", color: "#aaa", fontSize: 12, textAlign: "center" }}>—</td>
+                <td style={{ padding: "10px 10px", fontWeight: 800, color: ORANGE, textAlign: "center" }}>{personalSales}</td>
+                <td style={{ padding: "10px 10px", textAlign: "center" }}>
                   <span style={{ fontWeight: 800, color: BLUE_D, background: BLUE_M, padding: "2px 8px", borderRadius: 6, fontSize: 11 }}>{fmtNum(personalGV)} GV</span>
                 </td>
                 <td style={{ padding: "10px 10px" }}>
@@ -618,9 +618,9 @@ export function CalculatorPage() {
                         </div>
                       )}
                     </td>
-                    <td style={{ padding: "9px 10px", fontWeight: 700, color: isYours ? ORANGE : "#9ca3af" }}>{fmtNum(lv.size)}</td>
-                    <td style={{ padding: "9px 10px", color: isYours ? DARK : "#9ca3af" }}>{fmtNum(lv.monthlyUnits)}</td>
-                    <td style={{ padding: "9px 10px" }}>
+                    <td style={{ padding: "9px 10px", fontWeight: 700, color: isYours ? ORANGE : "#9ca3af", textAlign: "center" }}>{fmtNum(lv.size)}</td>
+                    <td style={{ padding: "9px 10px", color: isYours ? DARK : "#9ca3af", textAlign: "center" }}>{fmtNum(lv.monthlyUnits)}</td>
+                    <td style={{ padding: "9px 10px", textAlign: "center" }}>
                       <span style={{ fontWeight: 700, color: BLUE_D, background: BLUE_M, padding: "2px 7px", borderRadius: 6, fontSize: 11 }}>{fmtNum(lv.gv)} GV</span>
                       {lv.level >= 2 && lv.level <= 5 && (
                         <div style={{ fontSize: 9, color: BLUE_D, marginTop: 3, fontWeight: 600 }}>

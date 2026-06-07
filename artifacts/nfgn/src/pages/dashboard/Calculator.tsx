@@ -105,10 +105,10 @@ export function CalculatorPage() {
   const nameTimers = useRef<(ReturnType<typeof setTimeout> | null)[]>([null, null, null]);
 
   // ── Builder state ──────────────────────────────────────────────────────────
-  const [personalSales, setPersonalSales] = useState(5);
-  const [l1Size,        setL1Size]        = useState(7);
+  const [personalSales, setPersonalSales] = useState(0);
+  const [l1Size,        setL1Size]        = useState(0);
   const [levelMults,    setLevelMults]    = useState<number[]>([3, 3, 3, 3, 3, 3, 3, 3]);
-  const [avgPurchases,  setAvgPurchases]  = useState(1);
+  const [avgPurchases,  setAvgPurchases]  = useState(0);
   const [targetIncome,  setTargetIncome]  = useState(4500);
 
   function toCalcProduct(d: Record<string, unknown>): CalcProduct {
@@ -503,9 +503,9 @@ export function CalculatorPage() {
             <Label style={{ fontSize: 11, fontWeight: 900, color: GREEN_D, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Avg Purchases / Person / Month</Label>
             <Input
               type="number"
-              min={1}
+              min={0}
               value={avgPurchases}
-              onChange={e => setAvgPurchases(Math.max(1, parseInt(e.target.value) || 1))}
+              onChange={e => setAvgPurchases(Math.max(0, parseInt(e.target.value) || 0))}
               style={{ fontWeight: 800, fontSize: 18, border: `2px solid ${GREEN}`, background: WHITE }}
             />
             <div style={{ fontSize: 11, color: GREEN_D, marginTop: 5, fontWeight: 700 }}>Units each person buys/month</div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,10 +25,8 @@ const BLUE_M   = "#dbeafe";
 const BLUE_B   = "#3b82f6";
 const BLUE_D   = "#1e3a8a";
 
-// Commission rates
-const SC  = 0.10;   // Sales Commission  = 10% of CV (L1 purchases)
-const L1C = 0.10;   // Level 1 Commission = 10% of CV (Pro Pkg L1)
-const L2C = 0.20;   // Level 2 Commission = 20% of CV (Pro Pkg L2)
+// PSC default rates per level (overridden by live /api/commission-rules fetch)
+const DEFAULT_PSC_RATES = [10, 20, 5, 5, 5, 5, 5, 5, 5]; // % per level L1-L9
 
 function fmtId(id: number)  { return `NFGN-${String(id).padStart(5, "0")}`; }
 function fmtUsd(n: number)  { return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
@@ -45,30 +43,27 @@ function parseProductId(raw: string): number | null {
 }
 
 // Commission model:
-//   RC (flat $) = earned on YOUR OWN personal sales only
-//   SC / L1C    = earned when your L1 direct referrals make purchases (% of CV)
-//   L2C         = earned when L2 members purchase a Pro Package (% of CV)
-//   GV          = size × avgPurchases × totalCV  (per level)
+//   RC (flat $)   = earned on YOUR OWN personal sales only
+//   PSC (Uni-Lvl) = % of CV earned per level from downline purchases (all 9 levels)
+//   GV            = size × avgPurchases × totalCV  (per level)
 function buildLevels(
   l1Size: number,
   mults: number[],
   avgPurchases: number,
   totalCV: number,
   totalRC: number,
-  hasProPkg: boolean,
+  pscRates: number[], // per-level % as integers e.g. [10, 20, 5, 5, ...]
 ): LevelRow[] {
   const rows: LevelRow[] = [];
   for (let i = 1; i <= 9; i++) {
-    const size         = i === 1 ? l1Size : Math.round(rows[i - 2].size * (mults[i - 2] ?? 1));
-    const monthlyUnits = size * avgPurchases;
-    const gv           = monthlyUnits * totalCV;
-    const scRate       = hasProPkg ? L1C : SC;
-    const yourCommPerUnit =
-      i === 1 ? totalCV * scRate :
-      (i === 2 && hasProPkg) ? totalCV * L2C : 0;
-    const yourComm = monthlyUnits * yourCommPerUnit;
-    // orgComm = total commission generated from this level's purchases (RC + SC)
-    const orgComm  = monthlyUnits * (totalRC + totalCV * scRate);
+    const size            = i === 1 ? l1Size : Math.round(rows[i - 2].size * (mults[i - 2] ?? 1));
+    const monthlyUnits    = size * avgPurchases;
+    const gv              = monthlyUnits * totalCV;
+    const ratePct         = pscRates[i - 1] ?? 0;          // e.g. 10, 20, 5
+    const yourCommPerUnit = totalCV * ratePct / 100;        // $ per unit at this level
+    const yourComm        = monthlyUnits * yourCommPerUnit;
+    // orgComm = all commissions generated from this level's purchases (RC + PSC)
+    const orgComm  = monthlyUnits * (totalRC + yourCommPerUnit);
     const label    = i === 1 ? "Direct Referrals" : i === 2 ? "Their Referrals" : `Generation ${i}`;
     rows.push({ level: i, size, monthlyUnits, gv, yourComm, orgComm, label });
   }
@@ -76,6 +71,20 @@ function buildLevels(
 }
 
 export function CalculatorPage() {
+  // ── PSC rates from admin settings ─────────────────────────────────────────
+  const [pscRates, setPscRates] = useState<number[]>(DEFAULT_PSC_RATES);
+  useEffect(() => {
+    customFetch("/api/commission-rules")
+      .then(r => r.ok ? r.json() : null)
+      .then((d: { salesLevels?: { level: number; rate: number }[] } | null) => {
+        if (d?.salesLevels?.length) {
+          const sorted = [...d.salesLevels].sort((a, b) => a.level - b.level);
+          setPscRates(Array.from({ length: 9 }, (_, i) => sorted[i]?.rate ?? 0));
+        }
+      })
+      .catch(() => {/* keep defaults */});
+  }, []);
+
   // ── Product slots (up to 3) ────────────────────────────────────────────────
   const [productSlots,    setProductSlots]    = useState<(CalcProduct | null)[]>([null, null, null]);
   const [idInputs,        setIdInputs]        = useState(["", "", ""]);
@@ -122,44 +131,43 @@ export function CalculatorPage() {
   }
 
   // ── Combined derived values ────────────────────────────────────────────────
-  const loadedProducts   = productSlots.slice(0, slotCount).filter((p): p is CalcProduct => p !== null);
-  const hasAny           = loadedProducts.length > 0;
-  const totalCV          = loadedProducts.reduce((s, p) => s + p.cv,               0);
-  const totalRC          = loadedProducts.reduce((s, p) => s + p.commissionAmount, 0);
-  const hasProPkg        = loadedProducts.some(p => p.isProPackage);
-  const scRate           = hasProPkg ? L1C : SC;
-  const scPerUnit        = totalCV * scRate;       // SC per L1 purchase
-  const l2cPerUnit       = totalCV * L2C;          // L2C per L2 purchase (Pro Pkg)
-  const commPerDirectSale = totalRC + scPerUnit;   // display-only combined
+  const loadedProducts    = productSlots.slice(0, slotCount).filter((p): p is CalcProduct => p !== null);
+  const hasAny            = loadedProducts.length > 0;
+  const totalCV           = loadedProducts.reduce((s, p) => s + p.cv,               0);
+  const totalRC           = loadedProducts.reduce((s, p) => s + p.commissionAmount, 0);
+  const hasProPkg         = loadedProducts.some(p => p.isProPackage);
+  const l1RatePct         = pscRates[0] ?? 10;                      // e.g. 10
+  const l1DollarPerUnit   = totalCV * l1RatePct / 100;              // $ per L1 purchase
+  const l2DollarPerUnit   = totalCV * (pscRates[1] ?? 20) / 100;   // $ per L2 purchase
+  const commPerDirectSale = totalRC + l1DollarPerUnit;              // display-only combined
 
   // ── Level builder ──────────────────────────────────────────────────────────
-  const levels = hasAny ? buildLevels(l1Size, levelMults, avgPurchases, totalCV, totalRC, hasProPkg) : [];
+  const levels = hasAny ? buildLevels(l1Size, levelMults, avgPurchases, totalCV, totalRC, pscRates) : [];
 
   // ── Earnings ───────────────────────────────────────────────────────────────
-  // Personal: RC only (flat $ earned on own sales)
-  const myPersonalRC     = personalSales * totalRC;
-  // L1: SC from L1 downline purchases
-  const myL1SC           = levels[0]?.yourComm ?? 0;
-  // L2: L2C from L2 downline (Pro Pkg only)
-  const myL2Earnings     = levels[1]?.yourComm ?? 0;
-  const myCommTotal      = myPersonalRC + myL1SC + myL2Earnings;
-  const clbEarned        = l1Size >= 7 ? 100 : 0;
-  const l2Total          = levels[1] ? levels[1].size * avgPurchases : 0;
-  const mcbCount         = hasProPkg ? Math.floor(l2Total / 7) : 0;
-  const mcbEarned        = mcbCount * 200;
-  const totalWithBonus   = myCommTotal + clbEarned + mcbEarned;
+  const myPersonalRC    = personalSales * totalRC;                  // RC on own sales
+  const myL1Earnings    = levels[0]?.yourComm ?? 0;                 // PSC L1
+  const myL2Earnings    = levels[1]?.yourComm ?? 0;                 // PSC L2
+  const myL3to9Earnings = levels.slice(2).reduce((s, l) => s + l.yourComm, 0); // PSC L3-L9
+  const myPscTotal      = levels.reduce((s, l) => s + l.yourComm, 0);
+  const myCommTotal     = myPersonalRC + myPscTotal;
+  const clbEarned       = l1Size >= 7 ? 100 : 0;
+  const l2Total         = levels[1] ? levels[1].size * avgPurchases : 0;
+  const mcbCount        = hasProPkg ? Math.floor(l2Total / 7) : 0;
+  const mcbEarned       = mcbCount * 200;
+  const totalWithBonus  = myCommTotal + clbEarned + mcbEarned;
 
   // GV totals
-  const personalGV       = personalSales * totalCV;
-  const totalOrgGV       = personalGV + levels.reduce((s, l) => s + l.gv, 0);
-  const orgCollective    = levels.reduce((s, l) => s + l.orgComm, 0);
+  const personalGV    = personalSales * totalCV;
+  const totalOrgGV    = personalGV + levels.reduce((s, l) => s + l.gv, 0);
+  const orgCollective = levels.reduce((s, l) => s + l.orgComm, 0);
 
   // ── Income Goal ────────────────────────────────────────────────────────────
   const goalPersonalOnly  = totalRC > 0 ? Math.ceil(targetIncome / totalRC) : 0;
   const earningsFrom5     = 5 * totalRC;
-  const l1Needed          = scPerUnit > 0 ? Math.ceil(Math.max(0, targetIncome - earningsFrom5) / scPerUnit) : 0;
-  const l1WithBonusNeeded = scPerUnit > 0 ? Math.ceil(Math.max(0, targetIncome - 100 - earningsFrom5) / scPerUnit) : 0;
-  const l2Needed          = hasProPkg && l2cPerUnit > 0 ? Math.ceil(targetIncome / l2cPerUnit) : null;
+  const l1Needed          = l1DollarPerUnit > 0 ? Math.ceil(Math.max(0, targetIncome - earningsFrom5) / l1DollarPerUnit) : 0;
+  const l1WithBonusNeeded = l1DollarPerUnit > 0 ? Math.ceil(Math.max(0, targetIncome - 100 - earningsFrom5) / l1DollarPerUnit) : 0;
+  const l2Needed          = hasProPkg && l2DollarPerUnit > 0 ? Math.ceil(targetIncome / l2DollarPerUnit) : null;
 
   return (
     <div style={{ maxWidth: 960, margin: "0 auto", padding: "24px 16px 56px" }}>
@@ -283,7 +291,7 @@ export function CalculatorPage() {
               {[
                 { label: "Combined CV (GV basis)",  value: String(totalCV),           bg: YELLOW_B, text: GREEN_D  },
                 { label: "Combined RC / unit",      value: fmtUsd(totalRC),           bg: ORANGE_B, text: WHITE    },
-                { label: hasProPkg ? "L1 Comm / unit" : "Sales Comm / unit", value: fmtUsd(scPerUnit), bg: GREEN_D, text: YELLOW_B },
+                { label: `L1 PSC (${l1RatePct}%) / unit`, value: fmtUsd(l1DollarPerUnit), bg: GREEN_D, text: YELLOW_B },
                 { label: "Total Per Direct Sale",   value: fmtUsd(commPerDirectSale), bg: GREEN,    text: WHITE    },
               ].map(s => (
                 <div key={s.label} style={{ textAlign: "center", background: s.bg, borderRadius: 12, padding: "10px 16px", minWidth: 90 }}>
@@ -301,9 +309,9 @@ export function CalculatorPage() {
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 {[
                   { label: "RC — on Your Own Sales",         pct: fmtUsd(totalRC) + " flat",          amt: totalRC,   sub: "Fixed dollar RC earned per unit you personally sell",             bg: GREEN_M,  border: GREEN,    val: GREEN_D },
-                  { label: hasProPkg ? "L1 Commission" : "Sales Commission", pct: "10% of CV",        amt: scPerUnit, sub: `10% × ${totalCV} combined CV per L1 purchase`,                  bg: YELLOW_M, border: YELLOW_B, val: YELLOW  },
-                  { label: "Total Per Direct Sale",          pct: "RC + 10% CV",                       amt: commPerDirectSale, sub: `RC flat + 10% × ${totalCV} CV`,                         bg: GREEN,    border: GREEN_D,  val: WHITE, bold: true },
-                  ...(hasProPkg ? [{ label: "Level 2 Commission",     pct: "20% of CV", amt: l2cPerUnit, sub: `20% × ${totalCV} CV per L2 purchase`, bg: ORANGE_M, border: ORANGE_B, val: ORANGE }] : []),
+                  { label: `L1 PSC (${l1RatePct}%)`, pct: `${l1RatePct}% of CV`, amt: l1DollarPerUnit, sub: `${l1RatePct}% × ${totalCV} combined CV per L1 purchase`, bg: YELLOW_M, border: YELLOW_B, val: YELLOW },
+                  { label: "Total Per Direct Sale",  pct: `RC + ${l1RatePct}% CV`, amt: commPerDirectSale, sub: `RC flat + ${l1RatePct}% × ${totalCV} CV`, bg: GREEN, border: GREEN_D, val: WHITE, bold: true },
+                  ...(hasProPkg ? [{ label: `L2 PSC (${pscRates[1] ?? 20}%)`, pct: `${pscRates[1] ?? 20}% of CV`, amt: l2DollarPerUnit, sub: `${pscRates[1] ?? 20}% × ${totalCV} CV per L2 purchase`, bg: ORANGE_M, border: ORANGE_B, val: ORANGE }] : []),
                 ].map(item => (
                   <div key={item.label} style={{ flex: "1 1 140px", padding: "12px 14px", background: item.bg, borderRadius: 12, border: `2px solid ${item.border}` }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: (item as any).bold ? "rgba(255,255,255,0.75)" : "#555", marginBottom: 4 }}>{item.label}</div>
@@ -410,7 +418,7 @@ export function CalculatorPage() {
                   { h: "Mo. Units",            w: "8%"   },
                   { h: "Monthly GV",           w: "11%"  },
                   { h: "Your Commission",      w: "20%"  },
-                  { h: "Org Collective (RC+SC)", w: "19%" },
+                  { h: "Org Collective (RC+PSC)", w: "19%" },
                 ].map(({ h, w }) => (
                   <th key={h} style={{ padding: "11px 10px", textAlign: "left", fontSize: 9, fontWeight: 900, color: YELLOW_B, letterSpacing: "0.06em", whiteSpace: "nowrap", textTransform: "uppercase", width: w }}>{h}</th>
                 ))}
@@ -443,17 +451,14 @@ export function CalculatorPage() {
 
               {/* L1–L9 rows */}
               {levels.map((lv, i) => {
-                const isYours  = lv.yourComm > 0;
-                const prevSize = i === 0 ? l1Size : levels[i - 1].size;
-                const scRate   = hasProPkg ? L1C : SC;
-                // Commission rate label for this level
-                const rateLabel =
-                  lv.level === 1 ? `${Math.round(scRate * 100)}% ${hasProPkg ? "L1C" : "SC"}` :
-                  (lv.level === 2 && hasProPkg) ? "20% L2C" : "—";
-                const rateColor = lv.level === 1 ? GREEN : (lv.level === 2 && hasProPkg) ? ORANGE_B : "#d1d5db";
-                // Org collective breakdown sub-text (RC + SC)
-                const orgRC = lv.monthlyUnits * totalRC;
-                const orgSC = lv.monthlyUnits * totalCV * scRate;
+                const isYours       = lv.yourComm > 0;
+                const prevSize      = i === 0 ? l1Size : levels[i - 1].size;
+                const ratePct       = pscRates[lv.level - 1] ?? 0;
+                const dollarPerUnit = totalCV * ratePct / 100;
+                const rateColor     = ratePct >= 20 ? ORANGE_B : ratePct > 0 ? GREEN : "#d1d5db";
+                // Org breakdown sub-text
+                const orgRC  = lv.monthlyUnits * totalRC;
+                const orgPSC = lv.monthlyUnits * dollarPerUnit;
                 return (
                   <tr key={lv.level} style={{ background: isYours ? GREEN_M + "80" : (i % 2 === 0 ? "#f9fafb" : WHITE), borderBottom: `1px solid ${isYours ? GREEN : "#e5e7eb"}` }}>
                     {/* Level + Description merged */}
@@ -461,11 +466,20 @@ export function CalculatorPage() {
                       <div style={{ fontWeight: 900, color: isYours ? GREEN_D : "#9ca3af", fontSize: 13 }}>L{lv.level}</div>
                       <div style={{ fontSize: 10, color: isYours ? "#555" : "#c4c4c4", marginTop: 1 }}>{lv.label}</div>
                     </td>
-                    {/* Comm % */}
+                    {/* Comm % — rate badge + dollar per unit */}
                     <td style={{ padding: "9px 10px" }}>
-                      {rateLabel !== "—"
-                        ? <span style={{ fontSize: 10, fontWeight: 800, color: WHITE, background: rateColor, padding: "2px 7px", borderRadius: 5 }}>{rateLabel}</span>
-                        : <span style={{ color: "#d1d5db", fontSize: 12 }}>—</span>}
+                      {ratePct > 0 ? (
+                        <div>
+                          <span style={{ fontSize: 10, fontWeight: 800, color: WHITE, background: rateColor, padding: "2px 7px", borderRadius: 5 }}>
+                            {ratePct}% PSC
+                          </span>
+                          <div style={{ fontSize: 10, color: "#6b7280", marginTop: 3 }}>
+                            {fmtUsd(dollarPerUnit)}/unit
+                          </div>
+                        </div>
+                      ) : (
+                        <span style={{ color: "#d1d5db", fontSize: 12 }}>—</span>
+                      )}
                     </td>
                     {/* × Multiplier */}
                     <td style={{ padding: "9px 8px" }}>
@@ -497,27 +511,25 @@ export function CalculatorPage() {
                     <td style={{ padding: "9px 10px" }}>
                       <span style={{ fontWeight: 700, color: BLUE_D, background: BLUE_M, padding: "2px 7px", borderRadius: 6, fontSize: 11 }}>{fmtNum(lv.gv)} GV</span>
                     </td>
-                    {/* Your Commission + calculation */}
+                    {/* Your Commission + calculation sub-text */}
                     <td style={{ padding: "9px 10px" }}>
                       {isYours ? (
                         <>
                           <div style={{ fontWeight: 900, color: GREEN_D, fontSize: 14 }}>{fmtUsd(lv.yourComm)}</div>
                           <div style={{ fontSize: 10, color: "#6b7280", marginTop: 2 }}>
-                            {lv.monthlyUnits} × {fmtUsd(totalCV * (lv.level === 1 ? scRate : L2C))} = {fmtUsd(lv.yourComm)}
+                            {lv.monthlyUnits} × {fmtUsd(dollarPerUnit)} = {fmtUsd(lv.yourComm)}
                           </div>
                         </>
                       ) : (
                         <span style={{ color: "#d1d5db", fontSize: 12 }}>—</span>
                       )}
                     </td>
-                    {/* Org Collective + RC+SC breakdown */}
+                    {/* Org Collective + RC + PSC breakdown */}
                     <td style={{ padding: "9px 10px" }}>
                       <div style={{ fontWeight: 700, color: "#374151", fontSize: 13 }}>{fmtUsd(lv.orgComm)}</div>
-                      {lv.level <= 2 && (
-                        <div style={{ fontSize: 10, color: "#6b7280", marginTop: 2 }}>
-                          RC {fmtUsd(orgRC)} + SC {fmtUsd(orgSC)}
-                        </div>
-                      )}
+                      <div style={{ fontSize: 10, color: "#6b7280", marginTop: 2 }}>
+                        RC {fmtUsd(orgRC)} + PSC {fmtUsd(orgPSC)}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -549,10 +561,11 @@ export function CalculatorPage() {
             <TrendingUp size={14} /> Monthly Earnings Summary
           </div>
           {[
-            { label: "Personal Sales — RC",                  amount: myPersonalRC,   desc: `${personalSales} personal sales × ${fmtUsd(totalRC)} RC/unit`,                                             color: GREEN_M   },
-            { label: "L1 Direct Referrals — Sales Comm",     amount: myL1SC,         desc: `${fmtNum(l1Size)} members × ${avgPurchases} purchase × ${fmtUsd(scPerUnit)}/unit (10% × ${totalCV} CV)`,   color: YELLOW_B  },
-            ...(hasProPkg ? [{ label: "Level 2 Commission (Pro Pkg)", amount: myL2Earnings, desc: `${fmtNum(levels[1]?.size ?? 0)} members × ${avgPurchases} × ${fmtUsd(l2cPerUnit)}/unit`, color: ORANGE_B }] : []),
-            { label: "CLB Bonus",                            amount: clbEarned,      desc: l1Size >= 7 ? "✓ 7+ qualified L1 Pro Members" : `Need ${7 - l1Size} more L1 to qualify`,                  color: ORANGE_B  },
+            { label: "Personal Sales — RC",                    amount: myPersonalRC,    desc: `${personalSales} personal sales × ${fmtUsd(totalRC)} RC/unit`,                                                                      color: GREEN_M  },
+            { label: `L1 PSC (${pscRates[0] ?? 10}%)`,        amount: myL1Earnings,    desc: `${fmtNum(l1Size)} members × ${avgPurchases} purchase × ${fmtUsd(l1DollarPerUnit)}/unit`,                                           color: YELLOW_B },
+            { label: `L2 PSC (${pscRates[1] ?? 20}%)`,        amount: myL2Earnings,    desc: `${fmtNum(levels[1]?.size ?? 0)} members × ${avgPurchases} purchases × ${fmtUsd(l2DollarPerUnit)}/unit`,                            color: ORANGE_B },
+            { label: `L3–L9 PSC (${pscRates[2] ?? 5}% each)`, amount: myL3to9Earnings, desc: `${fmtNum(levels.slice(2).reduce((s,l)=>s+l.size,0))} members across 7 levels × ${avgPurchases} purchases`,                        color: "#fdba74" },
+            { label: "CLB Bonus",                              amount: clbEarned,       desc: l1Size >= 7 ? "✓ 7+ qualified L1 Pro Members" : `Need ${7 - l1Size} more L1 to qualify`,                                           color: ORANGE_B },
             ...(hasProPkg ? [{ label: `MCB Bonus (${mcbCount}× at $200)`, amount: mcbEarned, desc: `${fmtNum(l2Total)} L2 purchases ÷ 7 = ${mcbCount} payments`, color: "#fdba74" }] : []),
           ].map(row => (
             <div key={row.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
@@ -679,7 +692,7 @@ export function CalculatorPage() {
               </div>
               {hasProPkg && l2Needed !== null && (
                 <div style={{ fontSize: 13, color: ORANGE, lineHeight: 1.8, padding: "10px 12px", background: WHITE, borderRadius: 8, border: `2px solid ${ORANGE_B}` }}>
-                  OR: <strong style={{ color: ORANGE_B }}>{fmtNum(l2Needed)} L2 members</strong> buying 1 Pro Package/mo → L2 (20%) earns {fmtUsd(l2Needed * l2cPerUnit)}/mo.
+                  OR: <strong style={{ color: ORANGE_B }}>{fmtNum(l2Needed)} L2 members</strong> buying 1 Pro Package/mo → L2 ({pscRates[1] ?? 20}%) earns {fmtUsd(l2Needed * l2DollarPerUnit)}/mo.
                 </div>
               )}
               {!hasProPkg && (

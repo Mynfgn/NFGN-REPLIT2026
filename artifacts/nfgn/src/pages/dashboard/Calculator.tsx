@@ -39,10 +39,10 @@ function parseProductId(raw: string): number | null {
   return isNaN(n) || n <= 0 ? null : n;
 }
 
-function buildLevels(l1Size: number, dup: number, avgPurchases: number, cv: number, isProPkg: boolean, rcPerUnit: number) {
+function buildLevels(l1Size: number, mults: number[], avgPurchases: number, cv: number, isProPkg: boolean, rcPerUnit: number) {
   const levels: { level: number; size: number; monthlyUnits: number; yourComm: number; orgComm: number; label: string; }[] = [];
   for (let i = 1; i <= 9; i++) {
-    const size = i === 1 ? l1Size : levels[i - 2].size * dup;
+    const size = i === 1 ? l1Size : Math.round(levels[i - 2].size * (mults[i - 2] ?? 1));
     const monthlyUnits = size * avgPurchases;
     // RC is a flat dollar amount per unit; SC/L1C/L2C are % of CV
     const yourCommPerUnit = i === 1
@@ -63,7 +63,7 @@ export function CalculatorPage() {
   const [lookupLoading, setLookupLoading] = useState(false);
   const [personalSales, setPersonalSales] = useState(5);
   const [l1Size,        setL1Size]        = useState(7);
-  const [dupFactor,     setDupFactor]     = useState(5);
+  const [levelMults,    setLevelMults]    = useState<number[]>([3, 3, 3, 3, 3, 3, 3, 3]);
   const [avgPurchases,  setAvgPurchases]  = useState(1);
   const [targetIncome,  setTargetIncome]  = useState(4500);
 
@@ -88,7 +88,7 @@ export function CalculatorPage() {
   const rcPerUnit = product ? product.commissionAmount : 0;
   const commPerSalePersonal = rcPerUnit + cv * (isProPkg ? L1C : SC);
   const commL2PerSale       = isProPkg ? cv * L2C : 0;
-  const levels = product ? buildLevels(l1Size, dupFactor, avgPurchases, cv, isProPkg, rcPerUnit) : [];
+  const levels = product ? buildLevels(l1Size, levelMults, avgPurchases, cv, isProPkg, rcPerUnit) : [];
 
   const myPersonalEarnings = personalSales * commPerSalePersonal;
   const myL1Earnings       = levels[0]?.yourComm ?? 0;
@@ -235,16 +235,15 @@ export function CalculatorPage() {
       <SectionCard borderColor={YELLOW_B} topColor={YELLOW_B} disabled={!product}>
         <StepHeader n={2} title="9-Level Organization Builder" />
         <p style={{ fontSize: 13, color: "#444", marginBottom: 20, lineHeight: 1.7 }}>
-          Set your personal sales, Level 1 team size, duplication factor, and monthly purchases. Projects earnings through all 9 generations.
+          Set your Level 1 team size, then enter a multiplier for each level (L2–L9). Each level's team size = previous level × its multiplier.
         </p>
 
-        {/* Inputs */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 14, marginBottom: 24 }}>
+        {/* Top inputs: personal sales, L1 size, avg purchases */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 14, marginBottom: 20 }}>
           {[
-            { label: "Your Personal Sales / Month",    value: personalSales, setter: setPersonalSales, min: 0, hint: price > 0 ? `Earns ${fmtUsd(personalSales * commPerSalePersonal)}/mo` : "Load a product first", bg: GREEN_M,  border: GREEN,    color: GREEN_D   },
-            { label: "Level 1 Team Size",              value: l1Size,        setter: setL1Size,        min: 0, hint: l1Size >= 7 ? "✓ CLB eligible!"      : `${7 - l1Size} more needed for CLB`,       bg: YELLOW_M, border: YELLOW_B, color: YELLOW  },
-            { label: "Duplication Factor (L2–L9)",     value: dupFactor,     setter: setDupFactor,     min: 1, hint: "Recruits per member per level",                                                    bg: ORANGE_M, border: ORANGE_B, color: ORANGE  },
-            { label: "Avg Purchases / Person / Month", value: avgPurchases,  setter: setAvgPurchases,  min: 1, hint: "Units each person buys/month",                                                     bg: GREEN_M,  border: GREEN,    color: GREEN_D   },
+            { label: "Your Personal Sales / Month",    value: personalSales, setter: setPersonalSales, min: 0, hint: price > 0 ? `Earns ${fmtUsd(personalSales * commPerSalePersonal)}/mo` : "Load a product first", bg: GREEN_M,  border: GREEN,    color: GREEN_D },
+            { label: "Level 1 Team Size (Base)",       value: l1Size,        setter: setL1Size,        min: 0, hint: l1Size >= 7 ? "✓ CLB eligible!" : `${7 - l1Size} more needed for CLB`,                          bg: YELLOW_M, border: YELLOW_B, color: YELLOW  },
+            { label: "Avg Purchases / Person / Month", value: avgPurchases,  setter: setAvgPurchases,  min: 1, hint: "Units each person buys/month",                                                                   bg: GREEN_M,  border: GREEN,    color: GREEN_D },
           ].map(row => (
             <div key={row.label} style={{ background: row.bg, borderRadius: 12, border: `2px solid ${row.border}`, padding: "12px 14px" }}>
               <Label style={{ fontSize: 11, fontWeight: 900, color: row.color, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>{row.label}</Label>
@@ -265,7 +264,7 @@ export function CalculatorPage() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
             <thead>
               <tr style={{ background: `linear-gradient(135deg, ${GREEN_D}, #166534)` }}>
-                {["Level", "Description", "Team Size", "Monthly Units", "Your Commission", "Org Collective", "Flows To You?"].map(h => (
+                {["Level", "Description", "× Multiplier", "Team Size", "Monthly Units", "Your Commission", "Org Collective", "Flows To You?"].map(h => (
                   <th key={h} style={{ padding: "12px 14px", textAlign: "left", fontSize: 11, fontWeight: 900, color: YELLOW_B, letterSpacing: "0.07em", whiteSpace: "nowrap", textTransform: "uppercase" }}>{h}</th>
                 ))}
               </tr>
@@ -274,6 +273,7 @@ export function CalculatorPage() {
               <tr style={{ background: GREEN_M, borderBottom: `2px solid ${GREEN}` }}>
                 <td style={{ padding: "11px 14px", fontWeight: 900, color: GREEN_D, fontSize: 15 }}>You</td>
                 <td style={{ padding: "11px 14px", color: DARK, fontWeight: 600 }}>Personal Sales</td>
+                <td style={{ padding: "11px 14px", color: "#aaa" }}>—</td>
                 <td style={{ padding: "11px 14px", fontWeight: 700 }}>—</td>
                 <td style={{ padding: "11px 14px", fontWeight: 800, color: ORANGE }}>{personalSales}</td>
                 <td style={{ padding: "11px 14px", fontWeight: 900, color: GREEN_D, fontSize: 15 }}>{fmtUsd(myPersonalEarnings)}</td>
@@ -282,10 +282,35 @@ export function CalculatorPage() {
               </tr>
               {levels.map((lv, i) => {
                 const isYours = lv.yourComm > 0;
+                const prevSize = i === 0 ? l1Size : levels[i - 1].size;
                 return (
                   <tr key={lv.level} style={{ background: isYours ? GREEN_M + "80" : (i % 2 === 0 ? "#f9fafb" : WHITE), borderBottom: `1px solid ${isYours ? GREEN : "#e5e7eb"}` }}>
                     <td style={{ padding: "10px 14px", fontWeight: 900, color: isYours ? GREEN_D : "#d1d5db", fontSize: 14 }}>L{lv.level}</td>
                     <td style={{ padding: "10px 14px", color: "#555" }}>{lv.label}</td>
+                    <td style={{ padding: "10px 12px" }}>
+                      {lv.level === 1 ? (
+                        <span style={{ fontSize: 12, color: "#9ca3af", fontWeight: 600 }}>Base</span>
+                      ) : (
+                        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                          <span style={{ fontSize: 12, color: ORANGE, fontWeight: 700 }}>{fmtNum(prevSize)} ×</span>
+                          <input
+                            type="number"
+                            min={1}
+                            step={1}
+                            value={levelMults[lv.level - 2]}
+                            onChange={e => {
+                              const v = Math.max(1, parseInt(e.target.value) || 1);
+                              setLevelMults(prev => { const next = [...prev]; next[lv.level - 2] = v; return next; });
+                            }}
+                            style={{
+                              width: 52, fontWeight: 800, fontSize: 14, textAlign: "center",
+                              border: `2px solid ${ORANGE_B}`, borderRadius: 6, padding: "3px 5px",
+                              background: ORANGE_M, color: ORANGE, outline: "none",
+                            }}
+                          />
+                        </div>
+                      )}
+                    </td>
                     <td style={{ padding: "10px 14px", fontWeight: 700, color: isYours ? ORANGE : "#9ca3af" }}>{fmtNum(lv.size)}</td>
                     <td style={{ padding: "10px 14px", color: isYours ? DARK : "#9ca3af" }}>{fmtNum(lv.monthlyUnits)}</td>
                     <td style={{ padding: "10px 14px", fontWeight: isYours ? 900 : 400, color: isYours ? GREEN_D : "#d1d5db", fontSize: isYours ? 15 : 13 }}>

@@ -417,8 +417,7 @@ export function CalculatorPage() {
                   { h: "Team Size",            w: "8%"   },
                   { h: "Mo. Units",            w: "8%"   },
                   { h: "Monthly GV",           w: "11%"  },
-                  { h: "Your Commission",      w: "20%"  },
-                  { h: "Org Collective (RC+PSC)", w: "19%" },
+                  { h: "Your Commission",      w: "39%"  },
                 ].map(({ h, w }) => (
                   <th key={h} style={{ padding: "11px 10px", textAlign: "left", fontSize: 9, fontWeight: 900, color: YELLOW_B, letterSpacing: "0.06em", whiteSpace: "nowrap", textTransform: "uppercase", width: w }}>{h}</th>
                 ))}
@@ -456,9 +455,6 @@ export function CalculatorPage() {
                 const ratePct       = pscRates[lv.level - 1] ?? 0;
                 const dollarPerUnit = totalCV * ratePct / 100;
                 const rateColor     = ratePct >= 20 ? ORANGE_B : ratePct > 0 ? GREEN : "#d1d5db";
-                // Org breakdown sub-text
-                const orgRC  = lv.monthlyUnits * totalRC;
-                const orgPSC = lv.monthlyUnits * dollarPerUnit;
                 return (
                   <tr key={lv.level} style={{ background: isYours ? GREEN_M + "80" : (i % 2 === 0 ? "#f9fafb" : WHITE), borderBottom: `1px solid ${isYours ? GREEN : "#e5e7eb"}` }}>
                     {/* Level + Description merged */}
@@ -524,13 +520,6 @@ export function CalculatorPage() {
                         <span style={{ color: "#d1d5db", fontSize: 12 }}>—</span>
                       )}
                     </td>
-                    {/* Org Collective + RC + PSC breakdown */}
-                    <td style={{ padding: "9px 10px" }}>
-                      <div style={{ fontWeight: 700, color: "#374151", fontSize: 13 }}>{fmtUsd(lv.orgComm)}</div>
-                      <div style={{ fontSize: 10, color: "#6b7280", marginTop: 2 }}>
-                        RC {fmtUsd(orgRC)} + PSC {fmtUsd(orgPSC)}
-                      </div>
-                    </td>
                   </tr>
                 );
               })}
@@ -546,7 +535,7 @@ export function CalculatorPage() {
                       {fmtNum(totalOrgGV)} GV
                     </span>
                   </td>
-                  <td colSpan={3} style={{ padding: "9px 10px", fontSize: 10, color: BLUE_D, fontWeight: 600 }}>
+                  <td colSpan={2} style={{ padding: "9px 10px", fontSize: 10, color: BLUE_D, fontWeight: 600 }}>
                     Personal {fmtNum(personalGV)} GV + Org {fmtNum(totalOrgGV - personalGV)} GV
                   </td>
                 </tr>
@@ -588,7 +577,7 @@ export function CalculatorPage() {
             <div>
               <div style={{ fontSize: 15, fontWeight: 800, color: WHITE }}>Your Total Monthly Income</div>
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
-                Org collective SC: <span style={{ color: GREEN_M, fontWeight: 700 }}>{fmtUsd(orgCollective)}/mo</span> throughout your network
+                RC on personal sales + PSC from all 9 downline levels
               </div>
             </div>
             <div style={{ fontSize: 38, fontWeight: 900, color: YELLOW_B, textShadow: `0 0 20px rgba(251,191,36,0.7)` }}>{fmtUsd(totalWithBonus)}</div>

@@ -39,17 +39,17 @@ function parseProductId(raw: string): number | null {
   return isNaN(n) || n <= 0 ? null : n;
 }
 
-function buildLevels(l1Size: number, dup: number, avgPurchases: number, price: number, isProPkg: boolean, rcPerUnit: number) {
+function buildLevels(l1Size: number, dup: number, avgPurchases: number, cv: number, isProPkg: boolean, rcPerUnit: number) {
   const levels: { level: number; size: number; monthlyUnits: number; yourComm: number; orgComm: number; label: string; }[] = [];
   for (let i = 1; i <= 9; i++) {
     const size = i === 1 ? l1Size : levels[i - 2].size * dup;
     const monthlyUnits = size * avgPurchases;
-    // RC is a flat dollar amount per unit; SC/L1C/L2C are still % of price
+    // RC is a flat dollar amount per unit; SC/L1C/L2C are % of CV
     const yourCommPerUnit = i === 1
-      ? (rcPerUnit + price * (isProPkg ? L1C : SC))
-      : (i === 2 && isProPkg) ? price * L2C : 0;
+      ? (rcPerUnit + cv * (isProPkg ? L1C : SC))
+      : (i === 2 && isProPkg) ? cv * L2C : 0;
     const yourComm = monthlyUnits * yourCommPerUnit;
-    const orgComm  = monthlyUnits * (rcPerUnit + price * (isProPkg ? L1C : SC));
+    const orgComm  = monthlyUnits * (rcPerUnit + cv * (isProPkg ? L1C : SC));
     const label = i === 1 ? "Direct Referrals" : i === 2 ? "Their Referrals" : `Generation ${i}`;
     levels.push({ level: i, size, monthlyUnits, yourComm, orgComm, label });
   }
@@ -81,12 +81,14 @@ export function CalculatorPage() {
   }
 
   const price    = product?.price ?? 0;
+  const cv       = product?.cv ?? 0;
   const isProPkg = product?.isProPackage ?? false;
-  // RC per unit: fixed dollar amount per unit sold
-  const rcPerUnit = product ? product.commissionAmount : price * RC;
-  const commPerSalePersonal = rcPerUnit + price * (isProPkg ? L1C : SC);
-  const commL2PerSale       = isProPkg ? price * L2C : 0;
-  const levels = product ? buildLevels(l1Size, dupFactor, avgPurchases, price, isProPkg, rcPerUnit) : [];
+  // RC per unit: fixed flat dollar amount per unit sold
+  // SC / L1C / L2C are % of CV (commissionable volume), not price
+  const rcPerUnit = product ? product.commissionAmount : 0;
+  const commPerSalePersonal = rcPerUnit + cv * (isProPkg ? L1C : SC);
+  const commL2PerSale       = isProPkg ? cv * L2C : 0;
+  const levels = product ? buildLevels(l1Size, dupFactor, avgPurchases, cv, isProPkg, rcPerUnit) : [];
 
   const myPersonalEarnings = personalSales * commPerSalePersonal;
   const myL1Earnings       = levels[0]?.yourComm ?? 0;
@@ -204,9 +206,9 @@ export function CalculatorPage() {
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 {[
                   { label: "Referral Commission (RC)", pct: fmtUsd(rcPerUnit) + " flat", amt: rcPerUnit, sub: "Fixed dollar amount per unit sold", bg: GREEN_M,  border: GREEN,    val: GREEN_D  },
-                  { label: isProPkg ? "Level 1 Commission" : "Sales Commission", pct: "10%", amt: price * (isProPkg ? L1C : SC), sub: isProPkg ? "Your L1 buys Pro Package" : "Regular product sale", bg: YELLOW_M, border: YELLOW_B, val: YELLOW },
-                  { label: "Your Total Per Direct Sale", pct: "RC + 10%", amt: commPerSalePersonal, sub: "Fixed RC + 10% Sales/L1",  bg: GREEN,    border: GREEN_D,  val: WHITE,  bold: true },
-                  ...(isProPkg ? [{ label: "Level 2 Commission", pct: "20%", amt: commL2PerSale, sub: "Your L2 buys Pro Package", bg: ORANGE_M, border: ORANGE_B, val: ORANGE }] : []),
+                  { label: isProPkg ? "Level 1 Commission" : "Sales Commission", pct: "10% of CV", amt: cv * (isProPkg ? L1C : SC), sub: isProPkg ? `10% × ${cv} CV` : `10% × ${cv} CV`, bg: YELLOW_M, border: YELLOW_B, val: YELLOW },
+                  { label: "Your Total Per Direct Sale", pct: "RC + 10% CV", amt: commPerSalePersonal, sub: `RC flat + 10% × ${cv} CV`,  bg: GREEN,    border: GREEN_D,  val: WHITE,  bold: true },
+                  ...(isProPkg ? [{ label: "Level 2 Commission", pct: "20% of CV", amt: commL2PerSale, sub: `20% × ${cv} CV`, bg: ORANGE_M, border: ORANGE_B, val: ORANGE }] : []),
                 ].map(item => (
                   <div key={item.label} style={{ flex: "1 1 150px", padding: "14px 16px", background: item.bg, borderRadius: 12, border: `2px solid ${item.border}` }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: item.bold ? "rgba(255,255,255,0.75)" : "#555", marginBottom: 4 }}>{item.label}</div>

@@ -449,23 +449,76 @@ export function CalculatorPage() {
           <br /><span style={{ color: GREEN_D, fontWeight: 700 }}>GV = Team Size × Avg Purchases × Combined CV.</span>
         </p>
 
-        {/* Top inputs — personalSales is always ≤ l1Size (can't purchase without registering) */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 14, marginBottom: 20 }}>
-          {/* Personal Sales */}
-          <div style={{ background: GREEN_M, borderRadius: 12, border: `2px solid ${GREEN}`, padding: "12px 14px" }}>
-            <Label style={{ fontSize: 11, fontWeight: 900, color: GREEN_D, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Your Personal Sales / Month</Label>
-            <Input
-              type="number"
-              min={0}
-              max={l1Size}
-              value={personalSales}
-              onChange={e => {
-                const v = Math.max(0, parseInt(e.target.value) || 0);
-                setPersonalSales(Math.min(v, l1Size));
-              }}
-              style={{ fontWeight: 800, fontSize: 18, border: `2px solid ${GREEN}`, background: WHITE }}
-            />
-            <div style={{ fontSize: 11, color: GREEN_D, marginTop: 5, fontWeight: 700 }}>
+        {/* Top inputs — order: 1 L1 Team Size · 2 Avg Purchases · 3 Personal Sales */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14, marginBottom: 20 }}>
+
+          {/* ① L1 Team Size — START HERE FIRST */}
+          <div style={{ background: YELLOW_M, borderRadius: 14, border: `2px solid ${YELLOW_B}`, padding: "14px 16px 18px", position: "relative", overflow: "hidden" }}>
+            <Label style={{ fontSize: 11, fontWeight: 900, color: YELLOW, display: "block", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.06em" }}>Level 1 Team Size (Registered)</Label>
+            <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+              <Input
+                type="number"
+                min={0}
+                value={l1Size}
+                onChange={e => {
+                  const v = Math.max(0, parseInt(e.target.value) || 0);
+                  setL1Size(v);
+                  if (v < personalSales) setPersonalSales(v);
+                }}
+                style={{ fontWeight: 900, fontSize: 20, border: `2px solid ${YELLOW_B}`, background: WHITE, textAlign: "center", flex: 1 }}
+              />
+              {l1Size === 0 && (
+                <span style={{ position: "absolute", right: 10, fontSize: 9, fontWeight: 900, color: YELLOW, pointerEvents: "none", whiteSpace: "nowrap", letterSpacing: "0.05em" }}>START HERE FIRST</span>
+              )}
+            </div>
+            <div style={{ fontSize: 11, color: YELLOW, marginTop: 6, fontWeight: 700 }}>
+              {l1Size >= 7 ? "✓ CLB eligible!" : `${7 - l1Size} more needed for CLB`}
+            </div>
+            <div style={{ fontSize: 10, color: YELLOW + "cc", marginTop: 3, fontWeight: 600 }}>
+              Always ≥ personal sales (register first, then purchase)
+            </div>
+            <div style={{ position: "absolute", bottom: 6, right: 14, fontSize: 52, fontWeight: 900, color: YELLOW_B + "28", lineHeight: 1, pointerEvents: "none", userSelect: "none" }}>1</div>
+          </div>
+
+          {/* ② Avg Purchases — COME HERE NEXT */}
+          <div style={{ background: GREEN_M, borderRadius: 14, border: `2px solid ${GREEN}`, padding: "14px 16px 18px", position: "relative", overflow: "hidden" }}>
+            <Label style={{ fontSize: 11, fontWeight: 900, color: GREEN_D, display: "block", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.06em" }}>Avg Purchases / Person / Month</Label>
+            <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+              <Input
+                type="number"
+                min={0}
+                value={avgPurchases}
+                onChange={e => setAvgPurchases(Math.max(0, parseInt(e.target.value) || 0))}
+                style={{ fontWeight: 900, fontSize: 20, border: `2px solid ${GREEN}`, background: WHITE, textAlign: "center", flex: 1 }}
+              />
+              {avgPurchases === 0 && (
+                <span style={{ position: "absolute", right: 10, fontSize: 9, fontWeight: 900, color: GREEN, pointerEvents: "none", whiteSpace: "nowrap", letterSpacing: "0.05em" }}>COME HERE NEXT</span>
+              )}
+            </div>
+            <div style={{ fontSize: 11, color: GREEN_D, marginTop: 6, fontWeight: 700 }}>Units each person buys/month</div>
+            <div style={{ position: "absolute", bottom: 6, right: 14, fontSize: 52, fontWeight: 900, color: GREEN + "28", lineHeight: 1, pointerEvents: "none", userSelect: "none" }}>2</div>
+          </div>
+
+          {/* ③ Personal Sales — COME HERE LAST */}
+          <div style={{ background: GREEN_M, borderRadius: 14, border: `2px solid ${GREEN}`, padding: "14px 16px 18px", position: "relative", overflow: "hidden" }}>
+            <Label style={{ fontSize: 11, fontWeight: 900, color: GREEN_D, display: "block", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.06em" }}>Your Referral Commissions / Month</Label>
+            <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+              <Input
+                type="number"
+                min={0}
+                max={l1Size}
+                value={personalSales}
+                onChange={e => {
+                  const v = Math.max(0, parseInt(e.target.value) || 0);
+                  setPersonalSales(Math.min(v, l1Size));
+                }}
+                style={{ fontWeight: 900, fontSize: 20, border: `2px solid ${GREEN}`, background: WHITE, textAlign: "center", flex: 1 }}
+              />
+              {personalSales === 0 && (
+                <span style={{ position: "absolute", right: 10, fontSize: 9, fontWeight: 900, color: GREEN, pointerEvents: "none", whiteSpace: "nowrap", letterSpacing: "0.05em" }}>COME HERE LAST</span>
+              )}
+            </div>
+            <div style={{ fontSize: 11, color: GREEN_D, marginTop: 6, fontWeight: 700 }}>
               {hasAny ? `RC earnings: ${fmtUsd(personalSales * totalRC)}/mo` : "Load a product first"}
             </div>
             <div style={{ fontSize: 10, color: GREEN_D + "aa", marginTop: 3, fontWeight: 600 }}>
@@ -474,42 +527,9 @@ export function CalculatorPage() {
             {personalSales === l1Size && l1Size > 0 && (
               <div style={{ fontSize: 10, color: ORANGE, marginTop: 2, fontWeight: 700 }}>⚠ Max: cannot exceed L1 Team Size</div>
             )}
+            <div style={{ position: "absolute", bottom: 6, right: 14, fontSize: 52, fontWeight: 900, color: GREEN + "28", lineHeight: 1, pointerEvents: "none", userSelect: "none" }}>3</div>
           </div>
 
-          {/* L1 Team Size */}
-          <div style={{ background: YELLOW_M, borderRadius: 12, border: `2px solid ${YELLOW_B}`, padding: "12px 14px" }}>
-            <Label style={{ fontSize: 11, fontWeight: 900, color: YELLOW, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Level 1 Team Size (Registered)</Label>
-            <Input
-              type="number"
-              min={0}
-              value={l1Size}
-              onChange={e => {
-                const v = Math.max(0, parseInt(e.target.value) || 0);
-                setL1Size(v);
-                if (v < personalSales) setPersonalSales(v);
-              }}
-              style={{ fontWeight: 800, fontSize: 18, border: `2px solid ${YELLOW_B}`, background: WHITE }}
-            />
-            <div style={{ fontSize: 11, color: YELLOW, marginTop: 5, fontWeight: 700 }}>
-              {l1Size >= 7 ? "✓ CLB eligible!" : `${7 - l1Size} more needed for CLB`}
-            </div>
-            <div style={{ fontSize: 10, color: YELLOW + "cc", marginTop: 3, fontWeight: 600 }}>
-              Always ≥ personal sales (register first, then purchase)
-            </div>
-          </div>
-
-          {/* Avg Purchases */}
-          <div style={{ background: GREEN_M, borderRadius: 12, border: `2px solid ${GREEN}`, padding: "12px 14px" }}>
-            <Label style={{ fontSize: 11, fontWeight: 900, color: GREEN_D, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Avg Purchases / Person / Month</Label>
-            <Input
-              type="number"
-              min={0}
-              value={avgPurchases}
-              onChange={e => setAvgPurchases(Math.max(0, parseInt(e.target.value) || 0))}
-              style={{ fontWeight: 800, fontSize: 18, border: `2px solid ${GREEN}`, background: WHITE }}
-            />
-            <div style={{ fontSize: 11, color: GREEN_D, marginTop: 5, fontWeight: 700 }}>Units each person buys/month</div>
-          </div>
         </div>
 
         {/* 9-Level table — 8 columns (no "Flows To You?" to prevent overflow) */}

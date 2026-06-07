@@ -28,6 +28,15 @@ const BLUE_D   = "#1e3a8a";
 // PSC default rates per level (overridden by live /api/commission-rules fetch)
 const DEFAULT_PSC_RATES = [10, 20, 5, 5, 5, 5, 5, 5, 5]; // % per level L1-L9
 
+// BPP (Bill Payer Program) funds — qualify when Zone GCV (L2–L5) crosses threshold
+const BPP_FUNDS = [
+  { name: "Phone/Internet Fund", threshold:  8_000, amount:  185, icon: "📱", color: "#7c3aed" },
+  { name: "Medical Fund",        threshold: 10_000, amount:  350, icon: "❤️", color: "#dc2626" },
+  { name: "Utilities Fund",      threshold: 12_000, amount:  450, icon: "⚡", color: "#16a34a" },
+  { name: "Car Fund",            threshold: 15_000, amount:  600, icon: "🚗", color: "#d97706" },
+  { name: "Rent/Mortgage Fund",  threshold: 18_000, amount: 1500, icon: "🏠", color: "#2563eb" },
+];
+
 function fmtId(id: number)  { return `NFGN-${String(id).padStart(5, "0")}`; }
 function fmtUsd(n: number)  { return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 function fmtNum(n: number)  { return n.toLocaleString("en-US"); }
@@ -160,10 +169,26 @@ export function CalculatorPage() {
   // GV totals
   const personalGV    = personalSales * totalCV;
   const totalOrgGV    = personalGV + levels.reduce((s, l) => s + l.gv, 0);
-  // Running cumulative totals per level (personal RC + all PSC levels so far)
-  const runningTotals = levels.reduce<number[]>((acc, lv) => {
-    const prev = acc.length === 0 ? myPersonalRC : acc[acc.length - 1];
-    return [...acc, prev + lv.yourComm];
+
+  // Zone GCV = cumulative GV from L2–L5 (BPP qualification metric)
+  let _zoneAcc = 0;
+  const zoneGcvPerLevel = levels.map(lv => {
+    if (lv.level >= 2 && lv.level <= 5) _zoneAcc += lv.gv;
+    return _zoneAcc;
+  });
+
+  // Which BPP funds are newly crossed at each level
+  const levelBpp = levels.map((_, i) => {
+    const cur  = zoneGcvPerLevel[i];
+    const prev = i > 0 ? zoneGcvPerLevel[i - 1] : 0;
+    return BPP_FUNDS.filter(f => cur >= f.threshold && prev < f.threshold);
+  });
+
+  // Running cumulative totals: personal RC + PSC + any BPP bonuses earned
+  const runningTotals = levels.reduce<number[]>((acc, lv, i) => {
+    const prevTotal = acc.length === 0 ? myPersonalRC : acc[acc.length - 1];
+    const bppBonus  = levelBpp[i].reduce((s, f) => s + f.amount, 0);
+    return [...acc, prevTotal + lv.yourComm + bppBonus];
   }, []);
 
   // ── Income Goal ────────────────────────────────────────────────────────────
@@ -515,6 +540,11 @@ export function CalculatorPage() {
                     <td style={{ padding: "9px 10px", color: isYours ? DARK : "#9ca3af" }}>{fmtNum(lv.monthlyUnits)}</td>
                     <td style={{ padding: "9px 10px" }}>
                       <span style={{ fontWeight: 700, color: BLUE_D, background: BLUE_M, padding: "2px 7px", borderRadius: 6, fontSize: 11 }}>{fmtNum(lv.gv)} GV</span>
+                      {lv.level >= 2 && lv.level <= 5 && (
+                        <div style={{ fontSize: 9, color: BLUE_D, marginTop: 3, fontWeight: 600 }}>
+                          Zone: {fmtNum(zoneGcvPerLevel[i])} GV
+                        </div>
+                      )}
                     </td>
                     {/* Your Commission + calculation sub-text */}
                     <td style={{ padding: "9px 10px" }}>
@@ -529,16 +559,30 @@ export function CalculatorPage() {
                         <span style={{ color: "#d1d5db", fontSize: 12 }}>—</span>
                       )}
                     </td>
-                    {/* Your Level Totals — running cumulative */}
+                    {/* Your Level Totals — running cumulative + BPP bonuses */}
                     <td style={{ padding: "9px 10px" }}>
                       {isYours ? (() => {
                         const runTotal  = runningTotals[i] ?? 0;
                         const prevTotal = i === 0 ? myPersonalRC : (runningTotals[i - 1] ?? 0);
+                        const bppFunds  = levelBpp[i];
+                        const bppBonus  = bppFunds.reduce((s, f) => s + f.amount, 0);
                         return (
                           <>
-                            <div style={{ fontWeight: 900, color: YELLOW, fontSize: 18 }}>{fmtUsd(runTotal)}</div>
+                            {bppFunds.map(f => (
+                              <div key={f.name} style={{
+                                marginBottom: 5, padding: "4px 8px", borderRadius: 7,
+                                background: f.color + "18", border: `1.5px solid ${f.color}`,
+                                fontSize: 10, fontWeight: 800, color: f.color,
+                                display: "flex", alignItems: "center", gap: 5,
+                              }}>
+                                <span>{f.icon}</span>
+                                <span style={{ flex: 1 }}>{f.name}</span>
+                                <span style={{ fontWeight: 900 }}>+{fmtUsd(f.amount)}/mo</span>
+                              </div>
+                            ))}
+                            <div style={{ fontWeight: 900, color: bppBonus > 0 ? BLUE_B : YELLOW, fontSize: 18 }}>{fmtUsd(runTotal)}</div>
                             <div style={{ fontSize: 10, color: "#6b7280", marginTop: 2 }}>
-                              ({fmtUsd(prevTotal)} + {fmtUsd(lv.yourComm)} = {fmtUsd(runTotal)})
+                              ({fmtUsd(prevTotal)} + {fmtUsd(lv.yourComm)}{bppBonus > 0 ? ` + ${fmtUsd(bppBonus)} BPP` : ""} = {fmtUsd(runTotal)})
                             </div>
                           </>
                         );

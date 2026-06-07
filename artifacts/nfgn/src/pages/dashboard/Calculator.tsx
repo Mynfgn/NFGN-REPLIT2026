@@ -160,7 +160,11 @@ export function CalculatorPage() {
   // GV totals
   const personalGV    = personalSales * totalCV;
   const totalOrgGV    = personalGV + levels.reduce((s, l) => s + l.gv, 0);
-  const orgCollective = levels.reduce((s, l) => s + l.orgComm, 0);
+  // Running cumulative totals per level (personal RC + all PSC levels so far)
+  const runningTotals = levels.reduce<number[]>((acc, lv) => {
+    const prev = acc.length === 0 ? myPersonalRC : acc[acc.length - 1];
+    return [...acc, prev + lv.yourComm];
+  }, []);
 
   // ── Income Goal ────────────────────────────────────────────────────────────
   const goalPersonalOnly  = totalRC > 0 ? Math.ceil(targetIncome / totalRC) : 0;
@@ -417,7 +421,8 @@ export function CalculatorPage() {
                   { h: "Team Size",            w: "8%"   },
                   { h: "Mo. Units",            w: "8%"   },
                   { h: "Monthly GV",           w: "11%"  },
-                  { h: "Your Commission",      w: "39%"  },
+                  { h: "Your Commission",      w: "22%"  },
+                  { h: "Your Level Totals",   w: "17%"  },
                 ].map(({ h, w }) => (
                   <th key={h} style={{ padding: "11px 10px", textAlign: "left", fontSize: 9, fontWeight: 900, color: YELLOW_B, letterSpacing: "0.06em", whiteSpace: "nowrap", textTransform: "uppercase", width: w }}>{h}</th>
                 ))}
@@ -445,7 +450,11 @@ export function CalculatorPage() {
                   <div style={{ fontWeight: 900, color: GREEN_D, fontSize: 14 }}>{fmtUsd(myPersonalRC)}</div>
                   <div style={{ fontSize: 10, color: "#6b7280", marginTop: 2 }}>{personalSales} × {fmtUsd(totalRC)} RC</div>
                 </td>
-                <td style={{ padding: "10px 10px", color: "#9ca3af", fontSize: 12 }}>—</td>
+                {/* Your Level Totals — starting base (personal RC) */}
+                <td style={{ padding: "10px 10px" }}>
+                  <div style={{ fontWeight: 900, color: YELLOW, fontSize: 18 }}>{fmtUsd(myPersonalRC)}</div>
+                  <div style={{ fontSize: 10, color: "#6b7280", marginTop: 2 }}>Referral Comm</div>
+                </td>
               </tr>
 
               {/* L1–L9 rows */}
@@ -520,6 +529,23 @@ export function CalculatorPage() {
                         <span style={{ color: "#d1d5db", fontSize: 12 }}>—</span>
                       )}
                     </td>
+                    {/* Your Level Totals — running cumulative */}
+                    <td style={{ padding: "9px 10px" }}>
+                      {isYours ? (() => {
+                        const runTotal  = runningTotals[i] ?? 0;
+                        const prevTotal = i === 0 ? myPersonalRC : (runningTotals[i - 1] ?? 0);
+                        return (
+                          <>
+                            <div style={{ fontWeight: 900, color: YELLOW, fontSize: 18 }}>{fmtUsd(runTotal)}</div>
+                            <div style={{ fontSize: 10, color: "#6b7280", marginTop: 2 }}>
+                              ({fmtUsd(prevTotal)} + {fmtUsd(lv.yourComm)} = {fmtUsd(runTotal)})
+                            </div>
+                          </>
+                        );
+                      })() : (
+                        <span style={{ color: "#d1d5db", fontSize: 12 }}>—</span>
+                      )}
+                    </td>
                   </tr>
                 );
               })}
@@ -535,7 +561,7 @@ export function CalculatorPage() {
                       {fmtNum(totalOrgGV)} GV
                     </span>
                   </td>
-                  <td colSpan={2} style={{ padding: "9px 10px", fontSize: 10, color: BLUE_D, fontWeight: 600 }}>
+                  <td colSpan={3} style={{ padding: "9px 10px", fontSize: 10, color: BLUE_D, fontWeight: 600 }}>
                     Personal {fmtNum(personalGV)} GV + Org {fmtNum(totalOrgGV - personalGV)} GV
                   </td>
                 </tr>

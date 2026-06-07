@@ -54,6 +54,7 @@ function buildLevels(
   mults: number[],
   avgPurchases: number,
   totalCV: number,
+  totalRC: number,
   hasProPkg: boolean,
 ): LevelRow[] {
   const rows: LevelRow[] = [];
@@ -66,7 +67,8 @@ function buildLevels(
       i === 1 ? totalCV * scRate :
       (i === 2 && hasProPkg) ? totalCV * L2C : 0;
     const yourComm = monthlyUnits * yourCommPerUnit;
-    const orgComm  = monthlyUnits * totalCV * scRate;
+    // orgComm = total commission generated from this level's purchases (RC + SC)
+    const orgComm  = monthlyUnits * (totalRC + totalCV * scRate);
     const label    = i === 1 ? "Direct Referrals" : i === 2 ? "Their Referrals" : `Generation ${i}`;
     rows.push({ level: i, size, monthlyUnits, gv, yourComm, orgComm, label });
   }
@@ -131,7 +133,7 @@ export function CalculatorPage() {
   const commPerDirectSale = totalRC + scPerUnit;   // display-only combined
 
   // ── Level builder ──────────────────────────────────────────────────────────
-  const levels = hasAny ? buildLevels(l1Size, levelMults, avgPurchases, totalCV, hasProPkg) : [];
+  const levels = hasAny ? buildLevels(l1Size, levelMults, avgPurchases, totalCV, totalRC, hasProPkg) : [];
 
   // ── Earnings ───────────────────────────────────────────────────────────────
   // Personal: RC only (flat $ earned on own sales)
@@ -332,70 +334,146 @@ export function CalculatorPage() {
           <br /><span style={{ color: GREEN_D, fontWeight: 700 }}>GV = Team Size × Avg Purchases × Combined CV.</span>
         </p>
 
-        {/* Top inputs */}
+        {/* Top inputs — personalSales is always ≤ l1Size (can't purchase without registering) */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 14, marginBottom: 20 }}>
-          {[
-            { label: "Your Personal Sales / Month",    value: personalSales, setter: setPersonalSales, min: 0, hint: hasAny ? `RC earnings: ${fmtUsd(personalSales * totalRC)}/mo` : "Load a product first", bg: GREEN_M,  border: GREEN,    color: GREEN_D },
-            { label: "Level 1 Team Size (Base)",       value: l1Size,        setter: setL1Size,        min: 0, hint: l1Size >= 7 ? "✓ CLB eligible!" : `${7 - l1Size} more needed for CLB`,                  bg: YELLOW_M, border: YELLOW_B, color: YELLOW  },
-            { label: "Avg Purchases / Person / Month", value: avgPurchases,  setter: setAvgPurchases,  min: 1, hint: "Units each person buys/month",                                                           bg: GREEN_M,  border: GREEN,    color: GREEN_D },
-          ].map(row => (
-            <div key={row.label} style={{ background: row.bg, borderRadius: 12, border: `2px solid ${row.border}`, padding: "12px 14px" }}>
-              <Label style={{ fontSize: 11, fontWeight: 900, color: row.color, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>{row.label}</Label>
-              <Input
-                type="number"
-                min={row.min}
-                value={row.value}
-                onChange={e => row.setter(Math.max(row.min, parseInt(e.target.value) || 0))}
-                style={{ fontWeight: 800, fontSize: 18, border: `2px solid ${row.border}`, background: WHITE }}
-              />
-              <div style={{ fontSize: 11, color: row.color, marginTop: 5, fontWeight: 700 }}>{row.hint}</div>
+          {/* Personal Sales */}
+          <div style={{ background: GREEN_M, borderRadius: 12, border: `2px solid ${GREEN}`, padding: "12px 14px" }}>
+            <Label style={{ fontSize: 11, fontWeight: 900, color: GREEN_D, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Your Personal Sales / Month</Label>
+            <Input
+              type="number"
+              min={0}
+              max={l1Size}
+              value={personalSales}
+              onChange={e => {
+                const v = Math.max(0, parseInt(e.target.value) || 0);
+                setPersonalSales(Math.min(v, l1Size));
+              }}
+              style={{ fontWeight: 800, fontSize: 18, border: `2px solid ${GREEN}`, background: WHITE }}
+            />
+            <div style={{ fontSize: 11, color: GREEN_D, marginTop: 5, fontWeight: 700 }}>
+              {hasAny ? `RC earnings: ${fmtUsd(personalSales * totalRC)}/mo` : "Load a product first"}
             </div>
-          ))}
+            <div style={{ fontSize: 10, color: GREEN_D + "aa", marginTop: 3, fontWeight: 600 }}>
+              {personalSales === l1Size && l1Size > 0 ? `All ${l1Size} members purchased` : `${personalSales} of ${l1Size} members purchased`}
+            </div>
+            {personalSales === l1Size && l1Size > 0 && (
+              <div style={{ fontSize: 10, color: ORANGE, marginTop: 2, fontWeight: 700 }}>⚠ Max: cannot exceed L1 Team Size</div>
+            )}
+          </div>
+
+          {/* L1 Team Size */}
+          <div style={{ background: YELLOW_M, borderRadius: 12, border: `2px solid ${YELLOW_B}`, padding: "12px 14px" }}>
+            <Label style={{ fontSize: 11, fontWeight: 900, color: YELLOW, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Level 1 Team Size (Registered)</Label>
+            <Input
+              type="number"
+              min={0}
+              value={l1Size}
+              onChange={e => {
+                const v = Math.max(0, parseInt(e.target.value) || 0);
+                setL1Size(v);
+                if (v < personalSales) setPersonalSales(v);
+              }}
+              style={{ fontWeight: 800, fontSize: 18, border: `2px solid ${YELLOW_B}`, background: WHITE }}
+            />
+            <div style={{ fontSize: 11, color: YELLOW, marginTop: 5, fontWeight: 700 }}>
+              {l1Size >= 7 ? "✓ CLB eligible!" : `${7 - l1Size} more needed for CLB`}
+            </div>
+            <div style={{ fontSize: 10, color: YELLOW + "cc", marginTop: 3, fontWeight: 600 }}>
+              Always ≥ personal sales (register first, then purchase)
+            </div>
+          </div>
+
+          {/* Avg Purchases */}
+          <div style={{ background: GREEN_M, borderRadius: 12, border: `2px solid ${GREEN}`, padding: "12px 14px" }}>
+            <Label style={{ fontSize: 11, fontWeight: 900, color: GREEN_D, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Avg Purchases / Person / Month</Label>
+            <Input
+              type="number"
+              min={1}
+              value={avgPurchases}
+              onChange={e => setAvgPurchases(Math.max(1, parseInt(e.target.value) || 1))}
+              style={{ fontWeight: 800, fontSize: 18, border: `2px solid ${GREEN}`, background: WHITE }}
+            />
+            <div style={{ fontSize: 11, color: GREEN_D, marginTop: 5, fontWeight: 700 }}>Units each person buys/month</div>
+          </div>
         </div>
 
-        {/* 9-Level table */}
-        <div style={{ overflowX: "auto", marginBottom: 22, borderRadius: 14, border: `2px solid ${GREEN}`, overflow: "hidden" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+        {/* 9-Level table — 8 columns (no "Flows To You?" to prevent overflow) */}
+        <div style={{ overflowX: "auto", marginBottom: 22, borderRadius: 14, border: `2px solid ${GREEN}` }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, minWidth: 700 }}>
             <thead>
               <tr style={{ background: `linear-gradient(135deg, ${GREEN_D}, #166534)` }}>
-                {["Level", "Description", "× Multiplier", "Team Size", "Monthly Units", "Monthly GV", "Your Commission", "Org Collective", "Flows To You?"].map(h => (
-                  <th key={h} style={{ padding: "12px 12px", textAlign: "left", fontSize: 10, fontWeight: 900, color: YELLOW_B, letterSpacing: "0.07em", whiteSpace: "nowrap", textTransform: "uppercase" }}>{h}</th>
+                {[
+                  { h: "Level / Description",  w: "14%"  },
+                  { h: "Comm %",               w: "8%"   },
+                  { h: "× Multiplier",         w: "12%"  },
+                  { h: "Team Size",            w: "8%"   },
+                  { h: "Mo. Units",            w: "8%"   },
+                  { h: "Monthly GV",           w: "11%"  },
+                  { h: "Your Commission",      w: "20%"  },
+                  { h: "Org Collective (RC+SC)", w: "19%" },
+                ].map(({ h, w }) => (
+                  <th key={h} style={{ padding: "11px 10px", textAlign: "left", fontSize: 9, fontWeight: 900, color: YELLOW_B, letterSpacing: "0.06em", whiteSpace: "nowrap", textTransform: "uppercase", width: w }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {/* You — personal sales row */}
               <tr style={{ background: GREEN_M, borderBottom: `2px solid ${GREEN}` }}>
-                <td style={{ padding: "11px 12px", fontWeight: 900, color: GREEN_D, fontSize: 15 }}>You</td>
-                <td style={{ padding: "11px 12px", color: DARK, fontWeight: 600 }}>Personal Sales</td>
-                <td style={{ padding: "11px 12px", color: "#aaa" }}>—</td>
-                <td style={{ padding: "11px 12px", fontWeight: 700 }}>—</td>
-                <td style={{ padding: "11px 12px", fontWeight: 800, color: ORANGE }}>{personalSales}</td>
-                <td style={{ padding: "11px 12px" }}>
-                  <span style={{ fontWeight: 800, color: BLUE_D, background: BLUE_M, padding: "2px 8px", borderRadius: 6, fontSize: 12 }}>{fmtNum(personalGV)} GV</span>
+                {/* Level + Description merged */}
+                <td style={{ padding: "10px 10px" }}>
+                  <div style={{ fontWeight: 900, color: GREEN_D, fontSize: 14 }}>You</div>
+                  <div style={{ fontSize: 10, color: GREEN_D, fontWeight: 600, marginTop: 1 }}>Personal Sales</div>
                 </td>
-                <td style={{ padding: "11px 12px" }}>
+                {/* Comm % */}
+                <td style={{ padding: "10px 10px" }}>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: WHITE, background: ORANGE_B, padding: "2px 7px", borderRadius: 5 }}>RC flat</span>
+                </td>
+                <td style={{ padding: "10px 10px", color: "#aaa", fontSize: 12 }}>—</td>
+                <td style={{ padding: "10px 10px", color: "#aaa", fontSize: 12 }}>—</td>
+                <td style={{ padding: "10px 10px", fontWeight: 800, color: ORANGE }}>{personalSales}</td>
+                <td style={{ padding: "10px 10px" }}>
+                  <span style={{ fontWeight: 800, color: BLUE_D, background: BLUE_M, padding: "2px 8px", borderRadius: 6, fontSize: 11 }}>{fmtNum(personalGV)} GV</span>
+                </td>
+                <td style={{ padding: "10px 10px" }}>
                   <div style={{ fontWeight: 900, color: GREEN_D, fontSize: 14 }}>{fmtUsd(myPersonalRC)}</div>
-                  <div style={{ fontSize: 10, color: "#6b7280" }}>RC: {fmtUsd(totalRC)} × {personalSales}</div>
+                  <div style={{ fontSize: 10, color: "#6b7280", marginTop: 2 }}>{personalSales} × {fmtUsd(totalRC)} RC</div>
                 </td>
-                <td style={{ padding: "11px 12px", color: "#aaa" }}>—</td>
-                <td style={{ padding: "11px 12px" }}><span style={{ color: WHITE, fontWeight: 900, fontSize: 11, background: GREEN, padding: "3px 10px", borderRadius: 6 }}>✓ YOURS</span></td>
+                <td style={{ padding: "10px 10px", color: "#9ca3af", fontSize: 12 }}>—</td>
               </tr>
 
               {/* L1–L9 rows */}
               {levels.map((lv, i) => {
                 const isYours  = lv.yourComm > 0;
                 const prevSize = i === 0 ? l1Size : levels[i - 1].size;
+                const scRate   = hasProPkg ? L1C : SC;
+                // Commission rate label for this level
+                const rateLabel =
+                  lv.level === 1 ? `${Math.round(scRate * 100)}% ${hasProPkg ? "L1C" : "SC"}` :
+                  (lv.level === 2 && hasProPkg) ? "20% L2C" : "—";
+                const rateColor = lv.level === 1 ? GREEN : (lv.level === 2 && hasProPkg) ? ORANGE_B : "#d1d5db";
+                // Org collective breakdown sub-text (RC + SC)
+                const orgRC = lv.monthlyUnits * totalRC;
+                const orgSC = lv.monthlyUnits * totalCV * scRate;
                 return (
                   <tr key={lv.level} style={{ background: isYours ? GREEN_M + "80" : (i % 2 === 0 ? "#f9fafb" : WHITE), borderBottom: `1px solid ${isYours ? GREEN : "#e5e7eb"}` }}>
-                    <td style={{ padding: "10px 12px", fontWeight: 900, color: isYours ? GREEN_D : "#d1d5db", fontSize: 14 }}>L{lv.level}</td>
-                    <td style={{ padding: "10px 12px", color: "#555" }}>{lv.label}</td>
-                    <td style={{ padding: "10px 10px" }}>
+                    {/* Level + Description merged */}
+                    <td style={{ padding: "9px 10px" }}>
+                      <div style={{ fontWeight: 900, color: isYours ? GREEN_D : "#9ca3af", fontSize: 13 }}>L{lv.level}</div>
+                      <div style={{ fontSize: 10, color: isYours ? "#555" : "#c4c4c4", marginTop: 1 }}>{lv.label}</div>
+                    </td>
+                    {/* Comm % */}
+                    <td style={{ padding: "9px 10px" }}>
+                      {rateLabel !== "—"
+                        ? <span style={{ fontSize: 10, fontWeight: 800, color: WHITE, background: rateColor, padding: "2px 7px", borderRadius: 5 }}>{rateLabel}</span>
+                        : <span style={{ color: "#d1d5db", fontSize: 12 }}>—</span>}
+                    </td>
+                    {/* × Multiplier */}
+                    <td style={{ padding: "9px 8px" }}>
                       {lv.level === 1 ? (
                         <span style={{ fontSize: 11, color: "#9ca3af", fontWeight: 600 }}>Base</span>
                       ) : (
                         <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                          <span style={{ fontSize: 11, color: ORANGE, fontWeight: 700 }}>{fmtNum(prevSize)}×</span>
+                          <span style={{ fontSize: 10, color: ORANGE, fontWeight: 700 }}>{fmtNum(prevSize)}×</span>
                           <input
                             type="number"
                             min={1}
@@ -406,27 +484,40 @@ export function CalculatorPage() {
                               setLevelMults(prev => { const next = [...prev]; next[lv.level - 2] = v; return next; });
                             }}
                             style={{
-                              width: 50, fontWeight: 800, fontSize: 13, textAlign: "center",
-                              border: `2px solid ${ORANGE_B}`, borderRadius: 6, padding: "2px 4px",
+                              width: 46, fontWeight: 800, fontSize: 12, textAlign: "center",
+                              border: `2px solid ${ORANGE_B}`, borderRadius: 6, padding: "2px 3px",
                               background: ORANGE_M, color: ORANGE, outline: "none",
                             }}
                           />
                         </div>
                       )}
                     </td>
-                    <td style={{ padding: "10px 12px", fontWeight: 700, color: isYours ? ORANGE : "#9ca3af" }}>{fmtNum(lv.size)}</td>
-                    <td style={{ padding: "10px 12px", color: isYours ? DARK : "#9ca3af" }}>{fmtNum(lv.monthlyUnits)}</td>
-                    <td style={{ padding: "10px 12px" }}>
-                      <span style={{ fontWeight: 700, color: BLUE_D, background: BLUE_M, padding: "2px 8px", borderRadius: 6, fontSize: 12 }}>{fmtNum(lv.gv)} GV</span>
+                    <td style={{ padding: "9px 10px", fontWeight: 700, color: isYours ? ORANGE : "#9ca3af" }}>{fmtNum(lv.size)}</td>
+                    <td style={{ padding: "9px 10px", color: isYours ? DARK : "#9ca3af" }}>{fmtNum(lv.monthlyUnits)}</td>
+                    <td style={{ padding: "9px 10px" }}>
+                      <span style={{ fontWeight: 700, color: BLUE_D, background: BLUE_M, padding: "2px 7px", borderRadius: 6, fontSize: 11 }}>{fmtNum(lv.gv)} GV</span>
                     </td>
-                    <td style={{ padding: "10px 12px", fontWeight: isYours ? 900 : 400, color: isYours ? GREEN_D : "#d1d5db", fontSize: isYours ? 15 : 13 }}>
-                      {isYours ? fmtUsd(lv.yourComm) : "—"}
+                    {/* Your Commission + calculation */}
+                    <td style={{ padding: "9px 10px" }}>
+                      {isYours ? (
+                        <>
+                          <div style={{ fontWeight: 900, color: GREEN_D, fontSize: 14 }}>{fmtUsd(lv.yourComm)}</div>
+                          <div style={{ fontSize: 10, color: "#6b7280", marginTop: 2 }}>
+                            {lv.monthlyUnits} × {fmtUsd(totalCV * (lv.level === 1 ? scRate : L2C))} = {fmtUsd(lv.yourComm)}
+                          </div>
+                        </>
+                      ) : (
+                        <span style={{ color: "#d1d5db", fontSize: 12 }}>—</span>
+                      )}
                     </td>
-                    <td style={{ padding: "10px 12px", color: "#6b7280" }}>{fmtUsd(lv.orgComm)}</td>
-                    <td style={{ padding: "10px 12px" }}>
-                      {isYours
-                        ? <span style={{ color: WHITE, fontWeight: 900, fontSize: 11, background: GREEN, padding: "3px 10px", borderRadius: 6 }}>✓ YOURS</span>
-                        : <span style={{ color: "#d1d5db", fontSize: 12 }}>Their sponsors</span>}
+                    {/* Org Collective + RC+SC breakdown */}
+                    <td style={{ padding: "9px 10px" }}>
+                      <div style={{ fontWeight: 700, color: "#374151", fontSize: 13 }}>{fmtUsd(lv.orgComm)}</div>
+                      {lv.level <= 2 && (
+                        <div style={{ fontSize: 10, color: "#6b7280", marginTop: 2 }}>
+                          RC {fmtUsd(orgRC)} + SC {fmtUsd(orgSC)}
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );
@@ -435,16 +526,16 @@ export function CalculatorPage() {
               {/* Total GV footer row */}
               {hasAny && (
                 <tr style={{ background: BLUE_M, borderTop: `2px solid ${BLUE_B}` }}>
-                  <td colSpan={5} style={{ padding: "10px 12px", fontWeight: 900, color: BLUE_D, fontSize: 13, textAlign: "right" }}>
-                    TOTAL ORGANIZATION GV →
+                  <td colSpan={4} style={{ padding: "9px 10px", fontWeight: 900, color: BLUE_D, fontSize: 12, textAlign: "right" }}>
+                    TOTAL ORG GV →
                   </td>
-                  <td style={{ padding: "10px 12px" }}>
-                    <span style={{ fontWeight: 900, color: WHITE, background: BLUE_B, padding: "4px 12px", borderRadius: 8, fontSize: 14 }}>
+                  <td style={{ padding: "9px 10px" }}>
+                    <span style={{ fontWeight: 900, color: WHITE, background: BLUE_B, padding: "3px 10px", borderRadius: 8, fontSize: 13 }}>
                       {fmtNum(totalOrgGV)} GV
                     </span>
                   </td>
-                  <td colSpan={3} style={{ padding: "10px 12px", fontSize: 11, color: BLUE_D, fontWeight: 600 }}>
-                    Personal {fmtNum(personalGV)} + Org {fmtNum(totalOrgGV - personalGV)} GV
+                  <td colSpan={3} style={{ padding: "9px 10px", fontSize: 10, color: BLUE_D, fontWeight: 600 }}>
+                    Personal {fmtNum(personalGV)} GV + Org {fmtNum(totalOrgGV - personalGV)} GV
                   </td>
                 </tr>
               )}

@@ -128,7 +128,7 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
           { name: "Vision Goals & Dreams Sheet", href: "/dashboard/tools/vision-goals" },
         ],
       },
-      { name: "Comm. Calculator", href: "/dashboard/calculator", icon: Calculator, minTier: "pro_member" },
+      { name: "Da' Money Calculator", href: "/dashboard/calculator", icon: Calculator, minTier: "pro_member" },
       { name: "Reports", href: "/dashboard/reports", icon: BarChart3, minTier: "pro_member" },
     ],
   },

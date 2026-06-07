@@ -256,7 +256,7 @@ export function CalculatorPage() {
         </div>
         <div>
           <h1 style={{ fontFamily: "'Georgia',serif", fontSize: 22, fontWeight: 900, margin: 0, color: WHITE }}>
-            Products, Services &amp; Commissions Calculator
+            Da' Money Calculator
           </h1>
           <p style={{ fontSize: 13, color: YELLOW_B, margin: "4px 0 0" }}>
             Load up to 3 products — CVs combine for total GV and commission projections across 9 generations.

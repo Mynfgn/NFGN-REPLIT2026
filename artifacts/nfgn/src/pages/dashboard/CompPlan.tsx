@@ -154,7 +154,7 @@ function TerminologySection() {
 
       {/* ── Income Stream Abbreviations ─────────────────────── */}
       <TermGroup title="Income Streams & Abbreviations" color="#3b82f6">
-        <TermCell term="Referral Commission" abbr="RC" def="A fixed dollar amount earned per unit sold, set individually per product by administration (e.g. $6.00 per unit). It does not change based on the sale price. Check the product listing or Comm. Calculator for the exact RC amount on any product. Earned by all active members — no Pro Member status required." />
+        <TermCell term="Referral Commission" abbr="RC" def="A fixed dollar amount earned per unit sold, set individually per product by administration (e.g. $6.00 per unit). It does not change based on the sale price. Check the product listing or Da' Money Calculator for the exact RC amount on any product. Earned by all active members — no Pro Member status required." />
         <TermCell term="Product Sales Commission" abbr="PSC" def="Up to 24% earned across 9 levels of your downline on product purchases. Pro Members only. Level 2 always pays the highest rate (24%) — double the Level 1 rate of 12%." />
         <TermCell term="Pro Member Retail Commission" abbr="PMRC" def="Up to 22% earned across 5 levels when someone in your downline purchases a Pro Member Registration Package. Pro Members only. Separate from PSC." />
         <TermCell term="Core Leadership Bonus" abbr="CLB" def="A one-time $100 bonus triggered when you personally enroll 9 qualified Level 1 Pro Members (each with 150+ cumulative CV). A fast-start milestone reward." />
@@ -524,7 +524,7 @@ function RCSection() {
         <CardContent className="space-y-3">
           <Bullet>Share your unique referral link with anyone — friends, family, social media followers.</Bullet>
           <Bullet>When your direct referral buys a product, you earn the fixed RC dollar amount assigned to that product — regardless of any discount or sale price.</Bullet>
-          <Bullet>Every product has its own RC dollar amount set by administration. The exact amount is shown on each product listing and in the Comm. Calculator.</Bullet>
+          <Bullet>Every product has its own RC dollar amount set by administration. The exact amount is shown on each product listing and in the Da' Money Calculator.</Bullet>
           <Bullet>This applies to products, services, and Pro Member packages purchased by your direct referral.</Bullet>
           <Bullet>No special rank or Pro Member status required — all active members earn RC.</Bullet>
           <Bullet>Commissions are credited to your NFGN E-Wallet and paid according to the payout schedule.</Bullet>
@@ -555,7 +555,7 @@ function RCSection() {
           </div>
           <div className="rounded-xl bg-blue-50 border border-blue-200 p-3 text-xs text-blue-900">
             <p className="font-semibold mb-1">How to find a product's RC amount</p>
-            <p>Each product detail page shows its RC amount in the compensation code. Use the <strong>Comm. Calculator</strong> in your dashboard — enter any Product ID to instantly see the exact RC dollar amount per unit sold.</p>
+            <p>Each product detail page shows its RC amount in the compensation code. Use the <strong>Da' Money Calculator</strong> in your dashboard — enter any Product ID to instantly see the exact RC dollar amount per unit sold.</p>
           </div>
         </CardContent>
       </Card>

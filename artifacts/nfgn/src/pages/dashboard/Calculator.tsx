@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -100,6 +100,9 @@ export function CalculatorPage() {
   const [lookupErrors,    setLookupErrors]    = useState(["", "", ""]);
   const [lookupLoadings,  setLookupLoadings]  = useState([false, false, false]);
   const [slotCount,       setSlotCount]       = useState(1);
+  const [nameResults,     setNameResults]     = useState<(CalcProduct[] | null)[]>([null, null, null]);
+  const [showDropdown,    setShowDropdown]    = useState([false, false, false]);
+  const nameTimers = useRef<(ReturnType<typeof setTimeout> | null)[]>([null, null, null]);
 
   // ── Builder state ──────────────────────────────────────────────────────────
   const [personalSales, setPersonalSales] = useState(5);
@@ -108,12 +111,45 @@ export function CalculatorPage() {
   const [avgPurchases,  setAvgPurchases]  = useState(1);
   const [targetIncome,  setTargetIncome]  = useState(4500);
 
+  function toCalcProduct(d: Record<string, unknown>): CalcProduct {
+    return { id: d.id as number, name: d.name as string, price: parseFloat(d.price as string), cv: (d.cv as number) ?? 0, isProPackage: !!(d.isProPackage), commissionRate: parseFloat(d.commissionRate as string) || 10, commissionType: (d.commissionType as string) ?? "flat", commissionAmount: parseFloat(d.commissionAmount as string) || 0 };
+  }
+
+  async function searchByName(slot: number, query: string) {
+    if (query.trim().length < 2) {
+      setNameResults(prev => { const n = [...prev]; n[slot] = null; return n; });
+      setShowDropdown(prev => { const n = [...prev]; n[slot] = false; return n; });
+      return;
+    }
+    try {
+      const res = await customFetch(`/api/products?search=${encodeURIComponent(query.trim())}&limit=8`);
+      if (!res.ok) return;
+      const d = await res.json();
+      const items: CalcProduct[] = (d.products ?? []).map(toCalcProduct);
+      setNameResults(prev => { const n = [...prev]; n[slot] = items; return n; });
+      setShowDropdown(prev => { const n = [...prev]; n[slot] = items.length > 0; return n; });
+    } catch { /* silent */ }
+  }
+
+  function selectFromDropdown(slot: number, p: CalcProduct) {
+    setProductSlots(prev => { const n = [...prev]; n[slot] = p; return n; });
+    setIdInputs(prev => { const n = [...prev]; n[slot] = fmtId(p.id); return n; });
+    setShowDropdown(prev => { const n = [...prev]; n[slot] = false; return n; });
+    setNameResults(prev => { const n = [...prev]; n[slot] = null; return n; });
+    setLookupErrors(prev => { const n = [...prev]; n[slot] = ""; return n; });
+  }
+
   async function lookupProduct(slot: number) {
     const id = parseProductId(idInputs[slot]);
     if (!id) {
-      setLookupErrors(prev => { const n = [...prev]; n[slot] = "Enter a valid Product ID — e.g. NFGN-00001 or just 1"; return n; });
+      if (idInputs[slot].trim().length >= 2) {
+        await searchByName(slot, idInputs[slot]);
+        return;
+      }
+      setLookupErrors(prev => { const n = [...prev]; n[slot] = "Enter a Product ID (NFGN-00001 or 1) or type a name to search"; return n; });
       return;
     }
+    setShowDropdown(prev => { const n = [...prev]; n[slot] = false; return n; });
     setLookupLoadings(prev => { const n = [...prev]; n[slot] = true; return n; });
     setLookupErrors(prev => { const n = [...prev]; n[slot] = ""; return n; });
     try {
@@ -124,8 +160,7 @@ export function CalculatorPage() {
         return;
       }
       const d = await res.json();
-      const p: CalcProduct = { id: d.id, name: d.name, price: parseFloat(d.price), cv: d.cv ?? 0, isProPackage: !!d.isProPackage, commissionRate: parseFloat(d.commissionRate) || 10, commissionType: d.commissionType ?? "flat", commissionAmount: parseFloat(d.commissionAmount) || 0 };
-      setProductSlots(prev => { const n = [...prev]; n[slot] = p; return n; });
+      setProductSlots(prev => { const n = [...prev]; n[slot] = toCalcProduct(d); return n; });
     } catch {
       setLookupErrors(prev => { const n = [...prev]; n[slot] = "Failed to load product. Please try again."; return n; });
     } finally {
@@ -137,6 +172,8 @@ export function CalculatorPage() {
     setProductSlots(prev => { const n = [...prev]; n[slot] = null; return n; });
     setIdInputs(prev => { const n = [...prev]; n[slot] = ""; return n; });
     setLookupErrors(prev => { const n = [...prev]; n[slot] = ""; return n; });
+    setNameResults(prev => { const n = [...prev]; n[slot] = null; return n; });
+    setShowDropdown(prev => { const n = [...prev]; n[slot] = false; return n; });
   }
 
   // ── Combined derived values ────────────────────────────────────────────────
@@ -248,13 +285,54 @@ export function CalculatorPage() {
               )}
             </div>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
-              <Input
-                value={idInputs[slot]}
-                onChange={e => setIdInputs(prev => { const n = [...prev]; n[slot] = e.target.value; return n; })}
-                onKeyDown={e => e.key === "Enter" && lookupProduct(slot)}
-                placeholder="NFGN-00001  or just  1"
-                style={{ width: 220, fontFamily: "monospace", fontWeight: 700, letterSpacing: "0.05em", border: `2px solid ${slot === 0 ? GREEN : slot === 1 ? YELLOW_B : ORANGE_B}`, background: WHITE }}
-              />
+              <div style={{ position: "relative" }}>
+                <Input
+                  value={idInputs[slot]}
+                  onChange={e => {
+                    const val = e.target.value;
+                    setIdInputs(prev => { const n = [...prev]; n[slot] = val; return n; });
+                    setLookupErrors(prev => { const n = [...prev]; n[slot] = ""; return n; });
+                    const isId = /^\s*(nfgn-\d+|\d+)\s*$/i.test(val);
+                    if (!isId && val.trim().length >= 2) {
+                      if (nameTimers.current[slot]) clearTimeout(nameTimers.current[slot]!);
+                      nameTimers.current[slot] = setTimeout(() => searchByName(slot, val), 280);
+                    } else {
+                      setNameResults(prev => { const n = [...prev]; n[slot] = null; return n; });
+                      setShowDropdown(prev => { const n = [...prev]; n[slot] = false; return n; });
+                    }
+                  }}
+                  onKeyDown={e => e.key === "Enter" && lookupProduct(slot)}
+                  onBlur={() => setTimeout(() => setShowDropdown(prev => { const n = [...prev]; n[slot] = false; return n; }), 180)}
+                  placeholder="ID (NFGN-00001) or product name…"
+                  style={{ width: 260, fontWeight: 700, letterSpacing: "0.02em", border: `2px solid ${slot === 0 ? GREEN : slot === 1 ? YELLOW_B : ORANGE_B}`, background: WHITE }}
+                />
+                {showDropdown[slot] && nameResults[slot] && nameResults[slot]!.length > 0 && (
+                  <div style={{
+                    position: "absolute", top: "calc(100% + 4px)", left: 0, zIndex: 50,
+                    background: WHITE, border: `2px solid ${slot === 0 ? GREEN : slot === 1 ? YELLOW_B : ORANGE_B}`,
+                    borderRadius: 10, boxShadow: "0 8px 28px rgba(0,0,0,0.18)", minWidth: 260, maxHeight: 260, overflowY: "auto",
+                  }}>
+                    {nameResults[slot]!.map(p => (
+                      <button
+                        key={p.id}
+                        onMouseDown={e => { e.preventDefault(); selectFromDropdown(slot, p); }}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 8, width: "100%",
+                          padding: "9px 14px", background: "none", border: "none", cursor: "pointer",
+                          textAlign: "left", borderBottom: "1px solid #f3f4f6",
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.background = "#f9fafb")}
+                        onMouseLeave={e => (e.currentTarget.style.background = "none")}
+                      >
+                        <span style={{ fontFamily: "monospace", fontSize: 10, fontWeight: 900, color: WHITE, background: GREEN, padding: "2px 7px", borderRadius: 5, whiteSpace: "nowrap" }}>{fmtId(p.id)}</span>
+                        <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: DARK }}>{p.name}</span>
+                        {p.isProPackage && <span style={{ fontSize: 9, fontWeight: 900, color: WHITE, background: ORANGE_B, padding: "2px 6px", borderRadius: 4 }}>PRO</span>}
+                        <span style={{ fontSize: 11, color: "#6b7280", whiteSpace: "nowrap" }}>{fmtUsd(p.price)}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <Button
                 onClick={() => lookupProduct(slot)}
                 disabled={lookupLoadings[slot] || !idInputs[slot].trim()}

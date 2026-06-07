@@ -9,21 +9,21 @@ import {
   Package, AlertCircle, Plus, X,
 } from "lucide-react";
 
-// ── Palette ───────────────────────────────────────────────────────────────────
+// ── NFGN Brand Palette ────────────────────────────────────────────────────────
 const WHITE    = "#ffffff";
-const GREEN    = "#16a34a";
-const GREEN_D  = "#14532d";
-const GREEN_M  = "#86efac";
-const YELLOW   = "#a16207";
-const YELLOW_B = "#fbbf24";
-const YELLOW_M = "#fde68a";
-const ORANGE   = "#c2410c";
-const ORANGE_B = "#f97316";
-const ORANGE_M = "#fed7aa";
-const DARK     = "#111827";
-const BLUE_M   = "#dbeafe";
-const BLUE_B   = "#3b82f6";
-const BLUE_D   = "#1e3a8a";
+const GREEN    = "#2D6A4F";   // Forest green
+const GREEN_D  = "#1A4032";   // Dark forest
+const GREEN_M  = "#c8e6d4";   // Light forest tint
+const YELLOW   = "#7A6010";   // Dark gold (text)
+const YELLOW_B = "#C9A84C";   // Brand gold
+const YELLOW_M = "#FBF5DC";   // Light gold bg
+const ORANGE   = "#8B5014";   // Dark amber (text)
+const ORANGE_B = "#C9891A";   // Brand amber
+const ORANGE_M = "#FEF0D0";   // Light amber bg
+const DARK     = "#0a0a0a";   // Near-black ink
+const BLUE_M   = "#f5f0e8";   // Warm cream bg
+const BLUE_B   = "#C9A84C";   // Gold accent
+const BLUE_D   = "#1A4032";   // Dark forest
 
 // PSC default rates per level (overridden by live /api/commission-rules fetch)
 const DEFAULT_PSC_RATES = [10, 20, 5, 5, 5, 5, 5, 5, 5]; // % per level L1-L9
@@ -236,7 +236,7 @@ export function CalculatorPage() {
   const l2Needed          = hasProPkg && l2DollarPerUnit > 0 ? Math.ceil(targetIncome / l2DollarPerUnit) : null;
 
   return (
-    <div style={{ maxWidth: 960, margin: "0 auto", padding: "24px 16px 56px" }}>
+    <div style={{ maxWidth: 960, margin: "0 auto", padding: "24px 16px 56px", background: "#faf7f2", borderRadius: 18 }}>
 
       {/* ── Page header ─────────────────────────────────────────────────── */}
       <div style={{

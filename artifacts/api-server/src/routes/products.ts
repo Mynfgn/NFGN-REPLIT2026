@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, productsTable, categoriesTable, orderItemsTable, usersTable, productReviewsTable, proPackagesTable } from "@workspace/db";
-import { eq, like, and, sql, count, desc, ne, asc, avg } from "drizzle-orm";
+import { eq, like, ilike, and, sql, count, desc, ne, asc, avg } from "drizzle-orm";
 import { requireAdmin, requireAuth } from "../lib/auth";
 
 const router: IRouter = Router();
@@ -92,7 +92,7 @@ router.get("/products", async (req, res): Promise<void> => {
       eq(productsTable.status, "active"),
       callerIsProOrAdmin ? undefined : eq(productsTable.isProExclusive, false),
       category ? eq(categoriesTable.slug, category) : undefined,
-      search ? like(productsTable.name, `%${search}%`) : undefined,
+      search ? ilike(productsTable.name, `%${search}%`) : undefined,
       featured !== undefined ? eq(productsTable.featured, featured) : undefined,
     ))
     .limit(limit)

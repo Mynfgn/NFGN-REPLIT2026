@@ -6,26 +6,29 @@ import { customFetch } from "@/lib/custom-fetch";
 import {
   Calculator, Search, TrendingUp, Target,
   DollarSign, Users, Award, Loader2,
-  Package, AlertCircle,
+  Package, AlertCircle, Plus, X,
 } from "lucide-react";
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 const WHITE    = "#ffffff";
 const GREEN    = "#16a34a";
 const GREEN_D  = "#14532d";
-const GREEN_M  = "#86efac";   // green-300 — clearly visible tint
-const YELLOW   = "#a16207";   // dark yellow — readable on white
-const YELLOW_B = "#fbbf24";   // bright amber-yellow
-const YELLOW_M = "#fde68a";   // amber-200 — visible yellow tint
-const ORANGE   = "#c2410c";   // dark orange — readable on white
-const ORANGE_B = "#f97316";   // bright orange (buttons, badges)
-const ORANGE_M = "#fed7aa";   // orange-200 — visible orange tint
+const GREEN_M  = "#86efac";
+const YELLOW   = "#a16207";
+const YELLOW_B = "#fbbf24";
+const YELLOW_M = "#fde68a";
+const ORANGE   = "#c2410c";
+const ORANGE_B = "#f97316";
+const ORANGE_M = "#fed7aa";
 const DARK     = "#111827";
+const BLUE_M   = "#dbeafe";
+const BLUE_B   = "#3b82f6";
+const BLUE_D   = "#1e3a8a";
 
-const RC  = 0.10;
-const SC  = 0.10;
-const L1C = 0.10;
-const L2C = 0.20;
+// Commission rates
+const SC  = 0.10;   // Sales Commission  = 10% of CV (L1 purchases)
+const L1C = 0.10;   // Level 1 Commission = 10% of CV (Pro Pkg L1)
+const L2C = 0.20;   // Level 2 Commission = 20% of CV (Pro Pkg L2)
 
 function fmtId(id: number)  { return `NFGN-${String(id).padStart(5, "0")}`; }
 function fmtUsd(n: number)  { return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
@@ -33,82 +36,131 @@ function fmtNum(n: number)  { return n.toLocaleString("en-US"); }
 
 interface CalcProduct { id: number; name: string; price: number; cv: number; isProPackage: boolean; commissionRate: number; commissionType: string; commissionAmount: number; }
 
+type LevelRow = { level: number; size: number; monthlyUnits: number; gv: number; yourComm: number; orgComm: number; label: string; };
+
 function parseProductId(raw: string): number | null {
   const c = raw.trim().replace(/^nfgn-0*/i, "").replace(/^0+/, "") || "0";
   const n = parseInt(c);
   return isNaN(n) || n <= 0 ? null : n;
 }
 
-function buildLevels(l1Size: number, mults: number[], avgPurchases: number, cv: number, isProPkg: boolean, rcPerUnit: number) {
-  const levels: { level: number; size: number; monthlyUnits: number; yourComm: number; orgComm: number; label: string; }[] = [];
+// Commission model:
+//   RC (flat $) = earned on YOUR OWN personal sales only
+//   SC / L1C    = earned when your L1 direct referrals make purchases (% of CV)
+//   L2C         = earned when L2 members purchase a Pro Package (% of CV)
+//   GV          = size × avgPurchases × totalCV  (per level)
+function buildLevels(
+  l1Size: number,
+  mults: number[],
+  avgPurchases: number,
+  totalCV: number,
+  hasProPkg: boolean,
+): LevelRow[] {
+  const rows: LevelRow[] = [];
   for (let i = 1; i <= 9; i++) {
-    const size = i === 1 ? l1Size : Math.round(levels[i - 2].size * (mults[i - 2] ?? 1));
+    const size         = i === 1 ? l1Size : Math.round(rows[i - 2].size * (mults[i - 2] ?? 1));
     const monthlyUnits = size * avgPurchases;
-    // RC is a flat dollar amount per unit; SC/L1C/L2C are % of CV
-    const yourCommPerUnit = i === 1
-      ? (rcPerUnit + cv * (isProPkg ? L1C : SC))
-      : (i === 2 && isProPkg) ? cv * L2C : 0;
+    const gv           = monthlyUnits * totalCV;
+    const scRate       = hasProPkg ? L1C : SC;
+    const yourCommPerUnit =
+      i === 1 ? totalCV * scRate :
+      (i === 2 && hasProPkg) ? totalCV * L2C : 0;
     const yourComm = monthlyUnits * yourCommPerUnit;
-    const orgComm  = monthlyUnits * (rcPerUnit + cv * (isProPkg ? L1C : SC));
-    const label = i === 1 ? "Direct Referrals" : i === 2 ? "Their Referrals" : `Generation ${i}`;
-    levels.push({ level: i, size, monthlyUnits, yourComm, orgComm, label });
+    const orgComm  = monthlyUnits * totalCV * scRate;
+    const label    = i === 1 ? "Direct Referrals" : i === 2 ? "Their Referrals" : `Generation ${i}`;
+    rows.push({ level: i, size, monthlyUnits, gv, yourComm, orgComm, label });
   }
-  return levels;
+  return rows;
 }
 
 export function CalculatorPage() {
-  const [idInput,       setIdInput]       = useState("");
-  const [product,       setProduct]       = useState<CalcProduct | null>(null);
-  const [lookupError,   setLookupError]   = useState("");
-  const [lookupLoading, setLookupLoading] = useState(false);
+  // ── Product slots (up to 3) ────────────────────────────────────────────────
+  const [productSlots,    setProductSlots]    = useState<(CalcProduct | null)[]>([null, null, null]);
+  const [idInputs,        setIdInputs]        = useState(["", "", ""]);
+  const [lookupErrors,    setLookupErrors]    = useState(["", "", ""]);
+  const [lookupLoadings,  setLookupLoadings]  = useState([false, false, false]);
+  const [slotCount,       setSlotCount]       = useState(1);
+
+  // ── Builder state ──────────────────────────────────────────────────────────
   const [personalSales, setPersonalSales] = useState(5);
   const [l1Size,        setL1Size]        = useState(7);
   const [levelMults,    setLevelMults]    = useState<number[]>([3, 3, 3, 3, 3, 3, 3, 3]);
   const [avgPurchases,  setAvgPurchases]  = useState(1);
   const [targetIncome,  setTargetIncome]  = useState(4500);
 
-  async function lookupProduct() {
-    const id = parseProductId(idInput);
-    if (!id) { setLookupError("Enter a valid Product ID — e.g. NFGN-00001 or just 1"); return; }
-    setLookupLoading(true); setLookupError("");
+  async function lookupProduct(slot: number) {
+    const id = parseProductId(idInputs[slot]);
+    if (!id) {
+      setLookupErrors(prev => { const n = [...prev]; n[slot] = "Enter a valid Product ID — e.g. NFGN-00001 or just 1"; return n; });
+      return;
+    }
+    setLookupLoadings(prev => { const n = [...prev]; n[slot] = true; return n; });
+    setLookupErrors(prev => { const n = [...prev]; n[slot] = ""; return n; });
     try {
       const res = await customFetch(`/api/products/${id}`);
-      if (!res.ok) { setLookupError(`Product "${idInput.trim()}" not found.`); setProduct(null); return; }
+      if (!res.ok) {
+        setLookupErrors(prev => { const n = [...prev]; n[slot] = `Product "${idInputs[slot].trim()}" not found.`; return n; });
+        setProductSlots(prev => { const n = [...prev]; n[slot] = null; return n; });
+        return;
+      }
       const d = await res.json();
-      setProduct({ id: d.id, name: d.name, price: parseFloat(d.price), cv: d.cv ?? 0, isProPackage: !!d.isProPackage, commissionRate: parseFloat(d.commissionRate) || 10, commissionType: d.commissionType ?? "flat", commissionAmount: parseFloat(d.commissionAmount) || 0 });
-    } catch { setLookupError("Failed to load product. Please try again."); }
-    finally   { setLookupLoading(false); }
+      const p: CalcProduct = { id: d.id, name: d.name, price: parseFloat(d.price), cv: d.cv ?? 0, isProPackage: !!d.isProPackage, commissionRate: parseFloat(d.commissionRate) || 10, commissionType: d.commissionType ?? "flat", commissionAmount: parseFloat(d.commissionAmount) || 0 };
+      setProductSlots(prev => { const n = [...prev]; n[slot] = p; return n; });
+    } catch {
+      setLookupErrors(prev => { const n = [...prev]; n[slot] = "Failed to load product. Please try again."; return n; });
+    } finally {
+      setLookupLoadings(prev => { const n = [...prev]; n[slot] = false; return n; });
+    }
   }
 
-  const price    = product?.price ?? 0;
-  const cv       = product?.cv ?? 0;
-  const isProPkg = product?.isProPackage ?? false;
-  // RC per unit: fixed flat dollar amount per unit sold
-  // SC / L1C / L2C are % of CV (commissionable volume), not price
-  const rcPerUnit = product ? product.commissionAmount : 0;
-  const commPerSalePersonal = rcPerUnit + cv * (isProPkg ? L1C : SC);
-  const commL2PerSale       = isProPkg ? cv * L2C : 0;
-  const levels = product ? buildLevels(l1Size, levelMults, avgPurchases, cv, isProPkg, rcPerUnit) : [];
+  function clearSlot(slot: number) {
+    setProductSlots(prev => { const n = [...prev]; n[slot] = null; return n; });
+    setIdInputs(prev => { const n = [...prev]; n[slot] = ""; return n; });
+    setLookupErrors(prev => { const n = [...prev]; n[slot] = ""; return n; });
+  }
 
-  const myPersonalEarnings = personalSales * commPerSalePersonal;
-  const myL1Earnings       = levels[0]?.yourComm ?? 0;
-  const myL2Earnings       = levels[1]?.yourComm ?? 0;
-  const myCommTotal        = myPersonalEarnings + myL1Earnings + myL2Earnings;
-  const clbEarned          = l1Size >= 7 ? 100 : 0;
-  const l2Total            = levels[1] ? levels[1].size * avgPurchases : 0;
-  const mcbCount           = isProPkg ? Math.floor(l2Total / 7) : 0;
-  const mcbEarned          = mcbCount * 200;
-  const totalWithBonus     = myCommTotal + clbEarned + mcbEarned;
-  const orgCollective      = levels.reduce((s, l) => s + l.orgComm, 0);
+  // ── Combined derived values ────────────────────────────────────────────────
+  const loadedProducts   = productSlots.slice(0, slotCount).filter((p): p is CalcProduct => p !== null);
+  const hasAny           = loadedProducts.length > 0;
+  const totalCV          = loadedProducts.reduce((s, p) => s + p.cv,               0);
+  const totalRC          = loadedProducts.reduce((s, p) => s + p.commissionAmount, 0);
+  const hasProPkg        = loadedProducts.some(p => p.isProPackage);
+  const scRate           = hasProPkg ? L1C : SC;
+  const scPerUnit        = totalCV * scRate;       // SC per L1 purchase
+  const l2cPerUnit       = totalCV * L2C;          // L2C per L2 purchase (Pro Pkg)
+  const commPerDirectSale = totalRC + scPerUnit;   // display-only combined
 
-  const goalPersonalOnly  = commPerSalePersonal > 0 ? Math.ceil(targetIncome / commPerSalePersonal) : 0;
-  const earningsFrom5     = 5 * commPerSalePersonal;
-  const l1Needed          = commPerSalePersonal > 0 ? Math.ceil(Math.max(0, targetIncome - earningsFrom5) / commPerSalePersonal) : 0;
-  const l1WithBonusNeeded = commPerSalePersonal > 0 ? Math.ceil(Math.max(0, targetIncome - 100 - earningsFrom5) / commPerSalePersonal) : 0;
-  const l2Needed          = isProPkg && commL2PerSale > 0 ? Math.ceil(targetIncome / commL2PerSale) : null;
+  // ── Level builder ──────────────────────────────────────────────────────────
+  const levels = hasAny ? buildLevels(l1Size, levelMults, avgPurchases, totalCV, hasProPkg) : [];
+
+  // ── Earnings ───────────────────────────────────────────────────────────────
+  // Personal: RC only (flat $ earned on own sales)
+  const myPersonalRC     = personalSales * totalRC;
+  // L1: SC from L1 downline purchases
+  const myL1SC           = levels[0]?.yourComm ?? 0;
+  // L2: L2C from L2 downline (Pro Pkg only)
+  const myL2Earnings     = levels[1]?.yourComm ?? 0;
+  const myCommTotal      = myPersonalRC + myL1SC + myL2Earnings;
+  const clbEarned        = l1Size >= 7 ? 100 : 0;
+  const l2Total          = levels[1] ? levels[1].size * avgPurchases : 0;
+  const mcbCount         = hasProPkg ? Math.floor(l2Total / 7) : 0;
+  const mcbEarned        = mcbCount * 200;
+  const totalWithBonus   = myCommTotal + clbEarned + mcbEarned;
+
+  // GV totals
+  const personalGV       = personalSales * totalCV;
+  const totalOrgGV       = personalGV + levels.reduce((s, l) => s + l.gv, 0);
+  const orgCollective    = levels.reduce((s, l) => s + l.orgComm, 0);
+
+  // ── Income Goal ────────────────────────────────────────────────────────────
+  const goalPersonalOnly  = totalRC > 0 ? Math.ceil(targetIncome / totalRC) : 0;
+  const earningsFrom5     = 5 * totalRC;
+  const l1Needed          = scPerUnit > 0 ? Math.ceil(Math.max(0, targetIncome - earningsFrom5) / scPerUnit) : 0;
+  const l1WithBonusNeeded = scPerUnit > 0 ? Math.ceil(Math.max(0, targetIncome - 100 - earningsFrom5) / scPerUnit) : 0;
+  const l2Needed          = hasProPkg && l2cPerUnit > 0 ? Math.ceil(targetIncome / l2cPerUnit) : null;
 
   return (
-    <div style={{ maxWidth: 940, margin: "0 auto", padding: "24px 16px 56px" }}>
+    <div style={{ maxWidth: 960, margin: "0 auto", padding: "24px 16px 56px" }}>
 
       {/* ── Page header ─────────────────────────────────────────────────── */}
       <div style={{
@@ -128,94 +180,135 @@ export function CalculatorPage() {
         </div>
         <div>
           <h1 style={{ fontFamily: "'Georgia',serif", fontSize: 22, fontWeight: 900, margin: 0, color: WHITE }}>
-            Products, Services & Commissions Calculator
+            Products, Services &amp; Commissions Calculator
           </h1>
           <p style={{ fontSize: 13, color: YELLOW_B, margin: "4px 0 0" }}>
-            Enter any NFGN Product ID to calculate your earning potential across 9 generations.
+            Load up to 3 products — CVs combine for total GV and commission projections across 9 generations.
           </p>
         </div>
       </div>
 
-      {/* ── STEP 1 ──────────────────────────────────────────────────────── */}
+      {/* ── STEP 1: Product Lookup (up to 3 slots) ───────────────────────── */}
       <SectionCard borderColor={GREEN} topColor={GREEN}>
-        <StepHeader n={1} title="Product Lookup" />
+        <StepHeader n={1} title="Product Lookup (1–3 Products)" />
         <p style={{ fontSize: 13, color: "#444", marginBottom: 16, lineHeight: 1.7 }}>
-          Enter the Product ID displayed on any product in the shop. The system loads price, PV/CV, and commission type automatically.
+          Load up to 3 products. Their CV and RC values combine — giving you a total GV and combined commission per direct sale.
         </p>
 
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
-          <Input
-            value={idInput}
-            onChange={e => setIdInput(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && lookupProduct()}
-            placeholder="NFGN-00001  or just  1"
-            style={{ width: 240, fontFamily: "monospace", fontWeight: 700, letterSpacing: "0.05em", border: `2px solid ${GREEN}`, background: GREEN_M + "60" }}
-          />
-          <Button
-            onClick={lookupProduct}
-            disabled={lookupLoading || !idInput.trim()}
-            style={{ background: `linear-gradient(135deg, ${ORANGE_B}, #fb923c)`, color: WHITE, fontWeight: 800, gap: 6, border: "none", boxShadow: `0 3px 12px rgba(249,115,22,0.5)` }}
-          >
-            {lookupLoading ? <><Loader2 size={14} className="animate-spin" /> Loading…</> : <><Search size={14} /> Load Product</>}
-          </Button>
-        </div>
-
-        {lookupError && (
-          <div style={{ display: "flex", gap: 6, alignItems: "center", color: "#dc2626", fontSize: 13, padding: "8px 12px", background: "#fef2f2", borderRadius: 8, border: "2px solid #fca5a5", marginBottom: 8 }}>
-            <AlertCircle size={14} /> {lookupError}
+        {/* Product slots */}
+        {Array.from({ length: slotCount }).map((_, slot) => (
+          <div key={slot} style={{ marginBottom: 16, padding: "16px 18px", background: slot === 0 ? GREEN_M + "40" : slot === 1 ? YELLOW_M + "60" : ORANGE_M + "60", border: `2px solid ${slot === 0 ? GREEN : slot === 1 ? YELLOW_B : ORANGE_B}`, borderRadius: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+              <span style={{ fontSize: 11, fontWeight: 900, color: slot === 0 ? GREEN_D : slot === 1 ? YELLOW : ORANGE, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                Product {slot + 1}{slot > 0 ? " (optional)" : ""}
+              </span>
+              {slot > 0 && (
+                <button onClick={() => { clearSlot(slot); setSlotCount(s => s - 1); }} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "#9ca3af", padding: 2 }}>
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
+              <Input
+                value={idInputs[slot]}
+                onChange={e => setIdInputs(prev => { const n = [...prev]; n[slot] = e.target.value; return n; })}
+                onKeyDown={e => e.key === "Enter" && lookupProduct(slot)}
+                placeholder="NFGN-00001  or just  1"
+                style={{ width: 220, fontFamily: "monospace", fontWeight: 700, letterSpacing: "0.05em", border: `2px solid ${slot === 0 ? GREEN : slot === 1 ? YELLOW_B : ORANGE_B}`, background: WHITE }}
+              />
+              <Button
+                onClick={() => lookupProduct(slot)}
+                disabled={lookupLoadings[slot] || !idInputs[slot].trim()}
+                style={{ background: `linear-gradient(135deg, ${ORANGE_B}, #fb923c)`, color: WHITE, fontWeight: 800, gap: 6, border: "none", boxShadow: `0 3px 12px rgba(249,115,22,0.5)` }}
+              >
+                {lookupLoadings[slot] ? <><Loader2 size={14} className="animate-spin" /> Loading…</> : <><Search size={14} /> Load</>}
+              </Button>
+              {productSlots[slot] && (
+                <button onClick={() => clearSlot(slot)} style={{ padding: "6px 12px", borderRadius: 8, border: `2px solid #e5e7eb`, background: WHITE, cursor: "pointer", fontSize: 12, color: "#6b7280", fontWeight: 700 }}>
+                  Clear
+                </button>
+              )}
+            </div>
+            {lookupErrors[slot] && (
+              <div style={{ display: "flex", gap: 6, alignItems: "center", color: "#dc2626", fontSize: 13, padding: "8px 12px", background: "#fef2f2", borderRadius: 8, border: "2px solid #fca5a5", marginBottom: 6 }}>
+                <AlertCircle size={14} /> {lookupErrors[slot]}
+              </div>
+            )}
+            {productSlots[slot] && (() => {
+              const p = productSlots[slot]!;
+              return (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+                  <div>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 4 }}>
+                      <span style={{ fontFamily: "monospace", fontSize: 11, fontWeight: 900, color: WHITE, background: GREEN, padding: "3px 10px", borderRadius: 6 }}>{fmtId(p.id)}</span>
+                      {p.isProPackage && <span style={{ fontSize: 10, fontWeight: 900, color: WHITE, background: ORANGE_B, padding: "3px 10px", borderRadius: 6 }}>⭐ PRO PKG</span>}
+                    </div>
+                    <div style={{ fontWeight: 800, fontSize: 15, color: DARK }}>{p.name}</div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {[
+                      { label: "Price",   value: fmtUsd(p.price),              bg: GREEN_D,  text: YELLOW_B },
+                      { label: "CV",      value: String(p.cv),                 bg: YELLOW_B, text: GREEN_D  },
+                      { label: "RC/unit", value: fmtUsd(p.commissionAmount),   bg: ORANGE_B, text: WHITE    },
+                    ].map(s => (
+                      <div key={s.label} style={{ textAlign: "center", background: s.bg, borderRadius: 10, padding: "7px 14px", minWidth: 68 }}>
+                        <div style={{ fontSize: 9, fontWeight: 700, color: s.text + "aa", textTransform: "uppercase", letterSpacing: "0.07em" }}>{s.label}</div>
+                        <div style={{ fontSize: 16, fontWeight: 900, color: s.text }}>{s.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
+        ))}
+
+        {/* Add product slot button */}
+        {slotCount < 3 && (
+          <button
+            onClick={() => setSlotCount(s => s + 1)}
+            style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 18px", border: `2px dashed ${GREEN}`, borderRadius: 10, background: GREEN_M + "30", color: GREEN_D, fontWeight: 700, fontSize: 13, cursor: "pointer", marginBottom: 16 }}
+          >
+            <Plus size={15} /> Add Product {slotCount + 1}
+          </button>
         )}
 
-        {product && (
-          <div style={{ marginTop: 16, padding: "20px 22px", background: GREEN_M + "50", border: `2px solid ${GREEN}`, borderRadius: 14 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12, marginBottom: 18 }}>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                  <span style={{ fontFamily: "monospace", fontSize: 12, fontWeight: 900, color: WHITE, background: GREEN, padding: "5px 14px", borderRadius: 8, letterSpacing: "0.06em" }}>
-                    {fmtId(product.id)}
-                  </span>
-                  {isProPkg && (
-                    <span style={{ fontSize: 11, fontWeight: 900, color: WHITE, background: ORANGE_B, padding: "5px 12px", borderRadius: 8, letterSpacing: "0.04em" }}>
-                      ⭐ PRO PACKAGE
-                    </span>
-                  )}
+        {/* Combined summary */}
+        {hasAny && (
+          <div style={{ marginTop: 4, padding: "18px 20px", background: GREEN_M + "50", border: `2px solid ${GREEN}`, borderRadius: 14 }}>
+            {/* Combined CV / RC totals */}
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
+              {[
+                { label: "Combined CV (GV basis)",  value: String(totalCV),           bg: YELLOW_B, text: GREEN_D  },
+                { label: "Combined RC / unit",      value: fmtUsd(totalRC),           bg: ORANGE_B, text: WHITE    },
+                { label: hasProPkg ? "L1 Comm / unit" : "Sales Comm / unit", value: fmtUsd(scPerUnit), bg: GREEN_D, text: YELLOW_B },
+                { label: "Total Per Direct Sale",   value: fmtUsd(commPerDirectSale), bg: GREEN,    text: WHITE    },
+              ].map(s => (
+                <div key={s.label} style={{ textAlign: "center", background: s.bg, borderRadius: 12, padding: "10px 16px", minWidth: 90 }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: s.text + "bb", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 2 }}>{s.label}</div>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: s.text }}>{s.value}</div>
                 </div>
-                <div style={{ fontWeight: 800, fontSize: 20, color: DARK }}>{product.name}</div>
-                <div style={{ fontSize: 13, color: "#555", marginTop: 3 }}>
-                  {isProPkg ? "Pro Package — generates Level 1 & Level 2 commissions" : "Regular product — generates Referral + Sales commissions"}
-                </div>
-              </div>
-              <div style={{ display: "flex", gap: 12, flexShrink: 0, flexWrap: "wrap" }}>
-                {[
-                  { label: "Price",     value: fmtUsd(product.price), bg: GREEN_D,  text: YELLOW_B },
-                  { label: "PV / CV",   value: String(product.cv),    bg: YELLOW_B, text: GREEN_D  },
-                  { label: "RC / unit", value: fmtUsd(rcPerUnit), bg: ORANGE_B, text: WHITE },
-                ].map(s => (
-                  <div key={s.label} style={{ textAlign: "center", background: s.bg, borderRadius: 12, padding: "10px 18px", minWidth: 80 }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: s.text + "bb", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 2 }}>{s.label}</div>
-                    <div style={{ fontSize: 20, fontWeight: 900, color: s.text }}>{s.value}</div>
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
 
-            <div style={{ borderTop: `2px solid ${GREEN}`, paddingTop: 16 }}>
-              <div style={{ fontSize: 11, fontWeight: 900, color: ORANGE, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>
-                💰 Your Commission Per Sale (as a Pro Member)
+            {/* Per-sale breakdown tiles */}
+            <div style={{ borderTop: `2px solid ${GREEN}`, paddingTop: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 900, color: ORANGE, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>
+                💰 Your Commission Breakdown (as a Pro Member)
               </div>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 {[
-                  { label: "Referral Commission (RC)", pct: fmtUsd(rcPerUnit) + " flat", amt: rcPerUnit, sub: "Fixed dollar amount per unit sold", bg: GREEN_M,  border: GREEN,    val: GREEN_D  },
-                  { label: isProPkg ? "Level 1 Commission" : "Sales Commission", pct: "10% of CV", amt: cv * (isProPkg ? L1C : SC), sub: isProPkg ? `10% × ${cv} CV` : `10% × ${cv} CV`, bg: YELLOW_M, border: YELLOW_B, val: YELLOW },
-                  { label: "Your Total Per Direct Sale", pct: "RC + 10% CV", amt: commPerSalePersonal, sub: `RC flat + 10% × ${cv} CV`,  bg: GREEN,    border: GREEN_D,  val: WHITE,  bold: true },
-                  ...(isProPkg ? [{ label: "Level 2 Commission", pct: "20% of CV", amt: commL2PerSale, sub: `20% × ${cv} CV`, bg: ORANGE_M, border: ORANGE_B, val: ORANGE }] : []),
+                  { label: "RC — on Your Own Sales",         pct: fmtUsd(totalRC) + " flat",          amt: totalRC,   sub: "Fixed dollar RC earned per unit you personally sell",             bg: GREEN_M,  border: GREEN,    val: GREEN_D },
+                  { label: hasProPkg ? "L1 Commission" : "Sales Commission", pct: "10% of CV",        amt: scPerUnit, sub: `10% × ${totalCV} combined CV per L1 purchase`,                  bg: YELLOW_M, border: YELLOW_B, val: YELLOW  },
+                  { label: "Total Per Direct Sale",          pct: "RC + 10% CV",                       amt: commPerDirectSale, sub: `RC flat + 10% × ${totalCV} CV`,                         bg: GREEN,    border: GREEN_D,  val: WHITE, bold: true },
+                  ...(hasProPkg ? [{ label: "Level 2 Commission",     pct: "20% of CV", amt: l2cPerUnit, sub: `20% × ${totalCV} CV per L2 purchase`, bg: ORANGE_M, border: ORANGE_B, val: ORANGE }] : []),
                 ].map(item => (
-                  <div key={item.label} style={{ flex: "1 1 150px", padding: "14px 16px", background: item.bg, borderRadius: 12, border: `2px solid ${item.border}` }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: item.bold ? "rgba(255,255,255,0.75)" : "#555", marginBottom: 4 }}>{item.label}</div>
-                    <div style={{ fontSize: 22, fontWeight: 900, color: item.val }}>
-                      {fmtUsd(item.amt)} <span style={{ fontSize: 12, fontWeight: 600, opacity: 0.65 }}>({item.pct})</span>
+                  <div key={item.label} style={{ flex: "1 1 140px", padding: "12px 14px", background: item.bg, borderRadius: 12, border: `2px solid ${item.border}` }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: (item as any).bold ? "rgba(255,255,255,0.75)" : "#555", marginBottom: 4 }}>{item.label}</div>
+                    <div style={{ fontSize: 20, fontWeight: 900, color: item.val }}>
+                      {fmtUsd(item.amt)} <span style={{ fontSize: 11, fontWeight: 600, opacity: 0.65 }}>({item.pct})</span>
                     </div>
-                    <div style={{ fontSize: 11, color: item.bold ? "rgba(255,255,255,0.65)" : "#666", marginTop: 2 }}>{item.sub}</div>
+                    <div style={{ fontSize: 11, color: (item as any).bold ? "rgba(255,255,255,0.65)" : "#666", marginTop: 2 }}>{item.sub}</div>
                   </div>
                 ))}
               </div>
@@ -223,27 +316,28 @@ export function CalculatorPage() {
           </div>
         )}
 
-        {!product && (
-          <div style={{ marginTop: 12, padding: "28px", background: GREEN_M + "70", borderRadius: 12, border: `2px dashed ${GREEN}`, textAlign: "center" }}>
+        {!hasAny && (
+          <div style={{ marginTop: 4, padding: "28px", background: GREEN_M + "70", borderRadius: 12, border: `2px dashed ${GREEN}`, textAlign: "center" }}>
             <Package size={32} style={{ margin: "0 auto 10px", color: GREEN }} />
             <div style={{ fontSize: 13, color: GREEN_D, fontWeight: 600 }}>Load a product to see commission details and activate the calculators below.</div>
           </div>
         )}
       </SectionCard>
 
-      {/* ── STEP 2 ──────────────────────────────────────────────────────── */}
-      <SectionCard borderColor={YELLOW_B} topColor={YELLOW_B} disabled={!product}>
+      {/* ── STEP 2: 9-Level Organization Builder ─────────────────────────── */}
+      <SectionCard borderColor={YELLOW_B} topColor={YELLOW_B} disabled={!hasAny}>
         <StepHeader n={2} title="9-Level Organization Builder" />
         <p style={{ fontSize: 13, color: "#444", marginBottom: 20, lineHeight: 1.7 }}>
           Set your Level 1 team size, then enter a multiplier for each level (L2–L9). Each level's team size = previous level × its multiplier.
+          <br /><span style={{ color: GREEN_D, fontWeight: 700 }}>GV = Team Size × Avg Purchases × Combined CV.</span>
         </p>
 
-        {/* Top inputs: personal sales, L1 size, avg purchases */}
+        {/* Top inputs */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 14, marginBottom: 20 }}>
           {[
-            { label: "Your Personal Sales / Month",    value: personalSales, setter: setPersonalSales, min: 0, hint: price > 0 ? `Earns ${fmtUsd(personalSales * commPerSalePersonal)}/mo` : "Load a product first", bg: GREEN_M,  border: GREEN,    color: GREEN_D },
-            { label: "Level 1 Team Size (Base)",       value: l1Size,        setter: setL1Size,        min: 0, hint: l1Size >= 7 ? "✓ CLB eligible!" : `${7 - l1Size} more needed for CLB`,                          bg: YELLOW_M, border: YELLOW_B, color: YELLOW  },
-            { label: "Avg Purchases / Person / Month", value: avgPurchases,  setter: setAvgPurchases,  min: 1, hint: "Units each person buys/month",                                                                   bg: GREEN_M,  border: GREEN,    color: GREEN_D },
+            { label: "Your Personal Sales / Month",    value: personalSales, setter: setPersonalSales, min: 0, hint: hasAny ? `RC earnings: ${fmtUsd(personalSales * totalRC)}/mo` : "Load a product first", bg: GREEN_M,  border: GREEN,    color: GREEN_D },
+            { label: "Level 1 Team Size (Base)",       value: l1Size,        setter: setL1Size,        min: 0, hint: l1Size >= 7 ? "✓ CLB eligible!" : `${7 - l1Size} more needed for CLB`,                  bg: YELLOW_M, border: YELLOW_B, color: YELLOW  },
+            { label: "Avg Purchases / Person / Month", value: avgPurchases,  setter: setAvgPurchases,  min: 1, hint: "Units each person buys/month",                                                           bg: GREEN_M,  border: GREEN,    color: GREEN_D },
           ].map(row => (
             <div key={row.label} style={{ background: row.bg, borderRadius: 12, border: `2px solid ${row.border}`, padding: "12px 14px" }}>
               <Label style={{ fontSize: 11, fontWeight: 900, color: row.color, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>{row.label}</Label>
@@ -264,35 +358,44 @@ export function CalculatorPage() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
             <thead>
               <tr style={{ background: `linear-gradient(135deg, ${GREEN_D}, #166534)` }}>
-                {["Level", "Description", "× Multiplier", "Team Size", "Monthly Units", "Your Commission", "Org Collective", "Flows To You?"].map(h => (
-                  <th key={h} style={{ padding: "12px 14px", textAlign: "left", fontSize: 11, fontWeight: 900, color: YELLOW_B, letterSpacing: "0.07em", whiteSpace: "nowrap", textTransform: "uppercase" }}>{h}</th>
+                {["Level", "Description", "× Multiplier", "Team Size", "Monthly Units", "Monthly GV", "Your Commission", "Org Collective", "Flows To You?"].map(h => (
+                  <th key={h} style={{ padding: "12px 12px", textAlign: "left", fontSize: 10, fontWeight: 900, color: YELLOW_B, letterSpacing: "0.07em", whiteSpace: "nowrap", textTransform: "uppercase" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
+              {/* You — personal sales row */}
               <tr style={{ background: GREEN_M, borderBottom: `2px solid ${GREEN}` }}>
-                <td style={{ padding: "11px 14px", fontWeight: 900, color: GREEN_D, fontSize: 15 }}>You</td>
-                <td style={{ padding: "11px 14px", color: DARK, fontWeight: 600 }}>Personal Sales</td>
-                <td style={{ padding: "11px 14px", color: "#aaa" }}>—</td>
-                <td style={{ padding: "11px 14px", fontWeight: 700 }}>—</td>
-                <td style={{ padding: "11px 14px", fontWeight: 800, color: ORANGE }}>{personalSales}</td>
-                <td style={{ padding: "11px 14px", fontWeight: 900, color: GREEN_D, fontSize: 15 }}>{fmtUsd(myPersonalEarnings)}</td>
-                <td style={{ padding: "11px 14px", color: "#aaa" }}>—</td>
-                <td style={{ padding: "11px 14px" }}><span style={{ color: WHITE, fontWeight: 900, fontSize: 11, background: GREEN, padding: "3px 10px", borderRadius: 6 }}>✓ YOURS</span></td>
+                <td style={{ padding: "11px 12px", fontWeight: 900, color: GREEN_D, fontSize: 15 }}>You</td>
+                <td style={{ padding: "11px 12px", color: DARK, fontWeight: 600 }}>Personal Sales</td>
+                <td style={{ padding: "11px 12px", color: "#aaa" }}>—</td>
+                <td style={{ padding: "11px 12px", fontWeight: 700 }}>—</td>
+                <td style={{ padding: "11px 12px", fontWeight: 800, color: ORANGE }}>{personalSales}</td>
+                <td style={{ padding: "11px 12px" }}>
+                  <span style={{ fontWeight: 800, color: BLUE_D, background: BLUE_M, padding: "2px 8px", borderRadius: 6, fontSize: 12 }}>{fmtNum(personalGV)} GV</span>
+                </td>
+                <td style={{ padding: "11px 12px" }}>
+                  <div style={{ fontWeight: 900, color: GREEN_D, fontSize: 14 }}>{fmtUsd(myPersonalRC)}</div>
+                  <div style={{ fontSize: 10, color: "#6b7280" }}>RC: {fmtUsd(totalRC)} × {personalSales}</div>
+                </td>
+                <td style={{ padding: "11px 12px", color: "#aaa" }}>—</td>
+                <td style={{ padding: "11px 12px" }}><span style={{ color: WHITE, fontWeight: 900, fontSize: 11, background: GREEN, padding: "3px 10px", borderRadius: 6 }}>✓ YOURS</span></td>
               </tr>
+
+              {/* L1–L9 rows */}
               {levels.map((lv, i) => {
-                const isYours = lv.yourComm > 0;
+                const isYours  = lv.yourComm > 0;
                 const prevSize = i === 0 ? l1Size : levels[i - 1].size;
                 return (
                   <tr key={lv.level} style={{ background: isYours ? GREEN_M + "80" : (i % 2 === 0 ? "#f9fafb" : WHITE), borderBottom: `1px solid ${isYours ? GREEN : "#e5e7eb"}` }}>
-                    <td style={{ padding: "10px 14px", fontWeight: 900, color: isYours ? GREEN_D : "#d1d5db", fontSize: 14 }}>L{lv.level}</td>
-                    <td style={{ padding: "10px 14px", color: "#555" }}>{lv.label}</td>
-                    <td style={{ padding: "10px 12px" }}>
+                    <td style={{ padding: "10px 12px", fontWeight: 900, color: isYours ? GREEN_D : "#d1d5db", fontSize: 14 }}>L{lv.level}</td>
+                    <td style={{ padding: "10px 12px", color: "#555" }}>{lv.label}</td>
+                    <td style={{ padding: "10px 10px" }}>
                       {lv.level === 1 ? (
-                        <span style={{ fontSize: 12, color: "#9ca3af", fontWeight: 600 }}>Base</span>
+                        <span style={{ fontSize: 11, color: "#9ca3af", fontWeight: 600 }}>Base</span>
                       ) : (
-                        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                          <span style={{ fontSize: 12, color: ORANGE, fontWeight: 700 }}>{fmtNum(prevSize)} ×</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                          <span style={{ fontSize: 11, color: ORANGE, fontWeight: 700 }}>{fmtNum(prevSize)}×</span>
                           <input
                             type="number"
                             min={1}
@@ -303,21 +406,24 @@ export function CalculatorPage() {
                               setLevelMults(prev => { const next = [...prev]; next[lv.level - 2] = v; return next; });
                             }}
                             style={{
-                              width: 52, fontWeight: 800, fontSize: 14, textAlign: "center",
-                              border: `2px solid ${ORANGE_B}`, borderRadius: 6, padding: "3px 5px",
+                              width: 50, fontWeight: 800, fontSize: 13, textAlign: "center",
+                              border: `2px solid ${ORANGE_B}`, borderRadius: 6, padding: "2px 4px",
                               background: ORANGE_M, color: ORANGE, outline: "none",
                             }}
                           />
                         </div>
                       )}
                     </td>
-                    <td style={{ padding: "10px 14px", fontWeight: 700, color: isYours ? ORANGE : "#9ca3af" }}>{fmtNum(lv.size)}</td>
-                    <td style={{ padding: "10px 14px", color: isYours ? DARK : "#9ca3af" }}>{fmtNum(lv.monthlyUnits)}</td>
-                    <td style={{ padding: "10px 14px", fontWeight: isYours ? 900 : 400, color: isYours ? GREEN_D : "#d1d5db", fontSize: isYours ? 15 : 13 }}>
+                    <td style={{ padding: "10px 12px", fontWeight: 700, color: isYours ? ORANGE : "#9ca3af" }}>{fmtNum(lv.size)}</td>
+                    <td style={{ padding: "10px 12px", color: isYours ? DARK : "#9ca3af" }}>{fmtNum(lv.monthlyUnits)}</td>
+                    <td style={{ padding: "10px 12px" }}>
+                      <span style={{ fontWeight: 700, color: BLUE_D, background: BLUE_M, padding: "2px 8px", borderRadius: 6, fontSize: 12 }}>{fmtNum(lv.gv)} GV</span>
+                    </td>
+                    <td style={{ padding: "10px 12px", fontWeight: isYours ? 900 : 400, color: isYours ? GREEN_D : "#d1d5db", fontSize: isYours ? 15 : 13 }}>
                       {isYours ? fmtUsd(lv.yourComm) : "—"}
                     </td>
-                    <td style={{ padding: "10px 14px", color: "#6b7280" }}>{fmtUsd(lv.orgComm)}</td>
-                    <td style={{ padding: "10px 14px" }}>
+                    <td style={{ padding: "10px 12px", color: "#6b7280" }}>{fmtUsd(lv.orgComm)}</td>
+                    <td style={{ padding: "10px 12px" }}>
                       {isYours
                         ? <span style={{ color: WHITE, fontWeight: 900, fontSize: 11, background: GREEN, padding: "3px 10px", borderRadius: 6 }}>✓ YOURS</span>
                         : <span style={{ color: "#d1d5db", fontSize: 12 }}>Their sponsors</span>}
@@ -325,6 +431,23 @@ export function CalculatorPage() {
                   </tr>
                 );
               })}
+
+              {/* Total GV footer row */}
+              {hasAny && (
+                <tr style={{ background: BLUE_M, borderTop: `2px solid ${BLUE_B}` }}>
+                  <td colSpan={5} style={{ padding: "10px 12px", fontWeight: 900, color: BLUE_D, fontSize: 13, textAlign: "right" }}>
+                    TOTAL ORGANIZATION GV →
+                  </td>
+                  <td style={{ padding: "10px 12px" }}>
+                    <span style={{ fontWeight: 900, color: WHITE, background: BLUE_B, padding: "4px 12px", borderRadius: 8, fontSize: 14 }}>
+                      {fmtNum(totalOrgGV)} GV
+                    </span>
+                  </td>
+                  <td colSpan={3} style={{ padding: "10px 12px", fontSize: 11, color: BLUE_D, fontWeight: 600 }}>
+                    Personal {fmtNum(personalGV)} + Org {fmtNum(totalOrgGV - personalGV)} GV
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -335,11 +458,11 @@ export function CalculatorPage() {
             <TrendingUp size={14} /> Monthly Earnings Summary
           </div>
           {[
-            { label: "Personal Sales Commission",             amount: myPersonalEarnings, desc: `${personalSales} sales × ${fmtUsd(commPerSalePersonal)}/sale`,                           color: GREEN_M   },
-            { label: "Level 1 Commission",                    amount: myL1Earnings,       desc: `${fmtNum(l1Size)} members × ${avgPurchases} × ${fmtUsd(commPerSalePersonal)}`,            color: YELLOW_B  },
-            ...(isProPkg ? [{ label: "Level 2 Commission (Pro Pkg)", amount: myL2Earnings, desc: `${fmtNum(levels[1]?.size ?? 0)} members × ${avgPurchases} × ${fmtUsd(commL2PerSale)}`, color: ORANGE_B }] : []),
-            { label: "CLB Bonus",                             amount: clbEarned,          desc: l1Size >= 7 ? "✓ 7+ qualified L1 Pro Members" : `Need ${7 - l1Size} more L1 to qualify`,  color: ORANGE_B  },
-            ...(isProPkg ? [{ label: `MCB Bonus (${mcbCount}× at $200)`, amount: mcbEarned, desc: `${fmtNum(l2Total)} L2 purchases ÷ 7 = ${mcbCount} payments`,                         color: "#fdba74" }] : []),
+            { label: "Personal Sales — RC",                  amount: myPersonalRC,   desc: `${personalSales} personal sales × ${fmtUsd(totalRC)} RC/unit`,                                             color: GREEN_M   },
+            { label: "L1 Direct Referrals — Sales Comm",     amount: myL1SC,         desc: `${fmtNum(l1Size)} members × ${avgPurchases} purchase × ${fmtUsd(scPerUnit)}/unit (10% × ${totalCV} CV)`,   color: YELLOW_B  },
+            ...(hasProPkg ? [{ label: "Level 2 Commission (Pro Pkg)", amount: myL2Earnings, desc: `${fmtNum(levels[1]?.size ?? 0)} members × ${avgPurchases} × ${fmtUsd(l2cPerUnit)}/unit`, color: ORANGE_B }] : []),
+            { label: "CLB Bonus",                            amount: clbEarned,      desc: l1Size >= 7 ? "✓ 7+ qualified L1 Pro Members" : `Need ${7 - l1Size} more L1 to qualify`,                  color: ORANGE_B  },
+            ...(hasProPkg ? [{ label: `MCB Bonus (${mcbCount}× at $200)`, amount: mcbEarned, desc: `${fmtNum(l2Total)} L2 purchases ÷ 7 = ${mcbCount} payments`, color: "#fdba74" }] : []),
           ].map(row => (
             <div key={row.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
               <div>
@@ -349,11 +472,19 @@ export function CalculatorPage() {
               <div style={{ fontSize: 17, fontWeight: 900, color: row.amount > 0 ? row.color : "rgba(255,255,255,0.2)", minWidth: 100, textAlign: "right" }}>{fmtUsd(row.amount)}</div>
             </div>
           ))}
+          {/* Total GV in summary */}
+          <div style={{ padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.1)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <div style={{ fontSize: 13, color: "#bfdbfe" }}>Total Organization GV</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 1 }}>Personal + all 9 levels combined</div>
+            </div>
+            <div style={{ fontSize: 17, fontWeight: 900, color: BLUE_M, minWidth: 100, textAlign: "right" }}>{fmtNum(totalOrgGV)} GV</div>
+          </div>
           <div style={{ borderTop: `2px solid ${YELLOW_B}60`, marginTop: 16, paddingTop: 16, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
             <div>
               <div style={{ fontSize: 15, fontWeight: 800, color: WHITE }}>Your Total Monthly Income</div>
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
-                Org collective: <span style={{ color: GREEN_M, fontWeight: 700 }}>{fmtUsd(orgCollective)}/mo</span> throughout your network
+                Org collective SC: <span style={{ color: GREEN_M, fontWeight: 700 }}>{fmtUsd(orgCollective)}/mo</span> throughout your network
               </div>
             </div>
             <div style={{ fontSize: 38, fontWeight: 900, color: YELLOW_B, textShadow: `0 0 20px rgba(251,191,36,0.7)` }}>{fmtUsd(totalWithBonus)}</div>
@@ -361,11 +492,11 @@ export function CalculatorPage() {
         </div>
       </SectionCard>
 
-      {/* ── STEP 3 ──────────────────────────────────────────────────────── */}
-      <SectionCard borderColor={ORANGE_B} topColor={ORANGE_B} disabled={!product}>
+      {/* ── STEP 3: Income Goal Calculator ───────────────────────────────── */}
+      <SectionCard borderColor={ORANGE_B} topColor={ORANGE_B} disabled={!hasAny}>
         <StepHeader n={3} title="Income Goal Calculator" />
         <p style={{ fontSize: 13, color: "#444", marginBottom: 20, lineHeight: 1.7 }}>
-          How much do you want to earn per month? Choose a target and see exactly what it takes — selling <strong style={{ color: GREEN }}>{product?.name ?? "this product"}</strong>.
+          How much do you want to earn per month? Choose a target and see exactly what it takes.
         </p>
 
         {/* Target input */}
@@ -401,27 +532,27 @@ export function CalculatorPage() {
           </div>
         </div>
 
-        {price > 0 ? (
+        {hasAny ? (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
 
-            {/* Scenario A — Green */}
+            {/* Scenario A */}
             <div style={{ background: GREEN_M, borderRadius: 14, border: `3px solid ${GREEN}`, padding: "20px" }}>
               <div style={{ fontSize: 10, fontWeight: 900, color: GREEN_D, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>Scenario A</div>
               <div style={{ fontWeight: 800, fontSize: 15, color: GREEN_D, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
-                <DollarSign size={16} style={{ color: GREEN }} /> Personal Sales Only
+                <DollarSign size={16} style={{ color: GREEN }} /> Personal Sales Only (RC)
               </div>
               <div style={{ fontSize: 32, fontWeight: 900, color: GREEN_D, marginBottom: 6 }}>
                 {fmtNum(goalPersonalOnly)} <span style={{ fontSize: 14, fontWeight: 600, color: "#6b7280" }}>sales/mo</span>
               </div>
               <div style={{ fontSize: 13, color: GREEN_D, lineHeight: 1.6, marginBottom: 10 }}>
-                You personally sell {fmtNum(goalPersonalOnly)} units every month.
+                You personally sell {fmtNum(goalPersonalOnly)} units every month (RC only).
               </div>
               <div style={{ fontSize: 12, color: GREEN_D, padding: "8px 12px", background: WHITE, borderRadius: 8, fontWeight: 700, border: `2px solid ${GREEN}` }}>
-                {fmtNum(goalPersonalOnly)} × {fmtUsd(commPerSalePersonal)} = {fmtUsd(goalPersonalOnly * commPerSalePersonal)}/mo
+                {fmtNum(goalPersonalOnly)} × {fmtUsd(totalRC)} RC = {fmtUsd(goalPersonalOnly * totalRC)}/mo
               </div>
             </div>
 
-            {/* Scenario B — Yellow */}
+            {/* Scenario B */}
             <div style={{ background: YELLOW_M, borderRadius: 14, border: `3px solid ${YELLOW_B}`, padding: "20px" }}>
               <div style={{ fontSize: 10, fontWeight: 900, color: YELLOW, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>Scenario B</div>
               <div style={{ fontWeight: 800, fontSize: 15, color: YELLOW, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
@@ -443,7 +574,7 @@ export function CalculatorPage() {
               </div>
             </div>
 
-            {/* Scenario C — Orange */}
+            {/* Scenario C */}
             <div style={{ background: ORANGE_M, borderRadius: 14, border: `3px solid ${ORANGE_B}`, padding: "20px" }}>
               <div style={{ fontSize: 10, fontWeight: 900, color: ORANGE, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>Scenario C</div>
               <div style={{ fontWeight: 800, fontSize: 15, color: ORANGE, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
@@ -455,12 +586,12 @@ export function CalculatorPage() {
               <div style={{ fontSize: 13, color: ORANGE, lineHeight: 1.8, marginBottom: 10 }}>
                 CLB + 5 personal sales → need <strong style={{ color: ORANGE_B }}>{fmtNum(Math.max(0, l1WithBonusNeeded))} L1 members</strong>.
               </div>
-              {isProPkg && l2Needed !== null && (
+              {hasProPkg && l2Needed !== null && (
                 <div style={{ fontSize: 13, color: ORANGE, lineHeight: 1.8, padding: "10px 12px", background: WHITE, borderRadius: 8, border: `2px solid ${ORANGE_B}` }}>
-                  OR: <strong style={{ color: ORANGE_B }}>{fmtNum(l2Needed)} L2 members</strong> buying 1 Pro Package/mo → <strong style={{ color: GREEN_D }}>Level 2 (20%)</strong> earns {fmtUsd(l2Needed * commL2PerSale)}/mo.
+                  OR: <strong style={{ color: ORANGE_B }}>{fmtNum(l2Needed)} L2 members</strong> buying 1 Pro Package/mo → L2 (20%) earns {fmtUsd(l2Needed * l2cPerUnit)}/mo.
                 </div>
               )}
-              {!isProPkg && (
+              {!hasProPkg && (
                 <div style={{ fontSize: 12, color: ORANGE, padding: "8px 10px", background: WHITE, borderRadius: 8, border: `1px solid ${ORANGE_B}`, fontWeight: 600 }}>
                   💡 Pro Package products also unlock Level 2 commissions and MCB bonuses.
                 </div>

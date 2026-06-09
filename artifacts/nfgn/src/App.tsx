@@ -59,6 +59,7 @@ import { HealthHub } from "@/pages/dashboard/health/HealthHub";
 import { HealthLibrary } from "@/pages/dashboard/health/HealthLibrary";
 import { HealthTracker } from "@/pages/dashboard/health/HealthTracker";
 import { HealthEducation } from "@/pages/dashboard/health/HealthEducation";
+import { HealthProfile } from "@/pages/dashboard/health/HealthProfile";
 import { NutritionGuide } from "@/pages/dashboard/health/NutritionGuide";
 import { ExercisePlan } from "@/pages/dashboard/health/ExercisePlan";
 import { AIHealthAssistant } from "@/pages/dashboard/health/AIHealthAssistant";
@@ -335,6 +336,11 @@ function Router() {
       </Route>
 
       {/* Health & Wellness routes */}
+      <Route path="/dashboard/health/profile">
+        <RequireAuth>
+          <DashboardLayout><HealthProfile /></DashboardLayout>
+        </RequireAuth>
+      </Route>
       <Route path="/dashboard/health/library">
         <RequireAuth>
           <DashboardLayout><HealthLibrary /></DashboardLayout>

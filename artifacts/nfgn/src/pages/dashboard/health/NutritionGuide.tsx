@@ -133,7 +133,7 @@ export function NutritionGuide() {
           <p style={{ fontSize: 13, color: "#5a4200", lineHeight: 1.7, margin: "0 0 14px" }}>
             To generate your personalized nutrition guide, please complete your health profile first. We need your blood type, body type, and gut biome to tailor recommendations to you.
           </p>
-          <Link href="/dashboard/health">
+          <Link href="/dashboard/health/profile">
             <Button style={{ background: GOLD, color: "#fff", fontWeight: 700, borderRadius: 8 }}>Set Up Health Profile →</Button>
           </Link>
         </div>

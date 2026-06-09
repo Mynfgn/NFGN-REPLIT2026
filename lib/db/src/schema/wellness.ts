@@ -82,3 +82,18 @@ export const waterLogsTable = pgTable("water_logs", {
 export const insertWaterLogSchema = createInsertSchema(waterLogsTable).omit({ id: true });
 export type InsertWaterLog = z.infer<typeof insertWaterLogSchema>;
 export type WaterLog = typeof waterLogsTable.$inferSelect;
+
+// ── Daily calorie log ─────────────────────────────────────────────────────────
+export const calorieLogsTable = pgTable("calorie_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  foodName: text("food_name").notNull(),
+  category: text("category").notNull(), // fruit | vegetable | other
+  calories: integer("calories").notNull(),
+  servingSize: text("serving_size").notNull(),
+  loggedAt: timestamp("logged_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const insertCalorieLogSchema = createInsertSchema(calorieLogsTable).omit({ id: true });
+export type InsertCalorieLog = z.infer<typeof insertCalorieLogSchema>;
+export type CalorieLog = typeof calorieLogsTable.$inferSelect;

@@ -5,6 +5,7 @@ import {
   healthProfilesTable,
   weightLogsTable,
   waterLogsTable,
+  calorieLogsTable,
 } from "@workspace/db/schema";
 import { eq, and, ilike, or, desc, gte } from "drizzle-orm";
 import { requireAuth } from "../lib/auth";
@@ -367,6 +368,66 @@ Respond ONLY with a JSON object:
   }
 
   res.json({ plan: parsed, section });
+});
+
+// ── GET /api/wellness/calories ─────────────────────────────────────────────────
+// Returns today's calorie log entries for the authenticated user
+router.get("/wellness/calories", requireAuth, async (req, res): Promise<void> => {
+  const userId = (req as any).user.id;
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const logs = await db
+    .select()
+    .from(calorieLogsTable)
+    .where(and(eq(calorieLogsTable.userId, userId), gte(calorieLogsTable.loggedAt, todayStart)))
+    .orderBy(desc(calorieLogsTable.loggedAt));
+
+  res.json({
+    logs: logs.map(l => ({
+      id: l.id,
+      foodName: l.foodName,
+      category: l.category,
+      calories: l.calories,
+      servingSize: l.servingSize,
+      loggedAt: l.loggedAt.toISOString(),
+    })),
+    totalCalories: logs.reduce((sum, l) => sum + l.calories, 0),
+  });
+});
+
+// ── POST /api/wellness/calories ────────────────────────────────────────────────
+router.post("/wellness/calories", requireAuth, async (req, res): Promise<void> => {
+  const userId = (req as any).user.id;
+  const { foodName, category, calories, servingSize } = req.body as {
+    foodName: string; category: string; calories: number; servingSize: string;
+  };
+
+  if (!foodName || !category || calories == null || !servingSize) {
+    res.status(400).json({ error: "foodName, category, calories, and servingSize are required" });
+    return;
+  }
+
+  const [entry] = await db
+    .insert(calorieLogsTable)
+    .values({ userId, foodName, category, calories, servingSize })
+    .returning();
+
+  res.status(201).json({ entry });
+});
+
+// ── DELETE /api/wellness/calories/:id ──────────────────────────────────────────
+router.delete("/wellness/calories/:id", requireAuth, async (req, res): Promise<void> => {
+  const userId = (req as any).user.id;
+  const id = parseInt(req.params["id"] as string);
+
+  const [deleted] = await db
+    .delete(calorieLogsTable)
+    .where(and(eq(calorieLogsTable.id, id), eq(calorieLogsTable.userId, userId)))
+    .returning();
+
+  if (!deleted) { res.status(404).json({ error: "Entry not found" }); return; }
+  res.json({ ok: true });
 });
 
 export default router;

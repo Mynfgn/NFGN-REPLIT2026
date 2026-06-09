@@ -129,7 +129,7 @@ export function ExercisePlan() {
           <p style={{ fontSize: 13, color: "#5a4200", lineHeight: 1.7, margin: "0 0 14px" }}>
             To generate your personalized exercise plan, we need your primary goal and activity level from your health profile.
           </p>
-          <Link href="/dashboard/health">
+          <Link href="/dashboard/health/profile">
             <Button style={{ background: GOLD, color: "#fff", fontWeight: 700, borderRadius: 8 }}>Set Up Health Profile →</Button>
           </Link>
         </div>

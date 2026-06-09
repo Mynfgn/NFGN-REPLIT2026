@@ -140,9 +140,10 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
         icon: Leaf, group: "health",
         children: [
           { name: "Wellness Hub",               href: "/dashboard/health" },
+          { name: "My Health Profile",          href: "/dashboard/health/profile" },
           { name: "Herb & Supplement Library",  href: "/dashboard/health/library" },
           { name: "Weight & Water Tracker",     href: "/dashboard/health/tracker" },
-          { name: "Calorie & Nutrition Guide",  href: "/dashboard/health/education" },
+          { name: "Calorie Tracker",            href: "/dashboard/health/education" },
           { name: "Nutrition Guide",            href: "/dashboard/health/nutrition" },
           { name: "Exercise Plans",             href: "/dashboard/health/exercise" },
           { name: "AI Health Assistant",        href: "/dashboard/health/ai-assistant" },

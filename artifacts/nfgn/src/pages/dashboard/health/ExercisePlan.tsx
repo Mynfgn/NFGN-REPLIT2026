@@ -140,11 +140,11 @@ export function ExercisePlan() {
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>Your Profile</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {profile?.primaryGoal && (
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 5, background: PURPLE_M, border: `1px solid ${PURPLE}44`, borderRadius: 20, padding: "4px 10px", fontSize: 11, fontWeight: 700, color: PURPLE }}>
-                <span style={{ color: "#888", fontWeight: 600 }}>Goal:</span> {GOAL_LABELS[profile.primaryGoal] ?? profile.primaryGoal}
+            {profile?.primaryGoal && profile.primaryGoal.split(",").map((g: string) => g.trim()).filter(Boolean).map((g: string) => (
+              <div key={g} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: PURPLE_M, border: `1px solid ${PURPLE}44`, borderRadius: 20, padding: "4px 10px", fontSize: 11, fontWeight: 700, color: PURPLE }}>
+                <span style={{ color: "#888", fontWeight: 600 }}>Goal:</span> {GOAL_LABELS[g] ?? g}
               </div>
-            )}
+            ))}
             {profile?.activityLevel && (
               <div style={{ display: "inline-flex", alignItems: "center", gap: 5, background: PURPLE_M, border: `1px solid ${PURPLE}44`, borderRadius: 20, padding: "4px 10px", fontSize: 11, fontWeight: 700, color: PURPLE }}>
                 <span style={{ color: "#888", fontWeight: 600 }}>Level:</span> {ACTIVITY_LABELS[profile.activityLevel] ?? profile.activityLevel}

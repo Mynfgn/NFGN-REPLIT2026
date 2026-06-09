@@ -193,8 +193,9 @@ export function HealthEducation() {
   useEffect(() => {
     loadLogs();
     apiFetch("/api/wellness/profile").then(d => {
-      if (d.profile?.primaryGoal === "weight_loss") setCalorieGoal(1500);
-      else if (d.profile?.primaryGoal === "muscle_gain") setCalorieGoal(2500);
+      const goals: string[] = (d.profile?.primaryGoal ?? "").split(",").map((s: string) => s.trim()).filter(Boolean);
+      if (goals.includes("weight_loss")) setCalorieGoal(1500);
+      else if (goals.includes("muscle_gain")) setCalorieGoal(2500);
     }).catch(() => {});
   }, []);
 

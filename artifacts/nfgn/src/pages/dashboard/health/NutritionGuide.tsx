@@ -156,7 +156,9 @@ export function NutritionGuide() {
             {profile?.bloodType && <ProfileChip label="Blood" value={BLOOD_TYPE_LABELS[profile.bloodType] ?? profile.bloodType} />}
             {profile?.bodyType && <ProfileChip label="Body" value={BODY_TYPE_LABELS[profile.bodyType] ?? profile.bodyType} />}
             {profile?.gutBiome && <ProfileChip label="Gut" value={GUT_BIOME_LABELS[profile.gutBiome] ?? profile.gutBiome} />}
-            {profile?.primaryGoal && <ProfileChip label="Goal" value={GOAL_LABELS[profile.primaryGoal] ?? profile.primaryGoal} />}
+            {profile?.primaryGoal && profile.primaryGoal.split(",").map((g: string) => g.trim()).filter(Boolean).map((g: string) => (
+              <ProfileChip key={g} label="Goal" value={GOAL_LABELS[g] ?? g} />
+            ))}
           </div>
         </div>
       )}

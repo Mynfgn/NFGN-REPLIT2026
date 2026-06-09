@@ -81,12 +81,43 @@ const GENDERS = [
   { value: "other", label: "Other" },
   { value: "prefer_not_to_say", label: "Prefer not to say" },
 ];
-const CONDITIONS_LIST = [
-  "High Blood Pressure", "Diabetes (Type 1)", "Diabetes (Type 2)", "Pre-Diabetes",
-  "Thyroid (Hypo)", "Thyroid (Hyper)", "PCOS", "Heart Disease", "High Cholesterol",
-  "Anxiety / Stress", "Depression", "Insomnia", "IBS / Crohn's", "Acid Reflux / GERD",
-  "Arthritis", "Osteoporosis", "Cancer (in remission)", "Kidney Issues", "Liver Issues",
-  "Pregnant", "Nursing / Breastfeeding",
+const CONDITIONS_GROUPS: { group: string; items: string[] }[] = [
+  {
+    group: "Metabolic & Weight-Related",
+    items: ["Obesity", "Overweight", "Metabolic Syndrome", "Prediabetes", "Type 2 Diabetes", "Insulin Resistance", "Fatty Liver Disease (NAFLD)", "High Cholesterol", "High Triglycerides", "Hypoglycemia"],
+  },
+  {
+    group: "Cardiovascular",
+    items: ["High Blood Pressure (Hypertension)", "Low Blood Pressure (Hypotension)", "Coronary Artery Disease", "Congestive Heart Failure", "Atrial Fibrillation", "Peripheral Artery Disease", "Stroke Risk", "Poor Circulation"],
+  },
+  {
+    group: "Digestive & Gut Health",
+    items: ["Constipation", "Chronic Diarrhea", "Irritable Bowel Syndrome (IBS)", "Acid Reflux (GERD)", "Gastritis", "Leaky Gut Syndrome", "Gallstones", "Hemorrhoids", "Diverticulitis", "Food Sensitivities"],
+  },
+  {
+    group: "Hormonal & Endocrine",
+    items: ["Hypothyroidism", "Hyperthyroidism", "Menopause Symptoms", "Low Testosterone", "Polycystic Ovary Syndrome (PCOS)", "Adrenal Dysfunction", "Hormonal Imbalance"],
+  },
+  {
+    group: "Kidney & Urinary",
+    items: ["Kidney Stones", "Chronic Kidney Disease", "Frequent Urinary Tract Infections (UTIs)"],
+  },
+  {
+    group: "Brain, Mood & Mental Wellness",
+    items: ["Anxiety", "Depression", "Chronic Stress", "Brain Fog", "Memory Problems", "Insomnia"],
+  },
+  {
+    group: "Musculoskeletal",
+    items: ["Arthritis", "Osteoporosis", "Chronic Joint Pain", "Fibromyalgia", "Chronic Back Pain"],
+  },
+  {
+    group: "Immune & Inflammatory",
+    items: ["Chronic Inflammation", "Autoimmune Disorders", "Lupus", "Rheumatoid Arthritis", "Psoriasis", "Eczema", "Asthma", "Allergies"],
+  },
+  {
+    group: "Additional & Specialty Conditions",
+    items: ["Sleep Apnea", "Migraines", "Chronic Fatigue Syndrome", "Gout", "Erectile Dysfunction", "Low Libido", "Infertility", "Candida Overgrowth", "Parasite Concerns", "Vitamin D Deficiency", "Magnesium Deficiency", "Iron Deficiency Anemia", "Osteopenia", "Chronic Pain", "Smoking / Nicotine Dependence", "Alcohol Misuse", "Post-COVID Symptoms", "Sarcopenia (Muscle Loss)", "Pregnant", "Nursing / Breastfeeding"],
+  },
 ];
 
 const FT_OPTIONS = Array.from({ length: 5 }, (_, i) => i + 4); // 4ft – 8ft
@@ -164,7 +195,7 @@ export function HealthProfile() {
   const [bodyType, setBodyType] = useState("");
   const [gutBiome, setGutBiome] = useState("");
   const [activityLevel, setActivityLevel] = useState("");
-  const [primaryGoal, setPrimaryGoal] = useState("");
+  const [primaryGoals, setPrimaryGoals] = useState<string[]>([]);
   const [conditions, setConditions] = useState<string[]>([]);
 
   useEffect(() => {
@@ -179,8 +210,8 @@ export function HealthProfile() {
         if (p.bodyType) setBodyType(p.bodyType);
         if (p.gutBiome) setGutBiome(p.gutBiome);
         if (p.activityLevel) setActivityLevel(p.activityLevel);
-        if (p.primaryGoal) setPrimaryGoal(p.primaryGoal);
-        if (p.conditions) setConditions(p.conditions.split(",").map(s => s.trim()).filter(Boolean));
+        if (p.primaryGoal) setPrimaryGoals(p.primaryGoal.split(",").map((s: string) => s.trim()).filter(Boolean));
+        if (p.conditions) setConditions(p.conditions.split(",").map((s: string) => s.trim()).filter(Boolean));
       }
       setLoading(false);
     }).catch(() => setLoading(false));
@@ -205,7 +236,7 @@ export function HealthProfile() {
         ...(bodyType ? { bodyType } : {}),
         ...(gutBiome ? { gutBiome } : {}),
         ...(activityLevel ? { activityLevel } : {}),
-        ...(primaryGoal ? { primaryGoal } : {}),
+        ...(primaryGoals.length > 0 ? { primaryGoal: primaryGoals.join(", ") } : {}),
         conditions: conditions.join(", "),
       };
       const d = await apiFetch("/api/wellness/profile", { method: "POST", body: JSON.stringify(body) });
@@ -227,7 +258,7 @@ export function HealthProfile() {
     bloodType: bloodType || null,
     bodyType: bodyType || null,
     gutBiome: gutBiome || null,
-    primaryGoal: primaryGoal || null,
+    primaryGoal: primaryGoals.length > 0 ? primaryGoals[0] : null,
     activityLevel: activityLevel || null,
     conditions: null,
   });
@@ -416,44 +447,91 @@ export function HealthProfile() {
 
       {/* SECTION 6: Primary Goal */}
       <div style={{ background: "#fff", border: "1.5px solid #e5e7eb", borderRadius: 14, padding: "22px 24px", marginBottom: 20 }}>
-        <SectionHeader title="Primary Wellness Goal" subtitle="All AI recommendations focus on this goal" />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+          <SectionHeader title="Primary Wellness Goal" subtitle="AI recommendations focus on your selected goals" />
+          <span style={{
+            fontSize: 11, fontWeight: 900, padding: "3px 10px", borderRadius: 10,
+            background: primaryGoals.length === 3 ? `${GREEN}18` : "#f3f4f6",
+            color: primaryGoals.length === 3 ? GREEN_D : "#888",
+            border: `1px solid ${primaryGoals.length === 3 ? GREEN : "#e5e7eb"}`,
+          }}>
+            {primaryGoals.length} / 3 selected
+          </span>
+        </div>
+        {primaryGoals.length === 3 && (
+          <div style={{ fontSize: 11, color: "#7A6010", background: "#fffbea", border: "1px solid #C9A84C44", borderRadius: 8, padding: "6px 12px", marginBottom: 12 }}>
+            Maximum 3 goals selected. Deselect one to change your choices.
+          </div>
+        )}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-          {PRIMARY_GOALS.map(g => (
-            <button
-              key={g.value} type="button" onClick={() => setPrimaryGoal(primaryGoal === g.value ? "" : g.value)}
-              style={{
-                padding: "10px 18px", borderRadius: 20, border: `2px solid ${primaryGoal === g.value ? g.color : "#e5e7eb"}`,
-                background: primaryGoal === g.value ? `${g.color}18` : "#fff",
-                color: primaryGoal === g.value ? g.color : "#555",
-                fontWeight: 800, fontSize: 13, cursor: "pointer", transition: "all .15s",
-              }}
-            >
-              {g.label}
-            </button>
-          ))}
+          {PRIMARY_GOALS.map(g => {
+            const sel = primaryGoals.includes(g.value);
+            const maxed = !sel && primaryGoals.length >= 3;
+            return (
+              <button
+                key={g.value} type="button"
+                onClick={() => {
+                  if (sel) setPrimaryGoals(prev => prev.filter(x => x !== g.value));
+                  else if (primaryGoals.length < 3) setPrimaryGoals(prev => [...prev, g.value]);
+                }}
+                disabled={maxed}
+                style={{
+                  padding: "10px 18px", borderRadius: 20,
+                  border: `2px solid ${sel ? g.color : "#e5e7eb"}`,
+                  background: sel ? `${g.color}18` : maxed ? "#f9f9f9" : "#fff",
+                  color: sel ? g.color : maxed ? "#bbb" : "#555",
+                  fontWeight: 800, fontSize: 13,
+                  cursor: maxed ? "not-allowed" : "pointer",
+                  transition: "all .15s",
+                  display: "flex", alignItems: "center", gap: 6,
+                }}
+              >
+                {sel && <span style={{ fontSize: 12 }}>✓</span>}
+                {g.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* SECTION 7: Health Conditions */}
       <div style={{ background: "#fff", border: "1.5px solid #e5e7eb", borderRadius: 14, padding: "22px 24px", marginBottom: 28 }}>
-        <SectionHeader title="Health Conditions" subtitle="Helps the AI avoid contraindicated herbs and foods (optional)" />
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-          {CONDITIONS_LIST.map(c => {
-            const sel = conditions.includes(c);
-            return (
-              <button
-                key={c} type="button" onClick={() => toggleCondition(c)}
-                style={{
-                  padding: "7px 14px", borderRadius: 20, border: `1.5px solid ${sel ? "#8B3A3A" : "#e5e7eb"}`,
-                  background: sel ? "#fdeaea" : "#f9f9f9",
-                  color: sel ? "#8B3A3A" : "#555", fontWeight: sel ? 800 : 600, fontSize: 12, cursor: "pointer",
-                }}
-              >
-                {sel && "✓ "}{c}
-              </button>
-            );
-          })}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+          <SectionHeader title="Health Conditions" subtitle="Helps the AI personalize and avoid contraindicated recommendations (optional)" />
+          {conditions.length > 0 && (
+            <span style={{ fontSize: 11, fontWeight: 900, padding: "3px 10px", borderRadius: 10, background: "#fdeaea", color: "#8B3A3A", border: "1px solid #8B3A3A44" }}>
+              {conditions.length} selected
+            </span>
+          )}
         </div>
+        <div style={{ fontSize: 11, color: "#888", background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 8, padding: "8px 12px", marginBottom: 16, lineHeight: 1.5 }}>
+          ⚠️ Selecting a condition does not constitute a medical diagnosis. This information is used only to tailor educational wellness content. Always consult a qualified healthcare professional for medical advice.
+        </div>
+        {CONDITIONS_GROUPS.map(group => (
+          <div key={group.group} style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 11, fontWeight: 900, color: "#555", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8, paddingBottom: 6, borderBottom: "1px solid #f0f0f0" }}>
+              {group.group}
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+              {group.items.map(c => {
+                const sel = conditions.includes(c);
+                return (
+                  <button
+                    key={c} type="button" onClick={() => toggleCondition(c)}
+                    style={{
+                      padding: "6px 13px", borderRadius: 20, border: `1.5px solid ${sel ? "#8B3A3A" : "#e5e7eb"}`,
+                      background: sel ? "#fdeaea" : "#f9f9f9",
+                      color: sel ? "#8B3A3A" : "#555", fontWeight: sel ? 800 : 600, fontSize: 12, cursor: "pointer",
+                      transition: "all .12s",
+                    }}
+                  >
+                    {sel && "✓ "}{c}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Save button */}

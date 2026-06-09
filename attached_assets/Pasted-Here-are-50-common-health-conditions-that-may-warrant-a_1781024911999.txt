@@ -1,0 +1,103 @@
+Here are 50 common health conditions that may warrant attention, evaluation, lifestyle changes, or professional medical care.
+Metabolic & Weight-Related Conditions
+Obesity
+Overweight
+Metabolic Syndrome
+Prediabetes
+Type 2 Diabetes
+Insulin Resistance
+Fatty Liver Disease (NAFLD)
+High Cholesterol
+High Triglycerides
+Hypoglycemia
+Cardiovascular Conditions
+High Blood Pressure (Hypertension)
+Low Blood Pressure (Hypotension)
+Coronary Artery Disease
+Congestive Heart Failure
+Atrial Fibrillation
+Peripheral Artery Disease
+Stroke Risk
+Poor Circulation
+Digestive & Gut Health Conditions
+Constipation
+Chronic Diarrhea
+Irritable Bowel Syndrome (IBS)
+Acid Reflux (GERD)
+Gastritis
+Leaky Gut Syndrome (functional wellness term)
+Gallstones
+Hemorrhoids
+Diverticulitis
+Food Sensitivities
+Hormonal & Endocrine Conditions
+Hypothyroidism
+Hyperthyroidism
+Menopause Symptoms
+Low Testosterone
+Polycystic Ovary Syndrome (PCOS)
+Adrenal Dysfunction
+Hormonal Imbalance
+Kidney & Urinary Conditions
+Kidney Stones
+Chronic Kidney Disease
+Frequent Urinary Tract Infections (UTIs)
+Brain, Mood & Mental Wellness
+Anxiety
+Depression
+Chronic Stress
+Brain Fog
+Memory Problems
+Insomnia
+Musculoskeletal Conditions
+Arthritis
+Osteoporosis
+Chronic Joint Pain
+Fibromyalgia
+Chronic Back Pain
+Immune & Inflammatory Conditions
+Chronic Inflammation
+Additional Conditions You May Want in Your App
+If your goal is a comprehensive wellness platform, you could also include:
+Sleep Apnea
+Migraines
+Chronic Fatigue Syndrome
+Autoimmune Disorders
+Lupus
+Rheumatoid Arthritis
+Psoriasis
+Eczema
+Asthma
+Allergies
+Gout
+Erectile Dysfunction
+Low Libido
+Infertility
+Candida Overgrowth
+Parasite Concerns
+Vitamin D Deficiency
+Magnesium Deficiency
+Iron Deficiency Anemia
+Osteopenia
+Chronic Pain
+Smoking/Nicotine Dependence
+Alcohol Misuse
+Post-COVID Symptoms
+Sarcopenia (age-related muscle loss)
+Suggested Categories for Your NFGN Health & Wellness App
+Weight Loss & Metabolism
+Gut Health & Digestion
+Heart Health
+Blood Sugar & Diabetes
+Hormone Balance
+Men's Health
+Women's Health
+Mental Wellness
+Sleep & Recovery
+Joint & Mobility Health
+Kidney & Liver Health
+Immune System Support
+Inflammation Management
+Healthy Aging & Longevity
+Nutrition Deficiencies
+Important: For your app, include a disclaimer that educational content, herbs, supplements, nutrition, exercise, and wellness recommendations are not intended to diagnose, treat, cure, or prevent disease, and users should consult qualified healthcare professionals regarding medical conditions and medications.

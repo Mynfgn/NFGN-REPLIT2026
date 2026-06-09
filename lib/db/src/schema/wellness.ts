@@ -14,6 +14,14 @@ export const healthReferencesTable = pgTable("health_references", {
   commonForms: text("common_forms"),
   sourceUrl: text("source_url"),
   imageUrl: text("image_url"),
+  // Rich content (AI-generated on first view, cached)
+  origin: text("origin"),
+  culturalBackground: text("cultural_background"),
+  detailedDescription: text("detailed_description"),
+  keyBenefits: text("key_benefits"),
+  activeCompounds: text("active_compounds"),
+  howToUse: text("how_to_use"),
+  enrichedAt: timestamp("enriched_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

@@ -8,6 +8,7 @@ import {
 } from "@workspace/db/schema";
 import { eq, and, ilike, or, desc, gte } from "drizzle-orm";
 import { requireAuth } from "../lib/auth";
+import { openai } from "@workspace/integrations-openai-ai-server";
 
 const router = Router();
 
@@ -53,6 +54,74 @@ router.get("/wellness/references/:id", async (req, res): Promise<void> => {
   const [row] = await db.select().from(healthReferencesTable).where(eq(healthReferencesTable.id, id)).limit(1);
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
   res.json({ reference: row });
+});
+
+// ── POST /api/wellness/references/:id/enrich ──────────────────────────────────
+// Generates rich AI content for a herb/mineral/vitamin and caches it in the DB
+router.post("/wellness/references/:id/enrich", async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id as string);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const [row] = await db.select().from(healthReferencesTable).where(eq(healthReferencesTable.id, id)).limit(1);
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+
+  // Return cached content if already enriched
+  if (row.enrichedAt) {
+    res.json({ reference: row });
+    return;
+  }
+
+  const typeLabel = row.type === "herb" ? "herb or root" : row.type === "mineral" ? "mineral" : "vitamin or nutrient";
+  const prompt = `You are a naturopathic health educator writing for a wellness platform. Write a comprehensive, educational profile for the following ${typeLabel}.
+
+Name: ${row.name}
+${row.botanicalName ? `Botanical name: ${row.botanicalName}` : ""}
+Category: ${row.category}
+
+Respond ONLY with a valid JSON object (no markdown, no explanation) using exactly these keys:
+{
+  "botanicalName": "scientific botanical name if herb/root, otherwise empty string",
+  "origin": "2-3 sentences on geographic origin and where it grows or is found naturally",
+  "culturalBackground": "3-4 sentences on historical and cultural uses across different civilizations or traditions",
+  "detailedDescription": "4-5 sentences comprehensive educational description of what this is, how it works in the body, and its primary wellness role",
+  "keyBenefits": "comma-separated list of 5-8 specific health benefits (e.g. 'Supports healthy blood sugar levels, Boosts metabolism, Rich in antioxidants')",
+  "activeCompounds": "comma-separated list of the main active compounds or nutrients (e.g. 'EGCG, L-theanine, catechins' for herbs; 'calcium carbonate, calcium citrate' for minerals)",
+  "howToUse": "3-4 sentences on how to use it holistically — forms available, preparation methods, timing, and any dosage guidance phrased educationally"
+}
+
+Write in a clear, educational, naturopathic tone. Avoid medical claims. Use phrases like 'traditionally used', 'may support', 'has been associated with'. Keep it informative and empowering.`;
+
+  const completion = await openai.chat.completions.create({
+    model: "gpt-5-mini",
+    messages: [{ role: "user", content: prompt }],
+  });
+
+  const raw = completion.choices[0]?.message?.content ?? "{}";
+  let parsed: Record<string, string> = {};
+  try {
+    const cleaned = raw.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+    parsed = JSON.parse(cleaned);
+  } catch {
+    res.status(500).json({ error: "Failed to parse AI response" });
+    return;
+  }
+
+  const [updated] = await db
+    .update(healthReferencesTable)
+    .set({
+      botanicalName: parsed.botanicalName || row.botanicalName || null,
+      origin: parsed.origin || null,
+      culturalBackground: parsed.culturalBackground || null,
+      detailedDescription: parsed.detailedDescription || null,
+      keyBenefits: parsed.keyBenefits || null,
+      activeCompounds: parsed.activeCompounds || null,
+      howToUse: parsed.howToUse || null,
+      enrichedAt: new Date(),
+    })
+    .where(eq(healthReferencesTable.id, id))
+    .returning();
+
+  res.json({ reference: updated });
 });
 
 // ── GET /api/wellness/profile ──────────────────────────────────────────────────

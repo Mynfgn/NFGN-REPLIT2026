@@ -19,7 +19,7 @@ const DISCLAIMERS = [
   "The content here is not a substitute for professional medical advice, diagnosis, or treatment.",
 ];
 
-const FEATURES = [
+const FEATURES: { icon: React.ElementType; label: string; desc: string; href: string; color: string; bg: string; badge?: string }[] = [
   {
     icon: Leaf,
     label: "Herb & Supplement Library",
@@ -47,29 +47,26 @@ const FEATURES = [
   {
     icon: Apple,
     label: "Nutrition Guide",
-    desc: "Blood-type, body-type, and gut-biome tailored nutritional guidance — coming in Phase 2.",
-    href: "/dashboard/health/library",
+    desc: "Blood-type, body-type, and gut-biome tailored nutritional guidance — AI-personalized to your profile.",
+    href: "/dashboard/health/nutrition",
     color: "#8B3A3A",
     bg: "#fdeaea",
-    badge: "Phase 2",
   },
   {
     icon: Dumbbell,
     label: "Home Exercise Plans",
-    desc: "Structured workouts you can do at home with a mat, chair, dumbbells, or resistance bands.",
-    href: "/dashboard/health/library",
+    desc: "AI-personalized workouts based on your goal and activity level — no gym required.",
+    href: "/dashboard/health/exercise",
     color: "#4A3580",
     bg: "#ede8ff",
-    badge: "Phase 2",
   },
   {
     icon: Heart,
     label: "AI Health Assistant",
     desc: "Ask a naturopathic-trained AI any health, herb, or wellness question and get holistic guidance.",
-    href: "/dashboard/health/library",
+    href: "/dashboard/health/ai-assistant",
     color: "#a83265",
     bg: "#fce8f0",
-    badge: "Phase 2",
   },
 ];
 

@@ -59,6 +59,9 @@ import { HealthHub } from "@/pages/dashboard/health/HealthHub";
 import { HealthLibrary } from "@/pages/dashboard/health/HealthLibrary";
 import { HealthTracker } from "@/pages/dashboard/health/HealthTracker";
 import { HealthEducation } from "@/pages/dashboard/health/HealthEducation";
+import { NutritionGuide } from "@/pages/dashboard/health/NutritionGuide";
+import { ExercisePlan } from "@/pages/dashboard/health/ExercisePlan";
+import { AIHealthAssistant } from "@/pages/dashboard/health/AIHealthAssistant";
 
 // Admin Pages
 import { AdminDashboard } from "@/pages/admin/AdminDashboard";
@@ -345,6 +348,21 @@ function Router() {
       <Route path="/dashboard/health/education">
         <RequireAuth>
           <DashboardLayout><HealthEducation /></DashboardLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/dashboard/health/nutrition">
+        <RequireAuth>
+          <DashboardLayout><NutritionGuide /></DashboardLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/dashboard/health/exercise">
+        <RequireAuth>
+          <DashboardLayout><ExercisePlan /></DashboardLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/dashboard/health/ai-assistant">
+        <RequireAuth>
+          <DashboardLayout><AIHealthAssistant /></DashboardLayout>
         </RequireAuth>
       </Route>
       <Route path="/dashboard/health">

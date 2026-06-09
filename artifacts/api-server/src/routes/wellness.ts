@@ -248,4 +248,125 @@ router.post("/wellness/trackers/water", requireAuth, async (req, res): Promise<v
   });
 });
 
+// ── POST /api/wellness/ai-chat ─────────────────────────────────────────────────
+// AI Health Assistant — profile-aware naturopathic chat
+router.post("/wellness/ai-chat", requireAuth, async (req, res): Promise<void> => {
+  const userId = (req as any).user.id;
+  const { message, history } = req.body as {
+    message: string;
+    history?: { role: "user" | "assistant"; content: string }[];
+  };
+
+  if (!message?.trim()) { res.status(400).json({ error: "message required" }); return; }
+
+  const [profile] = await db.select().from(healthProfilesTable).where(eq(healthProfilesTable.userId, userId)).limit(1);
+
+  const systemPrompt = `You are a knowledgeable naturopathic wellness advisor for New Face Global Network (NFGN), a naturopathic wellness company. You help members with holistic health questions about herbs, supplements, nutrition, hydration, sleep, gut health, and natural wellness.
+
+${profile ? `Member profile:
+- Age: ${profile.age ?? "unknown"}, Gender: ${profile.gender ?? "unknown"}
+- Blood type: ${profile.bloodType ?? "unknown"}, Body type: ${profile.bodyType ?? "unknown"}
+- Gut biome: ${profile.gutBiome ?? "unknown"}
+- Primary goal: ${profile.primaryGoal ?? "unknown"}, Activity level: ${profile.activityLevel ?? "unknown"}
+- Health conditions: ${profile.conditions || "none listed"}
+Use this profile to personalize your responses when relevant.` : "No health profile set up yet."}
+
+Rules:
+- Speak in a warm, educational naturopathic tone
+- Use phrases like "traditionally used", "may support", "has been associated with"
+- Always recommend consulting a healthcare provider for medical decisions
+- Keep answers concise but informative (2-4 paragraphs max)
+- Focus on natural, holistic approaches
+- Never diagnose or prescribe`;
+
+  const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
+    { role: "system", content: systemPrompt },
+    ...(history ?? []).slice(-6).map(h => ({ role: h.role as "user" | "assistant", content: h.content })),
+    { role: "user", content: message },
+  ];
+
+  const completion = await openai.chat.completions.create({
+    model: "gpt-5-mini",
+    messages,
+  });
+
+  const reply = completion.choices[0]?.message?.content ?? "I'm sorry, I couldn't generate a response. Please try again.";
+  res.json({ reply });
+});
+
+// ── GET /api/wellness/plan ─────────────────────────────────────────────────────
+// Returns or generates a personalized wellness plan based on health profile
+router.post("/wellness/plan", requireAuth, async (req, res): Promise<void> => {
+  const userId = (req as any).user.id;
+
+  const [profile] = await db.select().from(healthProfilesTable).where(eq(healthProfilesTable.userId, userId)).limit(1);
+  if (!profile) { res.status(404).json({ error: "Health profile not set up" }); return; }
+
+  const { section } = req.body as { section: "nutrition" | "exercise" };
+
+  const sectionPrompts: Record<string, string> = {
+    nutrition: `Create a personalized nutrition guide for this member based on their profile:
+- Blood type: ${profile.bloodType ?? "unknown"}
+- Body type: ${profile.bodyType ?? "unknown"}
+- Gut biome: ${profile.gutBiome ?? "unknown"}
+- Primary goal: ${profile.primaryGoal ?? "general wellness"}
+- Activity level: ${profile.activityLevel ?? "moderate"}
+- Conditions: ${profile.conditions || "none"}
+
+Respond ONLY with a JSON object:
+{
+  "headline": "one-line personalized headline",
+  "intro": "2-3 sentence personalized intro based on their specific profile",
+  "eatMore": ["food 1", "food 2", "food 3", "food 4", "food 5", "food 6"],
+  "eatLess": ["food 1", "food 2", "food 3", "food 4"],
+  "herbs": ["herb 1 - benefit", "herb 2 - benefit", "herb 3 - benefit", "herb 4 - benefit"],
+  "mealTips": ["tip 1", "tip 2", "tip 3"],
+  "gutTips": "2 sentence gut-specific tip based on their biome type"
+}`,
+    exercise: `Create a personalized home exercise plan for this member:
+- Primary goal: ${profile.primaryGoal ?? "general wellness"}
+- Activity level: ${profile.activityLevel ?? "moderate"}
+- Body type: ${profile.bodyType ?? "unknown"}
+- Age: ${profile.age ?? "adult"}
+- Gender: ${profile.gender ?? "unknown"}
+- Conditions: ${profile.conditions || "none"}
+
+Respond ONLY with a JSON object:
+{
+  "headline": "one-line personalized headline",
+  "intro": "2-3 sentence personalized intro",
+  "warmup": ["exercise 1 - duration/reps", "exercise 2 - duration/reps", "exercise 3 - duration/reps"],
+  "mainWorkout": [
+    {"name": "Exercise Name", "sets": "3", "reps": "12-15", "tip": "form tip"},
+    {"name": "Exercise Name", "sets": "3", "reps": "12-15", "tip": "form tip"},
+    {"name": "Exercise Name", "sets": "3", "reps": "12-15", "tip": "form tip"},
+    {"name": "Exercise Name", "sets": "2", "reps": "45 sec", "tip": "form tip"},
+    {"name": "Exercise Name", "sets": "3", "reps": "10-12", "tip": "form tip"}
+  ],
+  "cooldown": ["stretch 1 - duration", "stretch 2 - duration", "stretch 3 - duration"],
+  "weeklySchedule": "recommended weekly schedule as a string",
+  "recoveryTips": "2 sentence naturopathic recovery tip including herbs/supplements"
+}`
+  };
+
+  if (!sectionPrompts[section]) { res.status(400).json({ error: "Invalid section" }); return; }
+
+  const completion = await openai.chat.completions.create({
+    model: "gpt-5-mini",
+    messages: [{ role: "user", content: sectionPrompts[section] }],
+  });
+
+  const raw = completion.choices[0]?.message?.content ?? "{}";
+  let parsed: Record<string, unknown> = {};
+  try {
+    const cleaned = raw.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+    parsed = JSON.parse(cleaned);
+  } catch {
+    res.status(500).json({ error: "Failed to parse AI response" });
+    return;
+  }
+
+  res.json({ plan: parsed, section });
+});
+
 export default router;

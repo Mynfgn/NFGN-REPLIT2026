@@ -10,6 +10,7 @@ import {
   TrendingUp, Wrench, Home, Star, BookOpen, DollarSign,
   ChevronDown, ChevronRight, ShieldCheck, Link2, Sparkles,
   CreditCard, Zap, Store, CalendarDays, Heart, RefreshCw, Calculator, Leaf,
+  BookMarked, Pen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { roleLabel, tierLabel } from "@/lib/labels";
@@ -151,6 +152,20 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
       },
     ],
   },
+  {
+    label: "Digital Book Store™",
+    items: [
+      {
+        name: "Book Store & Library",
+        icon: BookOpen, group: "bookstore",
+        children: [
+          { name: "Browse Bookstore",     href: "/dashboard/bookstore" },
+          { name: "My Digital Library",  href: "/dashboard/library" },
+          { name: "Become an Author",    href: "/dashboard/author/apply" },
+        ],
+      },
+    ],
+  },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -160,6 +175,7 @@ function isGroupOpen(group: string, location: string): boolean {
   if (group === "registration") return location.startsWith("/dashboard/registration") || location.startsWith("/dashboard/register-new-pro") || location.startsWith("/dashboard/member-outreach");
   if (group === "tools")        return location.startsWith("/dashboard/tools");
   if (group === "health")       return location.startsWith("/dashboard/health");
+  if (group === "bookstore")    return location.startsWith("/dashboard/bookstore") || location.startsWith("/dashboard/library") || location.startsWith("/dashboard/read") || location.startsWith("/dashboard/author");
   return false;
 }
 

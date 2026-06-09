@@ -64,6 +64,13 @@ import { NutritionGuide } from "@/pages/dashboard/health/NutritionGuide";
 import { ExercisePlan } from "@/pages/dashboard/health/ExercisePlan";
 import { AIHealthAssistant } from "@/pages/dashboard/health/AIHealthAssistant";
 
+// Bookstore Pages
+import { BookstorePage } from "@/pages/dashboard/bookstore/Bookstore";
+import { LibraryPage } from "@/pages/dashboard/bookstore/Library";
+import { ReaderPage } from "@/pages/dashboard/bookstore/Reader";
+import { AuthorApplyPage } from "@/pages/dashboard/bookstore/AuthorApply";
+import { AdminBookstorePage } from "@/pages/admin/Bookstore";
+
 // Admin Pages
 import { AdminDashboard } from "@/pages/admin/AdminDashboard";
 import { UsersPage } from "@/pages/admin/Users";
@@ -335,6 +342,30 @@ function Router() {
         </RequireAuth>
       </Route>
 
+      {/* Bookstore routes */}
+      <Route path="/dashboard/bookstore">
+        <RequireAuth>
+          <DashboardLayout><BookstorePage /></DashboardLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/dashboard/library">
+        <RequireAuth>
+          <DashboardLayout><LibraryPage /></DashboardLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/dashboard/read/:bookId">
+        {(params) => (
+          <RequireAuth>
+            <ReaderPage bookId={params.bookId ?? ""} />
+          </RequireAuth>
+        )}
+      </Route>
+      <Route path="/dashboard/author/apply">
+        <RequireAuth>
+          <DashboardLayout><AuthorApplyPage /></DashboardLayout>
+        </RequireAuth>
+      </Route>
+
       {/* Health & Wellness routes */}
       <Route path="/dashboard/health/profile">
         <RequireAuth>
@@ -536,6 +567,11 @@ function Router() {
       <Route path="/admin/banner-messages">
         <RequireAuth requireAdmin>
           <AdminLayout><AdminBannerMessagesPage /></AdminLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/admin/bookstore">
+        <RequireAuth requireAdmin>
+          <AdminLayout><AdminBookstorePage /></AdminLayout>
         </RequireAuth>
       </Route>
 

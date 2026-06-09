@@ -30,6 +30,7 @@ import nonprofitRequestsRouter from "./nonprofit-requests";
 import subscriptionsRouter from "./subscriptions";
 import paygRouter from "./payg";
 import sportsTeamsRouter from "./sports-teams";
+import bookstoreRouter from "./bookstore";
 
 const router: IRouter = Router();
 
@@ -64,5 +65,6 @@ router.use(nonprofitRequestsRouter);
 router.use(subscriptionsRouter);
 router.use(paygRouter);
 router.use(sportsTeamsRouter);
+router.use(bookstoreRouter);
 
 export default router;

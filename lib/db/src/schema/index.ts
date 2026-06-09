@@ -20,3 +20,4 @@ export * from "./subscriptions";
 export * from "./sports_teams";
 export * from "./payg_providers";
 export * from "./wellness";
+export * from "./bookstore";

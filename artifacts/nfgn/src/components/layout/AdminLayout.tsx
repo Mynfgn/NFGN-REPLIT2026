@@ -9,7 +9,7 @@ import {
   MessageSquare, Tag, BarChart, LogOut, Menu, X,
   ShieldCheck, Network, Star, Percent, Gift, Home, Clock, UserCircle,
   ChevronDown, ChevronRight, Briefcase, PackageCheck, Store, Megaphone,
-  FileDown, List, Trophy, Heart, Gem, DollarSign, HandHeart, UserPlus, Zap,
+  FileDown, List, Trophy, Heart, Gem, DollarSign, HandHeart, UserPlus, Zap, BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -128,6 +128,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     { name: "Pro Compensation Settings", href: "/admin/compensation", icon: Percent },
     { name: "Reports", href: "/admin/reports", icon: BarChart },
     { name: "Genealogy", href: "/admin/genealogy", icon: Network },
+    { name: "Digital Book Store™", href: "/admin/bookstore", icon: BookOpen },
     { name: "Profile Management", href: "/admin/profile", icon: UserCircle },
   ];
 

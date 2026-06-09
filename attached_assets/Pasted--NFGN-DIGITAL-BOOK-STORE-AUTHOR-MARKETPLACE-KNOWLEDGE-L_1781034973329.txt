@@ -1,0 +1,592 @@
+# NFGN DIGITAL BOOK STORE™, AUTHOR MARKETPLACE & KNOWLEDGE LIBRARY
+
+## COMPLETE REPLIT MASTER BUILD SPECIFICATION
+
+### PROJECT OVERVIEW
+
+Build a complete Digital Book Store, Author Marketplace, Audiobook Library, and Knowledge Library for NFGN.
+
+The platform should function similarly to Apple Books, Kindle, Audible, Gumroad, and a digital learning platform combined.
+
+The system must be integrated into both:
+
+1. NFGN Admin Back Office
+2. NFGN Member Back Office
+
+The platform must support:
+
+* eBooks
+* Audiobooks
+* Digital Training Manuals
+* Health & Wellness Guides
+* Bible Studies
+* Business Training Materials
+* Leadership Training
+* Personal Development Books
+* NFGN Educational Resources
+* Future Course Integration
+* Future Video Library Integration
+
+IMPORTANT:
+
+Customers are purchasing a LICENSE TO READ.
+
+Customers DO NOT receive:
+
+* Copyright Ownership
+* Resale Rights
+* Reproduction Rights
+* Distribution Rights
+* Commercial Rights
+
+Copyright ownership always remains with the author and/or NFGN.
+
+---
+
+# USER ROLES
+
+## SUPER ADMIN
+
+Full platform access.
+
+Permissions:
+
+* Manage all users
+* Manage all books
+* Manage authors
+* Manage categories
+* Manage subscriptions
+* Manage royalties
+* Manage commissions
+* Manage payout structures
+* Manage sales reports
+* Manage analytics
+* Approve books
+* Reject books
+* Suspend books
+* Feature books
+* Manage platform settings
+
+---
+
+## MEMBER
+
+Permissions:
+
+* Browse bookstore
+* Purchase books
+* Read books
+* Listen to audiobooks
+* Access personal library
+* Bookmark pages
+* Highlight text
+* Take notes
+* Track reading progress
+* Apply to become an author
+
+---
+
+## AUTHOR
+
+Permissions:
+
+* Submit books
+* Upload cover images
+* Upload PDF files
+* Upload EPUB files
+* Upload audiobook files
+* Edit submitted books
+* View sales
+* View royalties
+* View payout history
+* View analytics
+
+All books require admin approval before publication.
+
+---
+
+# ADMIN DASHBOARD
+
+Create:
+
+Admin > Digital Book Store
+
+Admin Dashboard Widgets:
+
+* Total Books
+* Total Authors
+* Total Sales
+* Monthly Revenue
+* Monthly Royalties
+* Active Readers
+* New Authors
+* Top Selling Books
+* Most Read Books
+* Subscription Revenue
+
+---
+
+# DIGITAL BOOK STORE
+
+Create:
+
+/member/bookstore
+
+Features:
+
+* Search Books
+* Featured Books
+* New Releases
+* Best Sellers
+* Staff Picks
+* Categories
+* Author Profiles
+* Book Details Page
+* Related Books
+* Purchase Button
+
+Categories:
+
+* Health & Wellness
+* Faith & Spiritual Growth
+* Marketplace Ministry
+* Business & Leadership
+* Herbal Education
+* Nutrition
+* Financial Education
+* Personal Development
+* NFGN Training
+* Audiobooks
+* Children's Books
+* Courses (Future)
+
+---
+
+# MY DIGITAL LIBRARY
+
+Create:
+
+/member/library
+
+Features:
+
+* Purchased Books
+* Free Books
+* Subscription Books
+* Recently Read
+* Favorites
+* Bookmarks
+* Notes
+* Reading History
+* Continue Reading
+
+Display:
+
+* Cover Image
+* Title
+* Author
+* Progress Percentage
+* Last Read Date
+* Read Button
+
+---
+
+# DIGITAL BOOK READER
+
+Create a secure browser-based reader.
+
+Books must open inside the platform.
+
+Features:
+
+* Light Mode
+* Dark Mode
+* Adjustable Font Size
+* Search Within Book
+* Bookmark Pages
+* Highlight Text
+* Personal Notes
+* Save Reading Position
+* Progress Tracking
+* Mobile Responsive
+* Tablet Responsive
+* Desktop Responsive
+
+Security:
+
+* Verify Ownership Before Reading
+* Watermark Pages With User Name
+* Watermark Pages With Email
+* Disable Direct Public Access
+* Disable Unauthorized Downloads
+* Session Validation
+* Purchase Verification
+
+---
+
+# AUDIOBOOK LIBRARY
+
+Create:
+
+/member/audiobooks
+
+Features:
+
+* Play
+* Pause
+* Resume
+* Save Position
+* Playback Speed
+* Reading Progress
+* Favorites
+* Download Option (Admin Controlled)
+
+---
+
+# AUTHOR MARKETPLACE
+
+Create:
+
+/member/author/dashboard
+
+Features:
+
+* Submit New Book
+* Upload Cover Image
+* Upload PDF
+* Upload EPUB
+* Upload Audiobook
+* Set Pricing
+* Edit Listings
+* View Sales
+* View Royalties
+* View Payouts
+* View Analytics
+
+---
+
+# AUTHOR APPLICATION SYSTEM
+
+Create:
+
+/member/author/apply
+
+Fields:
+
+* Name
+* Bio
+* Website
+* Social Media Links
+* Writing Experience
+* Categories
+* Agreement Checkbox
+
+Status Options:
+
+* Pending
+* Approved
+* Rejected
+* Suspended
+
+---
+
+# BOOK APPROVAL SYSTEM
+
+Workflow:
+
+Author Uploads Book
+
+↓
+
+Book Status = Pending
+
+↓
+
+Admin Reviews
+
+↓
+
+Approve OR Reject
+
+↓
+
+If Approved:
+
+Book Appears In Store
+
+---
+
+# SALES & ROYALTY SYSTEM
+
+IMPORTANT:
+
+Admin must be able to completely modify all payout structures.
+
+Admin Settings:
+
+* Platform Fee %
+* Author Royalty %
+* Affiliate Commission %
+* Referral Commission %
+* Promotional Bonuses
+* Category-Based Royalties
+* Book-Specific Royalties
+* Author-Specific Royalties
+
+Default Example:
+
+Platform Fee = 30%
+
+Author Royalty = 70%
+
+HOWEVER:
+
+Admin can modify at any time.
+
+Examples:
+
+Book A:
+Platform = 20%
+Author = 80%
+
+Book B:
+Platform = 40%
+Author = 60%
+
+Book C:
+Platform = Fixed Dollar Amount
+
+Book D:
+Custom Commission Structure
+
+Admin Controls:
+
+* Edit Royalty %
+* Edit Platform Fee %
+* Override Per Book
+* Override Per Author
+* Override Per Category
+* Pause Royalties
+* Bonus Royalties
+
+Track:
+
+* Gross Sales
+* Refunds
+* Platform Revenue
+* Author Earnings
+* Net Earnings
+* Pending Payouts
+* Completed Payouts
+
+---
+
+# SUBSCRIPTION LIBRARY
+
+Create:
+
+NFGN Knowledge Vault™
+
+Subscription Levels:
+
+Free
+Silver
+Gold
+Platinum
+
+Admin Controls:
+
+* Monthly Price
+* Annual Price
+* Included Books
+* Included Audiobooks
+* Included Courses
+* Included Resources
+
+---
+
+# PAYMENT PROCESSING
+
+Integrate:
+
+* Stripe
+* PayPal
+* Square (Optional)
+
+After Successful Payment:
+
+1. Create Purchase Record
+2. Generate License
+3. Add Book To Library
+4. Send Email Receipt
+5. Grant Immediate Access
+
+---
+
+# DIGITAL LICENSE SYSTEM
+
+Before Checkout:
+
+Require User Agreement
+
+License Agreement:
+
+"By purchasing this digital content, you are purchasing a limited, non-exclusive, non-transferable license to access and read the content through your NFGN account. Copyright ownership remains with the author and/or NFGN. Redistribution, resale, reproduction, sharing, uploading, copying, or commercial use is prohibited without written permission."
+
+Checkbox Required:
+
+"I Agree To The Digital License Terms"
+
+---
+
+# ANALYTICS SYSTEM
+
+Admin Analytics:
+
+* Total Books Sold
+* Revenue By Month
+* Revenue By Author
+* Revenue By Category
+* Active Readers
+* Reading Completion Rates
+* Most Popular Books
+* Most Viewed Books
+* Subscription Revenue
+
+Author Analytics:
+
+* Sales
+* Revenue
+* Royalties
+* Readers
+* Reading Completion Rates
+
+---
+
+# DATABASE STRUCTURE
+
+Users
+
+Books
+
+Authors
+
+Categories
+
+Purchases
+
+ReadingProgress
+
+Bookmarks
+
+Highlights
+
+Notes
+
+Subscriptions
+
+SubscriptionPlans
+
+AuthorApplications
+
+RoyaltyTransactions
+
+PayoutTransactions
+
+SalesTransactions
+
+Coupons
+
+DiscountCodes
+
+Analytics
+
+AuditLogs
+
+---
+
+# SAMPLE BOOKS
+
+Preload:
+
+The Prophetic Diet
+
+The Sensational Wealth Builder
+
+FLESH 101
+
+The War Within Me
+
+The 10 Pathways of a Builder
+
+Ezekiel 37
+
+Elijah and the Widow
+
+Marketplace Ministry
+
+IGNITE Your Life
+
+Prayer, Health, Wealth & Motivation
+
+---
+
+# DESIGN REQUIREMENTS
+
+Style Inspiration:
+
+* Apple Books
+* Kindle
+* Audible
+* Modern SaaS Platforms
+
+Colors:
+
+* White Background
+* Black Text
+* Gray Accents
+* Soft Shadows
+* Rounded Cards
+
+Design Goals:
+
+* Clean
+* Professional
+* Elegant
+* Mobile Friendly
+* Fast Loading
+* Easy Navigation
+
+---
+
+# FUTURE MODULES
+
+System Must Be Expandable For:
+
+* Video Courses
+* Certification Programs
+* Coaching Programs
+* Digital Downloads
+* Printable Resources
+* Member Communities
+* AI Learning Assistant
+* NFGN University
+* Affiliate Program
+* MLM Compensation Integration
+* Digital Product Marketplace
+
+---
+
+# FINAL OBJECTIVE
+
+Create a complete NFGN Digital Book Store™, Author Marketplace™, Audiobook Library™, and Knowledge Vault™ that allows:
+
+* NFGN to sell books
+* Members to purchase reading licenses
+* Approved members to become authors
+* Authors to earn royalties
+* Admin to control and modify all commissions, royalties, fees, subscriptions, and payout structures
+* Members to read books securely inside the platform
+* Future expansion into courses, videos, certifications, coaching, and digital products
+
+Build using modern scalable architecture, reusable components, secure authentication, role-based permissions, and enterprise-level design standards.

@@ -3,6 +3,7 @@ import { BookOpen, Users, DollarSign, TrendingUp, Clock, CheckCircle, XCircle, S
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { FileUploadField } from "@/components/ui/FileUploadField";
 
 const GREEN = "#2D6A4F";
 const GREEN_D = "#1A4032";
@@ -434,16 +435,36 @@ export function AdminBookstorePage() {
             <label htmlFor="isFree" style={{ fontSize: 13, fontWeight: 700, color: "#555", cursor: "pointer" }}>This is a FREE book / resource</label>
           </div>
 
-          {[
-            { label: "Cover Image URL", key: "coverImage", placeholder: "https://…" },
-            { label: "File URL (PDF / EPUB)", key: "fileUrl", placeholder: "https://… (accessible to buyers only)" },
-            { label: "Audio URL (Audiobook MP3/M4A)", key: "audioUrl", placeholder: "https://… (audiobooks only)" },
-          ].map(f => (
-            <div key={f.key} style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#555", display: "block", marginBottom: 4 }}>{f.label}</label>
-              <Input value={(form as any)[f.key]} onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} />
-            </div>
-          ))}
+          <div style={{ marginBottom: 14 }}>
+            <FileUploadField
+              label="Cover Image"
+              value={form.coverImage}
+              onChange={v => setForm(p => ({ ...p, coverImage: v }))}
+              placeholder="https://… or upload from computer"
+              kind="image"
+              helperText="Recommended: 400×600px, JPG or PNG"
+            />
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <FileUploadField
+              label="Book File (PDF / EPUB)"
+              value={form.fileUrl}
+              onChange={v => setForm(p => ({ ...p, fileUrl: v }))}
+              placeholder="https://… or upload from computer"
+              kind="document"
+              helperText="Buyers access this file securely after purchase"
+            />
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <FileUploadField
+              label="Audio File (Audiobook MP3 / M4A)"
+              value={form.audioUrl}
+              onChange={v => setForm(p => ({ ...p, audioUrl: v }))}
+              placeholder="https://… or upload from computer (audiobooks only)"
+              kind="audio"
+              helperText="Only required for Audiobook content type"
+            />
+          </div>
 
           <div style={{ display: "flex", gap: 16, marginBottom: 20 }}>
             {[

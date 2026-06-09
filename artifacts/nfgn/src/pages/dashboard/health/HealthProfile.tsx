@@ -18,10 +18,39 @@ function apiFetch(path: string, opts?: RequestInit) {
 }
 
 const BLOOD_TYPES = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"];
-const BODY_TYPES = [
-  { value: "ectomorph", label: "Ectomorph", desc: "Naturally lean, fast metabolism, hard to gain weight" },
-  { value: "mesomorph", label: "Mesomorph", desc: "Athletic build, gains muscle easily, responds well to exercise" },
-  { value: "endomorph", label: "Endomorph", desc: "Stores fat more easily, slower metabolism, broader build" },
+const BODY_TYPE_GROUPS = [
+  {
+    group: "Pure Somatotypes",
+    types: [
+      { value: "ectomorph",     label: "Ectomorph",      desc: "Naturally lean, fast metabolism, hard to gain weight or muscle" },
+      { value: "mesomorph",     label: "Mesomorph",       desc: "Athletic build, gains muscle easily, responds well to any training" },
+      { value: "endomorph",     label: "Endomorph",       desc: "Broader frame, stores fat more easily, slower metabolism" },
+    ],
+  },
+  {
+    group: "Common Mixed Types",
+    note: "Most people are a blend of two somatotypes",
+    types: [
+      { value: "ecto_mesomorph", label: "Ecto-Mesomorph", desc: "Lean and athletic — gains muscle while staying relatively lean. Common in swimmers, basketball players, and sprinters." },
+      { value: "meso_ectomorph", label: "Meso-Ectomorph", desc: "Primarily muscular but with a leaner frame and faster metabolism than a typical mesomorph." },
+      { value: "meso_endomorph", label: "Meso-Endomorph", desc: "Naturally muscular with a tendency to gain fat. Significant strength potential. Common in football linemen, powerlifters, wrestlers." },
+      { value: "endo_mesomorph", label: "Endo-Mesomorph", desc: "Large frame with substantial muscle mass but also stores body fat readily." },
+    ],
+  },
+  {
+    group: "Less Common Mixed Types",
+    types: [
+      { value: "ecto_endomorph", label: "Ecto-Endomorph", desc: "Appears thin in the arms and legs but stores fat around the abdomen or hips — sometimes called \"skinny fat\"." },
+      { value: "endo_ectomorph", label: "Endo-Ectomorph", desc: "Primarily endomorphic with some ectomorphic traits — long limbs but a tendency toward higher body fat." },
+    ],
+  },
+  {
+    group: "Rare Triple Blend",
+    note: "Significant traits of all three body types",
+    types: [
+      { value: "balanced",       label: "Balanced / Triple Blend", desc: "Moderate frame, moderate muscle-building ability, moderate fat storage. Highly adaptable to different training styles." },
+    ],
+  },
 ];
 const GUT_TYPES = [
   { value: "diverse", label: "Diverse & Balanced", desc: "Good variety of beneficial bacteria" },
@@ -332,16 +361,29 @@ export function HealthProfile() {
 
       {/* SECTION 3: Body Type */}
       <div style={{ background: "#fff", border: "1.5px solid #e5e7eb", borderRadius: 14, padding: "22px 24px", marginBottom: 20 }}>
-        <SectionHeader title="Body Type" subtitle="Helps tailor nutrition macros and exercise recommendations" />
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
-          {BODY_TYPES.map(bt => (
-            <SelectCard
-              key={bt.value} value={bt.value} label={bt.label} desc={bt.desc}
-              selected={bodyType === bt.value} color={GREEN}
-              onClick={() => setBodyType(bodyType === bt.value ? "" : bt.value)}
-            />
-          ))}
+        <SectionHeader title="Body Type (Somatotype)" subtitle="Most people are a blend — choose the type that best describes you" />
+        <div style={{ fontSize: 11, color: "#888", background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 8, padding: "8px 12px", marginBottom: 14, lineHeight: 1.5 }}>
+          Pure somatotypes (Ecto, Meso, Endo) are relatively rare. Most people are a <strong>hybrid of two types</strong>. Read each description and pick the one that feels most accurate.
         </div>
+        {BODY_TYPE_GROUPS.map(group => (
+          <div key={group.group} style={{ marginBottom: 18 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <span style={{ fontSize: 11, fontWeight: 900, color: GREEN, textTransform: "uppercase", letterSpacing: "0.07em" }}>{group.group}</span>
+              {group.note && (
+                <span style={{ fontSize: 10, color: "#999", fontStyle: "italic" }}>— {group.note}</span>
+              )}
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 8 }}>
+              {group.types.map(bt => (
+                <SelectCard
+                  key={bt.value} value={bt.value} label={bt.label} desc={bt.desc}
+                  selected={bodyType === bt.value} color={GREEN}
+                  onClick={() => setBodyType(bodyType === bt.value ? "" : bt.value)}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* SECTION 4: Gut Biome */}

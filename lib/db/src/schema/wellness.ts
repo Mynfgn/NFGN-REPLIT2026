@@ -40,7 +40,7 @@ export const healthProfilesTable = pgTable("health_profiles", {
   gender: text("gender"), // male | female | other | prefer_not_to_say
   // Typing
   bloodType: text("blood_type"), // O+ O- A+ A- B+ B- AB+ AB-
-  bodyType: text("body_type"), // ectomorph | mesomorph | endomorph
+  bodyType: text("body_type"), // pure: ectomorph | mesomorph | endomorph | hybrids: ecto_mesomorph | meso_ectomorph | meso_endomorph | endo_mesomorph | ecto_endomorph | endo_ectomorph | balanced
   gutBiome: text("gut_biome"), // diverse | low_diversity | dysbiotic | candida_dominant | inflammatory
   // Goals
   primaryGoal: text("primary_goal"), // weight_loss | muscle_gain | maintenance | detox | energy | sleep | hormonal

@@ -40,7 +40,16 @@ const BLOOD_TYPE_LABELS: Record<string, string> = {
   "B+": "Type B+", "B-": "Type B−", "AB+": "Type AB+", "AB-": "Type AB−",
 };
 const BODY_TYPE_LABELS: Record<string, string> = {
-  ectomorph: "Ectomorph (naturally lean)", mesomorph: "Mesomorph (athletic build)", endomorph: "Endomorph (stores fat easily)",
+  ectomorph:      "Ectomorph",
+  mesomorph:      "Mesomorph",
+  endomorph:      "Endomorph",
+  ecto_mesomorph: "Ecto-Mesomorph",
+  meso_ectomorph: "Meso-Ectomorph",
+  meso_endomorph: "Meso-Endomorph",
+  endo_mesomorph: "Endo-Mesomorph",
+  ecto_endomorph: "Ecto-Endomorph",
+  endo_ectomorph: "Endo-Ectomorph",
+  balanced:       "Balanced (Triple Blend)",
 };
 const GUT_BIOME_LABELS: Record<string, string> = {
   diverse: "Diverse & Balanced", low_diversity: "Low Diversity", dysbiotic: "Dysbiotic",

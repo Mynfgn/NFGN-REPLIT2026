@@ -1,0 +1,72 @@
+[
+  {
+    "name": "Anxiety/stress/sleep",
+    "herbCount": 41,
+    "safetyNote": "May cause sedation or interact with alcohol, antidepressants, sedatives, or anxiety medicines."
+  },
+  {
+    "name": "Appetite/fiber",
+    "herbCount": 28,
+    "safetyNote": "Take with plenty of water; separate from medicines/supplements by 2+ hours due to absorption effects."
+  },
+  {
+    "name": "Blood pressure/heart",
+    "herbCount": 48,
+    "safetyNote": "May interact with blood pressure, blood thinner, heart, or diuretic medications."
+  },
+  {
+    "name": "Blood sugar/diabetes support",
+    "herbCount": 36,
+    "safetyNote": "May lower blood sugar; monitor closely if using insulin or diabetes medications."
+  },
+  {
+    "name": "Brain/focus",
+    "herbCount": 26,
+    "safetyNote": "May interact with blood thinners, stimulants, sedatives, or psychiatric medications."
+  },
+  {
+    "name": "Energy/fatigue/adaptogen",
+    "herbCount": 27,
+    "safetyNote": "May be stimulating; use caution with insomnia, anxiety, hypertension, or stimulant medicines."
+  },
+  {
+    "name": "Gut cleansing/digestion",
+    "herbCount": 58,
+    "safetyNote": "Laxative or antimicrobial herbs may cause cramping or interactions; avoid long-term use without professional guidance."
+  },
+  {
+    "name": "Headaches",
+    "herbCount": 28,
+    "safetyNote": "Migraine support is individualized; check interactions with blood thinners, sedatives, and liver-affecting medicines."
+  },
+  {
+    "name": "Immune/cancer-support research",
+    "herbCount": 38,
+    "safetyNote": "Supportive education only; do not replace oncology care; ask an oncologist about interactions."
+  },
+  {
+    "name": "Inflammation/joints",
+    "herbCount": 24,
+    "safetyNote": "May interact with blood thinners, NSAIDs, surgery, or stomach-ulcer conditions."
+  },
+  {
+    "name": "Kidney/urinary",
+    "herbCount": 40,
+    "safetyNote": "Avoid with kidney disease, pregnancy, or diuretic/lithium medicines unless supervised."
+  },
+  {
+    "name": "Men/libido/ED",
+    "herbCount": 32,
+    "safetyNote": "May interact with blood pressure, heart, prostate, or ED medications; avoid yohimbe without clinician guidance."
+  },
+  {
+    "name": "Weight loss/metabolic",
+    "herbCount": 42,
+    "safetyNote": "Use caution with stimulants, thyroid issues, pregnancy, heart rhythm concerns, and blood-pressure or diabetes medicines."
+  },
+  {
+    "name": "Women/PCOS/hormone",
+    "herbCount": 32,
+    "safetyNote": "May affect hormones; avoid in pregnancy, fertility treatment, hormone-sensitive conditions unless supervised."
+  }
+]

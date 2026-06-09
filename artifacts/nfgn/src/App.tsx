@@ -55,6 +55,10 @@ import { PayAsYouGoPage } from "@/pages/public/PayAsYouGo";
 import { PaygProviderPage } from "@/pages/dashboard/PaygProvider";
 import { PaygBookingsPage } from "@/pages/dashboard/PaygBookings";
 import { CalculatorPage } from "@/pages/dashboard/Calculator";
+import { HealthHub } from "@/pages/dashboard/health/HealthHub";
+import { HealthLibrary } from "@/pages/dashboard/health/HealthLibrary";
+import { HealthTracker } from "@/pages/dashboard/health/HealthTracker";
+import { HealthEducation } from "@/pages/dashboard/health/HealthEducation";
 
 // Admin Pages
 import { AdminDashboard } from "@/pages/admin/AdminDashboard";
@@ -324,6 +328,28 @@ function Router() {
       <Route path="/dashboard/calculator">
         <RequireAuth>
           <DashboardLayout><CalculatorPage /></DashboardLayout>
+        </RequireAuth>
+      </Route>
+
+      {/* Health & Wellness routes */}
+      <Route path="/dashboard/health/library">
+        <RequireAuth>
+          <DashboardLayout><HealthLibrary /></DashboardLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/dashboard/health/tracker">
+        <RequireAuth>
+          <DashboardLayout><HealthTracker /></DashboardLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/dashboard/health/education">
+        <RequireAuth>
+          <DashboardLayout><HealthEducation /></DashboardLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/dashboard/health">
+        <RequireAuth>
+          <DashboardLayout><HealthHub /></DashboardLayout>
         </RequireAuth>
       </Route>
 

@@ -9,7 +9,7 @@ import {
   BarChart3, LogOut, Menu, X, UserPlus, ArrowRightLeft,
   TrendingUp, Wrench, Home, Star, BookOpen, DollarSign,
   ChevronDown, ChevronRight, ShieldCheck, Link2, Sparkles,
-  CreditCard, Zap, Store, CalendarDays, Heart, RefreshCw, Calculator,
+  CreditCard, Zap, Store, CalendarDays, Heart, RefreshCw, Calculator, Leaf,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { roleLabel, tierLabel } from "@/lib/labels";
@@ -132,6 +132,21 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
       { name: "Reports", href: "/dashboard/reports", icon: BarChart3, minTier: "pro_member" },
     ],
   },
+  {
+    label: "Health & Wellness",
+    items: [
+      {
+        name: "NFGN Health & Wellness",
+        icon: Leaf, group: "health",
+        children: [
+          { name: "Wellness Hub",               href: "/dashboard/health" },
+          { name: "Herb & Supplement Library",  href: "/dashboard/health/library" },
+          { name: "Weight & Water Tracker",     href: "/dashboard/health/tracker" },
+          { name: "Calorie & Nutrition Guide",  href: "/dashboard/health/education" },
+        ],
+      },
+    ],
+  },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -140,6 +155,7 @@ function isGroupOpen(group: string, location: string): boolean {
   if (group === "training")     return location.startsWith("/dashboard/tools/training");
   if (group === "registration") return location.startsWith("/dashboard/registration") || location.startsWith("/dashboard/register-new-pro") || location.startsWith("/dashboard/member-outreach");
   if (group === "tools")        return location.startsWith("/dashboard/tools");
+  if (group === "health")       return location.startsWith("/dashboard/health");
   return false;
 }
 

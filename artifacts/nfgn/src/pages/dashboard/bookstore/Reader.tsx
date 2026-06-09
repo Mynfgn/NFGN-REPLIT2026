@@ -20,7 +20,7 @@ async function apiFetch(path: string, opts?: RequestInit) {
 
 interface Book {
   id: number; title: string; authorName: string; type: string;
-  fileUrl: string | null; audioUrl: string | null; coverImage?: string;
+  hasFile: boolean; hasAudio: boolean; coverImage?: string;
   pageCount?: number; duration?: string; purchased: boolean;
 }
 
@@ -97,6 +97,8 @@ export function ReaderPage({ bookId }: Props) {
 
   const isAudio = book.type === "audiobook";
   const watermarkText = me ? `${me.firstName} ${me.lastName} · ${me.email}` : "NFGN Licensed Content";
+  const token = encodeURIComponent(localStorage.getItem("nfgn_token") ?? "");
+  const streamBase = `/api/bookstore/books/${id}/stream?token=${token}`;
 
   return (
     <div style={{ minHeight: "100vh", background: bg, transition: "background .2s" }}>
@@ -139,7 +141,7 @@ export function ReaderPage({ bookId }: Props) {
       {/* Content */}
       <div style={{ maxWidth: 860, margin: "0 auto", padding: "32px 24px", position: "relative" }}>
 
-        {isAudio && book.audioUrl ? (
+        {isAudio && book.hasAudio ? (
           /* ── AUDIOBOOK PLAYER ── */
           <div>
             <div style={{ textAlign: "center", marginBottom: 32 }}>
@@ -155,7 +157,7 @@ export function ReaderPage({ bookId }: Props) {
               {book.duration && <div style={{ fontSize: 12, color: "#aaa", marginTop: 4 }}>Duration: {book.duration}</div>}
             </div>
             <div style={{ background: darkMode ? "#222" : "#f3f4f6", borderRadius: 14, padding: "24px 28px" }}>
-              <audio ref={audioRef} controls src={book.audioUrl} style={{ width: "100%", marginBottom: 16 }} />
+              <audio ref={audioRef} controls src={`${streamBase}&type=audio`} style={{ width: "100%", marginBottom: 16 }} />
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, flexWrap: "wrap" }}>
                 <span style={{ fontSize: 12, color: "#888", fontWeight: 600 }}>Speed:</span>
                 {[0.75, 1, 1.25, 1.5, 2].map(s => (
@@ -166,12 +168,12 @@ export function ReaderPage({ bookId }: Props) {
               </div>
             </div>
           </div>
-        ) : book.fileUrl ? (
+        ) : book.hasFile ? (
           /* ── PDF READER ── */
           <div>
             <div style={{ position: "relative" }}>
               <iframe
-                src={`${book.fileUrl}#toolbar=0&navpanes=0&scrollbar=1&page=${currentPage}`}
+                src={`${streamBase}&type=file#toolbar=0&navpanes=0&scrollbar=1&page=${currentPage}`}
                 style={{ width: "100%", height: "calc(100vh - 200px)", minHeight: 600, border: "none", borderRadius: 12, boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
                 title={book.title}
               />

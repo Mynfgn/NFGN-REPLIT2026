@@ -1,15 +1,19 @@
-import { Router } from "express";
-import { db } from "@workspace/db";
+import { Router, type Request, type Response } from "express";
+import { Readable } from "stream";
+import { db, usersTable, cartItemsTable } from "@workspace/db";
 import {
   booksTable, authorApplicationsTable, bookPurchasesTable,
   bookReadingProgressTable, bookRoyaltyOverridesTable,
 } from "@workspace/db/schema";
 import { eq, and, desc, ilike, or, sql, count } from "drizzle-orm";
-import { requireAuth, requireAdmin } from "../lib/auth";
+import { requireAuth, requireAdmin, verifyToken } from "../lib/auth";
+import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
+
+const storageService = new ObjectStorageService();
 
 const router = Router();
 
-function formatBook(b: typeof booksTable.$inferSelect, showFile = false) {
+function formatBook(b: typeof booksTable.$inferSelect, showFile = false, isAdmin = false) {
   return {
     id: b.id,
     title: b.title,
@@ -22,8 +26,12 @@ function formatBook(b: typeof booksTable.$inferSelect, showFile = false) {
     category: b.category,
     type: b.type,
     coverImage: b.coverImage,
-    fileUrl: showFile ? b.fileUrl : null,
-    audioUrl: showFile ? b.audioUrl : null,
+    // Raw URLs only for admins/authors — member readers use the /stream endpoint
+    fileUrl: (showFile && isAdmin) ? b.fileUrl : null,
+    audioUrl: (showFile && isAdmin) ? b.audioUrl : null,
+    // Capability flags for members (tells the Reader whether a file/audio track exists)
+    hasFile: showFile ? b.fileUrl !== null : false,
+    hasAudio: showFile ? b.audioUrl !== null : false,
     price: parseFloat(String(b.price)),
     isFree: b.isFree,
     authorRoyaltyPct: parseFloat(String(b.authorRoyaltyPct)),
@@ -82,7 +90,7 @@ router.get("/bookstore/admin/books", requireAuth, requireAdmin, async (req, res)
   const rows = conds.length > 0
     ? await db.select().from(booksTable).where(and(...conds)).orderBy(desc(booksTable.createdAt))
     : await db.select().from(booksTable).orderBy(desc(booksTable.createdAt));
-  res.json({ books: rows.map(b => formatBook(b, true)) });
+  res.json({ books: rows.map(b => formatBook(b, true, true)) });
 });
 
 // ── ADMIN: Create book ─────────────────────────────────────────────
@@ -100,7 +108,7 @@ router.post("/bookstore/admin/books", requireAuth, requireAdmin, async (req, res
     language: language ?? "English", tags: tags ?? null, isbn: isbn ?? null,
     publishedAt: new Date(),
   }).returning();
-  res.json({ book: formatBook(book, true) });
+  res.json({ book: formatBook(book, true, true) });
 });
 
 // ── ADMIN: Update book status / flags ──────────────────────────────
@@ -115,7 +123,7 @@ router.patch("/bookstore/admin/books/:id/status", requireAuth, requireAdmin, asy
   if (isStaffPick !== undefined) upd.isStaffPick = isStaffPick;
   const [updated] = await db.update(booksTable).set(upd).where(eq(booksTable.id, id)).returning();
   if (!updated) { res.status(404).json({ error: "Not found" }); return; }
-  res.json({ book: formatBook(updated, true) });
+  res.json({ book: formatBook(updated, true, true) });
 });
 
 // ── ADMIN: Update book details ────────────────────────────────────
@@ -144,7 +152,7 @@ router.patch("/bookstore/admin/books/:id", requireAuth, requireAdmin, async (req
   if (platformFeePct !== undefined) upd.platformFeePct = String(platformFeePct);
   const [updated] = await db.update(booksTable).set(upd).where(eq(booksTable.id, id)).returning();
   if (!updated) { res.status(404).json({ error: "Not found" }); return; }
-  res.json({ book: formatBook(updated, true) });
+  res.json({ book: formatBook(updated, true, true) });
 });
 
 // ── ADMIN: Author applications ─────────────────────────────────────
@@ -222,29 +230,30 @@ router.get("/bookstore/books/:id", requireAuth, async (req, res): Promise<void> 
   res.json({ book: { ...formatBook(book, purchased), purchased } });
 });
 
-// ── MEMBER: Purchase a book ────────────────────────────────────────
+// ── MEMBER: Purchase a FREE book (direct — paid books go through cart/checkout) ──
 router.post("/bookstore/books/:id/purchase", requireAuth, async (req, res): Promise<void> => {
   const bookId = parseInt(String(req.params.id));
   const userId = (req as any).user.id;
-  const { licenseAgreed, paymentMethod } = req.body;
+  const { licenseAgreed } = req.body;
   if (!licenseAgreed) { res.status(400).json({ error: "You must agree to the digital license terms" }); return; }
   const [book] = await db.select().from(booksTable).where(and(eq(booksTable.id, bookId), eq(booksTable.status, "approved")));
   if (!book) { res.status(404).json({ error: "Book not found" }); return; }
+  if (!book.isFree) {
+    res.status(400).json({ error: "Paid books must be purchased through the checkout. Add to cart first." });
+    return;
+  }
   const [existing] = await db.select().from(bookPurchasesTable).where(and(eq(bookPurchasesTable.userId, userId), eq(bookPurchasesTable.bookId, bookId)));
   if (existing) { res.json({ success: true, message: "Already in your library" }); return; }
-  const price = parseFloat(String(book.price));
-  const royaltyPct = parseFloat(String(book.authorRoyaltyPct)) / 100;
-  const platformPct = parseFloat(String(book.platformFeePct)) / 100;
   await db.insert(bookPurchasesTable).values({
     userId, bookId,
-    pricePaid: String(price),
-    royaltyAmount: String((price * royaltyPct).toFixed(2)),
-    platformAmount: String((price * platformPct).toFixed(2)),
+    pricePaid: "0",
+    royaltyAmount: "0",
+    platformAmount: "0",
     licenseAgreed: true,
-    paymentMethod: paymentMethod ?? "platform",
+    paymentMethod: "free",
   });
   await db.update(booksTable).set({ totalSales: book.totalSales + 1 }).where(eq(booksTable.id, bookId));
-  res.json({ success: true, message: book.isFree ? "Added to your library!" : "Purchase successful! Book added to your library." });
+  res.json({ success: true, message: "Added to your library!" });
 });
 
 // ── MEMBER: My library ─────────────────────────────────────────────
@@ -318,7 +327,7 @@ router.post("/bookstore/author/apply", requireAuth, async (req, res): Promise<vo
 router.get("/bookstore/author/books", requireAuth, async (req, res): Promise<void> => {
   const userId = (req as any).user.id;
   const books = await db.select().from(booksTable).where(eq(booksTable.authorUserId, userId)).orderBy(desc(booksTable.createdAt));
-  res.json({ books: books.map(b => formatBook(b, true)) });
+  res.json({ books: books.map(b => formatBook(b, true, true)) });
 });
 
 router.post("/bookstore/author/books", requireAuth, async (req, res): Promise<void> => {
@@ -338,7 +347,7 @@ router.post("/bookstore/author/books", requireAuth, async (req, res): Promise<vo
     pageCount: pageCount ?? null, duration: duration ?? null,
     language: language ?? "English", tags: tags ?? null, isbn: isbn ?? null,
   }).returning();
-  res.json({ book: formatBook(book, true) });
+  res.json({ book: formatBook(book, true, true) });
 });
 
 router.get("/bookstore/author/sales", requireAuth, async (req, res): Promise<void> => {
@@ -349,6 +358,107 @@ router.get("/bookstore/author/sales", requireAuth, async (req, res): Promise<voi
   const purchases = await db.select().from(bookPurchasesTable).where(sql`book_id = ANY(${ids})`).orderBy(desc(bookPurchasesTable.createdAt));
   const totalEarned = purchases.reduce((s, p) => s + parseFloat(String(p.royaltyAmount)), 0);
   res.json({ sales: purchases, totalEarned, totalSales: purchases.length, books: myBooks });
+});
+
+// ── MEMBER: Secure content stream (JWT via ?token=, for iframes/audio) ──────────
+// Never exposes the raw GCS/storage URL to clients.
+router.get("/bookstore/books/:id/stream", async (req: Request, res: Response): Promise<void> => {
+  const tokenStr = String(req.query.token ?? "");
+  if (!tokenStr) { res.status(401).send("Unauthorized"); return; }
+
+  const payload = verifyToken(tokenStr);
+  if (!payload) { res.status(401).send("Invalid or expired token"); return; }
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, payload.userId));
+  if (!user || user.status === "inactive") { res.status(401).send("Unauthorized"); return; }
+
+  const bookId = parseInt(String(req.params.id));
+  if (isNaN(bookId)) { res.status(400).send("Invalid book id"); return; }
+
+  const [book] = await db.select().from(booksTable).where(and(eq(booksTable.id, bookId), eq(booksTable.status, "approved")));
+  if (!book) { res.status(404).send("Book not found"); return; }
+
+  const isAdmin = ["super_admin", "admin", "store_admin"].includes(user.role);
+  if (!book.isFree && !isAdmin) {
+    const [purchase] = await db.select().from(bookPurchasesTable)
+      .where(and(eq(bookPurchasesTable.userId, user.id), eq(bookPurchasesTable.bookId, bookId)));
+    if (!purchase) { res.status(403).send("Purchase required"); return; }
+  }
+
+  const fileType = String(req.query.type ?? "file");
+  const rawUrl = fileType === "audio" ? book.audioUrl : book.fileUrl;
+  if (!rawUrl) { res.status(404).send("File not available"); return; }
+
+  try {
+    // Derive object path if it was stored as a storage URL
+    let objectPath: string | null = null;
+    if (rawUrl.startsWith("/api/storage/objects/")) {
+      objectPath = rawUrl.slice("/api/storage".length); // → /objects/uploads/uuid
+    } else if (rawUrl.startsWith("/objects/")) {
+      objectPath = rawUrl;
+    }
+
+    if (objectPath) {
+      const file = await storageService.getObjectEntityFile(objectPath);
+      const gcsResponse = await storageService.downloadObject(file);
+      res.status(gcsResponse.status);
+      gcsResponse.headers.forEach((value, key) => {
+        if (key.toLowerCase() !== "content-disposition") res.setHeader(key, value);
+      });
+      res.setHeader("Content-Disposition", "inline");
+      if (gcsResponse.body) {
+        const nodeStream = Readable.fromWeb(gcsResponse.body as ReadableStream<Uint8Array>);
+        nodeStream.pipe(res);
+      } else {
+        res.end();
+      }
+    } else {
+      // External URL — proxy via fetch
+      const upstream = await fetch(rawUrl);
+      if (!upstream.ok) { res.status(502).send("File unavailable"); return; }
+      const ct = upstream.headers.get("content-type") ?? "application/octet-stream";
+      res.status(200).setHeader("Content-Type", ct).setHeader("Content-Disposition", "inline");
+      if (upstream.body) {
+        const nodeStream = Readable.fromWeb(upstream.body as ReadableStream<Uint8Array>);
+        nodeStream.pipe(res);
+      } else {
+        res.end();
+      }
+    }
+  } catch (err) {
+    if (err instanceof ObjectNotFoundError) { res.status(404).send("File not found"); return; }
+    res.status(500).send("Error streaming file");
+  }
+});
+
+// ── MEMBER: Add book to cart (paid books only — free books use /purchase directly) ──
+router.post("/bookstore/cart/books/:bookId", requireAuth, async (req, res): Promise<void> => {
+  const userId = (req as any).user.id;
+  const bookId = parseInt(String(req.params.bookId));
+  if (isNaN(bookId)) { res.status(400).json({ error: "Invalid book id" }); return; }
+
+  const [book] = await db.select().from(booksTable).where(and(eq(booksTable.id, bookId), eq(booksTable.status, "approved")));
+  if (!book) { res.status(404).json({ error: "Book not found" }); return; }
+  if (book.isFree) { res.status(400).json({ error: "Free books don't need to be added to cart — use the Add Free button directly" }); return; }
+
+  const [owned] = await db.select().from(bookPurchasesTable)
+    .where(and(eq(bookPurchasesTable.userId, userId), eq(bookPurchasesTable.bookId, bookId)));
+  if (owned) { res.json({ success: true, alreadyOwned: true, message: "Already in your library" }); return; }
+
+  const [existing] = await db.select().from(cartItemsTable)
+    .where(and(eq(cartItemsTable.userId, userId), eq(cartItemsTable.bookId, bookId)));
+  if (existing) { res.json({ success: true, message: "Already in cart" }); return; }
+
+  await db.insert(cartItemsTable).values({ userId, bookId, quantity: 1 });
+  res.json({ success: true, message: `"${book.title}" added to cart` });
+});
+
+// ── MEMBER: Remove book from cart ────────────────────────────────────
+router.delete("/bookstore/cart/books/:bookId", requireAuth, async (req, res): Promise<void> => {
+  const userId = (req as any).user.id;
+  const bookId = parseInt(String(req.params.bookId));
+  await db.delete(cartItemsTable).where(and(eq(cartItemsTable.userId, userId), eq(cartItemsTable.bookId, bookId)));
+  res.json({ success: true });
 });
 
 export default router;

@@ -34,6 +34,7 @@ export const orderItemsTable = pgTable("order_items", {
   id: serial("id").primaryKey(),
   orderId: integer("order_id").notNull(),
   productId: integer("product_id"),
+  bookId: integer("book_id"),
   productName: text("product_name").notNull(),
   productImage: text("product_image"),
   price: numeric("price", { precision: 10, scale: 2 }).notNull(),
@@ -49,7 +50,8 @@ export const orderItemsTable = pgTable("order_items", {
 export const cartItemsTable = pgTable("cart_items", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
-  productId: integer("product_id").notNull(),
+  productId: integer("product_id"),
+  bookId: integer("book_id"),
   quantity: integer("quantity").notNull().default(1),
   customPrice: numeric("custom_price", { precision: 10, scale: 2 }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

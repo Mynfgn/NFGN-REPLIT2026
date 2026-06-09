@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, ordersTable, orderItemsTable, cartItemsTable, productsTable, usersTable, appSettingsTable, promoCodesTable, dollarCreditsTable, walletsTable, walletTransactionsTable } from "@workspace/db";
+import { db, ordersTable, orderItemsTable, cartItemsTable, productsTable, usersTable, appSettingsTable, promoCodesTable, dollarCreditsTable, walletsTable, walletTransactionsTable, booksTable, bookPurchasesTable } from "@workspace/db";
 import { eq, and, desc, count, sql, inArray, gte } from "drizzle-orm";
 import { requireAuth, requireAdmin } from "../lib/auth";
 import { processCommissions, type OrderItemForCommission } from "../lib/commissions";
@@ -288,10 +288,6 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
     res.status(400).json({ error: "paymentMethod required" });
     return;
   }
-  if (!isPickup && !shippingAddress) {
-    res.status(400).json({ error: "shippingAddress required for delivery orders" });
-    return;
-  }
 
   const cartItems = await db.select({
     cart: cartItemsTable,
@@ -300,8 +296,25 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
     .leftJoin(productsTable, eq(cartItemsTable.productId, productsTable.id))
     .where(eq(cartItemsTable.userId, currentUser.id));
 
-  if (!cartItems.length) {
+  // Load digital book items from cart separately
+  const bookCartItems = await db.select({
+    cart: cartItemsTable,
+    book: booksTable,
+  }).from(cartItemsTable)
+    .innerJoin(booksTable, eq(cartItemsTable.bookId, booksTable.id))
+    .where(and(eq(cartItemsTable.userId, currentUser.id), sql`${cartItemsTable.bookId} IS NOT NULL`));
+
+  if (!cartItems.length && !bookCartItems.length) {
     res.status(400).json({ error: "Cart is empty" });
+    return;
+  }
+
+  // Shipping address only required when physical (non-digital) items are in the cart
+  const hasPhysicalItems = cartItems.some(({ product }) =>
+    product && !product.isDownloadable && !product.isDonation && !product.isChurchDonation
+  );
+  if (!isPickup && !shippingAddress && hasPhysicalItems) {
+    res.status(400).json({ error: "shippingAddress required for delivery orders" });
     return;
   }
 
@@ -335,6 +348,10 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
       ? parseFloat(cart.customPrice)
       : parseFloat(product.price);
     subtotal += effectivePrice * cart.quantity;
+  }
+  // Digital books: always qty 1
+  for (const { book } of bookCartItems) {
+    subtotal += parseFloat(String(book.price));
   }
 
   let discount = 0;
@@ -499,6 +516,42 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
         proMemberStatus: "pending_approval",
         role: "pro_member",
       }).where(eq(usersTable.id, currentUser.id));
+    }
+  }
+
+  // ── Digital book order items + instant library access ───────────────────
+  for (const { book } of bookCartItems) {
+    const bookPrice = String(book.price);
+    const priceNum = parseFloat(bookPrice);
+    await db.insert(orderItemsTable).values({
+      orderId: order.id,
+      bookId: book.id,
+      productName: `${book.title} (Digital Book)`,
+      productImage: book.coverImage ?? undefined,
+      price: bookPrice,
+      quantity: 1,
+      total: bookPrice,
+      cvTotal: 0,
+      isDownloadable: true,
+    });
+    // Check if user already owns this book (edge case: duplicate cart)
+    const [alreadyOwned] = await db.select().from(bookPurchasesTable)
+      .where(and(eq(bookPurchasesTable.userId, currentUser.id), eq(bookPurchasesTable.bookId, book.id)));
+    if (!alreadyOwned) {
+      const royaltyPct = parseFloat(String(book.authorRoyaltyPct)) / 100;
+      const platformPct = parseFloat(String(book.platformFeePct)) / 100;
+      await db.insert(bookPurchasesTable).values({
+        userId: currentUser.id,
+        bookId: book.id,
+        pricePaid: bookPrice,
+        royaltyAmount: String((priceNum * royaltyPct).toFixed(2)),
+        platformAmount: String((priceNum * platformPct).toFixed(2)),
+        licenseAgreed: true,
+        paymentMethod: paymentMethod,
+      });
+      await db.update(booksTable)
+        .set({ totalSales: book.totalSales + 1 })
+        .where(eq(booksTable.id, book.id));
     }
   }
 

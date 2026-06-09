@@ -135,18 +135,31 @@ export function BookstorePage() {
     setLicenseModal(null);
     setPurchasingId(book.id);
     try {
-      const d = await apiFetch(`/api/bookstore/books/${book.id}/purchase`, {
-        method: "POST", body: JSON.stringify({ licenseAgreed: true, paymentMethod: "platform" }),
-      });
-      toast({ title: d.message ?? "Added to library!" });
-      loadBooks();
+      if (book.isFree) {
+        // Free books: direct library grant
+        const d = await apiFetch(`/api/bookstore/books/${book.id}/purchase`, {
+          method: "POST", body: JSON.stringify({ licenseAgreed: true }),
+        });
+        toast({ title: d.message ?? "Added to library!" });
+        loadBooks();
+      } else {
+        // Paid books: add to cart then go to checkout
+        const d = await apiFetch(`/api/bookstore/cart/books/${book.id}`, { method: "POST" });
+        if (d.alreadyOwned) {
+          toast({ title: "Already in your library!" });
+          loadBooks();
+        } else {
+          toast({ title: "Added to cart!", description: "Complete your purchase at checkout." });
+          window.location.href = "/shop";
+        }
+      }
     } catch (e: any) { toast({ title: "Error", description: e.message, variant: "destructive" }); }
     finally { setPurchasingId(null); setLicenseAgreed(false); }
   }
 
   const featured = books.filter(b => b.isFeatured);
   const bestsellers = books.filter(b => b.isBestSeller);
-  const allBooks = search ? books : books.filter(b => !b.isFeatured);
+  const allBooks = books;
 
   return (
     <div style={{ maxWidth: 1080, margin: "0 auto", padding: "28px 20px" }}>

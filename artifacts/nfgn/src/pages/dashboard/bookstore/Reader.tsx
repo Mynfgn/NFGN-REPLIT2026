@@ -41,6 +41,99 @@ interface Book {
 
 interface Props { bookId: string }
 
+function PdfViewer({ streamUrl, darkMode, currentPage, totalPages, onPageChange, watermarkText }: {
+  streamUrl: string;
+  darkMode: boolean;
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (n: number) => void;
+  watermarkText: string;
+}) {
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [pdfError, setPdfError] = useState("");
+  const [pdfLoading, setPdfLoading] = useState(true);
+
+  useEffect(() => {
+    let url: string | null = null;
+    setPdfLoading(true);
+    setPdfError("");
+    // Fetch PDF as ArrayBuffer first — prevents iOS Safari from intercepting
+    // application/pdf at the network level and handing it off to Apple Books.
+    (async () => {
+      try {
+        const resp = await fetch(streamUrl);
+        if (!resp.ok) throw new Error(`Could not load PDF (HTTP ${resp.status})`);
+        const buffer = await resp.arrayBuffer();
+        url = URL.createObjectURL(new Blob([buffer], { type: "application/pdf" }));
+        setBlobUrl(url);
+      } catch (e: any) {
+        setPdfError(e?.message ?? "Failed to load PDF.");
+      } finally {
+        setPdfLoading(false);
+      }
+    })();
+    return () => { if (url) URL.revokeObjectURL(url); };
+  }, [streamUrl]);
+
+  const borderColor = darkMode ? "#333" : "#e5e7eb";
+  const textColor   = darkMode ? "#e5e5e5" : "#0a0a0a";
+  const DARK = "#0a0a0a";
+
+  if (pdfLoading) return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 400, gap: 10 }}>
+      <Loader2 size={24} color={GREEN} style={{ animation: "spin 1s linear infinite" }} />
+      <span style={{ fontSize: 13, color: "#888" }}>Loading PDF…</span>
+    </div>
+  );
+  if (pdfError) return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 300, flexDirection: "column", gap: 10 }}>
+      <AlertTriangle size={28} color={GOLD} />
+      <div style={{ fontSize: 13, color: "#888" }}>{pdfError}</div>
+    </div>
+  );
+
+  return (
+    <div>
+      <div style={{ position: "relative" }}>
+        <iframe
+          src={`${blobUrl}#toolbar=0&navpanes=0&scrollbar=1&page=${currentPage}`}
+          style={{ width: "100%", height: "calc(100vh - 200px)", minHeight: 600, border: "none", borderRadius: 12, boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
+          title="Book"
+        />
+        <div style={{ position: "absolute", inset: 0, pointerEvents: "none", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+          <div style={{ transform: "rotate(-35deg)", opacity: 0.06, fontSize: 28, fontWeight: 900, color: DARK, userSelect: "none", whiteSpace: "nowrap", width: "200%", textAlign: "center", lineHeight: 3 }}>
+            {Array.from({ length: 8 }).map((_, i) => <div key={i}>{watermarkText} — NFGN Licensed</div>)}
+          </div>
+        </div>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginTop: 20, padding: "12px 0" }}>
+        <button onClick={() => onPageChange(Math.max(1, currentPage - 1))} disabled={currentPage <= 1} style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${borderColor}`, background: "none", cursor: currentPage <= 1 ? "not-allowed" : "pointer", color: textColor, fontWeight: 700, opacity: currentPage <= 1 ? 0.4 : 1 }}>
+          ← Prev
+        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 13, color: textColor, fontWeight: 600 }}>Page</span>
+          <input
+            type="number" value={currentPage} min={1} max={totalPages || undefined}
+            onChange={e => { const n = parseInt(e.target.value); if (!isNaN(n) && n > 0) onPageChange(n); }}
+            style={{ width: 60, textAlign: "center", padding: "6px 8px", border: `1px solid ${borderColor}`, borderRadius: 8, background: darkMode ? "#222" : "#fff", color: textColor, fontWeight: 700, fontSize: 13 }}
+          />
+          {totalPages > 0 && <span style={{ fontSize: 13, color: "#888" }}>of {totalPages}</span>}
+        </div>
+        <button onClick={() => onPageChange(currentPage + 1)} disabled={totalPages > 0 && currentPage >= totalPages} style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${borderColor}`, background: "none", cursor: "pointer", color: textColor, fontWeight: 700 }}>
+          Next →
+        </button>
+      </div>
+      {totalPages > 0 && (
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <div style={{ width: 300, height: 4, background: borderColor, borderRadius: 2 }}>
+            <div style={{ height: "100%", width: `${Math.min(100, (currentPage / totalPages) * 100)}%`, background: GREEN, borderRadius: 2, transition: "width .3s" }} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle }: {
   streamUrl: string;
   fontSize: number;
@@ -392,47 +485,15 @@ export function ReaderPage({ bookId }: Props) {
               />
             </div>
           ) : (
-            /* — PDF iframe renderer — */
-            <div>
-              <div style={{ position: "relative" }}>
-                <iframe
-                  src={`${fileStreamUrl}#toolbar=0&navpanes=0&scrollbar=1&page=${currentPage}`}
-                  style={{ width: "100%", height: "calc(100vh - 200px)", minHeight: 600, border: "none", borderRadius: 12, boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
-                  title={book.title}
-                />
-                {!isSample && (
-                  <div style={{ position: "absolute", inset: 0, pointerEvents: "none", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                    <div style={{ transform: "rotate(-35deg)", opacity: 0.06, fontSize: 28, fontWeight: 900, color: DARK, userSelect: "none", whiteSpace: "nowrap", width: "200%", textAlign: "center", lineHeight: 3 }}>
-                      {Array.from({ length: 8 }).map((_, i) => <div key={i}>{watermarkText} — NFGN Licensed</div>)}
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginTop: 20, padding: "12px 0" }}>
-                <button onClick={() => handlePageChange(Math.max(1, currentPage - 1))} disabled={currentPage <= 1} style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${borderColor}`, background: "none", cursor: currentPage <= 1 ? "not-allowed" : "pointer", color: textColor, fontWeight: 700, opacity: currentPage <= 1 ? 0.4 : 1 }}>
-                  ← Prev
-                </button>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 13, color: textColor, fontWeight: 600 }}>Page</span>
-                  <input
-                    type="number" value={currentPage} min={1} max={totalPages || undefined}
-                    onChange={e => { const n = parseInt(e.target.value); if (!isNaN(n) && n > 0) handlePageChange(n); }}
-                    style={{ width: 60, textAlign: "center", padding: "6px 8px", border: `1px solid ${borderColor}`, borderRadius: 8, background: bg, color: textColor, fontWeight: 700, fontSize: 13 }}
-                  />
-                  {totalPages > 0 && <span style={{ fontSize: 13, color: "#888" }}>of {totalPages}</span>}
-                </div>
-                <button onClick={() => handlePageChange(currentPage + 1)} disabled={totalPages > 0 && currentPage >= totalPages} style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${borderColor}`, background: "none", cursor: "pointer", color: textColor, fontWeight: 700 }}>
-                  Next →
-                </button>
-              </div>
-              {totalPages > 0 && (
-                <div style={{ display: "flex", justifyContent: "center" }}>
-                  <div style={{ width: 300, height: 4, background: borderColor, borderRadius: 2 }}>
-                    <div style={{ height: "100%", width: `${Math.min(100, (currentPage / totalPages) * 100)}%`, background: GREEN, borderRadius: 2, transition: "width .3s" }} />
-                  </div>
-                </div>
-              )}
-            </div>
+            /* — PDF renderer — fetch as ArrayBuffer to prevent iOS Apple Books interception — */
+            <PdfViewer
+              streamUrl={fileStreamUrl}
+              darkMode={darkMode}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              watermarkText={isSample ? "" : watermarkText}
+            />
           )
 
         ) : (

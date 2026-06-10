@@ -427,14 +427,15 @@ router.get("/bookstore/books/:id/stream", async (req: Request, res: Response): P
     : (fileType === "audio" ? book.audioUrl : book.fileUrl);
   if (!rawUrl) { res.status(404).send("File not available"); return; }
 
-  // iOS Safari intercepts application/epub+zip responses at the OS level and shows
-  // a native "Do you want to download stream.epub?" dialog even for XHR/Fetch calls.
-  // Serving as application/octet-stream prevents that; the JS frontend re-wraps the
-  // binary into a Blob with the correct MIME type before passing to epub.js.
-  const isEpubFile = rawUrl.toLowerCase().includes(".epub");
-  function safeContentType(original: string | null): string {
-    if (!original || original.includes("epub")) return "application/octet-stream";
-    return original;
+  // iOS Safari intercepts known MIME types (application/epub+zip, application/pdf) at
+  // the OS level and hands them off to Apple Books even for XHR/Fetch calls — before
+  // JS can consume the response. Serving every book file as application/octet-stream
+  // prevents that. The JS frontend re-wraps the binary into a Blob with the correct
+  // MIME type before passing it to the renderer (epub.js or a PDF blob iframe).
+  const lowerUrl = rawUrl.toLowerCase();
+  const isBookFile = lowerUrl.includes(".epub") || lowerUrl.includes(".pdf");
+  function safeContentType(_original: string | null): string {
+    return "application/octet-stream";
   }
 
   try {
@@ -455,7 +456,7 @@ router.get("/bookstore/books/:id/stream", async (req: Request, res: Response): P
         if (lk === "content-disposition" || lk === "content-type") return; // override below
         res.setHeader(key, value);
       });
-      res.setHeader("Content-Type", isEpubFile ? "application/octet-stream" : safeContentType(gcsResponse.headers.get("content-type")));
+      res.setHeader("Content-Type", isBookFile ? "application/octet-stream" : safeContentType(gcsResponse.headers.get("content-type")));
       res.setHeader("Content-Disposition", "inline");
       res.setHeader("X-Content-Type-Options", "nosniff");
       if (gcsResponse.body) {
@@ -468,7 +469,7 @@ router.get("/bookstore/books/:id/stream", async (req: Request, res: Response): P
       // External URL — proxy via fetch
       const upstream = await fetch(rawUrl);
       if (!upstream.ok) { res.status(502).send("File unavailable"); return; }
-      const ct = isEpubFile ? "application/octet-stream" : safeContentType(upstream.headers.get("content-type"));
+      const ct = isBookFile ? "application/octet-stream" : safeContentType(upstream.headers.get("content-type"));
       res.status(200)
         .setHeader("Content-Type", ct)
         .setHeader("Content-Disposition", "inline")

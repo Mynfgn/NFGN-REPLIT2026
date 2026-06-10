@@ -599,6 +599,7 @@ router.get("/replicated/:username", async (req, res): Promise<void> => {
       role: user.role, status: user.status, referralCode: user.referralCode,
       sponsorId: user.sponsorId ?? null, avatar: user.avatar ?? null, phone: user.phone ?? null,
       isProMember: user.isProMember, createdAt: user.createdAt.toISOString(),
+      city: user.city ?? null, state: user.state ?? null, bio: user.bookAProBio ?? null,
     },
     featuredProducts: featuredProducts.map(p => ({
       id: p.id, name: p.name, slug: p.slug, description: p.description,

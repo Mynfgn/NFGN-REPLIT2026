@@ -186,7 +186,7 @@ export function AdminOrdersPage() {
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {order.userName} • {order.paymentMethod}
+                          {order.userName} • {order.paymentMethod === "dollar_credit" ? "$-Credit" : order.paymentMethod}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {new Date(order.createdAt).toLocaleString()}
@@ -251,7 +251,7 @@ export function AdminOrdersPage() {
                             ))}
                           </SelectContent>
                         </Select>
-                        {order.paymentMethod === "cod" && (
+                        {order.paymentMethod === "cod" && order.paymentMethod !== "dollar_credit" && (
                           <Select
                             value={order.paymentStatus}
                             onValueChange={(s) => handlePaymentStatusChange(order.id, s)}

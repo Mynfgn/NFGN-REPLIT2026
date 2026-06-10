@@ -418,6 +418,10 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
 
   const orderNumber = `NFGN-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
+  // When the wallet covers the entire order the stored payment method should
+  // reflect that — not whatever checkout option the user had previously selected.
+  const effectivePaymentMethod = walletCoversAll ? "dollar_credit" : paymentMethod;
+
   // Determine payment status
   let paymentStatus: string;
   if (walletCoversAll) {
@@ -432,7 +436,7 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
     orderNumber,
     userId: currentUser.id,
     status: "pending",
-    paymentMethod,
+    paymentMethod: effectivePaymentMethod,
     paymentStatus,
     subtotal: String(subtotal),
     tax: String(tax),

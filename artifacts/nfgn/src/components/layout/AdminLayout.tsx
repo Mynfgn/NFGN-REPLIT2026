@@ -72,6 +72,23 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     { name: "Users", href: "/admin/users", icon: Users },
     { name: "Register", href: "/dashboard/register-new-pro", icon: UserPlus },
     { name: "Shop", href: "/shop?from=admin", icon: Store },
+    { name: "Book Store & Library", href: "/admin/bookstore", icon: BookOpen },
+    {
+      name: "Health & Wellness",
+      href: "/dashboard/health",
+      icon: Leaf,
+      exact: true,
+      children: [
+        { name: "Wellness Hub",              href: "/dashboard/health",              icon: Activity },
+        { name: "My Health Profile",         href: "/dashboard/health/profile",      icon: UserCircle },
+        { name: "Herb & Supplement Library", href: "/dashboard/health/library",      icon: FlaskConical },
+        { name: "Weight & Water Tracker",    href: "/dashboard/health/tracker",      icon: Scale },
+        { name: "Calorie Tracker",           href: "/dashboard/health/education",    icon: Flame },
+        { name: "Nutrition Guide",           href: "/dashboard/health/nutrition",    icon: Apple },
+        { name: "Exercise Plans",            href: "/dashboard/health/exercise",     icon: Dumbbell },
+        { name: "AI Health Assistant",       href: "/dashboard/health/ai-assistant", icon: Bot },
+      ],
+    },
     {
       name: "Products",
       href: "/admin/products",
@@ -132,23 +149,6 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     { name: "Reports", href: "/admin/reports", icon: BarChart },
     { name: "Genealogy", href: "/admin/genealogy", icon: Network },
     { name: "Da' Money Calculator", href: "/dashboard/calculator", icon: Calculator },
-    {
-      name: "Health & Wellness",
-      href: "/dashboard/health",
-      icon: Leaf,
-      exact: true,
-      children: [
-        { name: "Wellness Hub",              href: "/dashboard/health",              icon: Activity },
-        { name: "My Health Profile",         href: "/dashboard/health/profile",      icon: UserCircle },
-        { name: "Herb & Supplement Library", href: "/dashboard/health/library",      icon: FlaskConical },
-        { name: "Weight & Water Tracker",    href: "/dashboard/health/tracker",      icon: Scale },
-        { name: "Calorie Tracker",           href: "/dashboard/health/education",    icon: Flame },
-        { name: "Nutrition Guide",           href: "/dashboard/health/nutrition",    icon: Apple },
-        { name: "Exercise Plans",            href: "/dashboard/health/exercise",     icon: Dumbbell },
-        { name: "AI Health Assistant",       href: "/dashboard/health/ai-assistant", icon: Bot },
-      ],
-    },
-    { name: "Book Store & Library", href: "/admin/bookstore", icon: BookOpen },
     { name: "Profile Management", href: "/admin/profile", icon: UserCircle },
   ];
 

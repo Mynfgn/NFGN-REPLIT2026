@@ -1,20 +1,30 @@
 import { Router, type IRouter } from "express";
-import { db, cartItemsTable, productsTable, usersTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { db, cartItemsTable, productsTable, usersTable, booksTable } from "@workspace/db";
+import { eq, and, isNotNull } from "drizzle-orm";
 import { requireAuth } from "../lib/auth";
 
 const router: IRouter = Router();
 
 async function buildCart(userId: number) {
-  const items = await db.select({
+  // Physical product rows (productId is set)
+  const productRows = await db.select({
     cart: cartItemsTable,
     product: productsTable,
   }).from(cartItemsTable)
     .leftJoin(productsTable, eq(cartItemsTable.productId, productsTable.id))
-    .where(eq(cartItemsTable.userId, userId));
+    .where(and(eq(cartItemsTable.userId, userId), isNotNull(cartItemsTable.productId)));
+
+  // Digital book rows (bookId is set)
+  const bookRows = await db.select({
+    cart: cartItemsTable,
+    book: booksTable,
+  }).from(cartItemsTable)
+    .innerJoin(booksTable, eq(cartItemsTable.bookId, booksTable.id))
+    .where(and(eq(cartItemsTable.userId, userId), isNotNull(cartItemsTable.bookId)));
 
   let subtotal = 0;
-  const cartItems = items.map(({ cart, product }) => {
+
+  const productItems = productRows.map(({ cart, product }) => {
     if (!product) return null;
     const basePrice = parseFloat(product.price);
     const isDonation = product.isDonation || product.isChurchDonation;
@@ -27,6 +37,7 @@ async function buildCart(userId: number) {
     return {
       id: cart.id,
       productId: cart.productId,
+      bookId: null as number | null,
       productName: product.name,
       productImage: product.image ?? null,
       price,
@@ -37,8 +48,33 @@ async function buildCart(userId: number) {
       cvLineTotal: cvPerUnit * cart.quantity,
       isDonation: !!isDonation,
       donationMinAmount: product.donationMinAmount != null ? parseFloat(product.donationMinAmount) : null,
+      isDigitalBook: false as boolean,
     };
   }).filter(Boolean);
+
+  const bookItems = bookRows.map(({ cart, book }) => {
+    const price = book.isFree ? 0 : parseFloat(book.price);
+    subtotal += price;
+    const cvPerUnit = Number(book.cv ?? 0);
+    return {
+      id: cart.id,
+      productId: null as number | null,
+      bookId: cart.bookId,
+      productName: `${book.title} (Digital Book)`,
+      productImage: book.coverImage ?? null,
+      price,
+      customPrice: null as number | null,
+      quantity: 1,
+      lineTotal: price,
+      cvPerUnit,
+      cvLineTotal: cvPerUnit,
+      isDonation: false,
+      donationMinAmount: null as number | null,
+      isDigitalBook: true,
+    };
+  });
+
+  const cartItems = [...productItems, ...bookItems].filter(Boolean);
 
   return {
     items: cartItems,

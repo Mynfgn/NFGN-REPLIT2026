@@ -60,51 +60,62 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle }: {
   useEffect(() => {
     if (!containerRef.current) return;
     let destroyed = false;
+    let blobUrl: string | null = null;
 
     setEpubLoading(true);
     setEpubError("");
 
-    // epub.js is loaded as a CDN global in index.html (window.ePub)
-    Promise.resolve().then(() => {
-      if (destroyed) return;
-      const ePub = (window as Window).ePub;
-      if (!ePub) { setEpubError("EPUB reader not available. Please refresh the page."); setEpubLoading(false); return; }
-      const epubBook = ePub(streamUrl);
-      bookRef.current = epubBook;
+    // Fetch the EPUB as an ArrayBuffer first, then create a blob URL.
+    // This prevents Safari iOS from intercepting application/epub+zip and
+    // showing a native "Do you want to download stream.epub?" dialog.
+    (async () => {
+      try {
+        const resp = await fetch(streamUrl);
+        if (!resp.ok) throw new Error(`Could not load book (HTTP ${resp.status})`);
+        const buffer = await resp.arrayBuffer();
+        if (destroyed) return;
 
-      const rendition = epubBook.renderTo(containerRef.current!, {
-        width: "100%",
-        height: "100%",
-        spread: "none",
-        flow: "paginated",
-      });
-      renditionRef.current = rendition;
+        blobUrl = URL.createObjectURL(new Blob([buffer], { type: "application/epub+zip" }));
 
-      rendition.themes.fontSize(`${fontSize}px`);
-      if (darkMode) {
-        rendition.themes.register("dark", {
-          body: { background: "#1a1a1a !important", color: "#e5e5e5 !important" },
+        const ePub = (window as Window).ePub;
+        if (!ePub) { setEpubError("EPUB reader not available. Please refresh the page."); setEpubLoading(false); return; }
+
+        const epubBook = ePub(blobUrl);
+        bookRef.current = epubBook;
+
+        const rendition = epubBook.renderTo(containerRef.current!, {
+          width: "100%",
+          height: "100%",
+          spread: "none",
+          flow: "paginated",
         });
-        rendition.themes.select("dark");
-      } else {
-        rendition.themes.register("light", {
-          body: { background: "#ffffff !important", color: "#1a1a1a !important" },
+        renditionRef.current = rendition;
+
+        rendition.themes.fontSize(`${fontSize}px`);
+        if (darkMode) {
+          rendition.themes.register("dark", { body: { background: "#1a1a1a !important", color: "#e5e5e5 !important" } });
+          rendition.themes.select("dark");
+        } else {
+          rendition.themes.register("light", { body: { background: "#ffffff !important", color: "#1a1a1a !important" } });
+          rendition.themes.select("light");
+        }
+
+        rendition.display()
+          .then(() => { if (!destroyed) { setEpubReady(true); setEpubLoading(false); } })
+          .catch((e: any) => { if (!destroyed) { setEpubError(e?.message ?? "Could not open this book."); setEpubLoading(false); } });
+
+        epubBook.ready.catch((e: any) => {
+          if (!destroyed) { setEpubError(e?.message ?? "Book failed to load."); setEpubLoading(false); }
         });
-        rendition.themes.select("light");
+      } catch (e: any) {
+        if (!destroyed) { setEpubError(e?.message ?? "Failed to download book."); setEpubLoading(false); }
       }
-
-      rendition.display()
-        .then(() => { if (!destroyed) { setEpubReady(true); setEpubLoading(false); } })
-        .catch((e: any) => { if (!destroyed) { setEpubError(e?.message ?? "Could not open this book."); setEpubLoading(false); } });
-
-      epubBook.ready.catch((e: any) => {
-        if (!destroyed) { setEpubError(e?.message ?? "Book failed to load."); setEpubLoading(false); }
-      });
-    });
+    })();
 
     return () => {
       destroyed = true;
       bookRef.current?.destroy?.();
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
     };
   }, [streamUrl]);
 

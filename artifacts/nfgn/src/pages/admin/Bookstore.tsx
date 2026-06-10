@@ -50,9 +50,14 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function KpiCard({ label, value, sub, color, icon: Icon }: { label: string; value: string | number; sub?: string; color: string; icon: any }) {
+function KpiCard({ label, value, sub, color, icon: Icon, onClick }: { label: string; value: string | number; sub?: string; color: string; icon: any; onClick?: () => void }) {
   return (
-    <div style={{ background: "#fff", border: `1.5px solid ${color}44`, borderRadius: 12, padding: "16px 18px" }}>
+    <div
+      onClick={onClick}
+      style={{ background: "#fff", border: `1.5px solid ${color}44`, borderRadius: 12, padding: "16px 18px", cursor: onClick ? "pointer" : "default", transition: "box-shadow .15s" }}
+      onMouseEnter={e => { if (onClick) (e.currentTarget as HTMLDivElement).style.boxShadow = `0 4px 16px ${color}33`; }}
+      onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "none"; }}
+    >
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
         <div style={{ width: 32, height: 32, borderRadius: 8, background: `${color}18`, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <Icon size={16} color={color} />
@@ -61,6 +66,7 @@ function KpiCard({ label, value, sub, color, icon: Icon }: { label: string; valu
       </div>
       <div style={{ fontSize: 26, fontWeight: 900, color: DARK }}>{value}</div>
       {sub && <div style={{ fontSize: 11, color: "#888", marginTop: 4 }}>{sub}</div>}
+      {onClick && <div style={{ fontSize: 10, color: color, marginTop: 6, fontWeight: 700 }}>Click to view →</div>}
     </div>
   );
 }
@@ -258,10 +264,23 @@ export function AdminBookstorePage() {
     } catch {}
   }
 
-  useEffect(() => { loadStats(); }, []);
+  useEffect(() => { loadStats(); loadBooks(); }, []);
   useEffect(() => { if (tab === "books") loadBooks(); }, [tab, statusFilter]);
   useEffect(() => { if (tab === "authors") loadApplications(); }, [tab]);
   useEffect(() => { if (tab === "royalties") loadDefRoyalty(); }, [tab]);
+
+  async function buyBook(book: Book) {
+    try {
+      if (book.isFree) {
+        await apiFetch(`/api/bookstore/books/${book.id}/purchase`, { method: "POST" });
+        toast({ title: "Added to your library!", description: "Visit your library to read it." });
+      } else {
+        await apiFetch(`/api/bookstore/cart/books/${book.id}`, { method: "POST" });
+        toast({ title: `"${book.title}" added to cart!`, description: "Go to your cart to complete checkout." });
+        window.location.href = "/shop";
+      }
+    } catch (e: any) { toast({ title: "Error", description: e.message, variant: "destructive" }); }
+  }
 
   async function handleBookStatus(id: number, status: string, flag?: { key: string; val: boolean }) {
     try {
@@ -412,13 +431,52 @@ export function AdminBookstorePage() {
       {tab === "overview" && stats && (
         <>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 28 }}>
-            <KpiCard label="Total Books" value={stats.totalBooks} sub={`${stats.approvedBooks} live`} color={GREEN} icon={BookOpen} />
-            <KpiCard label="Pending Approval" value={stats.pendingBooks} sub="awaiting review" color={GOLD} icon={Clock} />
+            <KpiCard label="Total Books" value={stats.totalBooks} sub={`${stats.approvedBooks} live`} color={GREEN} icon={BookOpen} onClick={() => setTab("books")} />
+            <KpiCard label="Pending Approval" value={stats.pendingBooks} sub="awaiting review" color={GOLD} icon={Clock} onClick={stats.pendingBooks > 0 ? () => setTab("books") : undefined} />
             <KpiCard label="Total Sales" value={stats.totalPurchases} sub="all time" color="#1d6fa4" icon={TrendingUp} />
             <KpiCard label="Total Revenue" value={`$${stats.totalRevenue.toFixed(2)}`} sub="platform + royalties" color="#7B2D8B" icon={DollarSign} />
             <KpiCard label="Monthly Revenue" value={`$${stats.monthlyRevenue.toFixed(2)}`} sub="this month" color={GREEN} icon={TrendingUp} />
-            <KpiCard label="Approved Authors" value={stats.totalAuthors} sub={`${stats.pendingAuthors} pending`} color="#B5651D" icon={Users} />
+            <KpiCard label="Approved Authors" value={stats.totalAuthors} sub={`${stats.pendingAuthors} pending`} color="#B5651D" icon={Users} onClick={stats.pendingAuthors > 0 ? () => setTab("authors") : undefined} />
           </div>
+
+          {/* Latest books shelf */}
+          {books.filter(b => b.status === "approved").length > 0 && (
+            <div style={{ background: "#fff", border: "1.5px solid #e5e7eb", borderRadius: 14, padding: "20px 22px", marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                <div style={{ fontWeight: 900, fontSize: 15, color: DARK }}>📚 Book Shelf — Latest Releases</div>
+                <button onClick={() => setTab("books")} style={{ background: "none", border: "none", color: GREEN, fontWeight: 700, fontSize: 12, cursor: "pointer" }}>View All →</button>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: 14 }}>
+                {books.filter(b => b.status === "approved").slice(0, 8).map(book => {
+                  const BTypeIcon = ({ ebook: BookOpen, audiobook: Mic, training_manual: FileText, guide: GraduationCap, bible_study: BookMarked } as Record<string, any>)[book.type] ?? BookOpen;
+                  return (
+                    <div key={book.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer" }} onClick={() => setTab("books")}>
+                      {/* Book cover */}
+                      <div style={{ width: "100%", aspectRatio: "2/3", background: `linear-gradient(135deg, ${GREEN}22, ${GOLD}22)`, borderRadius: 8, overflow: "hidden", boxShadow: "0 4px 12px rgba(0,0,0,0.12)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+                        {book.coverImage ? (
+                          <img src={book.coverImage} alt={book.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        ) : (
+                          <BTypeIcon size={32} color={GREEN} style={{ opacity: 0.4 }} />
+                        )}
+                        {book.isFeatured && <div style={{ position: "absolute", top: 4, left: 4, background: GOLD, color: "#fff", borderRadius: 4, padding: "1px 5px", fontSize: 9, fontWeight: 800 }}>★</div>}
+                        {book.isBestSeller && <div style={{ position: "absolute", top: 4, right: 4, background: "#0369a1", color: "#fff", borderRadius: 4, padding: "1px 5px", fontSize: 9, fontWeight: 800 }}>🏆</div>}
+                      </div>
+                      <div style={{ textAlign: "center", width: "100%" }}>
+                        <div style={{ fontSize: 11, fontWeight: 800, color: DARK, lineHeight: 1.3, marginBottom: 2, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{book.title}</div>
+                        <div style={{ fontSize: 10, color: "#888", marginBottom: 4 }}>{book.authorName}</div>
+                        <div style={{ fontSize: 10, fontWeight: 800, color: book.isFree ? GREEN : DARK }}>{book.isFree ? "Free" : `$${book.price.toFixed(2)}`}</div>
+                        <button
+                          onClick={e => { e.stopPropagation(); buyBook(book); }}
+                          style={{ marginTop: 4, width: "100%", background: GOLD, color: "#fff", border: "none", borderRadius: 6, padding: "4px 0", fontSize: 10, fontWeight: 800, cursor: "pointer" }}
+                        >🛒 Buy</button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div style={{ background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 12, padding: "20px 22px" }}>
             <div style={{ fontWeight: 800, fontSize: 14, color: DARK, marginBottom: 12 }}>Quick Actions</div>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -431,6 +489,11 @@ export function AdminBookstorePage() {
               <Button onClick={() => setTab("authors")} variant="outline" style={{ fontWeight: 700 }}>
                 Author Applications ({stats.pendingAuthors})
               </Button>
+              <a href="/dashboard/library" style={{ textDecoration: "none" }}>
+                <Button variant="outline" style={{ fontWeight: 700 }}>
+                  <BookOpen size={14} style={{ marginRight: 6 }} /> View Books Library
+                </Button>
+              </a>
             </div>
           </div>
         </>
@@ -511,6 +574,9 @@ export function AdminBookstorePage() {
                       )}
                       {book.status === "approved" && (
                         <>
+                          <Button size="sm" onClick={() => buyBook(book)} style={{ background: GOLD, color: "#fff", fontWeight: 700, fontSize: 12, padding: "5px 12px", border: "none" }}>
+                            🛒 Buy
+                          </Button>
                           <Button size="sm" onClick={() => toggleFlag(book.id, "isFeatured", !book.isFeatured)} variant="outline" style={{ fontWeight: 700, fontSize: 12, padding: "5px 12px", color: GOLD, borderColor: GOLD }}>
                             <Star size={12} style={{ marginRight: 4 }} /> {book.isFeatured ? "Unfeature" : "Feature"}
                           </Button>

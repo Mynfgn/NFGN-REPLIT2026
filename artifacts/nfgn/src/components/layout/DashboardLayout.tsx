@@ -43,25 +43,34 @@ type NavItem =
 const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[] = [
   {
     items: [
-      { name: "Overview",           href: "/dashboard",         icon: LayoutDashboard, exact: true },
-      { name: "Profile Management", href: "/dashboard/profile", icon: UserCircle },
+      { name: "Overview",           href: "/dashboard",           icon: LayoutDashboard, exact: true },
+      { name: "Profile Management", href: "/dashboard/profile",   icon: UserCircle },
       { name: "Genealogy",          href: "/dashboard/genealogy", icon: Users, minTier: "retail_community_builder" },
+      {
+        name: "Registration", icon: UserPlus, group: "registration", minTier: "retail_community_builder",
+        children: [
+          { name: "Register New Member",          href: "/dashboard/registration" },
+          { name: "Registration Hub",             href: "/dashboard/registration" },
+          { name: "Register A New Pro Member",    href: "/dashboard/register-new-pro" },
+          { name: "New Member Registration List", href: "/dashboard/member-outreach" },
+        ],
+      },
     ],
   },
   {
     label: "E-Commerce",
     items: [
-      { name: "Shop",          href: "/shop",                    icon: Store },
-      { name: "Bookings",      href: "/dashboard/bookings",      icon: Calendar },
-      { name: "Pay As You Go",        href: "/dashboard/payg-bookings", icon: Zap },
-      { name: "Send A Gift/Donation", href: "/shop?section=giving",    icon: Heart },
+      { name: "Shop",               href: "/shop",                    icon: Store },
+      { name: "Bookings",           href: "/dashboard/bookings",      icon: Calendar },
+      { name: "Pay As You Go",      href: "/dashboard/payg-bookings", icon: Zap },
+      { name: "Send A Gift/Donation", href: "/shop?section=giving",   icon: Heart },
       {
         name: "Book Store & Library",
         icon: BookOpen, group: "bookstore",
         children: [
-          { name: "Browse Bookstore",    href: "/dashboard/bookstore" },
-          { name: "My Digital Library",  href: "/dashboard/library" },
-          { name: "Become an Author",    href: "/dashboard/author/apply" },
+          { name: "Browse Bookstore",   href: "/dashboard/bookstore" },
+          { name: "My Digital Library", href: "/dashboard/library" },
+          { name: "Become an Author",   href: "/dashboard/author/apply" },
         ],
       },
     ],
@@ -69,43 +78,11 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
   {
     label: "My Account",
     items: [
-      { name: "Orders",               href: "/dashboard/orders",              icon: ShoppingBag },
-      { name: "Subscriptions",        href: "/dashboard/subscriptions",       icon: RefreshCw },
-      { name: "Mailbox",              href: "/dashboard/mailbox",             icon: Inbox },
-      { name: "My Referral Link",     href: "/dashboard/referral",            icon: Link2 },
-      { name: "Get the App",          href: "/dashboard/tools/get-the-app",   icon: Home },
-    ],
-  },
-  {
-    label: "Services",
-    items: [
-      {
-        name: "NFGN Health & Wellness",
-        icon: Leaf, group: "health",
-        children: [
-          { name: "Wellness Hub",               href: "/dashboard/health" },
-          { name: "My Health Profile",          href: "/dashboard/health/profile" },
-          { name: "Herb & Supplement Library",  href: "/dashboard/health/library" },
-          { name: "Weight & Water Tracker",     href: "/dashboard/health/tracker" },
-          { name: "Calorie Tracker",            href: "/dashboard/health/education" },
-          { name: "Nutrition Guide",            href: "/dashboard/health/nutrition" },
-          { name: "Exercise Plans",             href: "/dashboard/health/exercise" },
-          { name: "AI Health Assistant",        href: "/dashboard/health/ai-assistant" },
-        ],
-      },
-    ],
-  },
-  {
-    label: "Dollar Credit ($-Credit)",
-    minTier: "referring_retail_member",
-    items: [
-      { name: "My $-Credit Wallet", href: "/dashboard/wallet", icon: CreditCard, minTier: "referring_retail_member" },
-    ],
-  },
-  {
-    label: "Business",
-    minTier: "retail_community_builder",
-    items: [
+      { name: "Orders",               href: "/dashboard/orders",            icon: ShoppingBag },
+      { name: "Subscriptions",        href: "/dashboard/subscriptions",     icon: RefreshCw },
+      { name: "Mailbox",              href: "/dashboard/mailbox",           icon: Inbox },
+      { name: "My Referral Link",     href: "/dashboard/referral",          icon: Link2 },
+      { name: "Get the App",          href: "/dashboard/tools/get-the-app", icon: Home },
       {
         name: "Commissions", icon: Award, group: "commissions-sub", minTier: "retail_community_builder",
         children: [
@@ -117,16 +94,32 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
           { name: "Pro Member Bonus", href: "/dashboard/pro-member-bonuses" },
         ],
       },
+    ],
+  },
+  {
+    label: "Services",
+    items: [
       {
-        name: "Registration", icon: UserPlus, group: "registration", minTier: "retail_community_builder",
+        name: "NFGN Health & Wellness",
+        icon: Leaf, group: "health",
         children: [
-          { name: "Register New Member",          href: "/dashboard/registration" },
-          { name: "Registration Hub",             href: "/dashboard/registration" },
-          { name: "Register A New Pro Member",    href: "/dashboard/register-new-pro" },
-          { name: "New Member Registration List", href: "/dashboard/member-outreach" },
+          { name: "Wellness Hub",              href: "/dashboard/health" },
+          { name: "My Health Profile",         href: "/dashboard/health/profile" },
+          { name: "Herb & Supplement Library", href: "/dashboard/health/library" },
+          { name: "Weight & Water Tracker",    href: "/dashboard/health/tracker" },
+          { name: "Calorie Tracker",           href: "/dashboard/health/education" },
+          { name: "Nutrition Guide",           href: "/dashboard/health/nutrition" },
+          { name: "Exercise Plans",            href: "/dashboard/health/exercise" },
+          { name: "AI Health Assistant",       href: "/dashboard/health/ai-assistant" },
         ],
       },
-      { name: "Bill Payer Program", href: "/dashboard/bpp", icon: Home, minTier: "pro_member" },
+    ],
+  },
+  {
+    label: "Dollar Credit ($-Credit)",
+    minTier: "referring_retail_member",
+    items: [
+      { name: "My $-Credit Wallet", href: "/dashboard/wallet", icon: CreditCard, minTier: "referring_retail_member" },
     ],
   },
   {
@@ -168,7 +161,8 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
           { name: "Da' Money Calculator",        href: "/dashboard/calculator" },
         ],
       },
-      { name: "Reports", href: "/dashboard/reports", icon: BarChart3, minTier: "pro_member" },
+      { name: "Bill Payer Program", href: "/dashboard/bpp",     icon: Home,     minTier: "pro_member" },
+      { name: "Reports",            href: "/dashboard/reports", icon: BarChart3, minTier: "pro_member" },
     ],
   },
 ];

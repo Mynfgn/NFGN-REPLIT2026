@@ -41,7 +41,7 @@ interface Book {
   id: number; title: string; subtitle?: string; authorName: string; category: string; type: string;
   shortDescription?: string; description?: string; coverImage?: string;
   price: number; isFree: boolean; isFeatured: boolean; isBestSeller: boolean; isStaffPick: boolean;
-  totalSales: number; purchased: boolean;
+  totalSales: number; purchased: boolean; hasSample: boolean;
 }
 
 function BookCard({ book, onPurchase, purchasing }: { book: Book; onPurchase: (b: Book) => void; purchasing: boolean }) {
@@ -89,10 +89,19 @@ function BookCard({ book, onPurchase, purchasing }: { book: Book; onPurchase: (b
               </Button>
             </a>
           ) : (
-            <Button size="sm" onClick={() => onPurchase(book)} disabled={purchasing} style={{ background: DARK, color: "#fff", fontWeight: 700, fontSize: 12, padding: "6px 14px" }}>
-              {purchasing ? <Loader2 size={12} style={{ marginRight: 4, animation: "spin 1s linear infinite" }} /> : <ShoppingCart size={12} style={{ marginRight: 4 }} />}
-              {book.isFree ? "Add Free" : "Buy Now"}
-            </Button>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end" }}>
+              <Button size="sm" onClick={() => onPurchase(book)} disabled={purchasing} style={{ background: DARK, color: "#fff", fontWeight: 700, fontSize: 12, padding: "6px 14px" }}>
+                {purchasing ? <Loader2 size={12} style={{ marginRight: 4, animation: "spin 1s linear infinite" }} /> : <ShoppingCart size={12} style={{ marginRight: 4 }} />}
+                {book.isFree ? "Add Free" : "Buy Now"}
+              </Button>
+              {book.hasSample && (
+                <a href={`/dashboard/read/${book.id}?sample=true`} style={{ textDecoration: "none" }}>
+                  <button style={{ background: "none", border: `1.5px solid ${GREEN}`, color: GREEN, borderRadius: 6, padding: "4px 12px", fontWeight: 700, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+                    <BookOpen size={10} /> Read Sample
+                  </button>
+                </a>
+              )}
+            </div>
           )}
         </div>
       </div>

@@ -15,6 +15,7 @@ export const booksTable = pgTable("books", {
   type: text("type").notNull().default("ebook"),
   coverImage: text("cover_image"),
   fileUrl: text("file_url"),
+  sampleFileUrl: text("sample_file_url"),
   audioUrl: text("audio_url"),
   price: numeric("price", { precision: 10, scale: 2 }).notNull().default("0"),
   cv: numeric("cv", { precision: 10, scale: 2 }).notNull().default("0"),

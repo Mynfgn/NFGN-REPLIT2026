@@ -1,2 +1,3 @@
 - [Authorize.net Accept.js constraints](authorizenet-accept-js.md) — must be static script tag in index.html; dynamic injection = E_WC_03; fails inside iframes
 - [Subscription feature](subscription-feature.md) — subscriptionsTable added; route at /api/subscriptions; dashboard at /dashboard/subscriptions
+- [CDN-only libraries](cdn-only-libraries.md) — epubjs and similar packages blocked by npm package firewall (403); load as static script tag in index.html from unpkg/cdnjs; declare as window global in src/types/

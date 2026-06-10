@@ -69,13 +69,13 @@ interface Book {
   id: number; title: string; subtitle?: string; authorName: string; category: string; type: string;
   price: number; cv: number; isFree: boolean; status: string; isFeatured: boolean; isBestSeller: boolean; isStaffPick: boolean;
   totalSales: number; createdAt: string; authorRoyaltyPct: number; platformFeePct: number;
-  description?: string; shortDescription?: string; coverImage?: string; fileUrl?: string; audioUrl?: string;
+  description?: string; shortDescription?: string; coverImage?: string; fileUrl?: string; sampleFileUrl?: string; audioUrl?: string;
   pageCount?: number; duration?: string; language?: string; tags?: string; isbn?: string; adminNote?: string;
 }
 interface AuthorApp { id: number; userId: number; name: string; bio?: string; website?: string; writingExperience?: string; categories?: string; status: string; adminNote?: string; createdAt: string; }
 interface Stats { totalBooks: number; pendingBooks: number; approvedBooks: number; totalPurchases: number; totalAuthors: number; pendingAuthors: number; totalRevenue: number; monthlyRevenue: number; }
 
-const BLANK_FORM = { title: "", subtitle: "", authorName: "", shortDescription: "", description: "", category: "Health & Wellness", type: "ebook", price: "", cv: "0", isFree: false, authorRoyaltyPct: "70", platformFeePct: "30", coverImage: "", fileUrl: "", audioUrl: "", language: "English", tags: "", isbn: "", pageCount: "", duration: "", isFeatured: false, isStaffPick: false };
+const BLANK_FORM = { title: "", subtitle: "", authorName: "", shortDescription: "", description: "", category: "Health & Wellness", type: "ebook", price: "", cv: "0", isFree: false, authorRoyaltyPct: "70", platformFeePct: "30", coverImage: "", fileUrl: "", sampleFileUrl: "", audioUrl: "", language: "English", tags: "", isbn: "", pageCount: "", duration: "", isFeatured: false, isStaffPick: false };
 
 function BookForm({ value, onChange, onSubmit, saving, submitLabel }: {
   value: typeof BLANK_FORM;
@@ -183,6 +183,9 @@ function BookForm({ value, onChange, onSubmit, saving, submitLabel }: {
       </div>
       <div style={{ marginBottom: 14 }}>
         <FileUploadField label="Book File (PDF / EPUB)" value={value.fileUrl} onChange={v => set("fileUrl", v)} placeholder="https://… or upload from computer" kind="document" helperText="Buyers access this file securely after purchase" />
+      </div>
+      <div style={{ marginBottom: 14 }}>
+        <FileUploadField label="Sample / Preview File (PDF / EPUB — optional)" value={value.sampleFileUrl} onChange={v => set("sampleFileUrl", v)} placeholder="https://… or upload from computer" kind="document" helperText="Free preview — shown to non-purchasers as a 'Read Sample' teaser" />
       </div>
       <div style={{ marginBottom: 14 }}>
         <FileUploadField label="Audio File (MP3 / M4A)" value={value.audioUrl} onChange={v => set("audioUrl", v)} placeholder="https://… or upload from computer (audiobooks only)" kind="audio" helperText="Only required for Audiobook content type" />
@@ -325,6 +328,7 @@ export function AdminBookstorePage() {
       platformFeePct: String(book.platformFeePct),
       coverImage: book.coverImage ?? "",
       fileUrl: book.fileUrl ?? "",
+      sampleFileUrl: book.sampleFileUrl ?? "",
       audioUrl: book.audioUrl ?? "",
       language: book.language ?? "English",
       tags: book.tags ?? "",

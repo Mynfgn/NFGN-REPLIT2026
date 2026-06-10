@@ -10,6 +10,7 @@ import {
   ShieldCheck, Network, Star, Percent, Gift, Home, Clock, UserCircle,
   ChevronDown, ChevronRight, Briefcase, PackageCheck, Store, Megaphone,
   FileDown, List, Trophy, Heart, Gem, DollarSign, HandHeart, UserPlus, Zap, BookOpen,
+  Calculator, Leaf, Activity, FlaskConical, Scale, Flame, Apple, Dumbbell, Bot,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -42,11 +43,13 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   const isCommissionsSection = location.startsWith("/admin/referral-commissions") || location.startsWith("/admin/bonuses") || location.startsWith("/admin/bpp") || location.startsWith("/admin/commissions") || location.startsWith("/admin/pro-booking-commissions");
   const isProductsSection = location.startsWith("/admin/products");
   const isNFGNSection = location.startsWith("/admin/payg");
+  const isHealthSection = location.startsWith("/dashboard/health");
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     Orders: isOrdersSection,
     Commissions: isCommissionsSection,
     Products: isProductsSection,
     NFGN: isNFGNSection,
+    "Health & Wellness": isHealthSection,
   });
 
   const handleLogout = () => {
@@ -128,7 +131,34 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     { name: "Pro Compensation Settings", href: "/admin/compensation", icon: Percent },
     { name: "Reports", href: "/admin/reports", icon: BarChart },
     { name: "Genealogy", href: "/admin/genealogy", icon: Network },
-    { name: "Digital Book Store™", href: "/admin/bookstore", icon: BookOpen },
+    { name: "Da' Money Calculator", href: "/dashboard/calculator", icon: Calculator },
+    {
+      name: "Health & Wellness",
+      href: "/dashboard/health",
+      icon: Leaf,
+      exact: true,
+      children: [
+        { name: "Wellness Hub",              href: "/dashboard/health",              icon: Activity },
+        { name: "My Health Profile",         href: "/dashboard/health/profile",      icon: UserCircle },
+        { name: "Herb & Supplement Library", href: "/dashboard/health/library",      icon: FlaskConical },
+        { name: "Weight & Water Tracker",    href: "/dashboard/health/tracker",      icon: Scale },
+        { name: "Calorie Tracker",           href: "/dashboard/health/education",    icon: Flame },
+        { name: "Nutrition Guide",           href: "/dashboard/health/nutrition",    icon: Apple },
+        { name: "Exercise Plans",            href: "/dashboard/health/exercise",     icon: Dumbbell },
+        { name: "AI Health Assistant",       href: "/dashboard/health/ai-assistant", icon: Bot },
+      ],
+    },
+    {
+      name: "Book Store & Library",
+      href: "/admin/bookstore",
+      icon: BookOpen,
+      exact: true,
+      children: [
+        { name: "Manage Books",       href: "/admin/bookstore",            icon: BookOpen },
+        { name: "Browse Bookstore",   href: "/dashboard/bookstore",        icon: Star },
+        { name: "My Library",         href: "/dashboard/library",          icon: List },
+      ],
+    },
     { name: "Profile Management", href: "/admin/profile", icon: UserCircle },
   ];
 

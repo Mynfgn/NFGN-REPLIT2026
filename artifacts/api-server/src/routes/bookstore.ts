@@ -32,6 +32,11 @@ function formatBook(b: typeof booksTable.$inferSelect, showFile = false, isAdmin
     // Capability flags for members (tells the Reader whether a file/audio track exists)
     hasFile: showFile ? b.fileUrl !== null : false,
     hasAudio: showFile ? b.audioUrl !== null : false,
+    hasSample: b.sampleFileUrl !== null,
+    // Derive file format so Reader can pick the right renderer (epub.js vs iframe)
+    fileType: b.fileUrl
+      ? (b.fileUrl.toLowerCase().includes(".epub") ? "epub" : "pdf")
+      : null,
     price: parseFloat(String(b.price)),
     cv: parseFloat(String(b.cv ?? "0")),
     isFree: b.isFree,
@@ -96,12 +101,12 @@ router.get("/bookstore/admin/books", requireAuth, requireAdmin, async (req, res)
 
 // ── ADMIN: Create book ─────────────────────────────────────────────
 router.post("/bookstore/admin/books", requireAuth, requireAdmin, async (req, res): Promise<void> => {
-  const { title, subtitle, authorName, description, shortDescription, category, type, coverImage, fileUrl, audioUrl, price, cv, isFree, pageCount, duration, language, tags, isbn, isFeatured, isStaffPick, authorRoyaltyPct, platformFeePct } = req.body;
+  const { title, subtitle, authorName, description, shortDescription, category, type, coverImage, fileUrl, sampleFileUrl, audioUrl, price, cv, isFree, pageCount, duration, language, tags, isbn, isFeatured, isStaffPick, authorRoyaltyPct, platformFeePct } = req.body;
   if (!title || !authorName) { res.status(400).json({ error: "title and authorName are required" }); return; }
   const [book] = await db.insert(booksTable).values({
     title, subtitle, slug: makeSlug(title), authorName, description, shortDescription,
     category: category ?? "general", type: type ?? "ebook",
-    coverImage, fileUrl, audioUrl,
+    coverImage, fileUrl, sampleFileUrl: sampleFileUrl ?? null, audioUrl,
     price: String(price ?? 0), cv: String(cv ?? 0), isFree: isFree ?? false,
     authorRoyaltyPct: String(authorRoyaltyPct ?? 70), platformFeePct: String(platformFeePct ?? 30),
     status: "approved", isFeatured: isFeatured ?? false, isStaffPick: isStaffPick ?? false,
@@ -130,7 +135,7 @@ router.patch("/bookstore/admin/books/:id/status", requireAuth, requireAdmin, asy
 // ── ADMIN: Update book details ────────────────────────────────────
 router.patch("/bookstore/admin/books/:id", requireAuth, requireAdmin, async (req, res): Promise<void> => {
   const id = parseInt(String(req.params.id));
-  const { title, subtitle, authorName, description, shortDescription, category, type, coverImage, fileUrl, audioUrl, price, cv, isFree, pageCount, duration, language, tags, isbn, authorRoyaltyPct, platformFeePct } = req.body;
+  const { title, subtitle, authorName, description, shortDescription, category, type, coverImage, fileUrl, sampleFileUrl, audioUrl, price, cv, isFree, pageCount, duration, language, tags, isbn, authorRoyaltyPct, platformFeePct } = req.body;
   const upd: Record<string, unknown> = {};
   if (title) upd.title = title;
   if (subtitle !== undefined) upd.subtitle = subtitle;
@@ -141,6 +146,7 @@ router.patch("/bookstore/admin/books/:id", requireAuth, requireAdmin, async (req
   if (type) upd.type = type;
   if (coverImage !== undefined) upd.coverImage = coverImage;
   if (fileUrl !== undefined) upd.fileUrl = fileUrl;
+  if (sampleFileUrl !== undefined) upd.sampleFileUrl = sampleFileUrl;
   if (audioUrl !== undefined) upd.audioUrl = audioUrl;
   if (price !== undefined) upd.price = String(price);
   if (cv !== undefined) upd.cv = String(cv);
@@ -406,15 +412,19 @@ router.get("/bookstore/books/:id/stream", async (req: Request, res: Response): P
   const [book] = await db.select().from(booksTable).where(and(eq(booksTable.id, bookId), eq(booksTable.status, "approved")));
   if (!book) { res.status(404).send("Book not found"); return; }
 
+  const isSample = req.query.sample === "true";
   const isAdmin = ["super_admin", "admin", "store_admin"].includes(user.role);
-  if (!book.isFree && !isAdmin) {
+  if (!isSample && !book.isFree && !isAdmin) {
     const [purchase] = await db.select().from(bookPurchasesTable)
       .where(and(eq(bookPurchasesTable.userId, user.id), eq(bookPurchasesTable.bookId, bookId)));
     if (!purchase) { res.status(403).send("Purchase required"); return; }
   }
 
   const fileType = String(req.query.type ?? "file");
-  const rawUrl = fileType === "audio" ? book.audioUrl : book.fileUrl;
+  // Sample mode: serve the sampleFileUrl (no purchase needed)
+  const rawUrl = isSample
+    ? (book.sampleFileUrl ?? null)
+    : (fileType === "audio" ? book.audioUrl : book.fileUrl);
   if (!rawUrl) { res.status(404).send("File not available"); return; }
 
   try {

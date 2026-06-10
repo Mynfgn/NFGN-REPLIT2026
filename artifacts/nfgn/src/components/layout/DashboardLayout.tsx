@@ -43,42 +43,77 @@ type NavItem =
 const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[] = [
   {
     items: [
-      { name: "Overview",           href: "/dashboard",              icon: LayoutDashboard, exact: true },
-      { name: "Profile Management", href: "/dashboard/profile",      icon: UserCircle },
+      { name: "Overview",           href: "/dashboard",         icon: LayoutDashboard, exact: true },
+      { name: "Profile Management", href: "/dashboard/profile", icon: UserCircle },
+    ],
+  },
+  {
+    label: "E-Commerce",
+    items: [
+      { name: "Shop",          href: "/shop",                    icon: Store },
+      { name: "Bookings",      href: "/dashboard/bookings",      icon: Calendar },
+      { name: "Pay As You Go", href: "/dashboard/payg-bookings", icon: Zap },
+      {
+        name: "Book Store & Library",
+        icon: BookOpen, group: "bookstore",
+        children: [
+          { name: "Browse Bookstore",    href: "/dashboard/bookstore" },
+          { name: "My Digital Library",  href: "/dashboard/library" },
+          { name: "Become an Author",    href: "/dashboard/author/apply" },
+        ],
+      },
     ],
   },
   {
     label: "My Account",
     items: [
-      { name: "Shop",               href: "/shop",                   icon: Store },
-      { name: "Orders",             href: "/dashboard/orders",       icon: ShoppingBag },
-      { name: "Subscriptions",      href: "/dashboard/subscriptions", icon: RefreshCw },
-      { name: "My Referral Link",   href: "/dashboard/referral",     icon: Link2 },
-      { name: "Get the App",        href: "/dashboard/tools/get-the-app", icon: Home },
-      { name: "Send A Gift/Donation", href: "/shop?section=giving",  icon: Heart },
+      { name: "Orders",               href: "/dashboard/orders",              icon: ShoppingBag },
+      { name: "Subscriptions",        href: "/dashboard/subscriptions",       icon: RefreshCw },
+      { name: "My Referral Link",     href: "/dashboard/referral",            icon: Link2 },
+      { name: "Get the App",          href: "/dashboard/tools/get-the-app",   icon: Home },
+      { name: "Send A Gift/Donation", href: "/shop?section=giving",           icon: Heart },
+    ],
+  },
+  {
+    label: "Services",
+    items: [
+      {
+        name: "NFGN Health & Wellness",
+        icon: Leaf, group: "health",
+        children: [
+          { name: "Wellness Hub",               href: "/dashboard/health" },
+          { name: "My Health Profile",          href: "/dashboard/health/profile" },
+          { name: "Herb & Supplement Library",  href: "/dashboard/health/library" },
+          { name: "Weight & Water Tracker",     href: "/dashboard/health/tracker" },
+          { name: "Calorie Tracker",            href: "/dashboard/health/education" },
+          { name: "Nutrition Guide",            href: "/dashboard/health/nutrition" },
+          { name: "Exercise Plans",             href: "/dashboard/health/exercise" },
+          { name: "AI Health Assistant",        href: "/dashboard/health/ai-assistant" },
+        ],
+      },
     ],
   },
   {
     label: "Dollar Credit ($-Credit)",
     minTier: "referring_retail_member",
     items: [
-      { name: "My $-Credit Wallet",  href: "/dashboard/wallet",     icon: CreditCard, minTier: "referring_retail_member" },
+      { name: "My $-Credit Wallet", href: "/dashboard/wallet", icon: CreditCard, minTier: "referring_retail_member" },
     ],
   },
   {
     label: "Business",
     minTier: "retail_community_builder",
     items: [
-      { name: "Genealogy",          href: "/dashboard/genealogy",    icon: Users, minTier: "retail_community_builder" },
+      { name: "Genealogy", href: "/dashboard/genealogy", icon: Users, minTier: "retail_community_builder" },
       {
         name: "Commissions", icon: Award, group: "commissions-sub", minTier: "retail_community_builder",
         children: [
-          { name: "Commissions",       href: "/dashboard/commissions" },
-          { name: "User Earnings",     href: "/dashboard/earnings" },
-          { name: "E-Wallet",          href: "/dashboard/wallet" },
-          { name: "Transfer Funds",    href: "/dashboard/transfer" },
-          { name: "Payouts",           href: "/dashboard/payouts" },
-          { name: "Pro Member Bonus",  href: "/dashboard/pro-member-bonuses" },
+          { name: "Commissions",      href: "/dashboard/commissions" },
+          { name: "User Earnings",    href: "/dashboard/earnings" },
+          { name: "E-Wallet",         href: "/dashboard/wallet" },
+          { name: "Transfer Funds",   href: "/dashboard/transfer" },
+          { name: "Payouts",          href: "/dashboard/payouts" },
+          { name: "Pro Member Bonus", href: "/dashboard/pro-member-bonuses" },
         ],
       },
       {
@@ -90,8 +125,8 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
           { name: "New Member Registration List", href: "/dashboard/member-outreach" },
         ],
       },
-      { name: "Bill Payer Program", href: "/dashboard/bpp",          icon: Home, minTier: "pro_member" },
-      { name: "Mailbox",            href: "/dashboard/mailbox",      icon: Inbox, minTier: "pro_member" },
+      { name: "Bill Payer Program", href: "/dashboard/bpp",      icon: Home,  minTier: "pro_member" },
+      { name: "Mailbox",            href: "/dashboard/mailbox",  icon: Inbox, minTier: "pro_member" },
     ],
   },
   {
@@ -116,12 +151,12 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
         name: "Comp Plan",
         icon: DollarSign, group: "comp-plan", minTier: "pro_member",
         children: [
-          { name: "Overview",               href: "/dashboard/comp-plan?s=overview" },
-          { name: "Referral Commission",    href: "/dashboard/comp-plan?s=rc" },
-          { name: "Product Sales Comm.",    href: "/dashboard/comp-plan?s=psc" },
-          { name: "Multi-Level Retail",     href: "/dashboard/comp-plan?s=pmrc" },
-          { name: "Power Squad Bonuses",    href: "/dashboard/comp-plan?s=psb" },
-          { name: "Bill Payer Program",     href: "/dashboard/comp-plan?s=bpp" },
+          { name: "Overview",            href: "/dashboard/comp-plan?s=overview" },
+          { name: "Referral Commission", href: "/dashboard/comp-plan?s=rc" },
+          { name: "Product Sales Comm.", href: "/dashboard/comp-plan?s=psc" },
+          { name: "Multi-Level Retail",  href: "/dashboard/comp-plan?s=pmrc" },
+          { name: "Power Squad Bonuses", href: "/dashboard/comp-plan?s=psb" },
+          { name: "Bill Payer Program",  href: "/dashboard/comp-plan?s=bpp" },
         ],
       },
       {
@@ -134,36 +169,6 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
         ],
       },
       { name: "Reports", href: "/dashboard/reports", icon: BarChart3, minTier: "pro_member" },
-    ],
-  },
-  {
-    label: "Services",
-    items: [
-      { name: "Bookings",      href: "/dashboard/bookings",      icon: Calendar },
-      { name: "Pay As You Go", href: "/dashboard/payg-bookings", icon: Zap },
-      {
-        name: "NFGN Health & Wellness",
-        icon: Leaf, group: "health",
-        children: [
-          { name: "Wellness Hub",               href: "/dashboard/health" },
-          { name: "My Health Profile",          href: "/dashboard/health/profile" },
-          { name: "Herb & Supplement Library",  href: "/dashboard/health/library" },
-          { name: "Weight & Water Tracker",     href: "/dashboard/health/tracker" },
-          { name: "Calorie Tracker",            href: "/dashboard/health/education" },
-          { name: "Nutrition Guide",            href: "/dashboard/health/nutrition" },
-          { name: "Exercise Plans",             href: "/dashboard/health/exercise" },
-          { name: "AI Health Assistant",        href: "/dashboard/health/ai-assistant" },
-        ],
-      },
-      {
-        name: "Book Store & Library",
-        icon: BookOpen, group: "bookstore",
-        children: [
-          { name: "Browse Bookstore",    href: "/dashboard/bookstore" },
-          { name: "My Digital Library", href: "/dashboard/library" },
-          { name: "Become an Author",   href: "/dashboard/author/apply" },
-        ],
-      },
     ],
   },
 ];

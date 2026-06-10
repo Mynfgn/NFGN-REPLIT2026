@@ -113,18 +113,6 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
           { name: "AI Health Assistant",       href: "/dashboard/health/ai-assistant" },
         ],
       },
-    ],
-  },
-  {
-    label: "Dollar Credit ($-Credit)",
-    minTier: "referring_retail_member",
-    items: [
-      { name: "My $-Credit Wallet", href: "/dashboard/wallet", icon: CreditCard, minTier: "referring_retail_member" },
-    ],
-  },
-  {
-    label: "Resources",
-    items: [
       {
         name: "NFGN Basic Training",
         icon: BookOpen, group: "training", minTier: "retail_community_builder",
@@ -140,6 +128,18 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
           { name: "Add App to Phone",    href: "/dashboard/tools/training?s=app-setup" },
         ],
       },
+    ],
+  },
+  {
+    label: "Dollar Credit ($-Credit)",
+    minTier: "referring_retail_member",
+    items: [
+      { name: "My $-Credit Wallet", href: "/dashboard/wallet", icon: CreditCard, minTier: "referring_retail_member" },
+    ],
+  },
+  {
+    label: "Resources",
+    items: [
       {
         name: "Comp Plan",
         icon: DollarSign, group: "comp-plan", minTier: "pro_member",

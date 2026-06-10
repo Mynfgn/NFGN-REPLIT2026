@@ -667,7 +667,9 @@ router.get("/dashboard/member-locations", requireAuth, async (req, res): Promise
     }
   }
 
-  const locations = Object.values(locationMap).sort((a, b) => b.count - a.count);
+  const locations = Object.values(locationMap).sort(
+    (a, b) => b.count - a.count || new Date(b.latestJoin).getTime() - new Date(a.latestJoin).getTime()
+  );
   res.json({ locations, total: users.length });
 });
 

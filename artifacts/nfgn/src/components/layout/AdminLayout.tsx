@@ -148,17 +148,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
         { name: "AI Health Assistant",       href: "/dashboard/health/ai-assistant", icon: Bot },
       ],
     },
-    {
-      name: "Book Store & Library",
-      href: "/admin/bookstore",
-      icon: BookOpen,
-      exact: true,
-      children: [
-        { name: "Manage Books",       href: "/admin/bookstore",            icon: BookOpen },
-        { name: "Browse Bookstore",   href: "/dashboard/bookstore",        icon: Star },
-        { name: "My Library",         href: "/dashboard/library",          icon: List },
-      ],
-    },
+    { name: "Book Store & Library", href: "/admin/bookstore", icon: BookOpen },
     { name: "Profile Management", href: "/admin/profile", icon: UserCircle },
   ];
 

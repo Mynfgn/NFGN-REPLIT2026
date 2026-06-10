@@ -53,7 +53,8 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
     items: [
       { name: "Shop",          href: "/shop",                    icon: Store },
       { name: "Bookings",      href: "/dashboard/bookings",      icon: Calendar },
-      { name: "Pay As You Go", href: "/dashboard/payg-bookings", icon: Zap },
+      { name: "Pay As You Go",        href: "/dashboard/payg-bookings", icon: Zap },
+      { name: "Send A Gift/Donation", href: "/shop?section=giving",    icon: Heart },
       {
         name: "Book Store & Library",
         icon: BookOpen, group: "bookstore",
@@ -73,7 +74,6 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
       { name: "Mailbox",              href: "/dashboard/mailbox",             icon: Inbox },
       { name: "My Referral Link",     href: "/dashboard/referral",            icon: Link2 },
       { name: "Get the App",          href: "/dashboard/tools/get-the-app",   icon: Home },
-      { name: "Send A Gift/Donation", href: "/shop?section=giving",           icon: Heart },
     ],
   },
   {

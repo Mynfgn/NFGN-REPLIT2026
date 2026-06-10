@@ -17,6 +17,7 @@ export const booksTable = pgTable("books", {
   fileUrl: text("file_url"),
   audioUrl: text("audio_url"),
   price: numeric("price", { precision: 10, scale: 2 }).notNull().default("0"),
+  cv: numeric("cv", { precision: 10, scale: 2 }).notNull().default("0"),
   isFree: boolean("is_free").notNull().default(false),
   authorRoyaltyPct: numeric("author_royalty_pct", { precision: 5, scale: 2 }).notNull().default("70"),
   platformFeePct: numeric("platform_fee_pct", { precision: 5, scale: 2 }).notNull().default("30"),

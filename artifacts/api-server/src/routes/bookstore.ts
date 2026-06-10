@@ -33,6 +33,7 @@ function formatBook(b: typeof booksTable.$inferSelect, showFile = false, isAdmin
     hasFile: showFile ? b.fileUrl !== null : false,
     hasAudio: showFile ? b.audioUrl !== null : false,
     price: parseFloat(String(b.price)),
+    cv: parseFloat(String(b.cv ?? "0")),
     isFree: b.isFree,
     authorRoyaltyPct: parseFloat(String(b.authorRoyaltyPct)),
     platformFeePct: parseFloat(String(b.platformFeePct)),
@@ -95,13 +96,13 @@ router.get("/bookstore/admin/books", requireAuth, requireAdmin, async (req, res)
 
 // ── ADMIN: Create book ─────────────────────────────────────────────
 router.post("/bookstore/admin/books", requireAuth, requireAdmin, async (req, res): Promise<void> => {
-  const { title, subtitle, authorName, description, shortDescription, category, type, coverImage, fileUrl, audioUrl, price, isFree, pageCount, duration, language, tags, isbn, isFeatured, isStaffPick, authorRoyaltyPct, platformFeePct } = req.body;
+  const { title, subtitle, authorName, description, shortDescription, category, type, coverImage, fileUrl, audioUrl, price, cv, isFree, pageCount, duration, language, tags, isbn, isFeatured, isStaffPick, authorRoyaltyPct, platformFeePct } = req.body;
   if (!title || !authorName) { res.status(400).json({ error: "title and authorName are required" }); return; }
   const [book] = await db.insert(booksTable).values({
     title, subtitle, slug: makeSlug(title), authorName, description, shortDescription,
     category: category ?? "general", type: type ?? "ebook",
     coverImage, fileUrl, audioUrl,
-    price: String(price ?? 0), isFree: isFree ?? false,
+    price: String(price ?? 0), cv: String(cv ?? 0), isFree: isFree ?? false,
     authorRoyaltyPct: String(authorRoyaltyPct ?? 70), platformFeePct: String(platformFeePct ?? 30),
     status: "approved", isFeatured: isFeatured ?? false, isStaffPick: isStaffPick ?? false,
     pageCount: pageCount ?? null, duration: duration ?? null,
@@ -129,7 +130,7 @@ router.patch("/bookstore/admin/books/:id/status", requireAuth, requireAdmin, asy
 // ── ADMIN: Update book details ────────────────────────────────────
 router.patch("/bookstore/admin/books/:id", requireAuth, requireAdmin, async (req, res): Promise<void> => {
   const id = parseInt(String(req.params.id));
-  const { title, subtitle, authorName, description, shortDescription, category, type, coverImage, fileUrl, audioUrl, price, isFree, pageCount, duration, language, tags, isbn, authorRoyaltyPct, platformFeePct } = req.body;
+  const { title, subtitle, authorName, description, shortDescription, category, type, coverImage, fileUrl, audioUrl, price, cv, isFree, pageCount, duration, language, tags, isbn, authorRoyaltyPct, platformFeePct } = req.body;
   const upd: Record<string, unknown> = {};
   if (title) upd.title = title;
   if (subtitle !== undefined) upd.subtitle = subtitle;
@@ -142,6 +143,7 @@ router.patch("/bookstore/admin/books/:id", requireAuth, requireAdmin, async (req
   if (fileUrl !== undefined) upd.fileUrl = fileUrl;
   if (audioUrl !== undefined) upd.audioUrl = audioUrl;
   if (price !== undefined) upd.price = String(price);
+  if (cv !== undefined) upd.cv = String(cv);
   if (isFree !== undefined) upd.isFree = isFree;
   if (pageCount !== undefined) upd.pageCount = pageCount;
   if (duration !== undefined) upd.duration = duration;
@@ -153,6 +155,32 @@ router.patch("/bookstore/admin/books/:id", requireAuth, requireAdmin, async (req
   const [updated] = await db.update(booksTable).set(upd).where(eq(booksTable.id, id)).returning();
   if (!updated) { res.status(404).json({ error: "Not found" }); return; }
   res.json({ book: formatBook(updated, true, true) });
+});
+
+// ── ADMIN: Default royalty settings ───────────────────────────────
+router.get("/bookstore/admin/default-royalty", requireAuth, requireAdmin, async (req, res): Promise<void> => {
+  const [row] = await db.select().from(bookRoyaltyOverridesTable)
+    .where(and(sql`${bookRoyaltyOverridesTable.bookId} IS NULL`, sql`${bookRoyaltyOverridesTable.authorUserId} IS NULL`, sql`${bookRoyaltyOverridesTable.category} IS NULL`))
+    .limit(1);
+  if (row) {
+    res.json({ authorRoyaltyPct: parseFloat(String(row.authorRoyaltyPct)), platformFeePct: parseFloat(String(row.platformFeePct)) });
+  } else {
+    res.json({ authorRoyaltyPct: 70, platformFeePct: 30 });
+  }
+});
+
+router.put("/bookstore/admin/default-royalty", requireAuth, requireAdmin, async (req, res): Promise<void> => {
+  const { authorRoyaltyPct, platformFeePct } = req.body;
+  if (authorRoyaltyPct === undefined || platformFeePct === undefined) { res.status(400).json({ error: "authorRoyaltyPct and platformFeePct are required" }); return; }
+  const [existing] = await db.select().from(bookRoyaltyOverridesTable)
+    .where(and(sql`${bookRoyaltyOverridesTable.bookId} IS NULL`, sql`${bookRoyaltyOverridesTable.authorUserId} IS NULL`, sql`${bookRoyaltyOverridesTable.category} IS NULL`))
+    .limit(1);
+  if (existing) {
+    await db.update(bookRoyaltyOverridesTable).set({ authorRoyaltyPct: String(authorRoyaltyPct), platformFeePct: String(platformFeePct) }).where(eq(bookRoyaltyOverridesTable.id, existing.id));
+  } else {
+    await db.insert(bookRoyaltyOverridesTable).values({ bookId: null, authorUserId: null, category: null, authorRoyaltyPct: String(authorRoyaltyPct), platformFeePct: String(platformFeePct) });
+  }
+  res.json({ authorRoyaltyPct: parseFloat(String(authorRoyaltyPct)), platformFeePct: parseFloat(String(platformFeePct)) });
 });
 
 // ── ADMIN: Author applications ─────────────────────────────────────

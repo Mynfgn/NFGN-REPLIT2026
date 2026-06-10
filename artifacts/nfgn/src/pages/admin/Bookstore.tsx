@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { BookOpen, Users, DollarSign, TrendingUp, Clock, CheckCircle, XCircle, Star, AlertTriangle, Plus, Search, Filter, Edit3, Eye, Trash2, ChevronDown, Percent, BookMarked, Mic, FileText, GraduationCap, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { BookOpen, Users, DollarSign, TrendingUp, Clock, CheckCircle, XCircle, Star, Plus, Search, Edit3, Mic, FileText, GraduationCap, BookMarked, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -66,14 +66,147 @@ function KpiCard({ label, value, sub, color, icon: Icon }: { label: string; valu
 }
 
 interface Book {
-  id: number; title: string; authorName: string; category: string; type: string;
-  price: number; isFree: boolean; status: string; isFeatured: boolean; isBestSeller: boolean; isStaffPick: boolean;
+  id: number; title: string; subtitle?: string; authorName: string; category: string; type: string;
+  price: number; cv: number; isFree: boolean; status: string; isFeatured: boolean; isBestSeller: boolean; isStaffPick: boolean;
   totalSales: number; createdAt: string; authorRoyaltyPct: number; platformFeePct: number;
   description?: string; shortDescription?: string; coverImage?: string; fileUrl?: string; audioUrl?: string;
   pageCount?: number; duration?: string; language?: string; tags?: string; isbn?: string; adminNote?: string;
 }
 interface AuthorApp { id: number; userId: number; name: string; bio?: string; website?: string; writingExperience?: string; categories?: string; status: string; adminNote?: string; createdAt: string; }
 interface Stats { totalBooks: number; pendingBooks: number; approvedBooks: number; totalPurchases: number; totalAuthors: number; pendingAuthors: number; totalRevenue: number; monthlyRevenue: number; }
+
+const BLANK_FORM = { title: "", subtitle: "", authorName: "", shortDescription: "", description: "", category: "Health & Wellness", type: "ebook", price: "", cv: "0", isFree: false, authorRoyaltyPct: "70", platformFeePct: "30", coverImage: "", fileUrl: "", audioUrl: "", language: "English", tags: "", isbn: "", pageCount: "", duration: "", isFeatured: false, isStaffPick: false };
+
+function BookForm({ value, onChange, onSubmit, saving, submitLabel }: {
+  value: typeof BLANK_FORM;
+  onChange: (f: typeof BLANK_FORM) => void;
+  onSubmit: () => void;
+  saving: boolean;
+  submitLabel: string;
+}) {
+  const set = (k: string, v: unknown) => onChange({ ...value, [k as keyof typeof value]: v } as typeof BLANK_FORM);
+
+  return (
+    <div>
+      {/* Cover image preview */}
+      {value.coverImage && (
+        <div style={{ marginBottom: 18, textAlign: "center" }}>
+          <img src={value.coverImage} alt="Cover preview" style={{ maxHeight: 200, maxWidth: 140, objectFit: "cover", borderRadius: 10, boxShadow: "0 4px 16px rgba(0,0,0,0.12)" }} />
+          <div style={{ fontSize: 11, color: "#888", marginTop: 4 }}>Cover preview</div>
+        </div>
+      )}
+
+      {[
+        { label: "Book Title *", key: "title", placeholder: "e.g. The Healing Power of Nature" },
+        { label: "Subtitle", key: "subtitle", placeholder: "Optional subtitle" },
+        { label: "Author Name *", key: "authorName", placeholder: "e.g. Dr. Jane Smith" },
+        { label: "ISBN / Reference", key: "isbn", placeholder: "Optional" },
+      ].map(f => (
+        <div key={f.key} style={{ marginBottom: 14 }}>
+          <label style={{ fontSize: 12, fontWeight: 700, color: "#555", display: "block", marginBottom: 4 }}>{f.label}</label>
+          <Input value={(value as any)[f.key] ?? ""} onChange={e => set(f.key, e.target.value)} placeholder={f.placeholder} />
+        </div>
+      ))}
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
+        <div>
+          <label style={{ fontSize: 12, fontWeight: 700, color: "#555", display: "block", marginBottom: 4 }}>Category</label>
+          <select value={value.category} onChange={e => set("category", e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13 }}>
+            {BOOK_CATEGORIES.map(c => <option key={c}>{c}</option>)}
+          </select>
+        </div>
+        <div>
+          <label style={{ fontSize: 12, fontWeight: 700, color: "#555", display: "block", marginBottom: 4 }}>Content Type</label>
+          <select value={value.type} onChange={e => set("type", e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13 }}>
+            {BOOK_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <div style={{ marginBottom: 14 }}>
+        <label style={{ fontSize: 12, fontWeight: 700, color: "#555", display: "block", marginBottom: 4 }}>Short Description (shown in store listing)</label>
+        <textarea value={value.shortDescription} onChange={e => set("shortDescription", e.target.value)} placeholder="2–3 sentences for the store card…" rows={2} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, resize: "vertical", fontFamily: "inherit" }} />
+      </div>
+      <div style={{ marginBottom: 14 }}>
+        <label style={{ fontSize: 12, fontWeight: 700, color: "#555", display: "block", marginBottom: 4 }}>Full Description</label>
+        <textarea value={value.description} onChange={e => set("description", e.target.value)} placeholder="Full book description…" rows={4} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, resize: "vertical", fontFamily: "inherit" }} />
+      </div>
+
+      {/* Price / CV / Royalty row */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 14 }}>
+        <div>
+          <label style={{ fontSize: 12, fontWeight: 700, color: "#555", display: "block", marginBottom: 4 }}>Price ($)</label>
+          <Input value={value.price} onChange={e => set("price", e.target.value)} placeholder="0.00" type="number" min="0" step="0.01" disabled={value.isFree} />
+        </div>
+        <div>
+          <label style={{ fontSize: 12, fontWeight: 700, color: "#555", display: "block", marginBottom: 4 }}>CV Points</label>
+          <Input value={value.cv} onChange={e => set("cv", e.target.value)} placeholder="0" type="number" min="0" step="1" />
+        </div>
+        <div>
+          <label style={{ fontSize: 12, fontWeight: 700, color: "#555", display: "block", marginBottom: 4 }}>Author Royalty %</label>
+          <Input value={value.authorRoyaltyPct} onChange={e => { const v = e.target.value; set("authorRoyaltyPct", v); set("platformFeePct", String(Math.max(0, 100 - (parseFloat(v) || 0)))); }} type="number" min="0" max="100" />
+        </div>
+        <div>
+          <label style={{ fontSize: 12, fontWeight: 700, color: "#555", display: "block", marginBottom: 4 }}>Platform Fee %</label>
+          <Input value={value.platformFeePct} onChange={e => { const v = e.target.value; set("platformFeePct", v); set("authorRoyaltyPct", String(Math.max(0, 100 - (parseFloat(v) || 0)))); }} type="number" min="0" max="100" />
+        </div>
+      </div>
+
+      <div style={{ marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
+        <input type="checkbox" id="isFreeBook" checked={value.isFree} onChange={e => { set("isFree", e.target.checked); if (e.target.checked) set("price", "0"); }} />
+        <label htmlFor="isFreeBook" style={{ fontSize: 13, fontWeight: 700, color: "#555", cursor: "pointer" }}>This is a FREE book / resource</label>
+      </div>
+
+      {/* Extra metadata */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 14 }}>
+        <div>
+          <label style={{ fontSize: 12, fontWeight: 700, color: "#555", display: "block", marginBottom: 4 }}>Language</label>
+          <Input value={value.language} onChange={e => set("language", e.target.value)} />
+        </div>
+        <div>
+          <label style={{ fontSize: 12, fontWeight: 700, color: "#555", display: "block", marginBottom: 4 }}>Pages (eBooks)</label>
+          <Input value={value.pageCount} onChange={e => set("pageCount", e.target.value)} type="number" min="0" placeholder="e.g. 240" />
+        </div>
+        <div>
+          <label style={{ fontSize: 12, fontWeight: 700, color: "#555", display: "block", marginBottom: 4 }}>Duration (audiobooks)</label>
+          <Input value={value.duration} onChange={e => set("duration", e.target.value)} placeholder="e.g. 4h 30m" />
+        </div>
+      </div>
+      <div style={{ marginBottom: 14 }}>
+        <label style={{ fontSize: 12, fontWeight: 700, color: "#555", display: "block", marginBottom: 4 }}>Tags (comma-separated)</label>
+        <Input value={value.tags} onChange={e => set("tags", e.target.value)} placeholder="health, wellness, naturopathic" />
+      </div>
+
+      {/* File uploads */}
+      <div style={{ marginBottom: 14 }}>
+        <FileUploadField label="Cover Image" value={value.coverImage} onChange={v => set("coverImage", v)} placeholder="https://… or upload from computer" kind="image" helperText="Recommended: 400×600px, JPG or PNG" />
+      </div>
+      <div style={{ marginBottom: 14 }}>
+        <FileUploadField label="Book File (PDF / EPUB)" value={value.fileUrl} onChange={v => set("fileUrl", v)} placeholder="https://… or upload from computer" kind="document" helperText="Buyers access this file securely after purchase" />
+      </div>
+      <div style={{ marginBottom: 14 }}>
+        <FileUploadField label="Audio File (MP3 / M4A)" value={value.audioUrl} onChange={v => set("audioUrl", v)} placeholder="https://… or upload from computer (audiobooks only)" kind="audio" helperText="Only required for Audiobook content type" />
+      </div>
+
+      {/* Flags */}
+      <div style={{ display: "flex", gap: 20, marginBottom: 20, flexWrap: "wrap" }}>
+        {[
+          { key: "isFeatured", label: "Featured Book" },
+          { key: "isStaffPick", label: "Staff Pick" },
+        ].map(c => (
+          <div key={c.key} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <input type="checkbox" id={`flag-${c.key}`} checked={(value as any)[c.key]} onChange={e => set(c.key, e.target.checked)} />
+            <label htmlFor={`flag-${c.key}`} style={{ fontSize: 13, fontWeight: 700, color: "#555", cursor: "pointer" }}>{c.label}</label>
+          </div>
+        ))}
+      </div>
+
+      <Button onClick={onSubmit} disabled={saving} style={{ background: GREEN, color: "#fff", fontWeight: 800, padding: "12px 24px", borderRadius: 10, fontSize: 14 }}>
+        {saving ? "Saving…" : submitLabel}
+      </Button>
+    </div>
+  );
+}
 
 export function AdminBookstorePage() {
   const { toast } = useToast();
@@ -86,8 +219,17 @@ export function AdminBookstorePage() {
   const [searchQ, setSearchQ] = useState("");
 
   // Add book form
-  const [form, setForm] = useState({ title: "", subtitle: "", authorName: "", shortDescription: "", description: "", category: "Health & Wellness", type: "ebook", price: "", isFree: false, authorRoyaltyPct: "70", platformFeePct: "30", coverImage: "", fileUrl: "", audioUrl: "", language: "English", tags: "", isbn: "", isFeatured: false, isStaffPick: false });
-  const [saving, setSaving] = useState(false);
+  const [addForm, setAddForm] = useState<typeof BLANK_FORM>({ ...BLANK_FORM });
+  const [addSaving, setAddSaving] = useState(false);
+
+  // Edit modal
+  const [editBook, setEditBook] = useState<Book | null>(null);
+  const [editForm, setEditForm] = useState<typeof BLANK_FORM>({ ...BLANK_FORM });
+  const [editSaving, setEditSaving] = useState(false);
+
+  // Default royalty
+  const [defRoyalty, setDefRoyalty] = useState({ authorRoyaltyPct: "70", platformFeePct: "30" });
+  const [defRoyaltySaving, setDefRoyaltySaving] = useState(false);
 
   async function loadStats() {
     try { const d = await apiFetch("/api/bookstore/admin/stats"); setStats(d); } catch {}
@@ -106,10 +248,17 @@ export function AdminBookstorePage() {
   async function loadApplications() {
     try { const d = await apiFetch("/api/bookstore/admin/author-applications"); setApplications(d.applications); } catch {}
   }
+  async function loadDefRoyalty() {
+    try {
+      const d = await apiFetch("/api/bookstore/admin/default-royalty");
+      setDefRoyalty({ authorRoyaltyPct: String(d.authorRoyaltyPct), platformFeePct: String(d.platformFeePct) });
+    } catch {}
+  }
 
   useEffect(() => { loadStats(); }, []);
   useEffect(() => { if (tab === "books") loadBooks(); }, [tab, statusFilter]);
   useEffect(() => { if (tab === "authors") loadApplications(); }, [tab]);
+  useEffect(() => { if (tab === "royalties") loadDefRoyalty(); }, [tab]);
 
   async function handleBookStatus(id: number, status: string, flag?: { key: string; val: boolean }) {
     try {
@@ -138,15 +287,87 @@ export function AdminBookstorePage() {
   }
 
   async function handleAddBook() {
-    if (!form.title || !form.authorName) { toast({ title: "Title and author name are required", variant: "destructive" }); return; }
-    setSaving(true);
+    if (!addForm.title || !addForm.authorName) { toast({ title: "Title and author name are required", variant: "destructive" }); return; }
+    setAddSaving(true);
     try {
-      await apiFetch("/api/bookstore/admin/books", { method: "POST", body: JSON.stringify({ ...form, price: parseFloat(form.price) || 0, authorRoyaltyPct: parseFloat(form.authorRoyaltyPct), platformFeePct: parseFloat(form.platformFeePct) }) });
+      await apiFetch("/api/bookstore/admin/books", {
+        method: "POST",
+        body: JSON.stringify({
+          ...addForm,
+          price: parseFloat(addForm.price) || 0,
+          cv: parseFloat(addForm.cv) || 0,
+          pageCount: addForm.pageCount ? parseInt(addForm.pageCount) : null,
+          authorRoyaltyPct: parseFloat(addForm.authorRoyaltyPct),
+          platformFeePct: parseFloat(addForm.platformFeePct),
+        }),
+      });
       toast({ title: "Book added to store!" });
       setTab("books"); loadBooks(); loadStats();
-      setForm({ title: "", subtitle: "", authorName: "", shortDescription: "", description: "", category: "Health & Wellness", type: "ebook", price: "", isFree: false, authorRoyaltyPct: "70", platformFeePct: "30", coverImage: "", fileUrl: "", audioUrl: "", language: "English", tags: "", isbn: "", isFeatured: false, isStaffPick: false });
+      setAddForm({ ...BLANK_FORM });
     } catch (e: any) { toast({ title: "Error", description: e.message, variant: "destructive" }); }
-    finally { setSaving(false); }
+    finally { setAddSaving(false); }
+  }
+
+  function openEdit(book: Book) {
+    setEditBook(book);
+    setEditForm({
+      title: book.title,
+      subtitle: book.subtitle ?? "",
+      authorName: book.authorName,
+      shortDescription: book.shortDescription ?? "",
+      description: book.description ?? "",
+      category: book.category,
+      type: book.type,
+      price: String(book.price),
+      cv: String(book.cv ?? 0),
+      isFree: book.isFree,
+      authorRoyaltyPct: String(book.authorRoyaltyPct),
+      platformFeePct: String(book.platformFeePct),
+      coverImage: book.coverImage ?? "",
+      fileUrl: book.fileUrl ?? "",
+      audioUrl: book.audioUrl ?? "",
+      language: book.language ?? "English",
+      tags: book.tags ?? "",
+      isbn: book.isbn ?? "",
+      pageCount: book.pageCount ? String(book.pageCount) : "",
+      duration: book.duration ?? "",
+      isFeatured: book.isFeatured,
+      isStaffPick: book.isStaffPick,
+    });
+  }
+
+  async function handleSaveEdit() {
+    if (!editBook) return;
+    setEditSaving(true);
+    try {
+      await apiFetch(`/api/bookstore/admin/books/${editBook.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          ...editForm,
+          price: parseFloat(editForm.price) || 0,
+          cv: parseFloat(editForm.cv) || 0,
+          pageCount: editForm.pageCount ? parseInt(editForm.pageCount) : null,
+          authorRoyaltyPct: parseFloat(editForm.authorRoyaltyPct),
+          platformFeePct: parseFloat(editForm.platformFeePct),
+        }),
+      });
+      toast({ title: "Book updated!" });
+      setEditBook(null);
+      loadBooks();
+    } catch (e: any) { toast({ title: "Error", description: e.message, variant: "destructive" }); }
+    finally { setEditSaving(false); }
+  }
+
+  async function handleSaveDefRoyalty() {
+    setDefRoyaltySaving(true);
+    try {
+      await apiFetch("/api/bookstore/admin/default-royalty", {
+        method: "PUT",
+        body: JSON.stringify({ authorRoyaltyPct: parseFloat(defRoyalty.authorRoyaltyPct), platformFeePct: parseFloat(defRoyalty.platformFeePct) }),
+      });
+      toast({ title: "Default royalty split saved!" });
+    } catch (e: any) { toast({ title: "Error", description: e.message, variant: "destructive" }); }
+    finally { setDefRoyaltySaving(false); }
   }
 
   const filteredBooks = books.filter(b => !searchQ || b.title.toLowerCase().includes(searchQ.toLowerCase()) || b.authorName.toLowerCase().includes(searchQ.toLowerCase()));
@@ -178,12 +399,7 @@ export function AdminBookstorePage() {
         ] as const).map(t => (
           <button
             key={t.key} onClick={() => setTab(t.key)}
-            style={{
-              padding: "8px 16px", borderRadius: 8, border: "none", cursor: "pointer",
-              fontWeight: 800, fontSize: 13, transition: "all .15s",
-              background: tab === t.key ? DARK : "transparent",
-              color: tab === t.key ? "#fff" : "#555",
-            }}
+            style={{ padding: "8px 16px", borderRadius: 8, border: "none", cursor: "pointer", fontWeight: 800, fontSize: 13, transition: "all .15s", background: tab === t.key ? DARK : "transparent", color: tab === t.key ? "#fff" : "#555" }}
           >{t.label}</button>
         ))}
       </div>
@@ -241,10 +457,22 @@ export function AdminBookstorePage() {
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {filteredBooks.map(book => (
-                <div key={book.id} style={{ background: "#fff", border: `1.5px solid ${book.status === "pending" ? GOLD : "#e5e7eb"}`, borderRadius: 12, padding: "16px 18px" }}>
-                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-                    <div style={{ flex: 1, minWidth: 200 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                <div key={book.id} style={{ background: "#fff", border: `1.5px solid ${book.status === "pending" ? GOLD : "#e5e7eb"}`, borderRadius: 12, padding: "14px 16px" }}>
+                  <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+                    {/* Cover thumbnail */}
+                    <div style={{ flexShrink: 0 }}>
+                      {book.coverImage ? (
+                        <img src={book.coverImage} alt={book.title} style={{ width: 60, height: 80, objectFit: "cover", borderRadius: 6, boxShadow: "0 2px 8px rgba(0,0,0,0.12)" }} />
+                      ) : (
+                        <div style={{ width: 60, height: 80, background: `linear-gradient(135deg, ${GREEN_M}, ${GREEN}33)`, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <BookOpen size={22} color={GREEN} />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
                         <span style={{ fontSize: 14, fontWeight: 900, color: DARK }}>{book.title}</span>
                         <StatusBadge status={book.status} />
                         {book.isFeatured && <span style={{ background: `${GOLD}20`, color: "#7A6010", borderRadius: 10, padding: "1px 8px", fontSize: 10, fontWeight: 800 }}>★ Featured</span>}
@@ -253,12 +481,20 @@ export function AdminBookstorePage() {
                       </div>
                       <div style={{ fontSize: 12, color: "#555" }}>By {book.authorName} · {book.category} · {BOOK_TYPES.find(t => t.value === book.type)?.label ?? book.type}</div>
                       <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
-                        {book.isFree ? "Free" : `$${book.price.toFixed(2)}`} · {book.totalSales} sales · Royalty: {book.authorRoyaltyPct}% / Platform: {book.platformFeePct}%
+                        {book.isFree ? "Free" : `$${book.price.toFixed(2)}`}
+                        {" · "}<span style={{ color: GREEN_D, fontWeight: 700 }}>{book.cv > 0 ? `${book.cv} CV` : "No CV"}</span>
+                        {" · "}{book.totalSales} sales
+                        {" · "}Royalty: {book.authorRoyaltyPct}% / Platform: {book.platformFeePct}%
                       </div>
-                      {book.shortDescription && <div style={{ fontSize: 12, color: "#666", marginTop: 6, lineHeight: 1.5, maxWidth: 500 }}>{book.shortDescription}</div>}
-                      {book.adminNote && <div style={{ fontSize: 11, color: RED, marginTop: 4, fontStyle: "italic" }}>Admin note: {book.adminNote}</div>}
+                      {book.shortDescription && <div style={{ fontSize: 12, color: "#666", marginTop: 5, lineHeight: 1.5, maxWidth: 500 }}>{book.shortDescription}</div>}
+                      {book.adminNote && <div style={{ fontSize: 11, color: RED, marginTop: 4, fontStyle: "italic" }}>Note: {book.adminNote}</div>}
                     </div>
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "flex-start" }}>
+
+                    {/* Actions */}
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "flex-start", flexShrink: 0 }}>
+                      <Button size="sm" onClick={() => openEdit(book)} variant="outline" style={{ fontWeight: 700, fontSize: 12, padding: "5px 12px", color: "#374151" }}>
+                        <Edit3 size={12} style={{ marginRight: 4 }} /> Edit
+                      </Button>
                       {book.status === "pending" && (
                         <>
                           <Button size="sm" onClick={() => handleBookStatus(book.id, "approved")} style={{ background: GREEN, color: "#fff", fontWeight: 700, fontSize: 12, padding: "5px 12px" }}>
@@ -346,26 +582,46 @@ export function AdminBookstorePage() {
           <div style={{ background: "#fff", border: "1.5px solid #e5e7eb", borderRadius: 14, padding: "22px 24px", marginBottom: 20 }}>
             <div style={{ fontSize: 14, fontWeight: 900, color: DARK, marginBottom: 4 }}>Platform Default Royalty Split</div>
             <div style={{ fontSize: 12, color: "#666", marginBottom: 20, lineHeight: 1.6 }}>
-              This is the default split applied to all new books. You can override this per-book, per-author, or per-category when adding or editing a book.
+              This default is applied to all new books. You can override the split per-book when adding or editing a book.
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, maxWidth: 400 }}>
-              <div style={{ background: GREEN_M, border: `1px solid ${GREEN}44`, borderRadius: 10, padding: "14px 16px", textAlign: "center" }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: GREEN_D, textTransform: "uppercase", marginBottom: 4 }}>Author Royalty</div>
-                <div style={{ fontSize: 32, fontWeight: 900, color: GREEN_D }}>70%</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 14, maxWidth: 480, alignItems: "end" }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "#555", display: "block", marginBottom: 6 }}>Author Royalty %</label>
+                <Input
+                  value={defRoyalty.authorRoyaltyPct}
+                  onChange={e => { const v = e.target.value; setDefRoyalty(p => ({ authorRoyaltyPct: v, platformFeePct: String(Math.max(0, 100 - (parseFloat(v) || 0))) })); }}
+                  type="number" min="0" max="100"
+                  style={{ fontSize: 18, fontWeight: 900, textAlign: "center", color: GREEN_D }}
+                />
               </div>
-              <div style={{ background: "#FBF5DC", border: `1px solid ${GOLD}44`, borderRadius: 10, padding: "14px 16px", textAlign: "center" }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#7A6010", textTransform: "uppercase", marginBottom: 4 }}>Platform Fee</div>
-                <div style={{ fontSize: 32, fontWeight: 900, color: "#7A6010" }}>30%</div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "#555", display: "block", marginBottom: 6 }}>Platform Fee %</label>
+                <Input
+                  value={defRoyalty.platformFeePct}
+                  onChange={e => { const v = e.target.value; setDefRoyalty(p => ({ platformFeePct: v, authorRoyaltyPct: String(Math.max(0, 100 - (parseFloat(v) || 0))) })); }}
+                  type="number" min="0" max="100"
+                  style={{ fontSize: 18, fontWeight: 900, textAlign: "center", color: "#7A6010" }}
+                />
               </div>
+              <Button onClick={handleSaveDefRoyalty} disabled={defRoyaltySaving} style={{ background: GREEN, color: "#fff", fontWeight: 800 }}>
+                <Save size={14} style={{ marginRight: 6 }} /> {defRoyaltySaving ? "Saving…" : "Save"}
+              </Button>
+            </div>
+            <div style={{ marginTop: 14, fontSize: 12, color: "#888" }}>
+              Total must equal 100%. Currently: {parseFloat(defRoyalty.authorRoyaltyPct) + parseFloat(defRoyalty.platformFeePct)}%
+              {parseFloat(defRoyalty.authorRoyaltyPct) + parseFloat(defRoyalty.platformFeePct) !== 100 && (
+                <span style={{ color: RED, fontWeight: 700 }}> — Warning: does not total 100%</span>
+              )}
             </div>
           </div>
-          <div style={{ background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 12, padding: "20px 22px" }}>
-            <div style={{ fontWeight: 800, fontSize: 13, color: DARK, marginBottom: 8 }}>Custom Splits</div>
+
+          <div style={{ background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 12, padding: "20px 22px", marginBottom: 16 }}>
+            <div style={{ fontWeight: 800, fontSize: 13, color: DARK, marginBottom: 8 }}>Custom Per-Book Splits</div>
             <p style={{ fontSize: 12, color: "#666", lineHeight: 1.6, margin: 0 }}>
-              To set a custom royalty split for a specific book, edit that book's royalty percentages directly in the Books tab. The platform supports per-book, per-author, and per-category overrides. A fixed dollar platform fee can also be applied by setting platform fee to 0 and managing the split manually.
+              To set a custom royalty split for a specific book, click <strong>Edit</strong> on that book in the Books tab and update its Author Royalty % and Platform Fee % directly.
             </p>
           </div>
-          <div style={{ background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 12, padding: "20px 22px", marginTop: 16 }}>
+          <div style={{ background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 12, padding: "20px 22px" }}>
             <div style={{ fontWeight: 800, fontSize: 13, color: DARK, marginBottom: 8 }}>License Agreement</div>
             <div style={{ fontSize: 12, color: "#444", lineHeight: 1.8, fontStyle: "italic", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, padding: "14px 16px" }}>
               "By purchasing this digital content, you are purchasing a limited, non-exclusive, non-transferable license to access and read the content through your NFGN account. Copyright ownership remains with the author and/or NFGN. Redistribution, resale, reproduction, sharing, uploading, copying, or commercial use is strictly prohibited without written permission."
@@ -377,114 +633,29 @@ export function AdminBookstorePage() {
       {/* ── ADD BOOK ── */}
       {tab === "add" && (
         <div style={{ background: "#fff", border: "1.5px solid #e5e7eb", borderRadius: 14, padding: "24px 28px", maxWidth: 700 }}>
-          <div style={{ fontSize: 16, fontWeight: 900, color: DARK, marginBottom: 20 }}>Add New Book to Store</div>
+          <div style={{ fontSize: 16, fontWeight: 900, color: DARK, marginBottom: 6 }}>Add New Book to Store</div>
+          <div style={{ fontSize: 12, color: "#888", marginBottom: 20, background: "#fffbea", border: `1px solid ${GOLD}44`, borderRadius: 8, padding: "8px 12px" }}>
+            Books added by Admin are published immediately (Approved). Author-submitted books require your review.
+          </div>
+          <BookForm value={addForm} onChange={setAddForm} onSubmit={handleAddBook} saving={addSaving} submitLabel="Publish Book to Store" />
+        </div>
+      )}
 
-          {[
-            { label: "Book Title *", key: "title", placeholder: "e.g. The Healing Power of Nature" },
-            { label: "Subtitle", key: "subtitle", placeholder: "Optional subtitle" },
-            { label: "Author Name *", key: "authorName", placeholder: "e.g. Dr. Jane Smith" },
-            { label: "ISBN / Reference", key: "isbn", placeholder: "Optional" },
-          ].map(f => (
-            <div key={f.key} style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#555", display: "block", marginBottom: 4 }}>{f.label}</label>
-              <Input value={(form as any)[f.key]} onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} />
-            </div>
-          ))}
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
-            <div>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#555", display: "block", marginBottom: 4 }}>Category</label>
-              <select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13 }}>
-                {BOOK_CATEGORIES.map(c => <option key={c}>{c}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#555", display: "block", marginBottom: 4 }}>Content Type</label>
-              <select value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13 }}>
-                {BOOK_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ fontSize: 12, fontWeight: 700, color: "#555", display: "block", marginBottom: 4 }}>Short Description (shown in store listing)</label>
-            <textarea value={form.shortDescription} onChange={e => setForm(p => ({ ...p, shortDescription: e.target.value }))} placeholder="2–3 sentences for the store card…" rows={2} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, resize: "vertical", fontFamily: "inherit" }} />
-          </div>
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ fontSize: 12, fontWeight: 700, color: "#555", display: "block", marginBottom: 4 }}>Full Description</label>
-            <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Full book description…" rows={4} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, resize: "vertical", fontFamily: "inherit" }} />
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 14 }}>
-            <div>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#555", display: "block", marginBottom: 4 }}>Price ($)</label>
-              <Input value={form.price} onChange={e => setForm(p => ({ ...p, price: e.target.value }))} placeholder="0.00" type="number" min="0" step="0.01" disabled={form.isFree} />
-            </div>
-            <div>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#555", display: "block", marginBottom: 4 }}>Author Royalty %</label>
-              <Input value={form.authorRoyaltyPct} onChange={e => setForm(p => ({ ...p, authorRoyaltyPct: e.target.value, platformFeePct: String(100 - parseFloat(e.target.value) || 30) }))} type="number" min="0" max="100" />
-            </div>
-            <div>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#555", display: "block", marginBottom: 4 }}>Platform Fee %</label>
-              <Input value={form.platformFeePct} onChange={e => setForm(p => ({ ...p, platformFeePct: e.target.value, authorRoyaltyPct: String(100 - parseFloat(e.target.value) || 70) }))} type="number" min="0" max="100" />
-            </div>
-          </div>
-
-          <div style={{ marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
-            <input type="checkbox" id="isFree" checked={form.isFree} onChange={e => setForm(p => ({ ...p, isFree: e.target.checked, price: e.target.checked ? "0" : p.price }))} />
-            <label htmlFor="isFree" style={{ fontSize: 13, fontWeight: 700, color: "#555", cursor: "pointer" }}>This is a FREE book / resource</label>
-          </div>
-
-          <div style={{ marginBottom: 14 }}>
-            <FileUploadField
-              label="Cover Image"
-              value={form.coverImage}
-              onChange={v => setForm(p => ({ ...p, coverImage: v }))}
-              placeholder="https://… or upload from computer"
-              kind="image"
-              helperText="Recommended: 400×600px, JPG or PNG"
-            />
-          </div>
-          <div style={{ marginBottom: 14 }}>
-            <FileUploadField
-              label="Book File (PDF / EPUB)"
-              value={form.fileUrl}
-              onChange={v => setForm(p => ({ ...p, fileUrl: v }))}
-              placeholder="https://… or upload from computer"
-              kind="document"
-              helperText="Buyers access this file securely after purchase"
-            />
-          </div>
-          <div style={{ marginBottom: 14 }}>
-            <FileUploadField
-              label="Audio File (Audiobook MP3 / M4A)"
-              value={form.audioUrl}
-              onChange={v => setForm(p => ({ ...p, audioUrl: v }))}
-              placeholder="https://… or upload from computer (audiobooks only)"
-              kind="audio"
-              helperText="Only required for Audiobook content type"
-            />
-          </div>
-
-          <div style={{ display: "flex", gap: 16, marginBottom: 20 }}>
-            {[
-              { key: "isFeatured", label: "Featured Book" },
-              { key: "isStaffPick", label: "Staff Pick" },
-            ].map(c => (
-              <div key={c.key} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <input type="checkbox" id={c.key} checked={(form as any)[c.key]} onChange={e => setForm(p => ({ ...p, [c.key]: e.target.checked }))} />
-                <label htmlFor={c.key} style={{ fontSize: 13, fontWeight: 700, color: "#555", cursor: "pointer" }}>{c.label}</label>
+      {/* ── EDIT MODAL ── */}
+      {editBook && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "flex-start", justifyContent: "center", overflowY: "auto", padding: "32px 16px" }}>
+          <div style={{ background: "#fff", borderRadius: 16, width: "100%", maxWidth: 700, padding: "28px 32px", position: "relative", boxShadow: "0 20px 60px rgba(0,0,0,0.25)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 900, color: DARK }}>Edit Book</div>
+                <div style={{ fontSize: 12, color: "#888" }}>{editBook.title}</div>
               </div>
-            ))}
+              <button onClick={() => setEditBook(null)} style={{ background: "none", border: "none", cursor: "pointer", padding: 6, borderRadius: 8, color: "#555" }}>
+                <X size={20} />
+              </button>
+            </div>
+            <BookForm value={editForm} onChange={setEditForm} onSubmit={handleSaveEdit} saving={editSaving} submitLabel="Save Changes" />
           </div>
-
-          <div style={{ background: "#fffbea", border: `1px solid ${GOLD}44`, borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "#7A6010", marginBottom: 20, lineHeight: 1.6 }}>
-            <strong>Note:</strong> Books added by Admin are published immediately (Approved status). Author-submitted books require your approval before going live.
-          </div>
-
-          <Button onClick={handleAddBook} disabled={saving} style={{ background: GREEN, color: "#fff", fontWeight: 800, padding: "12px 24px", borderRadius: 10, fontSize: 14 }}>
-            {saving ? "Adding…" : "Publish Book to Store"}
-          </Button>
         </div>
       )}
     </div>

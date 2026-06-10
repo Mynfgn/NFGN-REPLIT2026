@@ -52,12 +52,10 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
     items: [
       { name: "Shop",               href: "/shop",                   icon: Store },
       { name: "Orders",             href: "/dashboard/orders",       icon: ShoppingBag },
-      { name: "Subscriptions",     href: "/dashboard/subscriptions", icon: RefreshCw },
-      { name: "Bookings",           href: "/dashboard/bookings",     icon: Calendar },
-      { name: "Pay As You Go",      href: "/dashboard/payg-bookings", icon: Zap },
+      { name: "Subscriptions",      href: "/dashboard/subscriptions", icon: RefreshCw },
       { name: "My Referral Link",   href: "/dashboard/referral",     icon: Link2 },
       { name: "Get the App",        href: "/dashboard/tools/get-the-app", icon: Home },
-      { name: "Send A Gift/Donation", href: "/shop?section=giving",       icon: Heart },
+      { name: "Send A Gift/Donation", href: "/shop?section=giving",  icon: Heart },
     ],
   },
   {
@@ -72,21 +70,26 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
     minTier: "retail_community_builder",
     items: [
       { name: "Genealogy",          href: "/dashboard/genealogy",    icon: Users, minTier: "retail_community_builder" },
-      { name: "User Earnings",      href: "/dashboard/earnings",     icon: TrendingUp, minTier: "retail_community_builder" },
-      { name: "Commissions",        href: "/dashboard/commissions",  icon: Award, minTier: "retail_community_builder" },
-      { name: "Register New Member", href: "/dashboard/registration",  icon: UserPlus, minTier: "retail_community_builder" },
       {
-        name: "Registration", icon: UserPlus, group: "registration", minTier: "pro_member",
+        name: "Commissions", icon: Award, group: "commissions-sub", minTier: "retail_community_builder",
         children: [
+          { name: "Commissions",       href: "/dashboard/commissions" },
+          { name: "User Earnings",     href: "/dashboard/earnings" },
+          { name: "E-Wallet",          href: "/dashboard/wallet" },
+          { name: "Transfer Funds",    href: "/dashboard/transfer" },
+          { name: "Payouts",           href: "/dashboard/payouts" },
+          { name: "Pro Member Bonus",  href: "/dashboard/pro-member-bonuses" },
+        ],
+      },
+      {
+        name: "Registration", icon: UserPlus, group: "registration", minTier: "retail_community_builder",
+        children: [
+          { name: "Register New Member",          href: "/dashboard/registration" },
           { name: "Registration Hub",             href: "/dashboard/registration" },
           { name: "Register A New Pro Member",    href: "/dashboard/register-new-pro" },
           { name: "New Member Registration List", href: "/dashboard/member-outreach" },
         ],
       },
-      { name: "E-Wallet",           href: "/dashboard/wallet",       icon: Wallet, minTier: "pro_member" },
-      { name: "Transfer Funds",     href: "/dashboard/transfer",     icon: ArrowRightLeft, minTier: "pro_member" },
-      { name: "Payouts",            href: "/dashboard/payouts",      icon: Banknote, minTier: "pro_member" },
-      { name: "Pro Member Bonus",   href: "/dashboard/pro-member-bonuses", icon: Star, minTier: "pro_member" },
       { name: "Bill Payer Program", href: "/dashboard/bpp",          icon: Home, minTier: "pro_member" },
       { name: "Mailbox",            href: "/dashboard/mailbox",      icon: Inbox, minTier: "pro_member" },
     ],
@@ -127,15 +130,17 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
         children: [
           { name: "Tools Overview",              href: "/dashboard/tools" },
           { name: "Vision Goals & Dreams Sheet", href: "/dashboard/tools/vision-goals" },
+          { name: "Da' Money Calculator",        href: "/dashboard/calculator" },
         ],
       },
-      { name: "Da' Money Calculator", href: "/dashboard/calculator", icon: Calculator, minTier: "pro_member" },
       { name: "Reports", href: "/dashboard/reports", icon: BarChart3, minTier: "pro_member" },
     ],
   },
   {
-    label: "Health & Wellness",
+    label: "Services",
     items: [
+      { name: "Bookings",      href: "/dashboard/bookings",      icon: Calendar },
+      { name: "Pay As You Go", href: "/dashboard/payg-bookings", icon: Zap },
       {
         name: "NFGN Health & Wellness",
         icon: Leaf, group: "health",
@@ -150,18 +155,13 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
           { name: "AI Health Assistant",        href: "/dashboard/health/ai-assistant" },
         ],
       },
-    ],
-  },
-  {
-    label: "Digital Book Store™",
-    items: [
       {
         name: "Book Store & Library",
         icon: BookOpen, group: "bookstore",
         children: [
-          { name: "Browse Bookstore",     href: "/dashboard/bookstore" },
-          { name: "My Digital Library",  href: "/dashboard/library" },
-          { name: "Become an Author",    href: "/dashboard/author/apply" },
+          { name: "Browse Bookstore",    href: "/dashboard/bookstore" },
+          { name: "My Digital Library", href: "/dashboard/library" },
+          { name: "Become an Author",   href: "/dashboard/author/apply" },
         ],
       },
     ],
@@ -170,12 +170,13 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function isGroupOpen(group: string, location: string): boolean {
-  if (group === "comp-plan")    return location.startsWith("/dashboard/comp-plan");
-  if (group === "training")     return location.startsWith("/dashboard/tools/training");
-  if (group === "registration") return location.startsWith("/dashboard/registration") || location.startsWith("/dashboard/register-new-pro") || location.startsWith("/dashboard/member-outreach");
-  if (group === "tools")        return location.startsWith("/dashboard/tools");
-  if (group === "health")       return location.startsWith("/dashboard/health");
-  if (group === "bookstore")    return location.startsWith("/dashboard/bookstore") || location.startsWith("/dashboard/library") || location.startsWith("/dashboard/read") || location.startsWith("/dashboard/author");
+  if (group === "comp-plan")       return location.startsWith("/dashboard/comp-plan");
+  if (group === "training")        return location.startsWith("/dashboard/tools/training");
+  if (group === "registration")    return location.startsWith("/dashboard/registration") || location.startsWith("/dashboard/register-new-pro") || location.startsWith("/dashboard/member-outreach");
+  if (group === "commissions-sub") return location.startsWith("/dashboard/commissions") || location.startsWith("/dashboard/earnings") || location.startsWith("/dashboard/wallet") || location.startsWith("/dashboard/transfer") || location.startsWith("/dashboard/payouts") || location.startsWith("/dashboard/pro-member-bonuses");
+  if (group === "tools")           return location.startsWith("/dashboard/tools") || location.startsWith("/dashboard/calculator");
+  if (group === "health")          return location.startsWith("/dashboard/health");
+  if (group === "bookstore")       return location.startsWith("/dashboard/bookstore") || location.startsWith("/dashboard/library") || location.startsWith("/dashboard/read") || location.startsWith("/dashboard/author");
   return false;
 }
 

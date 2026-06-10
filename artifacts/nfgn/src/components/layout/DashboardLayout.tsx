@@ -69,6 +69,7 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
     items: [
       { name: "Orders",               href: "/dashboard/orders",              icon: ShoppingBag },
       { name: "Subscriptions",        href: "/dashboard/subscriptions",       icon: RefreshCw },
+      { name: "Mailbox",              href: "/dashboard/mailbox",             icon: Inbox },
       { name: "My Referral Link",     href: "/dashboard/referral",            icon: Link2 },
       { name: "Get the App",          href: "/dashboard/tools/get-the-app",   icon: Home },
       { name: "Send A Gift/Donation", href: "/shop?section=giving",           icon: Heart },
@@ -125,8 +126,7 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
           { name: "New Member Registration List", href: "/dashboard/member-outreach" },
         ],
       },
-      { name: "Bill Payer Program", href: "/dashboard/bpp",      icon: Home,  minTier: "pro_member" },
-      { name: "Mailbox",            href: "/dashboard/mailbox",  icon: Inbox, minTier: "pro_member" },
+      { name: "Bill Payer Program", href: "/dashboard/bpp", icon: Home, minTier: "pro_member" },
     ],
   },
   {

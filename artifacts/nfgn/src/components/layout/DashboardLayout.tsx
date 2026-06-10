@@ -45,6 +45,7 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
     items: [
       { name: "Overview",           href: "/dashboard",         icon: LayoutDashboard, exact: true },
       { name: "Profile Management", href: "/dashboard/profile", icon: UserCircle },
+      { name: "Genealogy",          href: "/dashboard/genealogy", icon: Users, minTier: "retail_community_builder" },
     ],
   },
   {
@@ -105,7 +106,6 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
     label: "Business",
     minTier: "retail_community_builder",
     items: [
-      { name: "Genealogy", href: "/dashboard/genealogy", icon: Users, minTier: "retail_community_builder" },
       {
         name: "Commissions", icon: Award, group: "commissions-sub", minTier: "retail_community_builder",
         children: [

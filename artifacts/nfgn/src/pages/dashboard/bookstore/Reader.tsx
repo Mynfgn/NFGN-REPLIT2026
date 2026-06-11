@@ -75,8 +75,11 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle }: {
 
     try {
       // Pass the stream URL directly — epub.js fetches it internally.
+      // openAs:"epub" is required because our URL has no .epub extension;
+      // without it epub.js treats the URL as a directory base and tries to
+      // fetch META-INF/container.xml from it (resulting in 404s).
       // The server sends application/octet-stream so iOS Safari won't intercept it.
-      const epubBook = ePub(streamUrl);
+      const epubBook = ePub(streamUrl, { openAs: "epub" });
       bookRef.current = epubBook;
 
       const epubHeight = Math.max(500, window.innerHeight - 220);

@@ -176,9 +176,12 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle }: {
         const epubBook = ePub(blobUrl);
         bookRef.current = epubBook;
 
+        // Use an explicit pixel height — "100%" resolves to 0 when the container
+        // is visibility:hidden during initialisation, leaving the iframe blank.
+        const epubHeight = Math.max(500, window.innerHeight - 220);
         const rendition = epubBook.renderTo(containerRef.current!, {
           width: "100%",
-          height: "100%",
+          height: epubHeight,
           spread: "none",
           flow: "paginated",
         });
@@ -259,7 +262,7 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle }: {
       )}
       <div
         ref={containerRef}
-        style={{ flex: 1, display: epubLoading || epubError ? "none" : "block", borderRadius: 12, overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
+        style={{ flex: 1, visibility: epubLoading || epubError ? "hidden" : "visible", borderRadius: 12, overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
       />
       {epubReady && !epubError && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 20, padding: "14px 0 4px" }}>

@@ -13,7 +13,51 @@ const storageService = new ObjectStorageService();
 
 const router = Router();
 
-function formatBook(b: typeof booksTable.$inferSelect, showFile = false, isAdmin = false) {
+// ── File-type detection cache ───────────────────────────────────────────────
+// Object-storage URLs are UUID paths with no extension, so we cannot infer the
+// format from the URL.  Instead we read the first 4 bytes (magic bytes) from
+// GCS and cache the result in memory so subsequent requests are instant.
+const fileTypeCache = new Map<number, "epub" | "pdf">();
+
+async function detectBookFileType(bookId: number, fileUrl: string): Promise<"epub" | "pdf"> {
+  const cached = fileTypeCache.get(bookId);
+  if (cached) return cached;
+
+  let type: "epub" | "pdf" = fileUrl.toLowerCase().includes(".epub") ? "epub" : "pdf";
+
+  try {
+    const objectPath = fileUrl.startsWith("/api/storage/objects/")
+      ? fileUrl.slice("/api/storage".length)
+      : fileUrl.startsWith("/objects/") ? fileUrl : null;
+
+    if (objectPath) {
+      const file = await storageService.getObjectEntityFile(objectPath);
+      // Read only the first 4 bytes via GCS byte-range stream — fast and avoids
+      // pulling the whole file just to detect format.
+      const bytes = await new Promise<Buffer>((resolve, reject) => {
+        const chunks: Buffer[] = [];
+        const stream = (file as any).createReadStream({ start: 0, end: 3 });
+        stream.on("data", (chunk: Buffer) => chunks.push(chunk));
+        stream.on("end", () => resolve(Buffer.concat(chunks)));
+        stream.on("error", reject);
+      });
+      // PK (50 4B) = ZIP = EPUB;  %PDF (25 50 44 46) = PDF
+      type = (bytes[0] === 0x50 && bytes[1] === 0x4B) ? "epub" : "pdf";
+    }
+  } catch {
+    // fall through to URL-extension fallback already set above
+  }
+
+  fileTypeCache.set(bookId, type);
+  return type;
+}
+
+function formatBook(
+  b: typeof booksTable.$inferSelect,
+  showFile = false,
+  isAdmin = false,
+  detectedType: "epub" | "pdf" | null = null,
+) {
   return {
     id: b.id,
     title: b.title,
@@ -33,10 +77,10 @@ function formatBook(b: typeof booksTable.$inferSelect, showFile = false, isAdmin
     hasFile: showFile ? b.fileUrl !== null : false,
     hasAudio: showFile ? b.audioUrl !== null : false,
     hasSample: b.sampleFileUrl !== null,
-    // Derive file format so Reader can pick the right renderer (epub.js vs iframe)
-    fileType: b.fileUrl
+    // Use the magic-byte-detected type when available; fall back to URL extension
+    fileType: detectedType ?? (b.fileUrl
       ? (b.fileUrl.toLowerCase().includes(".epub") ? "epub" : "pdf")
-      : null,
+      : null),
     price: parseFloat(String(b.price)),
     cv: parseFloat(String(b.cv ?? "0")),
     isFree: b.isFree,
@@ -254,6 +298,7 @@ router.get("/bookstore/books", requireAuth, async (req, res): Promise<void> => {
 router.get("/bookstore/books/:id", requireAuth, async (req, res): Promise<void> => {
   const id = parseInt(String(req.params.id));
   const userId = (req as any).user?.id;
+  const isAdmin = ["super_admin", "admin", "store_admin"].includes((req as any).user?.role ?? "");
   const [book] = await db.select().from(booksTable).where(and(eq(booksTable.id, id), eq(booksTable.status, "approved")));
   if (!book) { res.status(404).json({ error: "Not found" }); return; }
   let purchased = false;
@@ -261,7 +306,13 @@ router.get("/bookstore/books/:id", requireAuth, async (req, res): Promise<void> 
     const [p] = await db.select().from(bookPurchasesTable).where(and(eq(bookPurchasesTable.userId, userId), eq(bookPurchasesTable.bookId, id)));
     purchased = !!p;
   }
-  res.json({ book: { ...formatBook(book, purchased), purchased } });
+  // Detect actual file type from magic bytes (cached after first call)
+  const showFile = purchased || isAdmin;
+  let detectedType: "epub" | "pdf" | null = null;
+  if (showFile && book.fileUrl) {
+    detectedType = await detectBookFileType(book.id, book.fileUrl);
+  }
+  res.json({ book: { ...formatBook(book, showFile, isAdmin, detectedType), purchased } });
 });
 
 // ── MEMBER: Purchase a FREE book (direct — paid books go through cart/checkout) ──

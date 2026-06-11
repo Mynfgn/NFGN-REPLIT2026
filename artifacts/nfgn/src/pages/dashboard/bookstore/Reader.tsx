@@ -3,12 +3,11 @@ import { ArrowLeft, Sun, Moon, Minus, Plus, BookOpen, Mic, Loader2, AlertTriangl
 import { Button } from "@/components/ui/button";
 import { useGetMe } from "@workspace/api-client-react";
 
-const GREEN  = "#2D6A4F";
-const GREEN_D = "#1A4032";
-const DARK   = "#0a0a0a";
-const GOLD   = "#C9A84C";
-
-const SPIN = `@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`;
+const GREEN   = "#2D6A4F";
+const GREEN_D  = "#1A4032";
+const DARK    = "#0a0a0a";
+const GOLD    = "#C9A84C";
+const SPIN    = `@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`;
 
 async function apiFetch(path: string, opts?: RequestInit) {
   const token = localStorage.getItem("nfgn_token");
@@ -22,17 +21,6 @@ async function apiFetch(path: string, opts?: RequestInit) {
   });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
-}
-
-/** Detect EPUB vs PDF from the first 4 magic bytes of a buffer.
- *  EPUB = ZIP (PK..) = 0x50 0x4B
- *  PDF  = %PDF      = 0x25 0x50 0x44 0x46
- *  Defaults to "epub" if neither matches (most books here are EPUB). */
-function detectFormat(buffer: ArrayBuffer): "epub" | "pdf" {
-  const b = new Uint8Array(buffer.slice(0, 4));
-  if (b[0] === 0x50 && b[1] === 0x4B) return "epub";
-  if (b[0] === 0x25 && b[1] === 0x50 && b[2] === 0x44 && b[3] === 0x46) return "pdf";
-  return "epub";
 }
 
 interface Book {
@@ -54,9 +42,9 @@ interface Book {
 
 interface Props { bookId: string }
 
-// ── EPUB renderer ─────────────────────────────────────────────────────────────
-function EpubViewer({ buffer, fontSize, darkMode, bookTitle }: {
-  buffer: ArrayBuffer;
+// ── EPUB viewer — passes URL directly to epub.js (no pre-download) ────────────
+function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle }: {
+  streamUrl: string;
   fontSize: number;
   darkMode: boolean;
   bookTitle: string;
@@ -64,8 +52,8 @@ function EpubViewer({ buffer, fontSize, darkMode, bookTitle }: {
   const containerRef = useRef<HTMLDivElement>(null);
   const bookRef      = useRef<any>(null);
   const renditionRef = useRef<any>(null);
-  const [epubReady, setEpubReady]     = useState(false);
-  const [epubError, setEpubError]     = useState("");
+  const [epubReady,   setEpubReady]   = useState(false);
+  const [epubError,   setEpubError]   = useState("");
   const [epubLoading, setEpubLoading] = useState(true);
 
   const prev = useCallback(() => renditionRef.current?.prev(), []);
@@ -74,22 +62,21 @@ function EpubViewer({ buffer, fontSize, darkMode, bookTitle }: {
   useEffect(() => {
     if (!containerRef.current) return;
     let destroyed = false;
-    let blobUrl: string | null = null;
 
     setEpubLoading(true);
     setEpubError("");
 
+    const ePub = (window as any).ePub;
+    if (!ePub) {
+      setEpubError("EPUB reader not available — please do a hard-refresh (Ctrl/Cmd+Shift+R).");
+      setEpubLoading(false);
+      return;
+    }
+
     try {
-      blobUrl = URL.createObjectURL(new Blob([buffer], { type: "application/epub+zip" }));
-
-      const ePub = (window as Window).ePub;
-      if (!ePub) {
-        setEpubError("EPUB reader not available. Please refresh the page.");
-        setEpubLoading(false);
-        return;
-      }
-
-      const epubBook = ePub(blobUrl);
+      // Pass the stream URL directly — epub.js fetches it internally.
+      // The server sends application/octet-stream so iOS Safari won't intercept it.
+      const epubBook = ePub(streamUrl);
       bookRef.current = epubBook;
 
       const epubHeight = Math.max(500, window.innerHeight - 220);
@@ -118,15 +105,15 @@ function EpubViewer({ buffer, fontSize, darkMode, bookTitle }: {
         if (!destroyed) { setEpubError(e?.message ?? "Book failed to load."); setEpubLoading(false); }
       });
     } catch (e: any) {
-      if (!destroyed) { setEpubError(e?.message ?? "Failed to open book."); setEpubLoading(false); }
+      setEpubError(e?.message ?? "Failed to open book.");
+      setEpubLoading(false);
     }
 
     return () => {
       destroyed = true;
       bookRef.current?.destroy?.();
-      if (blobUrl) URL.revokeObjectURL(blobUrl);
     };
-  }, [buffer]);
+  }, [streamUrl]);
 
   useEffect(() => {
     if (!renditionRef.current || !epubReady) return;
@@ -160,6 +147,7 @@ function EpubViewer({ buffer, fontSize, darkMode, bookTitle }: {
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
           <Loader2 size={28} color={GREEN} style={{ animation: "spin 1s linear infinite" }} />
           <div style={{ fontSize: 13, color: "#888" }}>Opening <em>{bookTitle}</em>…</div>
+          <div style={{ fontSize: 11, color: "#bbb", marginTop: 4 }}>This may take a moment on first open</div>
         </div>
       )}
       {epubError && !epubLoading && (
@@ -188,9 +176,9 @@ function EpubViewer({ buffer, fontSize, darkMode, bookTitle }: {
   );
 }
 
-// ── PDF renderer (PDF.js → canvas) ────────────────────────────────────────────
-function PdfViewer({ buffer, darkMode, currentPage, onPageChange, onTotalPages, watermarkText }: {
-  buffer: ArrayBuffer;
+// ── PDF viewer — passes URL directly to PDF.js (no pre-download) ──────────────
+function PdfViewer({ streamUrl, darkMode, currentPage, onPageChange, onTotalPages, watermarkText }: {
+  streamUrl: string;
   darkMode: boolean;
   currentPage: number;
   onPageChange: (n: number) => void;
@@ -200,15 +188,14 @@ function PdfViewer({ buffer, darkMode, currentPage, onPageChange, onTotalPages, 
   const canvasRef     = useRef<HTMLCanvasElement>(null);
   const pdfDocRef     = useRef<any>(null);
   const renderTaskRef = useRef<any>(null);
-  const [totalPages, setTotalPages]       = useState(0);
-  const [pdfError, setPdfError]           = useState("");
-  const [pdfLoading, setPdfLoading]       = useState(true);
+  const [totalPages,    setTotalPages]    = useState(0);
+  const [pdfError,      setPdfError]      = useState("");
+  const [pdfLoading,    setPdfLoading]    = useState(true);
   const [pageRendering, setPageRendering] = useState(false);
 
   const borderColor = darkMode ? "#333" : "#e5e7eb";
   const textColor   = darkMode ? "#e5e5e5" : "#0a0a0a";
 
-  // Load PDF document from pre-fetched buffer
   useEffect(() => {
     let cancelled = false;
     setPdfLoading(true);
@@ -217,13 +204,12 @@ function PdfViewer({ buffer, darkMode, currentPage, onPageChange, onTotalPages, 
     (async () => {
       try {
         const pdfjsLib = (window as any).pdfjsLib;
-        if (!pdfjsLib) throw new Error("PDF renderer not available — please refresh the page.");
+        if (!pdfjsLib) throw new Error("PDF renderer not available — please hard-refresh.");
         pdfjsLib.GlobalWorkerOptions.workerSrc =
           "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-        // Copy the buffer so PDF.js owns its own copy
-        const copy = buffer.slice(0);
-        const pdf  = await pdfjsLib.getDocument({ data: copy }).promise;
+        // Pass URL directly — PDF.js streams it internally
+        const pdf = await pdfjsLib.getDocument({ url: streamUrl }).promise;
         if (cancelled) return;
 
         pdfDocRef.current = pdf;
@@ -241,9 +227,8 @@ function PdfViewer({ buffer, darkMode, currentPage, onPageChange, onTotalPages, 
       pdfDocRef.current?.destroy?.();
       pdfDocRef.current = null;
     };
-  }, [buffer]);
+  }, [streamUrl]);
 
-  // Render current page whenever doc, page number, or dark mode changes
   const [pdfLoaded, setPdfLoaded] = useState(false);
   useEffect(() => { if (!pdfLoading && pdfDocRef.current) setPdfLoaded(true); }, [pdfLoading]);
 
@@ -288,7 +273,7 @@ function PdfViewer({ buffer, darkMode, currentPage, onPageChange, onTotalPages, 
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 400, gap: 10, flexDirection: "column" }}>
       <style>{SPIN}</style>
       <Loader2 size={28} color={GREEN} style={{ animation: "spin 1s linear infinite" }} />
-      <span style={{ fontSize: 13, color: "#888" }}>Loading book…</span>
+      <span style={{ fontSize: 13, color: "#888" }}>Loading PDF…</span>
     </div>
   );
   if (pdfError) return (
@@ -318,11 +303,7 @@ function PdfViewer({ buffer, darkMode, currentPage, onPageChange, onTotalPages, 
         <button onClick={() => onPageChange(Math.max(1, currentPage - 1))} disabled={currentPage <= 1} style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${borderColor}`, background: "none", cursor: currentPage <= 1 ? "not-allowed" : "pointer", color: textColor, fontWeight: 700, opacity: currentPage <= 1 ? 0.4 : 1 }}>← Prev</button>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontSize: 13, color: textColor, fontWeight: 600 }}>Page</span>
-          <input
-            type="number" value={currentPage} min={1} max={totalPages || undefined}
-            onChange={e => { const n = parseInt(e.target.value); if (!isNaN(n) && n >= 1) onPageChange(n); }}
-            style={{ width: 60, textAlign: "center", padding: "6px 8px", border: `1px solid ${borderColor}`, borderRadius: 8, background: darkMode ? "#222" : "#fff", color: textColor, fontWeight: 700, fontSize: 13 }}
-          />
+          <input type="number" value={currentPage} min={1} max={totalPages || undefined} onChange={e => { const n = parseInt(e.target.value); if (!isNaN(n) && n >= 1) onPageChange(n); }} style={{ width: 60, textAlign: "center", padding: "6px 8px", border: `1px solid ${borderColor}`, borderRadius: 8, background: darkMode ? "#222" : "#fff", color: textColor, fontWeight: 700, fontSize: 13 }} />
           {totalPages > 0 && <span style={{ fontSize: 13, color: "#888" }}>of {totalPages}</span>}
         </div>
         <button onClick={() => onPageChange(currentPage + 1)} disabled={totalPages > 0 && currentPage >= totalPages} style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${borderColor}`, background: "none", cursor: totalPages > 0 && currentPage >= totalPages ? "not-allowed" : "pointer", color: textColor, fontWeight: 700, opacity: totalPages > 0 && currentPage >= totalPages ? 0.4 : 1 }}>Next →</button>
@@ -335,80 +316,6 @@ function PdfViewer({ buffer, darkMode, currentPage, onPageChange, onTotalPages, 
         </div>
       )}
     </div>
-  );
-}
-
-// ── Smart wrapper — fetches once and auto-detects EPUB vs PDF ──────────────────
-function SmartBookViewer({ streamUrl, fontSize, darkMode, bookTitle, currentPage, onPageChange, onTotalPages, watermarkText }: {
-  streamUrl: string;
-  fontSize: number;
-  darkMode: boolean;
-  bookTitle: string;
-  currentPage: number;
-  onPageChange: (n: number) => void;
-  onTotalPages: (n: number) => void;
-  watermarkText: string;
-}) {
-  const [fileData, setFileData] = useState<{ type: "epub"|"pdf"; buffer: ArrayBuffer }|null>(null);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState("");
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError("");
-
-    (async () => {
-      try {
-        const resp = await fetch(streamUrl);
-        if (!resp.ok) throw new Error(`Could not load book (HTTP ${resp.status})`);
-        const buffer = await resp.arrayBuffer();
-        if (cancelled) return;
-        const type = detectFormat(buffer);
-        setFileData({ type, buffer });
-        setLoading(false);
-      } catch (e: any) {
-        if (!cancelled) { setError(e?.message ?? "Failed to download book."); setLoading(false); }
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, [streamUrl]);
-
-  if (loading) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 400, flexDirection: "column", gap: 12 }}>
-      <style>{SPIN}</style>
-      <Loader2 size={28} color={GREEN} style={{ animation: "spin 1s linear infinite" }} />
-      <div style={{ fontSize: 13, color: "#888" }}>Downloading <em>{bookTitle}</em>…</div>
-    </div>
-  );
-  if (error) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 300, flexDirection: "column", gap: 12, padding: 32 }}>
-      <AlertTriangle size={32} color={GOLD} />
-      <div style={{ fontSize: 14, fontWeight: 700, color: DARK }}>Could not load book</div>
-      <div style={{ fontSize: 12, color: "#888", textAlign: "center" }}>{error}</div>
-    </div>
-  );
-
-  if (fileData!.type === "epub") {
-    return (
-      <EpubViewer
-        buffer={fileData!.buffer}
-        fontSize={fontSize}
-        darkMode={darkMode}
-        bookTitle={bookTitle}
-      />
-    );
-  }
-  return (
-    <PdfViewer
-      buffer={fileData!.buffer}
-      darkMode={darkMode}
-      currentPage={currentPage}
-      onPageChange={onPageChange}
-      onTotalPages={onTotalPages}
-      watermarkText={watermarkText}
-    />
   );
 }
 
@@ -438,18 +345,20 @@ export function ReaderPage({ bookId }: Props) {
         }
         setBook(b);
         if (!isSample) {
-          const prog = await apiFetch(`/api/bookstore/reading-progress/${id}`);
-          if (prog?.progress) {
-            setCurrentPage(prog.progress.currentPage ?? 1);
-            if (prog.progress.totalPages) setTotalPages(prog.progress.totalPages);
-          }
+          try {
+            const prog = await apiFetch(`/api/bookstore/reading-progress/${id}`);
+            if (prog?.progress) {
+              setCurrentPage(prog.progress.currentPage ?? 1);
+              if (prog.progress.totalPages) setTotalPages(prog.progress.totalPages);
+            }
+          } catch {}
         }
       })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
   }, [id, isSample]);
 
-  // Debounced progress save — avoids hammering the server on rapid page changes
+  // Debounced progress save
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   function handlePageChange(newPage: number) {
     setCurrentPage(newPage);
@@ -474,15 +383,15 @@ export function ReaderPage({ bookId }: Props) {
   const headerBg    = darkMode ? "#0a0a0a" : "#f9fafb";
   const borderColor = darkMode ? "#333" : "#e5e7eb";
 
-  const token       = encodeURIComponent(localStorage.getItem("nfgn_token") ?? "");
-  const streamBase  = `/api/bookstore/books/${id}/stream?token=${token}`;
+  const token        = encodeURIComponent(localStorage.getItem("nfgn_token") ?? "");
+  const streamBase   = `/api/bookstore/books/${id}/stream?token=${token}`;
   const fileStreamUrl = isSample ? `${streamBase}&sample=true` : `${streamBase}&type=file`;
 
   const watermarkText = me
     ? `${me.firstName} ${me.lastName} · ${me.email}`
     : "NFGN Licensed Content";
 
-  const libraryHref = isSample ? "/dashboard/bookstore" : "/dashboard/library";
+  const libraryHref  = isSample ? "/dashboard/bookstore" : "/dashboard/library";
   const libraryLabel = isSample ? "Bookstore" : "My Library";
 
   if (loading) return (
@@ -511,6 +420,8 @@ export function ReaderPage({ bookId }: Props) {
   );
 
   const isAudio = book.type === "audiobook";
+  // Trust the server's magic-byte-detected fileType; fall back to epub if unknown
+  const isEpub  = book.fileType !== "pdf";
 
   return (
     <div style={{ minHeight: "100vh", background: bg, transition: "background .2s" }}>
@@ -518,10 +429,7 @@ export function ReaderPage({ bookId }: Props) {
       {/* ── Sticky header ── */}
       <div style={{ background: headerBg, borderBottom: `1px solid ${borderColor}`, padding: "10px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, position: "sticky", top: 0, zIndex: 100 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <a
-            href={libraryHref}
-            style={{ display: "flex", alignItems: "center", gap: 6, color: "#fff", textDecoration: "none", fontWeight: 700, fontSize: 13, background: GREEN, borderRadius: 8, padding: "6px 14px" }}
-          >
+          <a href={libraryHref} style={{ display: "flex", alignItems: "center", gap: 6, color: "#fff", textDecoration: "none", fontWeight: 700, fontSize: 13, background: GREEN, borderRadius: 8, padding: "6px 14px" }}>
             <ArrowLeft size={14} /> {libraryLabel}
           </a>
           <div style={{ width: 1, height: 24, background: borderColor }} />
@@ -533,13 +441,9 @@ export function ReaderPage({ bookId }: Props) {
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {!isAudio && (
             <>
-              <button onClick={() => setFontSize(s => Math.max(10, s - 1))} style={{ background: "none", border: `1px solid ${borderColor}`, borderRadius: 6, padding: "4px 8px", cursor: "pointer", color: textColor }}>
-                <Minus size={12} />
-              </button>
+              <button onClick={() => setFontSize(s => Math.max(10, s - 1))} style={{ background: "none", border: `1px solid ${borderColor}`, borderRadius: 6, padding: "4px 8px", cursor: "pointer", color: textColor }}><Minus size={12} /></button>
               <span style={{ fontSize: 12, color: textColor, fontWeight: 600, minWidth: 30, textAlign: "center" }}>{fontSize}px</span>
-              <button onClick={() => setFontSize(s => Math.min(28, s + 1))} style={{ background: "none", border: `1px solid ${borderColor}`, borderRadius: 6, padding: "4px 8px", cursor: "pointer", color: textColor }}>
-                <Plus size={12} />
-              </button>
+              <button onClick={() => setFontSize(s => Math.min(28, s + 1))} style={{ background: "none", border: `1px solid ${borderColor}`, borderRadius: 6, padding: "4px 8px", cursor: "pointer", color: textColor }}><Plus size={12} /></button>
             </>
           )}
           <button onClick={() => setDarkMode(d => !d)} style={{ background: "none", border: `1px solid ${borderColor}`, borderRadius: 6, padding: "6px 10px", cursor: "pointer", display: "flex", alignItems: "center", gap: 5, color: textColor, fontSize: 12, fontWeight: 700 }}>
@@ -551,9 +455,7 @@ export function ReaderPage({ bookId }: Props) {
       {/* Sample banner */}
       {isSample && (
         <div style={{ background: `${GOLD}18`, borderBottom: `2px solid ${GOLD}66`, padding: "10px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#7A6010" }}>
-            📖 Sample Preview of <em>{book.title}</em> — Purchase to read the full book
-          </div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#7A6010" }}>📖 Sample Preview of <em>{book.title}</em> — Purchase to read the full book</div>
           <a href="/dashboard/bookstore" style={{ textDecoration: "none" }}>
             <button style={{ background: GOLD, color: "#fff", border: "none", borderRadius: 8, padding: "6px 16px", fontWeight: 800, fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
               <ShoppingCart size={13} /> Buy Full Book
@@ -591,25 +493,30 @@ export function ReaderPage({ bookId }: Props) {
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, flexWrap: "wrap" }}>
                 <span style={{ fontSize: 12, color: "#888", fontWeight: 600 }}>Speed:</span>
                 {[0.75, 1, 1.25, 1.5, 2].map(s => (
-                  <button key={s} onClick={() => setAudioSpeed(s)} style={{ padding: "4px 10px", borderRadius: 16, border: `1.5px solid ${audioSpeed === s ? GREEN : borderColor}`, background: audioSpeed === s ? GREEN : "transparent", color: audioSpeed === s ? "#fff" : textColor, fontWeight: 800, fontSize: 12, cursor: "pointer" }}>
-                    {s}x
-                  </button>
+                  <button key={s} onClick={() => setAudioSpeed(s)} style={{ padding: "4px 10px", borderRadius: 16, border: `1.5px solid ${audioSpeed === s ? GREEN : borderColor}`, background: audioSpeed === s ? GREEN : "transparent", color: audioSpeed === s ? "#fff" : textColor, fontWeight: 800, fontSize: 12, cursor: "pointer" }}>{s}x</button>
                 ))}
               </div>
             </div>
           </div>
 
         ) : book.hasFile || (isSample && book.hasSample) ? (
-          <SmartBookViewer
-            streamUrl={fileStreamUrl}
-            fontSize={fontSize}
-            darkMode={darkMode}
-            bookTitle={book.title}
-            currentPage={currentPage}
-            onPageChange={handlePageChange}
-            onTotalPages={setTotalPages}
-            watermarkText={isSample ? "" : watermarkText}
-          />
+          isEpub ? (
+            <EpubViewer
+              streamUrl={fileStreamUrl}
+              fontSize={fontSize}
+              darkMode={darkMode}
+              bookTitle={book.title}
+            />
+          ) : (
+            <PdfViewer
+              streamUrl={fileStreamUrl}
+              darkMode={darkMode}
+              currentPage={currentPage}
+              onPageChange={handlePageChange}
+              onTotalPages={setTotalPages}
+              watermarkText={isSample ? "" : watermarkText}
+            />
+          )
 
         ) : (
           <div style={{ textAlign: "center", padding: "60px 32px" }}>
@@ -622,12 +529,9 @@ export function ReaderPage({ bookId }: Props) {
         )}
       </div>
 
-      {/* ── Floating "Back to Library" button at bottom of page ── */}
+      {/* ── Floating "Back to Library" button ── */}
       <div style={{ display: "flex", justifyContent: "center", padding: "24px 24px 40px" }}>
-        <a
-          href={libraryHref}
-          style={{ display: "inline-flex", alignItems: "center", gap: 8, background: GREEN, color: "#fff", textDecoration: "none", borderRadius: 10, padding: "12px 28px", fontWeight: 700, fontSize: 14, boxShadow: "0 4px 16px rgba(45,106,79,0.35)" }}
-        >
+        <a href={libraryHref} style={{ display: "inline-flex", alignItems: "center", gap: 8, background: GREEN, color: "#fff", textDecoration: "none", borderRadius: 10, padding: "12px 28px", fontWeight: 700, fontSize: 14, boxShadow: "0 4px 16px rgba(45,106,79,0.35)" }}>
           <Library size={16} /> Return to {libraryLabel}
         </a>
       </div>

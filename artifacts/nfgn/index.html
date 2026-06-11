@@ -30,6 +30,8 @@
     <!-- Authorize.net Accept.js — must be a static script tag (dynamic injection triggers E_WC_03) -->
     <script type="text/javascript" src="https://js.authorize.net/v1/Accept.js" charset="utf-8"></script>
 
+    <!-- JSZip — epub.js peer dependency; must load before epub.js so window.JSZip exists when epub.js initialises -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <!-- epub.js — loaded from CDN (npm package blocked by firewall); renders EPUBs in-browser without download dialogs -->
     <script src="https://unpkg.com/epubjs/dist/epub.min.js"></script>
 

@@ -11,17 +11,16 @@ import {
   ChevronDown, ChevronRight, Briefcase, PackageCheck, Store, Megaphone,
   FileDown, List, Trophy, Heart, Gem, DollarSign, HandHeart, UserPlus, Zap, BookOpen,
   Calculator, Leaf, Activity, FlaskConical, Scale, Flame, Apple, Dumbbell, Bot,
+  Sparkles, Wrench,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { roleLabel } from "@/lib/labels";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
 
-interface NavChild {
-  name: string;
-  href: string;
-  icon: React.ElementType;
-}
+type NavChild =
+  | { name: string; href: string; icon: React.ElementType; isSectionLabel?: never }
+  | { name: string; href?: never; icon?: never; isSectionLabel: true };
 
 interface NavItem {
   name: string;
@@ -136,10 +135,22 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       icon: Briefcase,
       exact: true,
       children: [
-        { name: "Providers Directory",  href: "/admin/professionals",           icon: Users },
-        { name: "All Bookings",         href: "/admin/bookings",                icon: Calendar },
-        { name: "PAYG Approvals",       href: "/admin/payg/providers",          icon: ShieldCheck },
-        { name: "BAP Earnings",         href: "/admin/pro-booking-commissions", icon: Briefcase },
+        { name: "PROVIDERS", isSectionLabel: true },
+        { name: "Health & Wellness",       href: "/admin/professionals?cat=health-wellness",       icon: Leaf },
+        { name: "Cosmetology",             href: "/admin/professionals?cat=cosmetology",            icon: Sparkles },
+        { name: "Restaurants & Food",      href: "/admin/professionals?cat=restaurants",            icon: Store },
+        { name: "Professional Services",   href: "/admin/professionals?cat=professional-services",  icon: Briefcase },
+        { name: "Consultant Services",     href: "/admin/professionals?cat=consultant-services",    icon: Users },
+        { name: "Education",               href: "/admin/professionals?cat=education",              icon: BookOpen },
+        { name: "Marketing & Advertising", href: "/admin/professionals?cat=marketing",              icon: Megaphone },
+        { name: "General Services",        href: "/admin/professionals?cat=general-services",       icon: Wrench },
+        { name: "NFGN Sports",             href: "/admin/professionals?cat=nfgn-sports",            icon: Trophy },
+        { name: "BOOKINGS", isSectionLabel: true },
+        { name: "All Bookings",            href: "/admin/bookings",                                 icon: Calendar },
+        { name: "PAY-AS-YOU-GO (PAYG)", isSectionLabel: true },
+        { name: "PAYG Approvals",          href: "/admin/payg/providers",                           icon: ShieldCheck },
+        { name: "EARNINGS", isSectionLabel: true },
+        { name: "BAP Earnings",            href: "/admin/pro-booking-commissions",                  icon: DollarSign },
       ],
     },
     { name: "Messages", href: "/admin/messages", icon: MessageSquare },
@@ -235,6 +246,14 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                     {isGroupOpen && (
                       <div className="ml-4 mt-0.5 border-l border-white/20 pl-2 space-y-0.5">
                         {item.children!.map((child) => {
+                          if (child.isSectionLabel) {
+                            return (
+                              <div key={child.name} className="flex items-center gap-2 px-1 pt-2.5 pb-0.5">
+                                <span className="text-[8px] font-black uppercase tracking-[0.18em] text-primary/60">{child.name}</span>
+                                <span className="flex-1 h-px bg-primary/20" />
+                              </div>
+                            );
+                          }
                           const childActive = location === child.href || location.startsWith(child.href);
                           return (
                             <Link key={child.name} href={child.href}>

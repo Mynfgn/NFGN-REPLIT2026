@@ -1,5 +1,12 @@
 export const BAP_MAIN_CATEGORIES = [
   {
+    key: "nfgn-sports",
+    label: "NFGN Sports",
+    description: "For sports coaches, trainers, teams, camps, player development, private lessons, and athletic services.",
+    purpose: "Support athletic development, team sports, and fitness through NFGN-affiliated sports professionals.",
+    forWhom: "Athletes of all ages, parents seeking coaching for children, and sports enthusiasts.",
+  },
+  {
     key: "health-wellness",
     label: "Health & Wellness",
     description: "For providers offering wellness, healthcare, fitness, nutrition, mental health, naturopathic, primary care, and personal wellness services.",
@@ -54,13 +61,6 @@ export const BAP_MAIN_CATEGORIES = [
     description: "For everyday service providers such as ride share, lawn care, home services, mechanics, painters, carpenters, and other local service providers.",
     purpose: "Provide access to reliable everyday services to support members in their daily lives.",
     forWhom: "Homeowners, renters, and anyone needing dependable local service providers.",
-  },
-  {
-    key: "nfgn-sports",
-    label: "NFGN Sports",
-    description: "For sports coaches, trainers, teams, camps, player development, private lessons, and athletic services.",
-    purpose: "Support athletic development, team sports, and fitness through NFGN-affiliated sports professionals.",
-    forWhom: "Athletes of all ages, parents seeking coaching for children, and sports enthusiasts.",
   },
 ] as const;
 

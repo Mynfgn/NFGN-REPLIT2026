@@ -281,7 +281,7 @@ export function AdminBookstorePage() {
       } else {
         await apiFetch(`/api/bookstore/cart/books/${book.id}`, { method: "POST" });
         toast({ title: `"${book.title}" added to cart!`, description: "Go to your cart to complete checkout." });
-        window.location.href = "/shop";
+        window.location.href = "/shop?openCart=1";
       }
     } catch (e: any) { toast({ title: "Error", description: e.message, variant: "destructive" }); }
   }

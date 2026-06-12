@@ -50,6 +50,14 @@ export function PublicLayout({ children }: { children: ReactNode }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("openCart") === "1") {
+      setCartOpen(true);
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, [setCartOpen]);
+
   const isAboutActive = location === "/about" || location === "/contact";
   const isBookAProActive = location === "/book" || location === "/pay-as-you-go";
 

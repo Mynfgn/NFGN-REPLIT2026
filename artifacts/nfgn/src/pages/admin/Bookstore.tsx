@@ -404,7 +404,7 @@ export function AdminBookstorePage() {
             <BookOpen size={24} color={GREEN} />
           </div>
           <div>
-            <h1 style={{ fontSize: 24, fontWeight: 900, color: DARK, fontFamily: "Georgia, serif", margin: 0 }}>NFGN Digital Book Store™</h1>
+            <h1 style={{ fontSize: 24, fontWeight: 900, color: DARK, fontFamily: "Georgia, serif", margin: 0 }}>NFGN Books™</h1>
             <p style={{ fontSize: 13, color: "#666", margin: 0 }}>Author Marketplace · Knowledge Library · Digital License Management</p>
           </div>
         </div>

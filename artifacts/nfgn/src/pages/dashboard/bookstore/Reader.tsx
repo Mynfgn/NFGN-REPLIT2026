@@ -395,7 +395,7 @@ export function ReaderPage({ bookId }: Props) {
     : "NFGN Licensed Content";
 
   const libraryHref  = isSample ? "/dashboard/bookstore" : "/dashboard/library";
-  const libraryLabel = isSample ? "Bookstore" : "My Library";
+  const libraryLabel = isSample ? "NFGN Books" : "My Library";
 
   if (loading) return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f9fafb" }}>

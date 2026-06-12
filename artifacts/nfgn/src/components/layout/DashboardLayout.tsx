@@ -65,11 +65,11 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
       { name: "Pay As You Go",      href: "/dashboard/payg-bookings", icon: Zap },
       { name: "Send A Gift/Donation", href: "/shop?section=giving",   icon: Heart },
       {
-        name: "Book Store & Library",
+        name: "NFGN Books",
         icon: BookOpen, group: "bookstore",
         children: [
-          { name: "Browse Bookstore",   href: "/dashboard/bookstore" },
-          { name: "My Digital Library", href: "/dashboard/library" },
+          { name: "Browse Books",   href: "/dashboard/bookstore" },
+          { name: "My Library",     href: "/dashboard/library" },
           { name: "Become an Author",   href: "/dashboard/author/apply" },
         ],
       },

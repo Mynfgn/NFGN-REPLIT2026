@@ -130,7 +130,7 @@ export function LibraryPage() {
             <BookOpenCheck size={24} color={GREEN} />
           </div>
           <div>
-            <h1 style={{ fontSize: 24, fontWeight: 900, color: DARK, fontFamily: "Georgia, serif", margin: 0 }}>My Digital Library</h1>
+            <h1 style={{ fontSize: 24, fontWeight: 900, color: DARK, fontFamily: "Georgia, serif", margin: 0 }}>My NFGN Books</h1>
             <p style={{ fontSize: 13, color: "#666", margin: 0 }}>{library.length} book{library.length !== 1 ? "s" : ""} in your collection</p>
           </div>
         </div>
@@ -146,9 +146,9 @@ export function LibraryPage() {
         <div style={{ padding: 60, textAlign: "center" }}>
           <BookOpen size={44} color="#ddd" style={{ margin: "0 auto 14px", display: "block" }} />
           <div style={{ fontSize: 16, fontWeight: 800, color: DARK, marginBottom: 8 }}>Your library is empty</div>
-          <div style={{ fontSize: 13, color: "#888", marginBottom: 20 }}>Browse the bookstore to add books to your collection.</div>
+          <div style={{ fontSize: 13, color: "#888", marginBottom: 20 }}>Browse NFGN Books to add titles to your collection.</div>
           <a href="/dashboard/bookstore">
-            <Button style={{ background: GREEN, color: "#fff", fontWeight: 700 }}>Go to Bookstore</Button>
+            <Button style={{ background: GREEN, color: "#fff", fontWeight: 700 }}>Go to NFGN Books</Button>
           </a>
         </div>
       ) : (

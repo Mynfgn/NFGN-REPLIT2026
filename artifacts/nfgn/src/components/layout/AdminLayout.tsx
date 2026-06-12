@@ -72,7 +72,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     { name: "Users", href: "/admin/users", icon: Users },
     { name: "Register", href: "/dashboard/register-new-pro", icon: UserPlus },
     { name: "Shop", href: "/shop?from=admin", icon: Store },
-    { name: "Book Store & Library", href: "/admin/bookstore", icon: BookOpen },
+    { name: "NFGN Books", href: "/admin/bookstore", icon: BookOpen },
     {
       name: "Health & Wellness",
       href: "/dashboard/health",

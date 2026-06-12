@@ -117,7 +117,7 @@ export function AuthorApplyPage() {
             <div style={{ marginTop: 24 }}>
               <a href="/dashboard/bookstore">
                 <Button style={{ background: GREEN, color: "#fff", fontWeight: 800 }}>
-                  <BookOpen size={14} style={{ marginRight: 6 }} /> Go to Bookstore
+                  <BookOpen size={14} style={{ marginRight: 6 }} /> Go to NFGN Books
                 </Button>
               </a>
             </div>

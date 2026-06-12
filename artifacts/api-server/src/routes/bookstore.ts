@@ -86,6 +86,7 @@ function formatBook(
     isFree: b.isFree,
     authorRoyaltyPct: parseFloat(String(b.authorRoyaltyPct)),
     platformFeePct: parseFloat(String(b.platformFeePct)),
+    referralCommissionPct: parseFloat(String(b.referralCommissionPct ?? "10")),
     status: b.status,
     isFeatured: b.isFeatured,
     isBestSeller: b.isBestSeller,
@@ -145,7 +146,7 @@ router.get("/bookstore/admin/books", requireAuth, requireAdmin, async (req, res)
 
 // ── ADMIN: Create book ─────────────────────────────────────────────
 router.post("/bookstore/admin/books", requireAuth, requireAdmin, async (req, res): Promise<void> => {
-  const { title, subtitle, authorName, description, shortDescription, category, type, coverImage, fileUrl, sampleFileUrl, audioUrl, price, cv, isFree, pageCount, duration, language, tags, isbn, isFeatured, isStaffPick, authorRoyaltyPct, platformFeePct } = req.body;
+  const { title, subtitle, authorName, description, shortDescription, category, type, coverImage, fileUrl, sampleFileUrl, audioUrl, price, cv, isFree, pageCount, duration, language, tags, isbn, isFeatured, isStaffPick, authorRoyaltyPct, platformFeePct, referralCommissionPct } = req.body;
   if (!title || !authorName) { res.status(400).json({ error: "title and authorName are required" }); return; }
   const [book] = await db.insert(booksTable).values({
     title, subtitle, slug: makeSlug(title), authorName, description, shortDescription,
@@ -153,6 +154,7 @@ router.post("/bookstore/admin/books", requireAuth, requireAdmin, async (req, res
     coverImage, fileUrl, sampleFileUrl: sampleFileUrl ?? null, audioUrl,
     price: String(price ?? 0), cv: String(cv ?? 0), isFree: isFree ?? false,
     authorRoyaltyPct: String(authorRoyaltyPct ?? 70), platformFeePct: String(platformFeePct ?? 30),
+    referralCommissionPct: String(referralCommissionPct ?? 10),
     status: "approved", isFeatured: isFeatured ?? false, isStaffPick: isStaffPick ?? false,
     pageCount: pageCount ?? null, duration: duration ?? null,
     language: language ?? "English", tags: tags ?? null, isbn: isbn ?? null,
@@ -179,7 +181,7 @@ router.patch("/bookstore/admin/books/:id/status", requireAuth, requireAdmin, asy
 // ── ADMIN: Update book details ────────────────────────────────────
 router.patch("/bookstore/admin/books/:id", requireAuth, requireAdmin, async (req, res): Promise<void> => {
   const id = parseInt(String(req.params.id));
-  const { title, subtitle, authorName, description, shortDescription, category, type, coverImage, fileUrl, sampleFileUrl, audioUrl, price, cv, isFree, pageCount, duration, language, tags, isbn, authorRoyaltyPct, platformFeePct } = req.body;
+  const { title, subtitle, authorName, description, shortDescription, category, type, coverImage, fileUrl, sampleFileUrl, audioUrl, price, cv, isFree, pageCount, duration, language, tags, isbn, authorRoyaltyPct, platformFeePct, referralCommissionPct } = req.body;
   const upd: Record<string, unknown> = {};
   if (title) upd.title = title;
   if (subtitle !== undefined) upd.subtitle = subtitle;
@@ -202,6 +204,7 @@ router.patch("/bookstore/admin/books/:id", requireAuth, requireAdmin, async (req
   if (isbn !== undefined) upd.isbn = isbn;
   if (authorRoyaltyPct !== undefined) upd.authorRoyaltyPct = String(authorRoyaltyPct);
   if (platformFeePct !== undefined) upd.platformFeePct = String(platformFeePct);
+  if (referralCommissionPct !== undefined) upd.referralCommissionPct = String(referralCommissionPct);
   const [updated] = await db.update(booksTable).set(upd).where(eq(booksTable.id, id)).returning();
   if (!updated) { res.status(404).json({ error: "Not found" }); return; }
   res.json({ book: formatBook(updated, true, true) });

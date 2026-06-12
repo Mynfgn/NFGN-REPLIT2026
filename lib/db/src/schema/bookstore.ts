@@ -22,6 +22,7 @@ export const booksTable = pgTable("books", {
   isFree: boolean("is_free").notNull().default(false),
   authorRoyaltyPct: numeric("author_royalty_pct", { precision: 5, scale: 2 }).notNull().default("70"),
   platformFeePct: numeric("platform_fee_pct", { precision: 5, scale: 2 }).notNull().default("30"),
+  referralCommissionPct: numeric("referral_commission_pct", { precision: 5, scale: 2 }).notNull().default("10"),
   status: text("status").notNull().default("pending"),
   isFeatured: boolean("is_featured").notNull().default(false),
   isBestSeller: boolean("is_best_seller").notNull().default(false),

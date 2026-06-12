@@ -74,14 +74,14 @@ function KpiCard({ label, value, sub, color, icon: Icon, onClick }: { label: str
 interface Book {
   id: number; title: string; subtitle?: string; authorName: string; category: string; type: string;
   price: number; cv: number; isFree: boolean; status: string; isFeatured: boolean; isBestSeller: boolean; isStaffPick: boolean;
-  totalSales: number; createdAt: string; authorRoyaltyPct: number; platformFeePct: number;
+  totalSales: number; createdAt: string; authorRoyaltyPct: number; platformFeePct: number; referralCommissionPct: number;
   description?: string; shortDescription?: string; coverImage?: string; fileUrl?: string; sampleFileUrl?: string; audioUrl?: string;
   pageCount?: number; duration?: string; language?: string; tags?: string; isbn?: string; adminNote?: string;
 }
 interface AuthorApp { id: number; userId: number; name: string; bio?: string; website?: string; writingExperience?: string; categories?: string; status: string; adminNote?: string; createdAt: string; }
 interface Stats { totalBooks: number; pendingBooks: number; approvedBooks: number; totalPurchases: number; totalAuthors: number; pendingAuthors: number; totalRevenue: number; monthlyRevenue: number; }
 
-const BLANK_FORM = { title: "", subtitle: "", authorName: "", shortDescription: "", description: "", category: "Health & Wellness", type: "ebook", price: "", cv: "0", isFree: false, authorRoyaltyPct: "70", platformFeePct: "30", coverImage: "", fileUrl: "", sampleFileUrl: "", audioUrl: "", language: "English", tags: "", isbn: "", pageCount: "", duration: "", isFeatured: false, isStaffPick: false };
+const BLANK_FORM = { title: "", subtitle: "", authorName: "", shortDescription: "", description: "", category: "Health & Wellness", type: "ebook", price: "", cv: "0", isFree: false, authorRoyaltyPct: "70", platformFeePct: "30", referralCommissionPct: "10", coverImage: "", fileUrl: "", sampleFileUrl: "", audioUrl: "", language: "English", tags: "", isbn: "", pageCount: "", duration: "", isFeatured: false, isStaffPick: false };
 
 function BookForm({ value, onChange, onSubmit, saving, submitLabel }: {
   value: typeof BLANK_FORM;
@@ -138,8 +138,8 @@ function BookForm({ value, onChange, onSubmit, saving, submitLabel }: {
         <textarea value={value.description} onChange={e => set("description", e.target.value)} placeholder="Full book description…" rows={4} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, resize: "vertical", fontFamily: "inherit" }} />
       </div>
 
-      {/* Price / CV / Royalty row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 14 }}>
+      {/* Price / CV / Royalty / RC row */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 14 }}>
         <div>
           <label style={{ fontSize: 12, fontWeight: 700, color: "#555", display: "block", marginBottom: 4 }}>Price ($)</label>
           <Input value={value.price} onChange={e => set("price", e.target.value)} placeholder="0.00" type="number" min="0" step="0.01" disabled={value.isFree} />
@@ -155,6 +155,10 @@ function BookForm({ value, onChange, onSubmit, saving, submitLabel }: {
         <div>
           <label style={{ fontSize: 12, fontWeight: 700, color: "#555", display: "block", marginBottom: 4 }}>Platform Fee %</label>
           <Input value={value.platformFeePct} onChange={e => { const v = e.target.value; set("platformFeePct", v); set("authorRoyaltyPct", String(Math.max(0, 100 - (parseFloat(v) || 0)))); }} type="number" min="0" max="100" />
+        </div>
+        <div>
+          <label style={{ fontSize: 12, fontWeight: 700, color: "#2D6A4F", display: "block", marginBottom: 4 }}>Referral RC %</label>
+          <Input value={value.referralCommissionPct} onChange={e => set("referralCommissionPct", e.target.value)} placeholder="10" type="number" min="0" max="100" step="0.5" style={{ borderColor: "#2D6A4F" }} />
         </div>
       </div>
 
@@ -321,6 +325,7 @@ export function AdminBookstorePage() {
           pageCount: addForm.pageCount ? parseInt(addForm.pageCount) : null,
           authorRoyaltyPct: parseFloat(addForm.authorRoyaltyPct),
           platformFeePct: parseFloat(addForm.platformFeePct),
+          referralCommissionPct: parseFloat(addForm.referralCommissionPct),
         }),
       });
       toast({ title: "Book added to store!" });
@@ -345,6 +350,7 @@ export function AdminBookstorePage() {
       isFree: book.isFree,
       authorRoyaltyPct: String(book.authorRoyaltyPct),
       platformFeePct: String(book.platformFeePct),
+      referralCommissionPct: String(book.referralCommissionPct ?? 10),
       coverImage: book.coverImage ?? "",
       fileUrl: book.fileUrl ?? "",
       sampleFileUrl: book.sampleFileUrl ?? "",
@@ -372,6 +378,7 @@ export function AdminBookstorePage() {
           pageCount: editForm.pageCount ? parseInt(editForm.pageCount) : null,
           authorRoyaltyPct: parseFloat(editForm.authorRoyaltyPct),
           platformFeePct: parseFloat(editForm.platformFeePct),
+          referralCommissionPct: parseFloat(editForm.referralCommissionPct),
         }),
       });
       toast({ title: "Book updated!" });
@@ -552,6 +559,7 @@ export function AdminBookstorePage() {
                         {" · "}<span style={{ color: GREEN_D, fontWeight: 700 }}>{book.cv > 0 ? `${book.cv} CV` : "No CV"}</span>
                         {" · "}{book.totalSales} sales
                         {" · "}Royalty: {book.authorRoyaltyPct}% / Platform: {book.platformFeePct}%
+                        {" · "}<span style={{ color: GREEN_D, fontWeight: 700 }}>RC: {book.referralCommissionPct ?? 10}%</span>
                       </div>
                       {book.shortDescription && <div style={{ fontSize: 12, color: "#666", marginTop: 5, lineHeight: 1.5, whiteSpace: "normal", wordBreak: "normal", overflowWrap: "break-word" }}>{book.shortDescription}</div>}
                       {book.adminNote && <div style={{ fontSize: 11, color: RED, marginTop: 4, fontStyle: "italic" }}>Note: {book.adminNote}</div>}

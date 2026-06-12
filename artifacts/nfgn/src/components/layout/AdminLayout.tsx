@@ -72,6 +72,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     { name: "Register", href: "/dashboard/register-new-pro", icon: UserPlus },
     { name: "Shop", href: "/shop?from=admin", icon: Store },
     { name: "NFGN Books", href: "/admin/bookstore", icon: BookOpen },
+    { name: "NFGN Sports", href: "/admin/products/sports", icon: Trophy },
     {
       name: "Health & Wellness",
       href: "/dashboard/health",
@@ -96,7 +97,6 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       children: [
         { name: "All Products", href: "/admin/products", icon: List },
         { name: "Digital Products", href: "/admin/products/digital", icon: FileDown },
-        { name: "NFGN Sports", href: "/admin/products/sports", icon: Trophy },
         { name: "Non-Profit Organizations", href: "/admin/products/nonprofit", icon: Heart },
         { name: "Nonprofit Requests", href: "/admin/nonprofit-requests", icon: HandHeart },
         { name: "Sports Team Approval", href: "/admin/sports-teams", icon: Trophy },

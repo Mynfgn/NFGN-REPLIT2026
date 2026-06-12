@@ -10,7 +10,7 @@ import {
   TrendingUp, Wrench, Home, Star, BookOpen, DollarSign,
   ChevronDown, ChevronRight, ShieldCheck, Link2, Sparkles,
   CreditCard, Zap, Store, CalendarDays, Heart, RefreshCw, Calculator, Leaf,
-  BookMarked, Pen,
+  BookMarked, Pen, Briefcase,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { roleLabel, tierLabel } from "@/lib/labels";
@@ -34,7 +34,9 @@ export function tierAtLeast(userTier: MemberTier, minTier: MemberTier): boolean 
 }
 
 // ── Nav types ─────────────────────────────────────────────────────────────────
-type NavChild = { name: string; href: string; minTier?: MemberTier };
+type NavChild =
+  | { name: string; href: string; minTier?: MemberTier; isSectionLabel?: never }
+  | { name: string; href?: never; isSectionLabel: true };
 type NavItem =
   | { name: string; href: string; icon: any; exact?: boolean; minTier?: MemberTier; group?: never; children?: never; badge?: string }
   | { name: string; href?: never; icon: any; group: string; children: NavChild[]; minTier?: MemberTier; exact?: never; badge?: string };
@@ -61,16 +63,36 @@ const NAV_SECTIONS: { label?: string; items: NavItem[]; minTier?: MemberTier }[]
     label: "E-Commerce",
     items: [
       { name: "Shop",               href: "/shop",                    icon: Store },
-      { name: "Bookings",           href: "/dashboard/bookings",      icon: Calendar },
-      { name: "Pay As You Go",      href: "/dashboard/payg-bookings", icon: Zap },
       { name: "Send A Gift/Donation", href: "/shop?section=giving",   icon: Heart },
       {
         name: "NFGN Books",
         icon: BookOpen, group: "bookstore",
         children: [
-          { name: "Browse Books",   href: "/dashboard/bookstore" },
-          { name: "My Library",     href: "/dashboard/library" },
+          { name: "Browse Books",       href: "/dashboard/bookstore" },
+          { name: "My Library",         href: "/dashboard/library" },
           { name: "Become an Author",   href: "/dashboard/author/apply" },
+        ],
+      },
+      {
+        name: "Book-A-Professional",
+        icon: Briefcase, group: "book-a-pro",
+        children: [
+          { name: "PROVIDERS", isSectionLabel: true },
+          { name: "Health & Wellness",       href: "/book?cat=health-wellness" },
+          { name: "Cosmetology",             href: "/book?cat=cosmetology" },
+          { name: "Restaurants & Food",      href: "/book?cat=restaurants" },
+          { name: "Professional Services",   href: "/book?cat=professional-services" },
+          { name: "Consultant Services",     href: "/book?cat=consultant-services" },
+          { name: "Education",               href: "/book?cat=education" },
+          { name: "Marketing & Advertising", href: "/book?cat=marketing" },
+          { name: "General Services",        href: "/book?cat=general-services" },
+          { name: "NFGN Sports",             href: "/book?cat=nfgn-sports" },
+          { name: "BOOKINGS", isSectionLabel: true },
+          { name: "My Bookings",             href: "/dashboard/bookings" },
+          { name: "PAY-AS-YOU-GO (PAYG)", isSectionLabel: true },
+          { name: "PAYG Bookings",           href: "/dashboard/payg-bookings" },
+          { name: "EARNINGS", isSectionLabel: true },
+          { name: "BAP Earnings",            href: "/dashboard/bap-earnings" },
         ],
       },
     ],
@@ -176,6 +198,7 @@ function isGroupOpen(group: string, location: string): boolean {
   if (group === "tools")           return location.startsWith("/dashboard/tools") || location.startsWith("/dashboard/calculator");
   if (group === "health")          return location.startsWith("/dashboard/health");
   if (group === "bookstore")       return location.startsWith("/dashboard/bookstore") || location.startsWith("/dashboard/library") || location.startsWith("/dashboard/read") || location.startsWith("/dashboard/author");
+  if (group === "book-a-pro")      return location.startsWith("/dashboard/bookings") || location.startsWith("/dashboard/payg-bookings") || location.startsWith("/dashboard/bap-earnings") || location === "/book";
   return false;
 }
 
@@ -200,7 +223,7 @@ function NavGroupItem({
   closeSidebar: () => void;
 }) {
   const open = openGroups[item.group] ?? false;
-  const anyChildActive = item.children.some(c => location.startsWith(c.href.split("?")[0]));
+  const anyChildActive = item.children.some(c => !c.isSectionLabel && location.startsWith(c.href.split("?")[0]));
 
   return (
     <div>
@@ -224,6 +247,14 @@ function NavGroupItem({
       {open && (
         <div className="ml-4 mt-0.5 border-l pl-3 space-y-0.5" style={{ borderColor: `${GOLD}25` }}>
           {item.children.map(child => {
+            if (child.isSectionLabel) {
+              return (
+                <div key={child.name} className="flex items-center gap-2 px-1 pt-2.5 pb-0.5">
+                  <span className="text-[8px] font-black uppercase tracking-[0.18em]" style={{ color: `${GOLD}60` }}>{child.name}</span>
+                  <span className="flex-1 h-px" style={{ background: `${GOLD}20` }} />
+                </div>
+              );
+            }
             const childPath = child.href.split("?")[0];
             const childSearch = child.href.includes("?") ? child.href.split("?")[1] : "";
             const childParam = childSearch ? new URLSearchParams(childSearch).get("s") : "";

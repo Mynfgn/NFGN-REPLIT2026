@@ -43,6 +43,7 @@ import { VisionGoalsPage } from "@/pages/dashboard/VisionGoals";
 import { TransferFundsPage } from "@/pages/dashboard/TransferFunds";
 import { PayoutsPage } from "@/pages/dashboard/Payouts";
 import { EarningsPage } from "@/pages/dashboard/Earnings";
+import { BapEarningsPage } from "@/pages/dashboard/BapEarnings";
 import { ProfilePage } from "@/pages/dashboard/Profile";
 import { ToolsPage } from "@/pages/dashboard/Tools";
 import { GetTheAppPage } from "@/pages/dashboard/GetTheApp";
@@ -289,6 +290,11 @@ function Router() {
       <Route path="/dashboard/earnings">
         <RequireAuth>
           <DashboardLayout><EarningsPage /></DashboardLayout>
+        </RequireAuth>
+      </Route>
+      <Route path="/dashboard/bap-earnings">
+        <RequireAuth>
+          <DashboardLayout><BapEarningsPage /></DashboardLayout>
         </RequireAuth>
       </Route>
       <Route path="/dashboard/mailbox">

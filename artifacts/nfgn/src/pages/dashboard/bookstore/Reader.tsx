@@ -503,23 +503,40 @@ export function ReaderPage({ bookId }: Props) {
           </div>
 
         ) : book.hasFile || (isSample && book.hasSample) ? (
-          isEpub ? (
-            <EpubViewer
-              streamUrl={fileStreamUrl}
-              fontSize={fontSize}
-              darkMode={darkMode}
-              bookTitle={book.title}
-            />
-          ) : (
-            <PdfViewer
-              streamUrl={fileStreamUrl}
-              darkMode={darkMode}
-              currentPage={currentPage}
-              onPageChange={handlePageChange}
-              onTotalPages={setTotalPages}
-              watermarkText={isSample ? "" : watermarkText}
-            />
-          )
+          <>
+            {/* Book cover + title card above the content */}
+            {book.coverImage && (
+              <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 28, padding: "20px 24px", background: darkMode ? "#111" : "#f8f8f8", borderRadius: 16, border: `1px solid ${borderColor}` }}>
+                <img
+                  src={book.coverImage}
+                  alt={book.title}
+                  style={{ width: 90, height: 120, objectFit: "cover", borderRadius: 10, boxShadow: "0 6px 20px rgba(0,0,0,0.2)", flexShrink: 0 }}
+                />
+                <div>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: textColor, fontFamily: "Georgia, serif", marginBottom: 4 }}>{book.title}</div>
+                  <div style={{ fontSize: 13, color: "#888" }}>by {book.authorName}</div>
+                  {book.pageCount && <div style={{ fontSize: 12, color: "#aaa", marginTop: 6 }}>{book.pageCount} pages</div>}
+                </div>
+              </div>
+            )}
+            {isEpub ? (
+              <EpubViewer
+                streamUrl={fileStreamUrl}
+                fontSize={fontSize}
+                darkMode={darkMode}
+                bookTitle={book.title}
+              />
+            ) : (
+              <PdfViewer
+                streamUrl={fileStreamUrl}
+                darkMode={darkMode}
+                currentPage={currentPage}
+                onPageChange={handlePageChange}
+                onTotalPages={setTotalPages}
+                watermarkText={isSample ? "" : watermarkText}
+              />
+            )}
+          </>
 
         ) : (
           <div style={{ textAlign: "center", padding: "60px 32px" }}>

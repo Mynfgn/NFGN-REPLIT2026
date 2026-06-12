@@ -879,6 +879,12 @@ export function CartDrawer() {
       ? `PICKUP — ${shipping.fullName}${shipping.phone ? " | " + shipping.phone : ""}`
       : `${shipping.fullName}, ${shipping.address}, ${shipping.city}, ${shipping.state} ${shipping.zip}${shipping.phone ? " | " + shipping.phone : ""}`;
 
+    /* ── Wallet covers full amount — skip payment processor ───── */
+    if (realFinalDue <= 0) {
+      createOrder.mutate({ data: { paymentMethod, shippingAddress: addr, promoCode: promoApplied?.code || promoCode || undefined, walletAmount: walletApplied, isPickup } } as any);
+      return;
+    }
+
     /* ── Authorize.net ─────────────────────────────────────────── */
     if (paymentMethod === "authorizenet") {
       const rawNum = anetCard.number.replace(/\s/g, "");

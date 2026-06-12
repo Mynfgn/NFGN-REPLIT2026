@@ -136,6 +136,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       exact: true,
       children: [
         { name: "PROVIDERS", isSectionLabel: true },
+        { name: "NFGN Sports",             href: "/admin/professionals?cat=nfgn-sports",            icon: Trophy },
         { name: "Health & Wellness",       href: "/admin/professionals?cat=health-wellness",       icon: Leaf },
         { name: "Cosmetology",             href: "/admin/professionals?cat=cosmetology",            icon: Sparkles },
         { name: "Restaurants & Food",      href: "/admin/professionals?cat=restaurants",            icon: Store },
@@ -144,7 +145,6 @@ export function AdminLayout({ children }: { children: ReactNode }) {
         { name: "Education",               href: "/admin/professionals?cat=education",              icon: BookOpen },
         { name: "Marketing & Advertising", href: "/admin/professionals?cat=marketing",              icon: Megaphone },
         { name: "General Services",        href: "/admin/professionals?cat=general-services",       icon: Wrench },
-        { name: "NFGN Sports",             href: "/admin/professionals?cat=nfgn-sports",            icon: Trophy },
         { name: "BOOKINGS", isSectionLabel: true },
         { name: "All Bookings",            href: "/admin/bookings",                                 icon: Calendar },
         { name: "PAY-AS-YOU-GO (PAYG)", isSectionLabel: true },

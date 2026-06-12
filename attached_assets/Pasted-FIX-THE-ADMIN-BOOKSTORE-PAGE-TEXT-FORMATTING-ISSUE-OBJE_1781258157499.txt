@@ -1,0 +1,294 @@
+FIX THE ADMIN BOOKSTORE PAGE TEXT FORMATTING ISSUE
+
+OBJECTIVE
+
+The Admin Bookstore page currently displays book information in an extremely narrow column, causing the title, author, category, pricing, CV, royalty information, and description to wrap vertically and appear stacked one word at a time.
+
+The goal is to redesign the product card layout so that all text displays naturally from left-to-right in a professional horizontal format while remaining responsive on desktop, tablet, and mobile devices.
+
+CURRENT ISSUE
+
+The following fields are displaying incorrectly:
+
+* Book Title
+* Author Name
+* Category
+* Product Type
+* Price
+* CV
+* Sales Count
+* Royalty Percentage
+* Platform Percentage
+* Book Description
+
+The content area is too narrow, causing text to wrap vertically.
+
+DESIRED LAYOUT
+
+Each book card should have three sections arranged horizontally:
+
+LEFT COLUMN
+
+* Book Cover Image
+
+CENTER COLUMN
+
+* Book Title
+* Author
+* Category
+* Product Type
+* Price
+* CV
+* Sales
+* Royalty Information
+* Description
+
+RIGHT COLUMN
+
+* Edit Button
+* Buy Button
+* Feature Button
+* Best Seller Button
+* Suspend Button
+* Any future action buttons
+
+VISUAL STRUCTURE
+
+[ Book Cover ]
+[ Book Information ]
+[ Action Buttons ]
+
+Everything should align horizontally across the card.
+
+TECHNICAL REQUIREMENTS
+
+Locate the Admin Bookstore component.
+
+Possible file locations:
+
+* AdminBookstore.tsx
+* BookstoreAdmin.tsx
+* ProductCard.tsx
+* BookCard.tsx
+* AdminProducts.tsx
+* admin/bookstore/*
+* components/bookstore/*
+
+Search for the component displaying:
+
+"The 10 Pathways Of A Builder"
+
+and update the layout.
+
+REQUIRED COMPONENT STRUCTURE
+
+```tsx
+<div className="book-card">
+
+  <div className="book-image-section">
+    <img
+      src={book.imageUrl}
+      alt={book.title}
+      className="book-cover"
+    />
+  </div>
+
+  <div className="book-info-section">
+    <h3 className="book-title">
+      {book.title}
+    </h3>
+
+    <p className="book-author">
+      By {book.author}
+    </p>
+
+    <p className="book-category">
+      {book.category} • {book.type}
+    </p>
+
+    <p className="book-pricing">
+      ${book.price} • {book.cv} CV • {book.sales} Sales
+    </p>
+
+    <p className="book-royalty">
+      Royalty: {book.royalty}% | Platform: {book.platform}%
+    </p>
+
+    <p className="book-description">
+      {book.description}
+    </p>
+  </div>
+
+  <div className="book-actions">
+    {/* Existing Action Buttons */}
+  </div>
+
+</div>
+```
+
+REQUIRED CSS
+
+```css
+.book-card {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  width: 100%;
+  padding: 16px;
+  gap: 20px;
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+
+.book-image-section {
+  flex-shrink: 0;
+}
+
+.book-cover {
+  width: 90px;
+  min-width: 90px;
+  height: 130px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.book-info-section {
+  flex: 1;
+  min-width: 350px;
+  max-width: 700px;
+  display: flex;
+  flex-direction: column;
+}
+
+.book-title {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 8px;
+
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.book-author,
+.book-category,
+.book-pricing,
+.book-royalty,
+.book-description {
+  margin-bottom: 6px;
+  line-height: 1.5;
+
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.book-description {
+  max-width: 700px;
+}
+
+.book-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  align-items: flex-start;
+  min-width: 400px;
+}
+```
+
+REMOVE OR OVERRIDE ANY OF THE FOLLOWING
+
+Search the project for and remove or override:
+
+```css
+writing-mode: vertical-rl;
+writing-mode: vertical-lr;
+
+word-break: break-all;
+
+overflow-wrap: anywhere;
+
+width: 1px;
+
+max-width: 50px;
+
+max-width: 80px;
+
+grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+```
+
+TAILWIND VERSION
+
+If Tailwind CSS is being used, replace the card container with:
+
+```tsx
+<div className="flex flex-row items-start justify-between gap-5 w-full p-4 rounded-xl">
+```
+
+Replace the information section with:
+
+```tsx
+<div className="flex-1 min-w-[350px] max-w-[700px]">
+```
+
+Replace title classes with:
+
+```tsx
+className="text-xl font-bold leading-snug whitespace-normal break-normal"
+```
+
+Replace description classes with:
+
+```tsx
+className="max-w-[700px] whitespace-normal break-normal"
+```
+
+Replace action buttons container with:
+
+```tsx
+className="flex flex-wrap gap-2 justify-end min-w-[400px]"
+```
+
+RESPONSIVE DESIGN REQUIREMENTS
+
+Desktop:
+
+* Image left
+* Text center
+* Buttons right
+
+Tablet:
+
+* Maintain horizontal layout
+
+Mobile:
+
+* Allow wrapping if needed
+* Text should still read left-to-right
+* Never display vertically
+
+FINAL VALIDATION CHECKLIST
+
+Verify:
+
+✓ Book title displays horizontally
+✓ Author displays horizontally
+✓ Category displays horizontally
+✓ Price displays horizontally
+✓ CV displays horizontally
+✓ Royalty displays horizontally
+✓ Description displays horizontally
+✓ Buttons remain aligned properly
+✓ Card width expands correctly
+✓ No text appears one word per line
+✓ No vertical text rendering exists anywhere on the page
+✓ Layout looks professional and modern
+
+After implementing, test using:
+
+"The 10 Pathways Of A Builder"
+
+and confirm the title, metadata, and description display in normal horizontal lines rather than stacked vertically.

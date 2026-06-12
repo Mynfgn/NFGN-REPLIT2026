@@ -525,40 +525,40 @@ export function AdminBookstorePage() {
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {filteredBooks.map(book => (
                 <div key={book.id} style={{ background: "#fff", border: `1.5px solid ${book.status === "pending" ? GOLD : "#e5e7eb"}`, borderRadius: 12, padding: "14px 16px" }}>
-                  <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+                  <div style={{ display: "flex", gap: 14, alignItems: "flex-start", flexWrap: "wrap" }}>
                     {/* Cover thumbnail */}
                     <div style={{ flexShrink: 0 }}>
                       {book.coverImage ? (
-                        <img src={book.coverImage} alt={book.title} style={{ width: 60, height: 80, objectFit: "cover", borderRadius: 6, boxShadow: "0 2px 8px rgba(0,0,0,0.12)" }} />
+                        <img src={book.coverImage} alt={book.title} style={{ width: 70, height: 95, objectFit: "cover", borderRadius: 6, boxShadow: "0 2px 8px rgba(0,0,0,0.12)" }} />
                       ) : (
-                        <div style={{ width: 60, height: 80, background: `linear-gradient(135deg, ${GREEN_M}, ${GREEN}33)`, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <div style={{ width: 70, height: 95, background: `linear-gradient(135deg, ${GREEN_M}, ${GREEN}33)`, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center" }}>
                           <BookOpen size={22} color={GREEN} />
                         </div>
                       )}
                     </div>
 
                     {/* Info */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ flex: 1, minWidth: 220 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
-                        <span style={{ fontSize: 14, fontWeight: 900, color: DARK }}>{book.title}</span>
+                        <span style={{ fontSize: 15, fontWeight: 900, color: DARK, whiteSpace: "normal", wordBreak: "normal", overflowWrap: "break-word" }}>{book.title}</span>
                         <StatusBadge status={book.status} />
                         {book.isFeatured && <span style={{ background: `${GOLD}20`, color: "#7A6010", borderRadius: 10, padding: "1px 8px", fontSize: 10, fontWeight: 800 }}>★ Featured</span>}
                         {book.isBestSeller && <span style={{ background: "#e0f2fe", color: "#0369a1", borderRadius: 10, padding: "1px 8px", fontSize: 10, fontWeight: 800 }}>🏆 Bestseller</span>}
                         {book.isStaffPick && <span style={{ background: GREEN_M, color: GREEN_D, borderRadius: 10, padding: "1px 8px", fontSize: 10, fontWeight: 800 }}>👍 Staff Pick</span>}
                       </div>
-                      <div style={{ fontSize: 12, color: "#555" }}>By {book.authorName} · {book.category} · {BOOK_TYPES.find(t => t.value === book.type)?.label ?? book.type}</div>
-                      <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
+                      <div style={{ fontSize: 12, color: "#555", whiteSpace: "normal" }}>By {book.authorName} · {book.category} · {BOOK_TYPES.find(t => t.value === book.type)?.label ?? book.type}</div>
+                      <div style={{ fontSize: 12, color: "#888", marginTop: 2, whiteSpace: "normal" }}>
                         {book.isFree ? "Free" : `$${book.price.toFixed(2)}`}
                         {" · "}<span style={{ color: GREEN_D, fontWeight: 700 }}>{book.cv > 0 ? `${book.cv} CV` : "No CV"}</span>
                         {" · "}{book.totalSales} sales
                         {" · "}Royalty: {book.authorRoyaltyPct}% / Platform: {book.platformFeePct}%
                       </div>
-                      {book.shortDescription && <div style={{ fontSize: 12, color: "#666", marginTop: 5, lineHeight: 1.5, maxWidth: 500 }}>{book.shortDescription}</div>}
+                      {book.shortDescription && <div style={{ fontSize: 12, color: "#666", marginTop: 5, lineHeight: 1.5, whiteSpace: "normal", wordBreak: "normal", overflowWrap: "break-word" }}>{book.shortDescription}</div>}
                       {book.adminNote && <div style={{ fontSize: 11, color: RED, marginTop: 4, fontStyle: "italic" }}>Note: {book.adminNote}</div>}
                     </div>
 
                     {/* Actions */}
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "flex-start", flexShrink: 0 }}>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "flex-start", flexShrink: 0, minWidth: 120 }}>
                       <Button size="sm" onClick={() => openEdit(book)} variant="outline" style={{ fontWeight: 700, fontSize: 12, padding: "5px 12px", color: "#374151" }}>
                         <Edit3 size={12} style={{ marginRight: 4 }} /> Edit
                       </Button>

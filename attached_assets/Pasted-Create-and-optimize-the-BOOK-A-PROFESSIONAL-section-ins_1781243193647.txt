@@ -1,0 +1,241 @@
+Create and optimize the BOOK-A-PROFESSIONAL section inside the NFGN Admin and Member Back Office.
+MAIN MENU STRUCTURE
+Under the main menu category BOOK-A-PROFESSIONAL, create the following 4 submenu sections:
+Providers
+Bookings
+Pay-As-You-Go
+Earnings
+BOOKINGS SECTION
+The Bookings section already exists. Keep it under BOOK-A-PROFESSIONAL.
+All BOOK-A-PROFESSIONAL bookings/orders must appear in Bookings once they are:
+Paid for
+Processed
+Rendered/completed
+Pending approval
+Approved
+Denied
+Refunded
+Cancelled
+PAY-AS-YOU-GO SECTION
+Under Pay-As-You-Go, create a dropdown menu with:
+PAYG Approvals
+PAYG Bookings
+Move “Pay As You Go Provider Approvals” under Pay-As-You-Go and rename it to:
+PAYG Approvals
+PAYG Bookings must also be connected to the main Bookings section, so PAYG bookings can be viewed both under:
+BOOK-A-PROFESSIONAL > Pay-As-You-Go > PAYG Bookings
+and
+BOOK-A-PROFESSIONAL > Bookings
+PROVIDERS SECTION
+Under Providers, create 9 main provider categories:
+Health and Wellness
+Cosmetology
+Restaurants
+Professional Services
+Consultant Services
+Education
+Marketing and Advertisement
+General Services
+NFGN Sports
+Each provider category must include:
+Category title
+Professional description
+Purpose of the category
+Who the category is for
+List of providers assigned to that category
+Admin input/add/edit/delete provider capability
+The Admin must be able to add a provider directly under the correct category.
+Example:
+If the Admin wants to add a hairstylist, barber, nail tech, massage therapist, or spa provider, the Admin should be able to add that provider directly under Cosmetology.
+PROVIDER INPUT FIELDS
+When the Admin adds a provider, include these fields:
+Provider name
+Provider business name
+Provider category
+Provider subcategory
+Service description
+Price or price range
+Pay-As-You-Go eligibility
+Commissionable status
+Commission amount or percentage
+Location
+Phone number
+Email address
+Website or booking link
+Upload image/logo
+Provider status: Pending, Approved, Denied, Suspended
+Notes
+Created date
+Updated date
+PROVIDER CATEGORY DESCRIPTIONS
+Health and Wellness:
+For providers offering wellness, healthcare, fitness, nutrition, mental health, naturopathic, primary care, and personal wellness services.
+Cosmetology:
+For beauty, grooming, spa, hair, nails, skincare, massage, and personal care providers.
+Restaurants:
+For restaurants, food trucks, meal services, catering, and food-related vendors.
+Professional Services:
+For skilled trades, repair services, event locations, business services, and professional service providers.
+Consultant Services:
+For business coaches, MLM consultants, spiritual consultants, life coaches, counselors, and professional advisors.
+Education:
+For tutors, instructors, trainers, educational coaches, and learning support providers.
+Marketing and Advertisement:
+For marketing specialists, branding experts, advertising providers, content creators, and promotional service providers.
+General Services:
+For everyday service providers such as ride share, lawn care, home services, mechanics, painters, carpenters, and other local service providers.
+NFGN Sports:
+For sports coaches, trainers, teams, camps, player development, private lessons, and athletic services.
+PROVIDER SUBCATEGORIES
+Create a dropdown list for provider subcategories and organize them professionally under the proper main category.
+Health and Wellness:
+Mental Health Doctors
+Primary Care Providers
+Physical Trainers
+Massage Therapists
+Counselors
+Wellness Coaches
+Cosmetology:
+Barbers
+Cosmetologists
+Aestheticians
+Nail Techs
+Barbershops
+Hair Salons
+Spas
+Massage Therapists
+Restaurants:
+Restaurants
+Food Trucks
+Catering Services
+Professional Services:
+Mechanics
+Carpenters
+Painters
+Event Locations
+Business Service Providers
+Consultant Services:
+MLM Consultants
+Spiritual Consultants
+Business Coaches
+Life Coaches
+Counselors
+Education:
+Tutoring
+Educational Coaches
+Instructors
+Marketing and Advertisement:
+Marketing Consultants
+Advertising Consultants
+Branding Specialists
+Content Creators
+Promotional Services
+General Services:
+Landscaping / Lawn Care
+Ride Share
+Home Services
+Local Service Providers
+NFGN Sports:
+Sports Coaches
+Physical Trainers
+Team Coaches
+Private Lessons
+Skills Trainers
+Sports Camps
+EARNINGS SECTION
+Under BOOK-A-PROFESSIONAL, create an Earnings section.
+Any money earned from completed bookings must show under:
+BOOK-A-PROFESSIONAL > Earnings
+Admin > Commissions
+Member Back Office > Earnings
+Member Back Office > Commissions
+Only completed services should count as earned income.
+A completed service means:
+Customer paid
+Booking was confirmed
+Service was rendered/provided
+Booking status changed to Completed
+Commission was calculated
+Earnings must include:
+Booking ID
+Customer name
+Provider name
+Service category
+Service subcategory
+Service date
+Payment amount
+Commission amount
+Admin earnings
+Provider earnings
+Member earnings
+Status
+Payment date
+Completion date
+BOOKING STATUS OPTIONS
+Create the following booking statuses:
+Pending Payment
+Paid
+Pending Approval
+Approved
+Scheduled
+In Progress
+Completed
+Cancelled
+Denied
+Refunded
+COMMISSION LOGIC
+When a booking is marked Completed, calculate and display the appropriate earnings/commissions in:
+BOOK-A-PROFESSIONAL Earnings
+Admin Commissions
+Member Earnings
+Member Commissions
+Do not count unpaid, cancelled, denied, or refunded bookings as earned income.
+ADMIN FUNCTIONALITY
+The Admin must be able to:
+Add providers
+Edit providers
+Delete providers
+Approve providers
+Deny providers
+Suspend providers
+Assign provider categories
+Assign provider subcategories
+View all bookings
+View PAYG approvals
+View PAYG bookings
+View earnings
+View commissions
+Filter by category, provider, status, date, and earnings
+Export bookings and earnings reports
+MEMBER FUNCTIONALITY
+Members must be able to:
+View available providers
+Search providers by category
+Book services
+View booking history
+View completed bookings
+View earnings
+View commissions
+Track PAYG-related commissions where applicable
+DESIGN REQUIREMENTS
+Make the BOOK-A-PROFESSIONAL section clean, professional, mobile-friendly, and easy to navigate.
+Use dropdown menus where appropriate.
+The structure should be:
+BOOK-A-PROFESSIONAL
+Providers
+Health and Wellness
+Cosmetology
+Restaurants
+Professional Services
+Consultant Services
+Education
+Marketing and Advertisement
+General Services
+NFGN Sports
+Bookings
+Pay-As-You-Go
+PAYG Approvals
+PAYG Bookings
+Earnings
+FINAL REQUIREMENT
+Make sure the database, dashboard, menus, dropdowns, booking logic, provider input process, PAYG approvals, earnings tracking, and commissions reporting are all connected properly throughout the Admin and Member Back Office.

@@ -392,36 +392,82 @@ function serializePro(p: typeof professionalsTable.$inferSelect) {
     id: p.id,
     userId: p.userId ?? null,
     name: p.name,
+    businessName: p.businessName ?? null,
     bio: p.bio,
     specialty: p.specialty,
+    category: p.category ?? null,
+    subcategory: p.subcategory ?? null,
     avatar: p.avatar ?? null,
     rating: parseFloat(p.rating),
     reviewCount: p.reviewCount,
     isAvailable: p.isAvailable,
+    providerStatus: p.providerStatus ?? "approved",
     hourlyRate: parseFloat(p.hourlyRate),
     cv: p.cv ?? 0,
     proPayoutPercent: p.proPayoutPercent ?? 80,
+    commissionPercent: parseFloat(p.commissionPercent ?? "10"),
+    isPaygEligible: p.isPaygEligible ?? false,
+    isCommissionable: p.isCommissionable ?? true,
     services: p.services ?? [],
+    phone: p.phone ?? null,
+    email: p.email ?? null,
+    website: p.website ?? null,
+    location: p.location ?? null,
+    adminNotes: p.adminNotes ?? null,
     createdAt: p.createdAt.toISOString(),
+    updatedAt: p.updatedAt.toISOString(),
   };
 }
 
 router.get("/professionals", async (req, res): Promise<void> => {
-  const professionals = await db.select().from(professionalsTable).orderBy(professionalsTable.name);
-  res.json(professionals.map(serializePro));
+  const { cat, status, search } = req.query as Record<string, string>;
+  const conditions = [];
+  if (cat) conditions.push(eq(professionalsTable.category, cat));
+  if (status) conditions.push(eq(professionalsTable.providerStatus, status));
+  const professionals = await db.select().from(professionalsTable)
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(professionalsTable.name);
+  const results = professionals.map(serializePro);
+  const filtered = search
+    ? results.filter(p =>
+        p.name.toLowerCase().includes(search.toLowerCase()) ||
+        (p.businessName ?? "").toLowerCase().includes(search.toLowerCase()) ||
+        (p.specialty ?? "").toLowerCase().includes(search.toLowerCase()) ||
+        (p.subcategory ?? "").toLowerCase().includes(search.toLowerCase())
+      )
+    : results;
+  res.json(filtered);
 });
 
 router.post("/professionals", requireAdmin, async (req, res): Promise<void> => {
-  const { userId, name, bio, specialty, avatar, hourlyRate, cv, proPayoutPercent, services, isAvailable } = req.body;
+  const {
+    userId, name, businessName, bio, specialty, category, subcategory,
+    avatar, hourlyRate, cv, proPayoutPercent, commissionPercent,
+    isPaygEligible, isCommissionable, services, isAvailable,
+    phone, email, website, location, adminNotes, providerStatus,
+  } = req.body;
   const [pro] = await db.insert(professionalsTable).values({
     userId: userId ?? undefined,
-    name, bio, specialty,
-    avatar: avatar ?? undefined,
-    hourlyRate: String(hourlyRate),
+    name, bio,
+    businessName: businessName || undefined,
+    specialty: specialty || category || "General",
+    category: category || undefined,
+    subcategory: subcategory || undefined,
+    avatar: avatar || undefined,
+    hourlyRate: String(hourlyRate || 0),
     cv: cv != null ? parseInt(String(cv)) : 0,
     proPayoutPercent: proPayoutPercent != null ? Math.min(95, Math.max(50, parseInt(String(proPayoutPercent)))) : 80,
+    commissionPercent: commissionPercent != null ? String(commissionPercent) : "10",
+    isPaygEligible: isPaygEligible ?? false,
+    isCommissionable: isCommissionable ?? true,
     services: services ?? [],
     isAvailable: isAvailable ?? true,
+    providerStatus: providerStatus ?? "approved",
+    phone: phone || undefined,
+    email: email || undefined,
+    website: website || undefined,
+    location: location || undefined,
+    adminNotes: adminNotes || undefined,
   }).returning();
 
   res.status(201).json(serializePro(pro));
@@ -431,21 +477,47 @@ router.patch("/professionals/:id", requireAdmin, async (req, res): Promise<void>
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
-  const { name, bio, specialty, avatar, hourlyRate, cv, proPayoutPercent, services, isAvailable } = req.body;
+  const {
+    name, businessName, bio, specialty, category, subcategory,
+    avatar, hourlyRate, cv, proPayoutPercent, commissionPercent,
+    isPaygEligible, isCommissionable, services, isAvailable,
+    phone, email, website, location, adminNotes, providerStatus,
+  } = req.body;
+
   const updates: Partial<typeof professionalsTable.$inferInsert> = {};
   if (name !== undefined) updates.name = name;
+  if (businessName !== undefined) updates.businessName = businessName || null;
   if (bio !== undefined) updates.bio = bio;
   if (specialty !== undefined) updates.specialty = specialty;
-  if (avatar !== undefined) updates.avatar = avatar || undefined;
+  if (category !== undefined) updates.category = category || null;
+  if (subcategory !== undefined) updates.subcategory = subcategory || null;
+  if (avatar !== undefined) updates.avatar = avatar || null;
   if (hourlyRate !== undefined) updates.hourlyRate = String(hourlyRate);
   if (cv !== undefined) updates.cv = parseInt(String(cv)) || 0;
   if (proPayoutPercent !== undefined) updates.proPayoutPercent = Math.min(95, Math.max(50, parseInt(String(proPayoutPercent)) || 80));
+  if (commissionPercent !== undefined) updates.commissionPercent = String(commissionPercent);
+  if (isPaygEligible !== undefined) updates.isPaygEligible = isPaygEligible;
+  if (isCommissionable !== undefined) updates.isCommissionable = isCommissionable;
   if (services !== undefined) updates.services = services;
   if (isAvailable !== undefined) updates.isAvailable = isAvailable;
+  if (providerStatus !== undefined) updates.providerStatus = providerStatus;
+  if (phone !== undefined) updates.phone = phone || null;
+  if (email !== undefined) updates.email = email || null;
+  if (website !== undefined) updates.website = website || null;
+  if (location !== undefined) updates.location = location || null;
+  if (adminNotes !== undefined) updates.adminNotes = adminNotes || null;
 
   const [pro] = await db.update(professionalsTable).set(updates).where(eq(professionalsTable.id, id)).returning();
   if (!pro) { res.status(404).json({ error: "Not found" }); return; }
   res.json(serializePro(pro));
+});
+
+router.delete("/professionals/:id", requireAdmin, async (req, res): Promise<void> => {
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const [deleted] = await db.delete(professionalsTable).where(eq(professionalsTable.id, id)).returning();
+  if (!deleted) { res.status(404).json({ error: "Not found" }); return; }
+  res.json({ success: true });
 });
 
 router.get("/professionals/:id", async (req, res): Promise<void> => {
@@ -704,37 +776,6 @@ router.patch("/bookings/:id/cancellation-note", requireAuth, async (req, res): P
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, updated.userId));
   const [pro] = await db.select().from(professionalsTable).where(eq(professionalsTable.id, updated.professionalId));
   res.json(formatBooking(updated, user ? `${user.firstName} ${user.lastName}` : "Unknown", pro?.name ?? "Unknown"));
-});
-
-router.patch("/professionals/:id", requireAdmin, async (req, res): Promise<void> => {
-  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
-  const { name, bio, specialty, avatar, hourlyRate, services, isAvailable } = req.body;
-  const updates: Partial<typeof professionalsTable.$inferInsert> = {};
-  if (name) updates.name = name;
-  if (bio) updates.bio = bio;
-  if (specialty) updates.specialty = specialty;
-  if (avatar !== undefined) updates.avatar = avatar;
-  if (hourlyRate) updates.hourlyRate = String(hourlyRate);
-  if (services) updates.services = services;
-  if (isAvailable !== undefined) updates.isAvailable = isAvailable;
-
-  const [pro] = await db.update(professionalsTable).set(updates).where(eq(professionalsTable.id, id)).returning();
-  if (!pro) { res.status(404).json({ error: "Not found" }); return; }
-
-  res.json({
-    id: pro.id,
-    userId: pro.userId ?? null,
-    name: pro.name,
-    bio: pro.bio,
-    specialty: pro.specialty,
-    avatar: pro.avatar ?? null,
-    rating: parseFloat(pro.rating),
-    reviewCount: pro.reviewCount,
-    isAvailable: pro.isAvailable,
-    hourlyRate: parseFloat(pro.hourlyRate),
-    services: pro.services ?? [],
-    createdAt: pro.createdAt.toISOString(),
-  });
 });
 
 export default router;

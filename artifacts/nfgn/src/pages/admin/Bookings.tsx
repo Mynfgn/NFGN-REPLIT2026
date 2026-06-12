@@ -33,24 +33,39 @@ interface Booking {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  confirmed: "bg-green-100 text-green-800 border-green-200",
-  completed: "bg-blue-100 text-blue-800 border-blue-200",
-  cancelled: "bg-red-100 text-red-800 border-red-200",
-  "no-show": "bg-gray-100 text-gray-700 border-gray-200",
-  "payment_declined": "bg-rose-100 text-rose-800 border-rose-200",
+  pending_payment:  "bg-orange-100 text-orange-800 border-orange-200",
+  paid:             "bg-emerald-100 text-emerald-800 border-emerald-200",
+  pending_approval: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  approved:         "bg-green-100 text-green-800 border-green-200",
+  scheduled:        "bg-blue-100 text-blue-800 border-blue-200",
+  in_progress:      "bg-indigo-100 text-indigo-800 border-indigo-200",
+  completed:        "bg-teal-100 text-teal-800 border-teal-200",
+  cancelled:        "bg-red-100 text-red-800 border-red-200",
+  denied:           "bg-rose-100 text-rose-800 border-rose-200",
+  refunded:         "bg-gray-100 text-gray-700 border-gray-200",
+  pending:          "bg-yellow-100 text-yellow-800 border-yellow-200",
+  confirmed:        "bg-green-100 text-green-800 border-green-200",
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  pending: "Pending",
-  confirmed: "Confirmed",
-  completed: "Completed",
-  cancelled: "Cancelled",
-  "no-show": "No Show",
-  "payment_declined": "Payment Not Received",
+  pending_payment:  "Pending Payment",
+  paid:             "Paid",
+  pending_approval: "Pending Approval",
+  approved:         "Approved",
+  scheduled:        "Scheduled",
+  in_progress:      "In Progress",
+  completed:        "Completed",
+  cancelled:        "Cancelled",
+  denied:           "Denied",
+  refunded:         "Refunded",
+  pending:          "Pending",
+  confirmed:        "Confirmed",
 };
 
-const STATUS_OPTIONS = ["pending", "confirmed", "completed", "cancelled", "no-show", "payment_declined"];
+const STATUS_OPTIONS = [
+  "pending_payment", "paid", "pending_approval", "approved",
+  "scheduled", "in_progress", "completed", "cancelled", "denied", "refunded",
+];
 
 function BookingDetailModal({ booking, onClose, onUpdated }: { booking: Booking; onClose: () => void; onUpdated: () => void }) {
   const [status, setStatus] = useState(booking.status);

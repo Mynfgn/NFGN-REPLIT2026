@@ -6,16 +6,28 @@ export const professionalsTable = pgTable("professionals", {
   id: serial("id").primaryKey(),
   userId: integer("user_id"),
   name: text("name").notNull(),
+  businessName: text("business_name"),
   bio: text("bio").notNull(),
   specialty: text("specialty").notNull(),
+  category: text("category"),         // slug: health-wellness | cosmetology | restaurants | ...
+  subcategory: text("subcategory"),   // e.g. "Barbers", "Physical Trainers"
   avatar: text("avatar"),
   rating: numeric("rating", { precision: 3, scale: 2 }).notNull().default("5.0"),
   reviewCount: integer("review_count").notNull().default(0),
   isAvailable: boolean("is_available").notNull().default(true),
+  providerStatus: text("provider_status").notNull().default("approved"),  // pending|approved|denied|suspended
   hourlyRate: numeric("hourly_rate", { precision: 10, scale: 2 }).notNull(),
   cv: integer("cv").notNull().default(0),
   proPayoutPercent: integer("pro_payout_percent").notNull().default(80),
+  commissionPercent: numeric("commission_percent", { precision: 5, scale: 2 }).notNull().default("10"),
+  isPaygEligible: boolean("is_payg_eligible").notNull().default(false),
+  isCommissionable: boolean("is_commissionable").notNull().default(true),
   services: text("services").array().default([]),
+  phone: text("phone"),
+  email: text("email"),
+  website: text("website"),
+  location: text("location"),
+  adminNotes: text("admin_notes"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

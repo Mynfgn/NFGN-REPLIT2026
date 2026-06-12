@@ -1,27 +1,21 @@
-import { useState } from "react";
-import { useListProfessionals } from "@workspace/api-client-react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import {
   Star, Calendar, Clock, DollarSign, Loader2, Trophy,
-  ChevronDown, Users, Dumbbell, Mic, UserCheck, Stethoscope,
-  GraduationCap, Zap, Filter, X, CheckCircle,
+  ChevronDown, Users, Filter, X, CheckCircle, MapPin, Globe,
 } from "lucide-react";
-import { BAP_CATEGORIES, SPORTS_CATEGORY_KEY } from "@/lib/bapCategories";
+import { BAP_MAIN_CATEGORIES, getCategoryLabel, getCategoryInfo } from "@/lib/bapCategories";
+import { customFetch } from "@/lib/custom-fetch";
 
 const GOLD = "#C9A84C";
 const BLACK = "#0a0a0a";
 
-const SPORTS_ROLES = [
-  { icon: <Dumbbell size={13} />, label: "Personal Trainer" },
-  { icon: <Mic size={13} />, label: "Guest Speaker" },
-  { icon: <UserCheck size={13} />, label: "Coach / Ast Coach" },
-  { icon: <Stethoscope size={13} />, label: "Medical Sports Professional" },
-  { icon: <GraduationCap size={13} />, label: "Skills Camp Trainer" },
-  { icon: <Zap size={13} />, label: "Athletic Performance Coach" },
-];
+const ALL_OPTION = "all";
 
-const ALL_OPTION = "All Categories";
-const CATEGORY_OPTIONS = [ALL_OPTION, SPORTS_CATEGORY_KEY, ...Object.keys(BAP_CATEGORIES).filter(k => k !== SPORTS_CATEGORY_KEY)];
+const SPORTS_SUBCATEGORIES = [
+  "Sports Coaches", "Physical Trainers", "Team Coaches",
+  "Private Lessons", "Skills Trainers", "Sports Camps", "Athletic Performance Coaches",
+];
 
 function BookingModal({ pro, onClose }: { pro: any; onClose: () => void }) {
   const [, navigate] = useLocation();
@@ -208,7 +202,8 @@ function BookingModal({ pro, onClose }: { pro: any; onClose: () => void }) {
 }
 
 function ProCard({ pro, onBook }: { pro: any; onBook: (pro: any) => void }) {
-  const isSports = pro.specialty === SPORTS_CATEGORY_KEY;
+  const isSports = pro.category === "nfgn-sports" || pro.specialty === "NFGN SPORTS Professionals";
+  const displayCategory = pro.category ? getCategoryLabel(pro.category) : pro.specialty;
 
   return (
     <div
@@ -263,7 +258,7 @@ function ProCard({ pro, onBook }: { pro: any; onBook: (pro: any) => void }) {
               border: `1px solid ${isSports ? "rgba(201,168,76,0.3)" : "#e5e7eb"}`,
               padding: "2px 8px", borderRadius: 99,
             }}>
-              {pro.specialty}
+              {pro.subcategory ?? displayCategory}
             </span>
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
               {[1, 2, 3, 4, 5].map(n => (
@@ -351,17 +346,25 @@ export function BookAPro() {
   const [selectedCategory, setSelectedCategory] = useState<string>(ALL_OPTION);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [bookingPro, setBookingPro] = useState<any>(null);
+  const [allPros, setAllPros] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const specialtyParam = selectedCategory === ALL_OPTION ? undefined : selectedCategory;
-  const { data: professionals, isLoading } = useListProfessionals(
-    specialtyParam ? { specialty: specialtyParam } : undefined,
-  );
+  useEffect(() => {
+    setIsLoading(true);
+    const params = new URLSearchParams({ status: "approved" });
+    if (selectedCategory !== ALL_OPTION) params.set("cat", selectedCategory);
+    customFetch(`/api/professionals?${params}`)
+      .then(r => r.ok ? r.json() : [])
+      .then((data: any[]) => { setAllPros(data); setIsLoading(false); })
+      .catch(() => { setAllPros([]); setIsLoading(false); });
+  }, [selectedCategory]);
 
-  const allPros: any[] = professionals ?? [];
-  const sportsPros = allPros.filter(p => p.specialty === SPORTS_CATEGORY_KEY);
-  const otherPros = allPros.filter(p => p.specialty !== SPORTS_CATEGORY_KEY);
+  const catInfo = getCategoryInfo(selectedCategory);
+  const isNfgnSports = selectedCategory === "nfgn-sports";
+  const sportsPros = allPros.filter(p => p.category === "nfgn-sports" || p.specialty === "NFGN SPORTS Professionals");
+  const otherPros = allPros.filter(p => p.category !== "nfgn-sports" && p.specialty !== "NFGN SPORTS Professionals");
 
-  const showSportsBanner = selectedCategory === ALL_OPTION || selectedCategory === SPORTS_CATEGORY_KEY;
+  const showSportsBanner = selectedCategory === ALL_OPTION || isNfgnSports;
   const showSportsSection = showSportsBanner && sportsPros.length > 0;
 
   return (
@@ -401,40 +404,53 @@ export function BookAPro() {
                 >
                   <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <Filter size={15} color={GOLD} />
-                    {selectedCategory === ALL_OPTION ? "Filter by Category" : selectedCategory}
+                    {selectedCategory === ALL_OPTION ? "Filter by Category" : getCategoryLabel(selectedCategory)}
                   </span>
                   <ChevronDown size={15} color={GOLD} style={{ transform: dropdownOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
                 </button>
 
                 {dropdownOpen && (
                   <div style={{
-                    position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0,
+                    position: "absolute", top: "calc(100% + 6px)", left: "50%", transform: "translateX(-50%)",
+                    width: 320,
                     background: "#1a1a1a", border: "1px solid rgba(201,168,76,0.25)",
                     borderRadius: 10, boxShadow: "0 16px 48px rgba(0,0,0,0.5)",
-                    zIndex: 50, overflow: "hidden", maxHeight: 340, overflowY: "auto",
+                    zIndex: 50, overflow: "hidden", maxHeight: 380, overflowY: "auto",
                   }}>
-                    {CATEGORY_OPTIONS.map((cat, idx) => {
-                      const isSportsOpt = cat === SPORTS_CATEGORY_KEY;
-                      const isSelected = selectedCategory === cat;
-                      const isAll = cat === ALL_OPTION;
+                    <button
+                      onClick={() => { setSelectedCategory(ALL_OPTION); setDropdownOpen(false); }}
+                      style={{
+                        width: "100%", textAlign: "left", padding: "11px 16px",
+                        background: selectedCategory === ALL_OPTION ? "rgba(201,168,76,0.15)" : "transparent",
+                        color: selectedCategory === ALL_OPTION ? GOLD : "#d1d5db",
+                        fontWeight: selectedCategory === ALL_OPTION ? 800 : 500,
+                        fontSize: 13, cursor: "pointer", border: "none",
+                        borderBottom: "1px solid rgba(255,255,255,0.06)",
+                      }}
+                    >
+                      All Categories
+                    </button>
+                    {BAP_MAIN_CATEGORIES.map((cat, idx) => {
+                      const isSelected = selectedCategory === cat.key;
+                      const isSports = cat.key === "nfgn-sports";
                       return (
                         <button
-                          key={cat}
-                          onClick={() => { setSelectedCategory(cat); setDropdownOpen(false); }}
+                          key={cat.key}
+                          onClick={() => { setSelectedCategory(cat.key); setDropdownOpen(false); }}
                           style={{
                             width: "100%", textAlign: "left",
                             padding: "11px 16px",
                             display: "flex", alignItems: "center", gap: 9,
-                            background: isSelected ? "rgba(201,168,76,0.15)" : isSportsOpt ? "rgba(201,168,76,0.06)" : "transparent",
-                            color: isSelected ? GOLD : isSportsOpt ? GOLD : "#d1d5db",
-                            fontWeight: isSelected || isSportsOpt ? 800 : 500,
+                            background: isSelected ? "rgba(201,168,76,0.15)" : isSports ? "rgba(201,168,76,0.06)" : "transparent",
+                            color: isSelected ? GOLD : isSports ? GOLD : "#d1d5db",
+                            fontWeight: isSelected || isSports ? 800 : 500,
                             fontSize: 13, cursor: "pointer", border: "none",
-                            borderBottom: isSportsOpt && !isAll ? "1px solid rgba(201,168,76,0.2)" : idx < CATEGORY_OPTIONS.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                            borderBottom: idx < BAP_MAIN_CATEGORIES.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
                           }}
                         >
-                          {isSportsOpt && <Trophy size={13} color={GOLD} />}
-                          {cat}
-                          {isSportsOpt && (
+                          {isSports && <Trophy size={13} color={GOLD} />}
+                          {cat.label}
+                          {isSports && (
                             <span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 900, background: GOLD, color: "#000", padding: "2px 6px", borderRadius: 99, letterSpacing: "0.1em" }}>
                               SPORTS
                             </span>
@@ -470,16 +486,16 @@ export function BookAPro() {
                   Coaches, trainers, speakers, and medical sports professionals — all powered by the NFGN Sports network.
                 </p>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                  {SPORTS_ROLES.map(r => (
-                    <span key={r.label} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.22)", color: GOLD, fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 99 }}>
-                      {r.icon} {r.label}
+                  {SPORTS_SUBCATEGORIES.map(label => (
+                    <span key={label} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.22)", color: GOLD, fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 99 }}>
+                      {label}
                     </span>
                   ))}
                 </div>
               </div>
-              {selectedCategory !== SPORTS_CATEGORY_KEY && (
+              {selectedCategory !== "nfgn-sports" && (
                 <button
-                  onClick={() => setSelectedCategory(SPORTS_CATEGORY_KEY)}
+                  onClick={() => setSelectedCategory("nfgn-sports")}
                   style={{ background: GOLD, color: "#000", border: "none", borderRadius: 8, padding: "12px 22px", fontWeight: 800, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, whiteSpace: "nowrap", flexShrink: 0 }}
                 >
                   <Trophy size={14} /> View Sports Pros
@@ -494,14 +510,23 @@ export function BookAPro() {
       <div style={{ background: "#f9f9f9", padding: "60px 24px 80px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
 
+          {/* Category description banner */}
+          {catInfo && (
+            <div style={{ background: "linear-gradient(135deg, #0a0a0a, #111)", borderRadius: 12, padding: "20px 24px", marginBottom: 28, border: "1px solid rgba(201,168,76,0.2)" }}>
+              <p style={{ color: GOLD, fontSize: 10, fontWeight: 900, letterSpacing: "0.2em", textTransform: "uppercase", margin: "0 0 6px" }}>{catInfo.label}</p>
+              <p style={{ color: "#d1d5db", fontSize: 14, margin: "0 0 4px", lineHeight: 1.5 }}>{catInfo.description}</p>
+              <p style={{ color: "#9ca3af", fontSize: 12, margin: 0 }}>For: {catInfo.forWhom}</p>
+            </div>
+          )}
+
           {/* Section heading */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 12 }}>
             <div>
               <p style={{ color: GOLD, fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", margin: "0 0 4px" }}>
-                {selectedCategory === ALL_OPTION ? "All Professionals" : selectedCategory}
+                {selectedCategory === ALL_OPTION ? "All Professionals" : getCategoryLabel(selectedCategory)}
               </p>
               <h2 style={{ color: "#1a1a1a", fontSize: 26, fontWeight: 900, margin: 0, fontFamily: "serif" }}>
-                {selectedCategory === ALL_OPTION ? "Find Your Professional" : selectedCategory}
+                {selectedCategory === ALL_OPTION ? "Find Your Professional" : getCategoryLabel(selectedCategory)}
               </h2>
             </div>
             {!isLoading && allPros.length > 0 && (

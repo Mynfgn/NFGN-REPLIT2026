@@ -42,13 +42,13 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   const isOrdersSection = location.startsWith("/admin/orders");
   const isCommissionsSection = location.startsWith("/admin/referral-commissions") || location.startsWith("/admin/bonuses") || location.startsWith("/admin/bpp") || location.startsWith("/admin/commissions") || location.startsWith("/admin/pro-booking-commissions");
   const isProductsSection = location.startsWith("/admin/products");
-  const isNFGNSection = location.startsWith("/admin/payg");
+  const isBapSection = location.startsWith("/admin/payg") || location.startsWith("/admin/bookings") || location.startsWith("/admin/professionals") || location.startsWith("/admin/pro-booking-commissions");
   const isHealthSection = location.startsWith("/dashboard/health");
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     Orders: isOrdersSection,
     Commissions: isCommissionsSection,
     Products: isProductsSection,
-    NFGN: isNFGNSection,
+    "Book-A-Professional": isBapSection,
     "Health & Wellness": isHealthSection,
   });
 

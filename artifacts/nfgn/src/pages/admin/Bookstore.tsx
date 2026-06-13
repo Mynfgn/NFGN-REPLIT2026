@@ -223,13 +223,18 @@ function BookForm({ value, onChange, onSubmit, saving, submitLabel }: {
 
 export function AdminBookstorePage() {
   const { toast } = useToast();
-  const [tab, setTab] = useState<"overview" | "books" | "authors" | "royalties" | "add">("overview");
+  const [tab, setTab] = useState<"overview" | "books" | "authors" | "royalties" | "add" | "read">("overview");
   const [stats, setStats] = useState<Stats | null>(null);
   const [books, setBooks] = useState<Book[]>([]);
   const [applications, setApplications] = useState<AuthorApp[]>([]);
   const [loadingBooks, setLoadingBooks] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQ, setSearchQ] = useState("");
+
+  // Read tab
+  const [readBooks, setReadBooks] = useState<Array<{ id: number; title: string; authorName: string; coverImage?: string; type: string; isFree: boolean; price: number }>>([]);
+  const [readSearch, setReadSearch] = useState("");
+  const [loadingRead, setLoadingRead] = useState(false);
 
   // Add book form
   const [addForm, setAddForm] = useState<typeof BLANK_FORM>({ ...BLANK_FORM });
@@ -272,6 +277,14 @@ export function AdminBookstorePage() {
   useEffect(() => { if (tab === "books") loadBooks(); }, [tab, statusFilter]);
   useEffect(() => { if (tab === "authors") loadApplications(); }, [tab]);
   useEffect(() => { if (tab === "royalties") loadDefRoyalty(); }, [tab]);
+  useEffect(() => {
+    if (tab !== "read") return;
+    setLoadingRead(true);
+    apiFetch("/api/bookstore/books?limit=100")
+      .then(d => setReadBooks(d.books ?? []))
+      .catch(() => {})
+      .finally(() => setLoadingRead(false));
+  }, [tab]);
 
   async function buyBook(book: Book) {
     try {
@@ -425,6 +438,7 @@ export function AdminBookstorePage() {
           { key: "books", label: `Books${stats?.pendingBooks ? ` (${stats.pendingBooks} pending)` : ""}` },
           { key: "authors", label: `Author Applications${stats?.pendingAuthors ? ` (${stats.pendingAuthors})` : ""}` },
           { key: "royalties", label: "Royalty Settings" },
+          { key: "read", label: "📖 Read Book" },
           { key: "add", label: "+ Add Book" },
         ] as const).map(t => (
           <button
@@ -716,6 +730,80 @@ export function AdminBookstorePage() {
             Books added by Admin are published immediately (Approved). Author-submitted books require your review.
           </div>
           <BookForm value={addForm} onChange={setAddForm} onSubmit={handleAddBook} saving={addSaving} submitLabel="Publish Book to Store" />
+        </div>
+      )}
+
+      {/* ── READ BOOK ── */}
+      {tab === "read" && (
+        <div>
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 15, fontWeight: 900, color: DARK, marginBottom: 4 }}>Read a Book</div>
+            <div style={{ fontSize: 12, color: "#888", marginBottom: 14 }}>Click any book to start reading. As an admin you have access to all published books.</div>
+            <div style={{ position: "relative", maxWidth: 380 }}>
+              <Search size={14} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#aaa" }} />
+              <input
+                value={readSearch}
+                onChange={e => setReadSearch(e.target.value)}
+                placeholder="Search by title or author…"
+                style={{ width: "100%", padding: "9px 12px 9px 32px", border: "1.5px solid #e5e7eb", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }}
+              />
+            </div>
+          </div>
+
+          {loadingRead ? (
+            <div style={{ textAlign: "center", padding: 48, color: "#888" }}>Loading books…</div>
+          ) : readBooks.length === 0 ? (
+            <div style={{ textAlign: "center", padding: 48, color: "#aaa" }}>No published books yet.</div>
+          ) : (() => {
+            const filtered = readBooks.filter(b =>
+              !readSearch ||
+              b.title.toLowerCase().includes(readSearch.toLowerCase()) ||
+              b.authorName.toLowerCase().includes(readSearch.toLowerCase())
+            );
+            const TypeIcon = (type: string) => {
+              const icons: Record<string, any> = { ebook: BookOpen, audiobook: Mic, training_manual: FileText, guide: GraduationCap, bible_study: BookMarked };
+              return icons[type] ?? BookOpen;
+            };
+            return filtered.length === 0 ? (
+              <div style={{ textAlign: "center", padding: 40, color: "#aaa" }}>No books match your search.</div>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 18 }}>
+                {filtered.map(book => {
+                  const Icon = TypeIcon(book.type);
+                  return (
+                    <div key={book.id} style={{ background: "#fff", border: "1.5px solid #e5e7eb", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", transition: "box-shadow .15s" }}
+                      onMouseEnter={e => (e.currentTarget.style.boxShadow = "0 6px 24px rgba(45,106,79,0.15)")}
+                      onMouseLeave={e => (e.currentTarget.style.boxShadow = "none")}
+                    >
+                      {/* Cover */}
+                      <div style={{ height: 180, background: `linear-gradient(135deg, ${GREEN}22, ${GOLD}22)`, position: "relative", overflow: "hidden" }}>
+                        {book.coverImage ? (
+                          <img src={book.coverImage} alt={book.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        ) : (
+                          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <Icon size={44} color={GREEN} style={{ opacity: 0.35 }} />
+                          </div>
+                        )}
+                        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.55))", padding: "16px 10px 8px" }}>
+                          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.85)", fontWeight: 700 }}>{book.isFree ? "FREE" : `$${book.price?.toFixed(2)}`}</div>
+                        </div>
+                      </div>
+                      {/* Info */}
+                      <div style={{ padding: "12px 12px 14px", flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+                        <div style={{ fontSize: 13, fontWeight: 900, color: DARK, lineHeight: 1.3 }}>{book.title}</div>
+                        <div style={{ fontSize: 11, color: "#888", flex: 1 }}>by {book.authorName}</div>
+                        <a href={`/dashboard/read/${book.id}`} style={{ textDecoration: "none" }}>
+                          <button style={{ width: "100%", background: GREEN, color: "#fff", border: "none", borderRadius: 8, padding: "8px 0", fontWeight: 800, fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                            <BookOpen size={12} /> Read Now
+                          </button>
+                        </a>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </div>
       )}
 

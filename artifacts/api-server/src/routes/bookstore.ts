@@ -315,7 +315,7 @@ router.get("/bookstore/books/:id", requireAuth, async (req, res): Promise<void> 
   if (showFile && book.fileUrl) {
     detectedType = await detectBookFileType(book.id, book.fileUrl);
   }
-  res.json({ book: { ...formatBook(book, showFile, isAdmin, detectedType), purchased } });
+  res.json({ book: { ...formatBook(book, showFile, isAdmin, detectedType), purchased: purchased || isAdmin } });
 });
 
 // ── MEMBER: Purchase a FREE book (direct — paid books go through cart/checkout) ──

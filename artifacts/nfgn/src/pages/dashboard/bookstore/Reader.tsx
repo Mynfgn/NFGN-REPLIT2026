@@ -43,13 +43,14 @@ interface Book {
 interface Props { bookId: string }
 
 // ── EPUB viewer — passes URL directly to epub.js (no pre-download) ────────────
-function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onReadAloudStop }: {
+function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onReadAloudStop, spreadMode }: {
   streamUrl: string;
   fontSize: number;
   darkMode: boolean;
   bookTitle: string;
   readAloud: boolean;
   onReadAloudStop: () => void;
+  spreadMode: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const bookRef      = useRef<any>(null);
@@ -95,7 +96,7 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
       const rendition = epubBook.renderTo(containerRef.current!, {
         width: "100%",
         height: epubHeight,
-        spread: "none",
+        spread: spreadMode ? "always" : "none",
         flow: "paginated",
       });
       renditionRef.current = rendition;
@@ -204,6 +205,14 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
       setTtsStatus("idle");
     }
   }, [readAloud]);
+
+  /* ── Toggle spread mode after init ── */
+  useEffect(() => {
+    if (!renditionRef.current || !epubReady) return;
+    try {
+      renditionRef.current.spread(spreadMode ? "always" : "none");
+    } catch { /* epub.js may not support post-init spread on all versions */ }
+  }, [spreadMode, epubReady]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 180px)", minHeight: 500 }}>
@@ -314,7 +323,7 @@ function WatermarkOverlay({ text }: { text: string }) {
 }
 
 // ── PDF viewer — two-page spread + single page mode ────────────────────────────
-function PdfViewer({ streamUrl, darkMode, currentPage, onPageChange, onTotalPages, watermarkText, readAloud, onReadAloudStop }: {
+function PdfViewer({ streamUrl, darkMode, currentPage, onPageChange, onTotalPages, watermarkText, readAloud, onReadAloudStop, spreadMode }: {
   streamUrl: string;
   darkMode: boolean;
   currentPage: number;
@@ -323,6 +332,7 @@ function PdfViewer({ streamUrl, darkMode, currentPage, onPageChange, onTotalPage
   watermarkText: string;
   readAloud: boolean;
   onReadAloudStop: () => void;
+  spreadMode: boolean;
 }) {
   const leftCanvasRef  = useRef<HTMLCanvasElement>(null);
   const rightCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -334,7 +344,6 @@ function PdfViewer({ streamUrl, darkMode, currentPage, onPageChange, onTotalPage
   const [pdfLoading,    setPdfLoading]    = useState(true);
   const [pdfLoaded,     setPdfLoaded]     = useState(false);
   const [pageRendering, setPageRendering] = useState(false);
-  const [spreadMode,    setSpreadMode]    = useState(() => window.innerWidth >= 860);
 
   // ── TTS state ──
   const [ttsStatus, setTtsStatus] = useState<"idle" | "playing" | "paused">("idle");
@@ -550,16 +559,6 @@ function PdfViewer({ streamUrl, darkMode, currentPage, onPageChange, onTotalPage
     <div>
       <style>{SPIN}</style>
 
-      {/* ── Spread toggle ── */}
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
-        <button
-          onClick={() => { setSpreadMode(s => !s); }}
-          style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 14px", borderRadius: 8, border: `1.5px solid ${borderColor}`, background: spreadMode ? GREEN : "transparent", color: spreadMode ? "#fff" : textColor, fontSize: 12, fontWeight: 700, cursor: "pointer", transition: "all .2s" }}
-        >
-          <BookOpen size={13} /> {spreadMode ? "Two-Page Spread" : "Single Page"}
-        </button>
-      </div>
-
       {/* ── Book spread ── */}
       {spreadMode ? (
         <div style={{ position: "relative", display: "flex", boxShadow: `0 12px 48px ${shadowColor}`, borderRadius: 6 }}>
@@ -643,6 +642,7 @@ export function ReaderPage({ bookId }: Props) {
   const [totalPages, setTotalPages]   = useState(0);
   const [audioSpeed, setAudioSpeed]   = useState(1);
   const [readAloud,  setReadAloud]    = useState(false);
+  const [spreadMode, setSpreadMode]  = useState(() => window.innerWidth >= 700);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const id       = parseInt(bookId);
@@ -761,6 +761,14 @@ export function ReaderPage({ bookId }: Props) {
           )}
           {!isAudio && (
             <button
+              onClick={() => setSpreadMode(s => !s)}
+              style={{ display: "flex", alignItems: "center", gap: 5, background: spreadMode ? GREEN : "none", border: `1px solid ${spreadMode ? GREEN : borderColor}`, borderRadius: 6, padding: "6px 10px", cursor: "pointer", color: spreadMode ? "#fff" : textColor, fontSize: 12, fontWeight: 700 }}
+            >
+              <BookOpen size={14} /> {spreadMode ? "2 Pages" : "1 Page"}
+            </button>
+          )}
+          {!isAudio && (
+            <button
               onClick={() => setReadAloud(r => !r)}
               style={{ display: "flex", alignItems: "center", gap: 5, background: readAloud ? GREEN : "none", border: `1px solid ${readAloud ? GREEN : borderColor}`, borderRadius: 6, padding: "6px 10px", cursor: "pointer", color: readAloud ? "#fff" : textColor, fontSize: 12, fontWeight: 700 }}
             >
@@ -845,6 +853,7 @@ export function ReaderPage({ bookId }: Props) {
                 bookTitle={book.title}
                 readAloud={readAloud}
                 onReadAloudStop={() => setReadAloud(false)}
+                spreadMode={spreadMode}
               />
             ) : (
               <PdfViewer
@@ -856,6 +865,7 @@ export function ReaderPage({ bookId }: Props) {
                 watermarkText={isSample ? "" : watermarkText}
                 readAloud={readAloud}
                 onReadAloudStop={() => setReadAloud(false)}
+                spreadMode={spreadMode}
               />
             )}
           </>

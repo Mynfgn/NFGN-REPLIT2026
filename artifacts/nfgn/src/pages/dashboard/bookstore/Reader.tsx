@@ -179,7 +179,18 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle }: {
   );
 }
 
-// ── PDF viewer — passes URL directly to PDF.js (no pre-download) ──────────────
+// ── Watermark overlay ──────────────────────────────────────────────────────────
+function WatermarkOverlay({ text }: { text: string }) {
+  return (
+    <div style={{ position: "absolute", inset: 0, pointerEvents: "none", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", zIndex: 2 }}>
+      <div style={{ transform: "rotate(-35deg)", opacity: 0.045, fontSize: 14, fontWeight: 900, color: DARK, userSelect: "none", whiteSpace: "nowrap", width: "250%", textAlign: "center", lineHeight: 3.5 }}>
+        {Array.from({ length: 12 }).map((_, i) => <div key={i}>{text} — NFGN Licensed</div>)}
+      </div>
+    </div>
+  );
+}
+
+// ── PDF viewer — two-page spread + single page mode ────────────────────────────
 function PdfViewer({ streamUrl, darkMode, currentPage, onPageChange, onTotalPages, watermarkText }: {
   streamUrl: string;
   darkMode: boolean;
@@ -188,20 +199,28 @@ function PdfViewer({ streamUrl, darkMode, currentPage, onPageChange, onTotalPage
   onTotalPages: (n: number) => void;
   watermarkText: string;
 }) {
-  const canvasRef     = useRef<HTMLCanvasElement>(null);
-  const pdfDocRef     = useRef<any>(null);
-  const renderTaskRef = useRef<any>(null);
+  const leftCanvasRef  = useRef<HTMLCanvasElement>(null);
+  const rightCanvasRef = useRef<HTMLCanvasElement>(null);
+  const pdfDocRef      = useRef<any>(null);
+  const leftTaskRef    = useRef<any>(null);
+  const rightTaskRef   = useRef<any>(null);
   const [totalPages,    setTotalPages]    = useState(0);
   const [pdfError,      setPdfError]      = useState("");
   const [pdfLoading,    setPdfLoading]    = useState(true);
+  const [pdfLoaded,     setPdfLoaded]     = useState(false);
   const [pageRendering, setPageRendering] = useState(false);
+  const [spreadMode,    setSpreadMode]    = useState(() => window.innerWidth >= 860);
 
   const borderColor = darkMode ? "#333" : "#e5e7eb";
   const textColor   = darkMode ? "#e5e5e5" : "#0a0a0a";
+  const pageBg      = darkMode ? "#1c1c1c" : "#ffffff";
+  const shadowColor = darkMode ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.18)";
 
+  /* ── Load PDF ── */
   useEffect(() => {
     let cancelled = false;
     setPdfLoading(true);
+    setPdfLoaded(false);
     setPdfError("");
 
     (async () => {
@@ -210,15 +229,13 @@ function PdfViewer({ streamUrl, darkMode, currentPage, onPageChange, onTotalPage
         if (!pdfjsLib) throw new Error("PDF renderer not available — please hard-refresh.");
         pdfjsLib.GlobalWorkerOptions.workerSrc =
           "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-
-        // Pass URL directly — PDF.js streams it internally
         const pdf = await pdfjsLib.getDocument({ url: streamUrl }).promise;
         if (cancelled) return;
-
         pdfDocRef.current = pdf;
         setTotalPages(pdf.numPages);
         onTotalPages(pdf.numPages);
         setPdfLoading(false);
+        setPdfLoaded(true);
       } catch (e: any) {
         if (!cancelled) { setPdfError(e?.message ?? "Failed to load PDF."); setPdfLoading(false); }
       }
@@ -226,40 +243,69 @@ function PdfViewer({ streamUrl, darkMode, currentPage, onPageChange, onTotalPage
 
     return () => {
       cancelled = true;
-      renderTaskRef.current?.cancel?.();
+      leftTaskRef.current?.cancel?.();
+      rightTaskRef.current?.cancel?.();
       pdfDocRef.current?.destroy?.();
       pdfDocRef.current = null;
     };
   }, [streamUrl]);
 
-  const [pdfLoaded, setPdfLoaded] = useState(false);
-  useEffect(() => { if (!pdfLoading && pdfDocRef.current) setPdfLoaded(true); }, [pdfLoading]);
-
+  /* ── Render pages ── */
   useEffect(() => {
-    if (!pdfLoaded || !canvasRef.current || !pdfDocRef.current) return;
+    if (!pdfLoaded || !pdfDocRef.current) return;
     let cancelled = false;
-    renderTaskRef.current?.cancel?.();
+    leftTaskRef.current?.cancel?.();
+    rightTaskRef.current?.cancel?.();
     setPageRendering(true);
+
+    const pdf = pdfDocRef.current;
+
+    async function renderToCanvas(canvas: HTMLCanvasElement, pageNum: number) {
+      const pg  = await pdf.getPage(Math.max(1, Math.min(pageNum, pdf.numPages)));
+      if (cancelled) return null;
+      const ctx = canvas.getContext("2d")!;
+      const w   = canvas.parentElement?.clientWidth || (spreadMode ? 400 : 800);
+      const base = pg.getViewport({ scale: 1 });
+      const scale = Math.min(w / base.width, 2.5);
+      const vp   = pg.getViewport({ scale });
+      canvas.width  = vp.width;
+      canvas.height = vp.height;
+      const task = pg.render({ canvasContext: ctx, viewport: vp });
+      return task;
+    }
 
     (async () => {
       try {
-        const pdf  = pdfDocRef.current;
-        const page = await pdf.getPage(Math.max(1, Math.min(currentPage, pdf.numPages)));
-        if (cancelled) return;
-
-        const canvas = canvasRef.current!;
-        const ctx    = canvas.getContext("2d")!;
-        const containerWidth = canvas.parentElement?.clientWidth || 800;
-        const base   = page.getViewport({ scale: 1 });
-        const scale  = Math.min(containerWidth / base.width, 2);
-        const vp     = page.getViewport({ scale });
-
-        canvas.width  = vp.width;
-        canvas.height = vp.height;
-
-        const task = page.render({ canvasContext: ctx, viewport: vp });
-        renderTaskRef.current = task;
-        await task.promise;
+        if (spreadMode) {
+          const lc = leftCanvasRef.current;
+          const rc = rightCanvasRef.current;
+          if (!lc) return;
+          const lTask = await renderToCanvas(lc, currentPage);
+          if (cancelled) return;
+          leftTaskRef.current = lTask;
+          if (lTask) await lTask.promise;
+          if (cancelled) return;
+          const hasRight = currentPage + 1 <= totalPages;
+          if (rc && hasRight) {
+            const rTask = await renderToCanvas(rc, currentPage + 1);
+            if (cancelled) return;
+            rightTaskRef.current = rTask;
+            if (rTask) await rTask.promise;
+          } else if (rc) {
+            const ctx = rc.getContext("2d")!;
+            rc.width  = lc.width;
+            rc.height = lc.height;
+            ctx.fillStyle = darkMode ? "#1a1a1a" : "#f7f5f0";
+            ctx.fillRect(0, 0, rc.width, rc.height);
+          }
+        } else {
+          const lc = leftCanvasRef.current;
+          if (!lc) return;
+          const task = await renderToCanvas(lc, currentPage);
+          if (cancelled) return;
+          leftTaskRef.current = task;
+          if (task) await task.promise;
+        }
         if (!cancelled) setPageRendering(false);
       } catch (e: any) {
         if (!cancelled && e?.name !== "RenderingCancelledException") {
@@ -270,7 +316,20 @@ function PdfViewer({ streamUrl, darkMode, currentPage, onPageChange, onTotalPage
     })();
 
     return () => { cancelled = true; };
-  }, [pdfLoaded, currentPage, darkMode]);
+  }, [pdfLoaded, currentPage, darkMode, spreadMode, totalPages]);
+
+  /* ── Navigation ── */
+  const step     = spreadMode ? 2 : 1;
+  const canPrev  = currentPage > 1;
+  const canNext  = currentPage + step - 1 < totalPages;
+  const handlePrev = () => onPageChange(Math.max(1, currentPage - step));
+  const handleNext = () => onPageChange(Math.min(totalPages, currentPage + step));
+
+  const rightPageNum = currentPage + 1;
+  const hasRightPage = spreadMode && rightPageNum <= totalPages;
+  const pageLabel    = spreadMode && hasRightPage
+    ? `Pages ${currentPage}–${rightPageNum} of ${totalPages}`
+    : `Page ${currentPage}${totalPages > 0 ? ` of ${totalPages}` : ""}`;
 
   if (pdfLoading) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 400, gap: 10, flexDirection: "column" }}>
@@ -289,31 +348,62 @@ function PdfViewer({ streamUrl, darkMode, currentPage, onPageChange, onTotalPage
   return (
     <div>
       <style>{SPIN}</style>
-      <div style={{ position: "relative", borderRadius: 12, overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.1)", background: darkMode ? "#1a1a1a" : "#fff" }}>
-        {pageRendering && (
-          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5, background: darkMode ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.6)" }}>
-            <Loader2 size={22} color={GREEN} style={{ animation: "spin 1s linear infinite" }} />
+
+      {/* ── Spread toggle ── */}
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
+        <button
+          onClick={() => { setSpreadMode(s => !s); }}
+          style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 14px", borderRadius: 8, border: `1.5px solid ${borderColor}`, background: spreadMode ? GREEN : "transparent", color: spreadMode ? "#fff" : textColor, fontSize: 12, fontWeight: 700, cursor: "pointer", transition: "all .2s" }}
+        >
+          <BookOpen size={13} /> {spreadMode ? "Two-Page Spread" : "Single Page"}
+        </button>
+      </div>
+
+      {/* ── Book spread ── */}
+      {spreadMode ? (
+        <div style={{ position: "relative", display: "flex", boxShadow: `0 12px 48px ${shadowColor}`, borderRadius: 6 }}>
+          {pageRendering && (
+            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10, background: darkMode ? "rgba(20,20,20,0.55)" : "rgba(255,255,255,0.55)", borderRadius: 6 }}>
+              <Loader2 size={24} color={GREEN} style={{ animation: "spin 1s linear infinite" }} />
+            </div>
+          )}
+          {/* Left page */}
+          <div style={{ flex: 1, position: "relative", background: pageBg, borderRadius: "6px 0 0 6px", overflow: "hidden", boxShadow: "inset -3px 0 10px rgba(0,0,0,0.08)" }}>
+            <canvas ref={leftCanvasRef} style={{ display: "block", width: "100%", height: "auto" }} />
+            {watermarkText && <WatermarkOverlay text={watermarkText} />}
           </div>
-        )}
-        <canvas ref={canvasRef} style={{ display: "block", width: "100%", height: "auto" }} />
-        <div style={{ position: "absolute", inset: 0, pointerEvents: "none", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-          <div style={{ transform: "rotate(-35deg)", opacity: 0.055, fontSize: 22, fontWeight: 900, color: DARK, userSelect: "none", whiteSpace: "nowrap", width: "200%", textAlign: "center", lineHeight: 3.2 }}>
-            {Array.from({ length: 10 }).map((_, i) => <div key={i}>{watermarkText} — NFGN Licensed</div>)}
+          {/* Spine shadow */}
+          <div style={{ width: 8, flexShrink: 0, background: darkMode ? "linear-gradient(to right, rgba(0,0,0,0.35), rgba(0,0,0,0.06))" : "linear-gradient(to right, rgba(0,0,0,0.12), rgba(0,0,0,0.03))", zIndex: 3 }} />
+          {/* Right page */}
+          <div style={{ flex: 1, position: "relative", background: pageBg, borderRadius: "0 6px 6px 0", overflow: "hidden", boxShadow: "inset 3px 0 10px rgba(0,0,0,0.08)" }}>
+            <canvas ref={rightCanvasRef} style={{ display: "block", width: "100%", height: "auto" }} />
+            {watermarkText && hasRightPage && <WatermarkOverlay text={watermarkText} />}
           </div>
         </div>
-      </div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginTop: 20, padding: "12px 0" }}>
-        <button onClick={() => onPageChange(Math.max(1, currentPage - 1))} disabled={currentPage <= 1} style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${borderColor}`, background: "none", cursor: currentPage <= 1 ? "not-allowed" : "pointer", color: textColor, fontWeight: 700, opacity: currentPage <= 1 ? 0.4 : 1 }}>← Prev</button>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 13, color: textColor, fontWeight: 600 }}>Page</span>
-          <input type="number" value={currentPage} min={1} max={totalPages || undefined} onChange={e => { const n = parseInt(e.target.value); if (!isNaN(n) && n >= 1) onPageChange(n); }} style={{ width: 60, textAlign: "center", padding: "6px 8px", border: `1px solid ${borderColor}`, borderRadius: 8, background: darkMode ? "#222" : "#fff", color: textColor, fontWeight: 700, fontSize: 13 }} />
-          {totalPages > 0 && <span style={{ fontSize: 13, color: "#888" }}>of {totalPages}</span>}
+      ) : (
+        /* ── Single page ── */
+        <div style={{ position: "relative", borderRadius: 10, overflow: "hidden", boxShadow: `0 6px 28px ${shadowColor}`, background: pageBg }}>
+          {pageRendering && (
+            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5, background: darkMode ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.6)" }}>
+              <Loader2 size={22} color={GREEN} style={{ animation: "spin 1s linear infinite" }} />
+            </div>
+          )}
+          <canvas ref={leftCanvasRef} style={{ display: "block", width: "100%", height: "auto" }} />
+          {watermarkText && <WatermarkOverlay text={watermarkText} />}
         </div>
-        <button onClick={() => onPageChange(currentPage + 1)} disabled={totalPages > 0 && currentPage >= totalPages} style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${borderColor}`, background: "none", cursor: totalPages > 0 && currentPage >= totalPages ? "not-allowed" : "pointer", color: textColor, fontWeight: 700, opacity: totalPages > 0 && currentPage >= totalPages ? 0.4 : 1 }}>Next →</button>
+      )}
+
+      {/* ── Navigation ── */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginTop: 20, padding: "10px 0" }}>
+        <button onClick={handlePrev} disabled={!canPrev} style={{ padding: "8px 20px", borderRadius: 8, border: `1px solid ${borderColor}`, background: "none", cursor: canPrev ? "pointer" : "not-allowed", color: textColor, fontWeight: 700, opacity: canPrev ? 1 : 0.35 }}>← Prev</button>
+        <span style={{ fontSize: 12, color: "#888", minWidth: 160, textAlign: "center" }}>{pageLabel}</span>
+        <button onClick={handleNext} disabled={!canNext} style={{ padding: "8px 20px", borderRadius: 8, border: `1px solid ${borderColor}`, background: "none", cursor: canNext ? "pointer" : "not-allowed", color: textColor, fontWeight: 700, opacity: canNext ? 1 : 0.35 }}>Next →</button>
       </div>
+
+      {/* ── Progress bar ── */}
       {totalPages > 0 && (
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
-          <div style={{ width: 300, height: 4, background: borderColor, borderRadius: 2 }}>
+          <div style={{ width: "min(400px, 100%)", height: 4, background: borderColor, borderRadius: 2 }}>
             <div style={{ height: "100%", width: `${Math.min(100, (currentPage / totalPages) * 100)}%`, background: GREEN, borderRadius: 2, transition: "width .3s" }} />
           </div>
         </div>

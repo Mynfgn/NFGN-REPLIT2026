@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { ArrowLeft, Sun, Moon, Minus, Plus, BookOpen, Mic, Loader2, AlertTriangle, ChevronLeft, ChevronRight, ShoppingCart, Library } from "lucide-react";
+import { ArrowLeft, Sun, Moon, Minus, Plus, BookOpen, Mic, Loader2, AlertTriangle, ChevronLeft, ChevronRight, ShoppingCart, Library, Volume2, Play, Pause, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGetMe } from "@workspace/api-client-react";
 
@@ -43,11 +43,13 @@ interface Book {
 interface Props { bookId: string }
 
 // ── EPUB viewer — passes URL directly to epub.js (no pre-download) ────────────
-function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle }: {
+function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onReadAloudStop }: {
   streamUrl: string;
   fontSize: number;
   darkMode: boolean;
   bookTitle: string;
+  readAloud: boolean;
+  onReadAloudStop: () => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const bookRef      = useRef<any>(null);
@@ -55,6 +57,13 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle }: {
   const [epubReady,   setEpubReady]   = useState(false);
   const [epubError,   setEpubError]   = useState("");
   const [epubLoading, setEpubLoading] = useState(true);
+
+  // TTS state
+  const [ttsStatus, setTtsStatus] = useState<"idle" | "playing" | "paused">("idle");
+  const [ttsSpeed,  setTtsSpeed]  = useState(1);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  const borderColor = darkMode ? "#333" : "#e5e7eb";
 
   const prev = useCallback(() => renditionRef.current?.prev(), []);
   const next = useCallback(() => renditionRef.current?.next(), []);
@@ -143,6 +152,59 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle }: {
     return () => window.removeEventListener("keydown", handleKey);
   }, [prev, next]);
 
+  /* ── TTS for EPUB: extract text from rendered iframe and speak ── */
+  useEffect(() => {
+    if (!readAloud || !epubReady) return;
+    let cancelled = false;
+    window.speechSynthesis.cancel();
+
+    function extractAndSpeak() {
+      try {
+        const contents = renditionRef.current?.getContents?.() ?? [];
+        let text = "";
+        for (const c of contents) {
+          text += (c.document?.body?.innerText ?? c.document?.body?.textContent ?? "") + " ";
+        }
+        const clean = text.replace(/\s+/g, " ").trim();
+        if (!clean || cancelled) { onReadAloudStop(); return; }
+
+        const utter = new SpeechSynthesisUtterance(clean);
+        utter.rate = ttsSpeed;
+        utter.onpause  = () => { if (!cancelled) setTtsStatus("paused"); };
+        utter.onresume = () => { if (!cancelled) setTtsStatus("playing"); };
+        utter.onend    = () => {
+          if (cancelled) return;
+          // advance to next epub page and re-trigger via rendition "rendered" event
+          renditionRef.current?.next?.();
+        };
+        utter.onerror = () => { if (!cancelled) { setTtsStatus("idle"); onReadAloudStop(); } };
+        utteranceRef.current = utter;
+        window.speechSynthesis.speak(utter);
+        if (!cancelled) setTtsStatus("playing");
+      } catch {
+        if (!cancelled) { setTtsStatus("idle"); onReadAloudStop(); }
+      }
+    }
+
+    // Speak current page immediately; re-speak when epub page changes
+    extractAndSpeak();
+    renditionRef.current?.on?.("rendered", extractAndSpeak);
+
+    return () => {
+      cancelled = true;
+      window.speechSynthesis.cancel();
+      renditionRef.current?.off?.("rendered", extractAndSpeak);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readAloud, epubReady, ttsSpeed]);
+
+  useEffect(() => {
+    if (!readAloud) {
+      window.speechSynthesis.cancel();
+      setTtsStatus("idle");
+    }
+  }, [readAloud]);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 180px)", minHeight: 500 }}>
       <style>{SPIN}</style>
@@ -175,6 +237,67 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle }: {
           </button>
         </div>
       )}
+
+      {/* ── Read Aloud floating bar ── */}
+      {readAloud && ttsStatus !== "idle" && (
+        <ReadAloudBar
+          status={ttsStatus as "playing" | "paused"}
+          speed={ttsSpeed}
+          darkMode={darkMode}
+          borderColor={borderColor}
+          onPause={() => window.speechSynthesis.pause()}
+          onResume={() => window.speechSynthesis.resume()}
+          onStop={() => { window.speechSynthesis.cancel(); setTtsStatus("idle"); onReadAloudStop(); }}
+          onSpeedChange={(s) => { setTtsSpeed(s); window.speechSynthesis.cancel(); }}
+        />
+      )}
+    </div>
+  );
+}
+
+// ── Read-Aloud floating control bar ───────────────────────────────────────────
+function ReadAloudBar({ status, speed, onPause, onResume, onStop, onSpeedChange, darkMode, borderColor }: {
+  status: "playing" | "paused";
+  speed: number;
+  onPause: () => void;
+  onResume: () => void;
+  onStop: () => void;
+  onSpeedChange: (s: number) => void;
+  darkMode: boolean;
+  borderColor: string;
+}) {
+  const bg  = darkMode ? "#1e1e1e" : "#fff";
+  const txt = darkMode ? "#e5e5e5" : "#0a0a0a";
+  return (
+    <div style={{
+      position: "fixed", bottom: 28, left: "50%", transform: "translateX(-50%)",
+      background: bg, border: `2px solid ${GREEN}`, borderRadius: 16,
+      padding: "10px 18px", display: "flex", alignItems: "center", gap: 10,
+      boxShadow: "0 8px 36px rgba(45,106,79,0.25)", zIndex: 300,
+      flexWrap: "wrap", justifyContent: "center", maxWidth: "90vw",
+    }}>
+      <Volume2 size={16} color={GREEN} />
+      <span style={{ fontSize: 12, fontWeight: 800, color: GREEN, marginRight: 4 }}>
+        {status === "playing" ? "Reading…" : "Paused"}
+      </span>
+      <div style={{ width: 1, height: 22, background: borderColor }} />
+      <button
+        onClick={status === "playing" ? onPause : onResume}
+        style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 13px", borderRadius: 8, border: `1.5px solid ${GREEN}`, background: GREEN, color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer" }}
+      >
+        {status === "playing" ? <><Pause size={13} /> Pause</> : <><Play size={13} /> Resume</>}
+      </button>
+      <button
+        onClick={onStop}
+        style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 13px", borderRadius: 8, border: `1.5px solid #ccc`, background: "transparent", color: txt, fontWeight: 700, fontSize: 12, cursor: "pointer" }}
+      >
+        <Square size={12} /> Stop
+      </button>
+      <div style={{ width: 1, height: 22, background: borderColor }} />
+      <span style={{ fontSize: 11, color: "#888" }}>Speed:</span>
+      {[0.75, 1, 1.25, 1.5, 2].map(s => (
+        <button key={s} onClick={() => onSpeedChange(s)} style={{ padding: "3px 9px", borderRadius: 12, border: `1.5px solid ${speed === s ? GREEN : borderColor}`, background: speed === s ? GREEN : "transparent", color: speed === s ? "#fff" : txt, fontWeight: 800, fontSize: 11, cursor: "pointer" }}>{s}x</button>
+      ))}
     </div>
   );
 }
@@ -191,13 +314,15 @@ function WatermarkOverlay({ text }: { text: string }) {
 }
 
 // ── PDF viewer — two-page spread + single page mode ────────────────────────────
-function PdfViewer({ streamUrl, darkMode, currentPage, onPageChange, onTotalPages, watermarkText }: {
+function PdfViewer({ streamUrl, darkMode, currentPage, onPageChange, onTotalPages, watermarkText, readAloud, onReadAloudStop }: {
   streamUrl: string;
   darkMode: boolean;
   currentPage: number;
   onPageChange: (n: number) => void;
   onTotalPages: (n: number) => void;
   watermarkText: string;
+  readAloud: boolean;
+  onReadAloudStop: () => void;
 }) {
   const leftCanvasRef  = useRef<HTMLCanvasElement>(null);
   const rightCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -210,6 +335,11 @@ function PdfViewer({ streamUrl, darkMode, currentPage, onPageChange, onTotalPage
   const [pdfLoaded,     setPdfLoaded]     = useState(false);
   const [pageRendering, setPageRendering] = useState(false);
   const [spreadMode,    setSpreadMode]    = useState(() => window.innerWidth >= 860);
+
+  // ── TTS state ──
+  const [ttsStatus, setTtsStatus] = useState<"idle" | "playing" | "paused">("idle");
+  const [ttsSpeed,  setTtsSpeed]  = useState(1);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   const borderColor = darkMode ? "#333" : "#e5e7eb";
   const textColor   = darkMode ? "#e5e5e5" : "#0a0a0a";
@@ -318,6 +448,77 @@ function PdfViewer({ streamUrl, darkMode, currentPage, onPageChange, onTotalPage
     return () => { cancelled = true; };
   }, [pdfLoaded, currentPage, darkMode, spreadMode, totalPages]);
 
+  /* ── TTS: speak current page(s) whenever readAloud is on ── */
+  useEffect(() => {
+    if (!readAloud || !pdfLoaded || !pdfDocRef.current) return;
+    let cancelled = false;
+    window.speechSynthesis.cancel();
+    setTtsStatus("playing");
+
+    const pdf = pdfDocRef.current;
+    const pagesToRead = spreadMode
+      ? [currentPage, currentPage + 1].filter(p => p <= totalPages)
+      : [currentPage];
+
+    (async () => {
+      let fullText = "";
+      for (const pn of pagesToRead) {
+        try {
+          const pg = await pdf.getPage(pn);
+          const content = await pg.getTextContent();
+          const items = content.items as Array<{ str: string; hasEOL?: boolean }>;
+          let prev: any = null;
+          for (const item of items) {
+            // insert space between words not already separated
+            if (prev && item.str && !prev.str.endsWith(" ") && !item.str.startsWith(" ")) {
+              fullText += " ";
+            }
+            fullText += item.str;
+            if (item.hasEOL) fullText += " ";
+            prev = item;
+          }
+          fullText += "  ";
+        } catch { /* skip unreadable pages */ }
+      }
+
+      if (cancelled) return;
+      const clean = fullText.replace(/\s+/g, " ").trim();
+      if (!clean) { onReadAloudStop(); return; }
+
+      const utter = new SpeechSynthesisUtterance(clean);
+      utter.rate = ttsSpeed;
+      utter.onpause  = () => { if (!cancelled) setTtsStatus("paused"); };
+      utter.onresume = () => { if (!cancelled) setTtsStatus("playing"); };
+      utter.onend    = () => {
+        if (cancelled) return;
+        const step = spreadMode ? 2 : 1;
+        if (currentPage + step <= totalPages) {
+          onPageChange(currentPage + step);
+        } else {
+          setTtsStatus("idle");
+          onReadAloudStop();
+        }
+      };
+      utter.onerror  = () => { if (!cancelled) { setTtsStatus("idle"); onReadAloudStop(); } };
+      utteranceRef.current = utter;
+      window.speechSynthesis.speak(utter);
+    })();
+
+    return () => {
+      cancelled = true;
+      window.speechSynthesis.cancel();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readAloud, pdfLoaded, currentPage, ttsSpeed]);
+
+  /* ── Stop TTS when readAloud is toggled off ── */
+  useEffect(() => {
+    if (!readAloud) {
+      window.speechSynthesis.cancel();
+      setTtsStatus("idle");
+    }
+  }, [readAloud]);
+
   /* ── Navigation ── */
   const step     = spreadMode ? 2 : 1;
   const canPrev  = currentPage > 1;
@@ -408,6 +609,24 @@ function PdfViewer({ streamUrl, darkMode, currentPage, onPageChange, onTotalPage
           </div>
         </div>
       )}
+
+      {/* ── Read Aloud floating bar ── */}
+      {readAloud && ttsStatus !== "idle" && (
+        <ReadAloudBar
+          status={ttsStatus as "playing" | "paused"}
+          speed={ttsSpeed}
+          darkMode={darkMode}
+          borderColor={borderColor}
+          onPause={() => window.speechSynthesis.pause()}
+          onResume={() => window.speechSynthesis.resume()}
+          onStop={() => { window.speechSynthesis.cancel(); setTtsStatus("idle"); onReadAloudStop(); }}
+          onSpeedChange={(s) => {
+            setTtsSpeed(s);
+            // Restart at new speed — effect dependency on ttsSpeed handles it
+            window.speechSynthesis.cancel();
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -423,6 +642,7 @@ export function ReaderPage({ bookId }: Props) {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages]   = useState(0);
   const [audioSpeed, setAudioSpeed]   = useState(1);
+  const [readAloud,  setReadAloud]    = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const id       = parseInt(bookId);
@@ -539,6 +759,14 @@ export function ReaderPage({ bookId }: Props) {
               <button onClick={() => setFontSize(s => Math.min(28, s + 1))} style={{ background: "none", border: `1px solid ${borderColor}`, borderRadius: 6, padding: "4px 8px", cursor: "pointer", color: textColor }}><Plus size={12} /></button>
             </>
           )}
+          {!isAudio && (
+            <button
+              onClick={() => setReadAloud(r => !r)}
+              style={{ display: "flex", alignItems: "center", gap: 5, background: readAloud ? GREEN : "none", border: `1px solid ${readAloud ? GREEN : borderColor}`, borderRadius: 6, padding: "6px 10px", cursor: "pointer", color: readAloud ? "#fff" : textColor, fontSize: 12, fontWeight: 700 }}
+            >
+              <Volume2 size={14} /> {readAloud ? "Stop" : "Read Aloud"}
+            </button>
+          )}
           <button onClick={() => setDarkMode(d => !d)} style={{ background: "none", border: `1px solid ${borderColor}`, borderRadius: 6, padding: "6px 10px", cursor: "pointer", display: "flex", alignItems: "center", gap: 5, color: textColor, fontSize: 12, fontWeight: 700 }}>
             {darkMode ? <Sun size={14} /> : <Moon size={14} />} {darkMode ? "Light" : "Dark"}
           </button>
@@ -615,6 +843,8 @@ export function ReaderPage({ bookId }: Props) {
                 fontSize={fontSize}
                 darkMode={darkMode}
                 bookTitle={book.title}
+                readAloud={readAloud}
+                onReadAloudStop={() => setReadAloud(false)}
               />
             ) : (
               <PdfViewer
@@ -624,6 +854,8 @@ export function ReaderPage({ bookId }: Props) {
                 onPageChange={handlePageChange}
                 onTotalPages={setTotalPages}
                 watermarkText={isSample ? "" : watermarkText}
+                readAloud={readAloud}
+                onReadAloudStop={() => setReadAloud(false)}
               />
             )}
           </>

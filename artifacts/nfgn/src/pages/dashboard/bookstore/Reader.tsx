@@ -71,44 +71,87 @@ interface Book {
 
 interface Props { bookId: string }
 
-// ── EPUB viewer — passes URL directly to epub.js (no pre-download) ────────────
-function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onReadAloudStop, spreadMode }: {
+// ── EPUB viewer — Apple Books-style professional reader ───────────────────────
+function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onReadAloudStop, bookId }: {
   streamUrl: string;
   fontSize: number;
   darkMode: boolean;
   bookTitle: string;
   readAloud: boolean;
   onReadAloudStop: () => void;
-  spreadMode: boolean;
+  spreadMode?: boolean;
+  bookId?: string;
 }) {
-  // Native 6×9 book page dimensions (matching Apple Books' reference size).
-  // epub.js renders at this full size so the EPUB's own CSS (flex footers,
-  // fixed-position elements) lays out exactly as designed. We then scale the
-  // result down with CSS transform to fit the available viewport.
-  const EPUB_PAGE_W = 450;  // per-page width  (6in × 75dpi ≈ 450px)
-  const EPUB_PAGE_H = 675;  // per-page height (9in × 75dpi ≈ 675px)
+  // Native 6×9 book page dimensions — epub.js renders at full size so the
+  // EPUB's own CSS (flex footers, absolute elements) lays out correctly.
+  // We then CSS-scale the result down to fit the viewport.
+  const EPUB_PAGE_W = 450;
+  const EPUB_PAGE_H = 675;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const bookRef      = useRef<any>(null);
   const renditionRef = useRef<any>(null);
+
+  // Core state
   const [epubReady,   setEpubReady]   = useState(false);
   const [epubError,   setEpubError]   = useState("");
   const [epubLoading, setEpubLoading] = useState(true);
   const [epubScale,   setEpubScale]   = useState(1);
-  // 3-D page-flip state
-  const [flipClass,   setFlipClass]   = useState("");
-  const [flipping,    setFlipping]    = useState(false);
 
-  // TTS state
+  // 3-D page-flip
+  const [flipClass, setFlipClass] = useState("");
+  const [flipping,  setFlipping]  = useState(false);
+
+  // TTS
   const [ttsStatus, setTtsStatus] = useState<"idle" | "playing" | "paused">("idle");
   const [ttsSpeed,  setTtsSpeed]  = useState(1);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-  const borderColor = darkMode ? "#333" : "#e5e7eb";
+  // ── Professional reader state ──────────────────────────────────────────────
+  const [epubCurrentPage, setEpubCurrentPage] = useState(0);
+  const [epubTotalPages,  setEpubTotalPages]  = useState(0);
+  const [epubProgress,    setEpubProgress]    = useState(0);
+  const [currentChapter,  setCurrentChapter]  = useState("");
+  const tocRef        = useRef<any[]>([]);
+  const currentCfiRef = useRef("");
 
-  // Animated prev/next: rotate the page away (0→180°), navigate epub.js at the
-  // midpoint when the page is edge-on and invisible, then snap back to 0° with
-  // the new content already loaded (matches the Apple Books reference component).
+  // TOC
+  const [toc,     setToc]     = useState<any[]>([]);
+  const [showToc, setShowToc] = useState(false);
+
+  // Bookmarks
+  const bmKey = bookId ? `nfgn_epub_bm_${bookId}` : null;
+  const [bookmarks, setBookmarks] = useState<Array<{ cfi: string; chapter: string; page: number; date: number }>>(() => {
+    if (!bmKey) return [];
+    try { return JSON.parse(localStorage.getItem(bmKey) || "[]"); } catch { return []; }
+  });
+  const [showBookmarks, setShowBookmarks] = useState(false);
+  const [isBookmarked,  setIsBookmarked]  = useState(false);
+
+  // Search
+  const [showSearch,    setShowSearch]    = useState(false);
+  const [searchQuery,   setSearchQuery]   = useState("");
+  const [searchResults, setSearchResults] = useState<Array<{ cfi: string; excerpt: string }>>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+
+  // Resume
+  const cfiKey = bookId ? `nfgn_epub_cfi_${bookId}` : null;
+  const [showResume, setShowResume] = useState(false);
+  const [resumeCfi,  setResumeCfi]  = useState<string | null>(null);
+
+  // Fullscreen + font
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [fontFamily,   setFontFamily]   = useState<"serif" | "sans" | "dyslexia">("serif");
+
+  // Touch tracking
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+
+  const borderColor = darkMode ? "#333" : "#e5e7eb";
+  const bg          = darkMode ? "#1a1a1a" : "#fff";
+  const textColor   = darkMode ? "#e5e5e5" : DARK;
+
+  // ── 3-D animated nav ────────────────────────────────────────────────────────
   const FLIP_MS = 550;
   const prev = useCallback(() => {
     if (flipping || !renditionRef.current) return;
@@ -125,10 +168,10 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
     setTimeout(() => { setFlipClass(""); setFlipping(false); }, FLIP_MS);
   }, [flipping]);
 
+  // ── Init epub.js ─────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!containerRef.current) return;
     let destroyed = false;
-
     setEpubLoading(true);
     setEpubError("");
 
@@ -140,87 +183,153 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
     }
 
     try {
-      // Pass the stream URL directly — epub.js fetches it internally.
-      // openAs:"epub" is required because our URL has no .epub extension.
-      // The server sends application/octet-stream so iOS Safari won't intercept it.
       const epubBook = ePub(streamUrl, { openAs: "epub" });
       bookRef.current = epubBook;
 
-      // Render at the NATIVE 6×9 page size so the EPUB's own CSS (flex/absolute
-      // footers, etc.) lays out exactly as designed — matching Apple Books.
-      // We then scale the rendered result down to fit the viewport with CSS
-      // transform, so pagination is identical to Apple Books regardless of
-      // the current screen size.
-      const nativeW = EPUB_PAGE_W * 2; // 900px (two pages)
-      const nativeH = EPUB_PAGE_H;     // 675px
-
-      const availH  = Math.max(300, window.innerHeight - 180);
-      const availW  = Math.max(300, window.innerWidth  - 40);
-      const scale   = Math.min(availW / nativeW, availH / nativeH, 1);
-      if (!destroyed) setEpubScale(scale);
+      const nativeW = EPUB_PAGE_W * 2;
+      const nativeH = EPUB_PAGE_H;
 
       const rendition = epubBook.renderTo(containerRef.current!, {
-        width:          nativeW,
-        height:         nativeH,
-        spread:         "always",   // 2-page spread like Apple Books on iPad
-        flow:           "paginated",
-        minSpreadWidth: 0,
+        width: nativeW, height: nativeH,
+        spread: "always", flow: "paginated", minSpreadWidth: 0,
       });
       renditionRef.current = rendition;
 
-      rendition.themes.fontSize(`${fontSize}%`);
-      if (darkMode) {
-        rendition.themes.register("dark", { body: { background: "#1a1a1a !important", color: "#e5e5e5 !important" } });
-        rendition.themes.select("dark");
-      } else {
-        rendition.themes.register("light", { body: { background: "#ffffff !important", color: "#1a1a1a !important" } });
-        rendition.themes.select("light");
-      }
+      // Apply initial scale
+      const calcScale = () => {
+        const availW = Math.max(300, window.innerWidth  - 40);
+        const availH = Math.max(300, window.innerHeight - 240);
+        return Math.min(availW / nativeW, availH / nativeH, 1);
+      };
+      if (!destroyed) setEpubScale(calcScale());
+      const onResize = () => { if (!destroyed) setEpubScale(calcScale()); };
+      window.addEventListener("resize", onResize);
 
+      rendition.themes.fontSize(`${fontSize}%`);
+
+      // ── Track reading position on every page turn ──
+      rendition.on("relocated", (location: any) => {
+        if (destroyed) return;
+        const page  = location.start.displayed?.page  ?? 0;
+        const total = location.start.displayed?.total ?? 0;
+        const pct   = (location.start.percentage ?? 0) * 100;
+        const cfi   = location.start.cfi ?? "";
+        setEpubCurrentPage(page);
+        setEpubTotalPages(total);
+        setEpubProgress(pct);
+        currentCfiRef.current = cfi;
+        if (cfiKey && cfi) localStorage.setItem(cfiKey, cfi);
+        // Match chapter from TOC
+        const rawHref  = location.start.href ?? "";
+        const baseHref = rawHref.split("#")[0].split("/").pop() ?? "";
+        const findCh = (items: any[]): string => {
+          for (const item of items) {
+            const h = (item.href ?? "").split("#")[0].split("/").pop() ?? "";
+            if (h && baseHref && h === baseHref) return item.label ?? "";
+            const found = findCh(item.subitems ?? []);
+            if (found) return found;
+          }
+          return "";
+        };
+        if (tocRef.current.length) {
+          const ch = findCh(tocRef.current);
+          if (ch) setCurrentChapter(ch);
+        }
+      });
+
+      // ── Load TOC ──
+      epubBook.loaded.navigation.then((nav: any) => {
+        if (destroyed) return;
+        const items = nav.toc ?? [];
+        setToc(items);
+        tocRef.current = items;
+      });
+
+      // ── Display + resume ──
       rendition.display()
-        .then(() => { if (!destroyed) { setEpubReady(true); setEpubLoading(false); } })
-        .catch((e: any) => { if (!destroyed) { setEpubError(e?.message ?? "Could not open this book."); setEpubLoading(false); } });
+        .then(() => {
+          if (destroyed) return;
+          setEpubReady(true);
+          setEpubLoading(false);
+          if (cfiKey) {
+            const saved = localStorage.getItem(cfiKey);
+            if (saved) { setResumeCfi(saved); setShowResume(true); }
+          }
+        })
+        .catch((e: any) => {
+          if (!destroyed) { setEpubError(e?.message ?? "Could not open this book."); setEpubLoading(false); }
+        });
 
       epubBook.ready.catch((e: any) => {
         if (!destroyed) { setEpubError(e?.message ?? "Book failed to load."); setEpubLoading(false); }
       });
+
+      return () => {
+        destroyed = true;
+        window.removeEventListener("resize", onResize);
+        window.speechSynthesis?.cancel();
+        try { epubBook.destroy(); } catch {}
+        renditionRef.current = null;
+        bookRef.current = null;
+      };
     } catch (e: any) {
       setEpubError(e?.message ?? "Failed to open book.");
       setEpubLoading(false);
     }
-
-    return () => {
-      destroyed = true;
-      bookRef.current?.destroy?.();
-    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [streamUrl]);
 
+  // ── Combined dark + font theme ──────────────────────────────────────────────
   useEffect(() => {
-    if (!renditionRef.current || !epubReady) return;
-    renditionRef.current.themes.fontSize(`${fontSize}%`);
+    const r = renditionRef.current;
+    if (!r || !epubReady) return;
+    const fontMap: Record<string, string> = {
+      serif:    "Georgia, 'Times New Roman', serif",
+      sans:     "system-ui, -apple-system, sans-serif",
+      dyslexia: "'OpenDyslexic', Arial, sans-serif",
+    };
+    const rules: Record<string, Record<string, string>> = {
+      "html, body, p, div, span, li, td, h1, h2, h3, h4, h5, h6": {
+        "font-family": `${fontMap[fontFamily]} !important`,
+      },
+    };
+    if (darkMode) {
+      rules["html, body"] = { background: "#1a1a1a !important", color: "#e8e8e8 !important" };
+    } else {
+      rules["html, body"] = { background: "#ffffff !important", color: "#1a1a1a !important" };
+    }
+    r.themes.register("active", rules);
+    r.themes.select("active");
+  }, [darkMode, fontFamily, epubReady]);
+
+  // ── Font size ──
+  useEffect(() => {
+    if (renditionRef.current && epubReady) renditionRef.current.themes.fontSize(`${fontSize}%`);
   }, [fontSize, epubReady]);
 
+  // ── Keyboard nav ──
   useEffect(() => {
-    if (!renditionRef.current || !epubReady) return;
-    if (darkMode) {
-      renditionRef.current.themes.register("dark", { body: { background: "#1a1a1a !important", color: "#e5e5e5 !important" } });
-      renditionRef.current.themes.select("dark");
-    } else {
-      renditionRef.current.themes.register("light", { body: { background: "#ffffff !important", color: "#1a1a1a !important" } });
-      renditionRef.current.themes.select("light");
-    }
-  }, [darkMode, epubReady]);
-
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft")  prev();
-      if (e.key === "ArrowRight") next();
+    const h = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft"  || e.key === "ArrowUp")   prev();
+      if (e.key === "ArrowRight" || e.key === "ArrowDown")  next();
     };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
   }, [prev, next]);
 
-  /* ── TTS for EPUB: extract text from rendered iframe and speak ── */
+  // ── Fullscreen listener ──
+  useEffect(() => {
+    const h = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", h);
+    return () => document.removeEventListener("fullscreenchange", h);
+  }, []);
+
+  // ── Bookmark state sync ──
+  useEffect(() => {
+    setIsBookmarked(bookmarks.some(b => b.cfi === currentCfiRef.current));
+  }, [bookmarks, epubCurrentPage]);
+
+  // ── TTS ──
   useEffect(() => {
     if (!readAloud || !epubReady) return;
     let cancelled = false;
@@ -235,29 +344,20 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
         }
         const clean = text.replace(/\s+/g, " ").trim();
         if (!clean || cancelled) { onReadAloudStop(); return; }
-
         const utter = new SpeechSynthesisUtterance(clean);
-        utter.rate = ttsSpeed;
+        utter.rate     = ttsSpeed;
         utter.onpause  = () => { if (!cancelled) setTtsStatus("paused"); };
         utter.onresume = () => { if (!cancelled) setTtsStatus("playing"); };
-        utter.onend    = () => {
-          if (cancelled) return;
-          // advance to next epub page and re-trigger via rendition "rendered" event
-          renditionRef.current?.next?.();
-        };
-        utter.onerror = () => { if (!cancelled) { setTtsStatus("idle"); onReadAloudStop(); } };
+        utter.onend    = () => { if (!cancelled) renditionRef.current?.next?.(); };
+        utter.onerror  = () => { if (!cancelled) { setTtsStatus("idle"); onReadAloudStop(); } };
         utteranceRef.current = utter;
         window.speechSynthesis.speak(utter);
         if (!cancelled) setTtsStatus("playing");
-      } catch {
-        if (!cancelled) { setTtsStatus("idle"); onReadAloudStop(); }
-      }
+      } catch { if (!cancelled) { setTtsStatus("idle"); onReadAloudStop(); } }
     }
 
-    // Speak current page immediately; re-speak when epub page changes
     extractAndSpeak();
     renditionRef.current?.on?.("rendered", extractAndSpeak);
-
     return () => {
       cancelled = true;
       window.speechSynthesis.cancel();
@@ -267,80 +367,304 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
   }, [readAloud, epubReady, ttsSpeed]);
 
   useEffect(() => {
-    if (!readAloud) {
-      window.speechSynthesis.cancel();
-      setTtsStatus("idle");
-    }
+    if (!readAloud) { window.speechSynthesis.cancel(); setTtsStatus("idle"); }
   }, [readAloud]);
 
+  // ── Bookmark toggle ──────────────────────────────────────────────────────────
+  const toggleBookmark = useCallback(() => {
+    const cfi = currentCfiRef.current;
+    if (!cfi || !bmKey) return;
+    const idx = bookmarks.findIndex(b => b.cfi === cfi);
+    const updated = idx >= 0
+      ? bookmarks.filter((_, i) => i !== idx)
+      : [...bookmarks, { cfi, chapter: currentChapter, page: epubCurrentPage, date: Date.now() }];
+    setBookmarks(updated);
+    localStorage.setItem(bmKey, JSON.stringify(updated));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookmarks, currentChapter, epubCurrentPage, bmKey]);
+
+  // ── Search ──────────────────────────────────────────────────────────────────
+  const doSearch = useCallback(async () => {
+    if (!bookRef.current || !searchQuery.trim()) return;
+    setSearchLoading(true);
+    setSearchResults([]);
+    try {
+      const res = await bookRef.current.search(searchQuery.trim());
+      setSearchResults((Array.isArray(res) ? res : []).map((r: any) => ({
+        cfi: r.cfi ?? "", excerpt: r.excerpt ?? "",
+      })));
+    } catch {}
+    setSearchLoading(false);
+  }, [searchQuery]);
+
+  // ── Fullscreen ──────────────────────────────────────────────────────────────
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {});
+    else document.exitFullscreen?.().catch(() => {});
+  }, []);
+
+  // ── Touch handlers ──────────────────────────────────────────────────────────
+  const onTouchStart = useCallback((e: any) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  }, []);
+  const onTouchEnd = useCallback((e: any) => {
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const dy = e.changedTouches[0].clientY - touchStartY.current;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+      if (dx < 0) next(); else prev();
+    }
+  }, [next, prev]);
+
+  // ── Estimated reading time (30 sec/spread ≈ 0.5 min/page) ──────────────────
+  const minsLeft = epubTotalPages > 0 && epubCurrentPage > 0
+    ? Math.max(1, Math.ceil((epubTotalPages - epubCurrentPage) * 0.5)) : null;
+
+  // ── JSX ─────────────────────────────────────────────────────────────────────
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 180px)", minHeight: 500 }}>
+    <div style={{ display: "flex", flexDirection: "column", minHeight: 500, position: "relative" }}>
       <style>{SPIN}</style>
       <style>{FLIP_CSS}</style>
-      {epubLoading && (
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
-          <Loader2 size={28} color={GREEN} style={{ animation: "spin 1s linear infinite" }} />
-          <div style={{ fontSize: 13, color: "#888" }}>Opening <em>{bookTitle}</em>…</div>
-          <div style={{ fontSize: 11, color: "#bbb", marginTop: 4 }}>This may take a moment on first open</div>
+
+      {/* ── Secondary EPUB toolbar ── */}
+      {epubReady && !epubError && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 6, padding: "6px 12px", background: darkMode ? "#111" : "#f0f0f0", borderBottom: `1px solid ${borderColor}`, borderRadius: "8px 8px 0 0", flexShrink: 0 }}>
+          <div style={{ display: "flex", gap: 6 }}>
+            <button onClick={() => setShowToc(t => !t)} aria-label="Table of contents"
+              style={{ display: "flex", alignItems: "center", gap: 4, background: showToc ? GREEN : "none", border: `1px solid ${showToc ? GREEN : borderColor}`, color: showToc ? "#fff" : textColor, borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+              ☰ Contents
+            </button>
+            <button onClick={() => { setShowSearch(s => !s); if (showSearch) { setSearchResults([]); setSearchQuery(""); } }} aria-label="Search in book"
+              style={{ display: "flex", alignItems: "center", gap: 4, background: showSearch ? GREEN : "none", border: `1px solid ${showSearch ? GREEN : borderColor}`, color: showSearch ? "#fff" : textColor, borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+              🔍 Search
+            </button>
+          </div>
+          <div style={{ flex: 1, textAlign: "center", minWidth: 0, padding: "0 8px" }}>
+            {currentChapter && <div style={{ fontSize: 11, color: "#888", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentChapter}</div>}
+            {minsLeft && <div style={{ fontSize: 10, color: "#aaa" }}>~{minsLeft} min left in section</div>}
+          </div>
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            <select value={fontFamily} onChange={e => setFontFamily(e.target.value as any)} aria-label="Font family"
+              style={{ border: `1px solid ${borderColor}`, borderRadius: 6, padding: "3px 6px", fontSize: 11, background: darkMode ? "#222" : "#fff", color: textColor, cursor: "pointer" }}>
+              <option value="serif">Serif</option>
+              <option value="sans">Sans</option>
+              <option value="dyslexia">Dyslexia</option>
+            </select>
+            {bmKey && (
+              <button onClick={toggleBookmark} aria-label={isBookmarked ? "Remove bookmark" : "Bookmark this page"}
+                style={{ background: isBookmarked ? GOLD : "none", border: `1px solid ${isBookmarked ? GOLD : borderColor}`, color: isBookmarked ? "#fff" : textColor, borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+                {isBookmarked ? "🔖 Saved" : "🔖 Save"}
+              </button>
+            )}
+            {bmKey && (
+              <button onClick={() => setShowBookmarks(s => !s)} aria-label="View bookmarks"
+                style={{ background: showBookmarks ? GREEN : "none", border: `1px solid ${showBookmarks ? GREEN : borderColor}`, color: showBookmarks ? "#fff" : textColor, borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+                Bookmarks{bookmarks.length > 0 ? ` (${bookmarks.length})` : ""}
+              </button>
+            )}
+            <button onClick={toggleFullscreen} aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+              style={{ background: "none", border: `1px solid ${borderColor}`, color: textColor, borderRadius: 6, padding: "4px 9px", fontSize: 13, cursor: "pointer" }} title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}>
+              {isFullscreen ? "⤓" : "⤢"}
+            </button>
+          </div>
         </div>
       )}
+
+      {/* ── Loading ── */}
+      {epubLoading && (
+        <div style={{ height: "calc(100vh - 280px)", minHeight: 400, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
+          <Loader2 size={28} color={GREEN} style={{ animation: "spin 1s linear infinite" }} />
+          <div style={{ fontSize: 13, color: "#888" }}>Opening <em>{bookTitle}</em>…</div>
+          <div style={{ fontSize: 11, color: "#bbb" }}>This may take a moment on first open</div>
+        </div>
+      )}
+
+      {/* ── Error ── */}
       {epubError && !epubLoading && (
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12, padding: 32 }}>
+        <div style={{ height: "calc(100vh - 280px)", minHeight: 300, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12, padding: 32 }}>
           <AlertTriangle size={32} color={GOLD} />
           <div style={{ fontSize: 14, fontWeight: 700, color: DARK }}>Could not display this book</div>
           <div style={{ fontSize: 12, color: "#888", textAlign: "center" }}>{epubError}</div>
         </div>
       )}
-      {/* epub.js renders at native 6×9 size, scaled down to fit the viewport.
-          The outer centering div carries the 3-D perspective so the flip div's
-          rotateY animation has realistic depth.  flipClass drives the animation;
-          epub.js navigates at the midpoint when the page is edge-on/invisible. */}
-      <div style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "flex-start", overflow: "hidden", visibility: epubLoading || epubError ? "hidden" : "visible", perspective: "2500px" }}>
-        {/* FLIP layer — gets the rotateY animation class */}
-        <div
-          className={flipClass}
-          style={{ width: EPUB_PAGE_W * 2 * epubScale, height: EPUB_PAGE_H * epubScale, flexShrink: 0, transformStyle: "preserve-3d", willChange: "transform" }}
-        >
-          {/* CLIP layer — masks the oversized native iframe */}
+
+      {/* ── Reader area: touch events + tap zones + 3-layer flip/clip/scale ── */}
+      <div
+        style={{ height: "calc(100vh - 280px)", minHeight: 400, display: "flex", justifyContent: "center", alignItems: "flex-start", overflow: "hidden", visibility: epubLoading || epubError ? "hidden" : "visible", perspective: "2500px", position: "relative" }}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        {/* Tap zones: left 30% = prev, right 30% = next (like Kindle / Apple Books) */}
+        {epubReady && (
+          <>
+            <div onClick={flipping ? undefined : prev} aria-label="Previous page"
+              style={{ position: "absolute", left: 0, top: 0, width: "30%", height: "100%", cursor: flipping ? "default" : "pointer", zIndex: 20 }} />
+            <div onClick={flipping ? undefined : next} aria-label="Next page"
+              style={{ position: "absolute", right: 0, top: 0, width: "30%", height: "100%", cursor: flipping ? "default" : "pointer", zIndex: 20 }} />
+          </>
+        )}
+
+        {/* FLIP layer — rotateY animation */}
+        <div className={flipClass}
+          style={{ width: EPUB_PAGE_W * 2 * epubScale, height: EPUB_PAGE_H * epubScale, flexShrink: 0, transformStyle: "preserve-3d", willChange: "transform" }}>
+          {/* CLIP layer */}
           <div style={{ width: "100%", height: "100%", overflow: "hidden", borderRadius: 12, boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }}>
-            {/* SCALE layer — epub.js target at NATIVE size, scaled to visual size */}
-            <div
-              ref={containerRef}
-              style={{ width: EPUB_PAGE_W * 2, height: EPUB_PAGE_H, transform: `scale(${epubScale})`, transformOrigin: "top left" }}
-            />
+            {/* SCALE layer — epub.js target at native size, CSS-scaled to fit */}
+            <div ref={containerRef}
+              style={{ width: EPUB_PAGE_W * 2, height: EPUB_PAGE_H, transform: `scale(${epubScale})`, transformOrigin: "top left" }} />
           </div>
         </div>
       </div>
+
+      {/* ── Page nav + page numbers ── */}
       {epubReady && !epubError && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 20, padding: "14px 0 4px" }}>
-          <button
-            onClick={prev} disabled={flipping}
-            style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: `1.5px solid ${GREEN}`, color: GREEN, borderRadius: 8, padding: "8px 18px", fontWeight: 700, fontSize: 13, cursor: flipping ? "default" : "pointer", opacity: flipping ? 0.4 : 1 }}
-          >
-            <ChevronLeft size={14} /> Prev
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 20, padding: "10px 0 4px", flexShrink: 0 }}>
+          <button onClick={prev} disabled={flipping} aria-label="Previous page"
+            style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: `1.5px solid ${GREEN}`, color: GREEN, borderRadius: 8, padding: "7px 16px", fontWeight: 700, fontSize: 12, cursor: flipping ? "default" : "pointer", opacity: flipping ? 0.4 : 1 }}>
+            <ChevronLeft size={13} /> Prev
           </button>
-          <span style={{ fontSize: 11, color: "#aaa" }}>← → keys also work</span>
-          <button
-            onClick={next} disabled={flipping}
-            style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: `1.5px solid ${GREEN}`, color: GREEN, borderRadius: 8, padding: "8px 18px", fontWeight: 700, fontSize: 13, cursor: flipping ? "default" : "pointer", opacity: flipping ? 0.4 : 1 }}
-          >
-            Next <ChevronRight size={14} />
+          <div style={{ textAlign: "center" }}>
+            {epubCurrentPage > 0 && (
+              <div style={{ fontSize: 12, color: textColor, fontWeight: 600 }}>
+                Page {epubCurrentPage}{epubTotalPages > 0 ? ` of ${epubTotalPages}` : ""}
+              </div>
+            )}
+            <div style={{ fontSize: 10, color: "#aaa" }}>← → keys · tap edges to turn</div>
+          </div>
+          <button onClick={next} disabled={flipping} aria-label="Next page"
+            style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: `1.5px solid ${GREEN}`, color: GREEN, borderRadius: 8, padding: "7px 16px", fontWeight: 700, fontSize: 12, cursor: flipping ? "default" : "pointer", opacity: flipping ? 0.4 : 1 }}>
+            Next <ChevronRight size={13} />
           </button>
         </div>
       )}
 
-      {/* ── Read Aloud floating bar ── */}
+      {/* ── Progress bar ── */}
+      {epubReady && !epubError && (
+        <div style={{ height: 4, background: borderColor, borderRadius: 2, flexShrink: 0 }}>
+          <div style={{ height: "100%", width: `${Math.min(100, epubProgress)}%`, background: GOLD, borderRadius: 2, transition: "width 0.4s ease" }} />
+        </div>
+      )}
+
+      {/* ── Read Aloud bar ── */}
       {readAloud && ttsStatus !== "idle" && (
         <ReadAloudBar
-          status={ttsStatus as "playing" | "paused"}
-          speed={ttsSpeed}
-          darkMode={darkMode}
-          borderColor={borderColor}
+          status={ttsStatus as "playing" | "paused"} speed={ttsSpeed}
+          darkMode={darkMode} borderColor={borderColor}
           onPause={() => window.speechSynthesis.pause()}
           onResume={() => window.speechSynthesis.resume()}
           onStop={() => { window.speechSynthesis.cancel(); setTtsStatus("idle"); onReadAloudStop(); }}
           onSpeedChange={(s) => { setTtsSpeed(s); window.speechSynthesis.cancel(); }}
         />
+      )}
+
+      {/* ══════════════════════ OVERLAYS ══════════════════════ */}
+
+      {/* ── TOC sidebar (slides in from left) ── */}
+      {showToc && (
+        <>
+          <div onClick={() => setShowToc(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 400 }} />
+          <div style={{ position: "fixed", left: 0, top: 0, height: "100vh", width: 300, maxWidth: "85vw", background: bg, zIndex: 401, display: "flex", flexDirection: "column", boxShadow: "4px 0 28px rgba(0,0,0,0.3)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: `1px solid ${borderColor}`, flexShrink: 0 }}>
+              <span style={{ fontWeight: 800, fontSize: 15, color: textColor }}>📑 Contents</span>
+              <button onClick={() => setShowToc(false)} aria-label="Close" style={{ background: "none", border: "none", cursor: "pointer", color: textColor, fontSize: 20, lineHeight: 1, padding: 4 }}>×</button>
+            </div>
+            <div style={{ overflowY: "auto", flex: 1, padding: "8px 0" }}>
+              {toc.length === 0 && <div style={{ padding: 20, fontSize: 12, color: "#888", textAlign: "center" }}>Loading contents…</div>}
+              {toc.map((item: any, i: number) => (
+                <div key={i}>
+                  <button onClick={() => { renditionRef.current?.display(item.href); setShowToc(false); }}
+                    style={{ display: "block", width: "100%", textAlign: "left", background: item.label === currentChapter ? `${GREEN}18` : "none", border: "none", borderLeft: item.label === currentChapter ? `3px solid ${GREEN}` : "3px solid transparent", padding: "10px 20px", cursor: "pointer", color: item.label === currentChapter ? GREEN : textColor, fontWeight: item.label === currentChapter ? 700 : 400, fontSize: 13 }}>
+                    {item.label}
+                  </button>
+                  {(item.subitems ?? []).map((sub: any, j: number) => (
+                    <button key={j} onClick={() => { renditionRef.current?.display(sub.href); setShowToc(false); }}
+                      style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", borderLeft: "3px solid transparent", padding: "7px 20px 7px 36px", cursor: "pointer", color: sub.label === currentChapter ? GREEN : "#888", fontSize: 12 }}>
+                      {sub.label}
+                    </button>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Bookmarks panel (slides in from right) ── */}
+      {showBookmarks && (
+        <>
+          <div onClick={() => setShowBookmarks(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 400 }} />
+          <div style={{ position: "fixed", right: 0, top: 0, height: "100vh", width: 300, maxWidth: "85vw", background: bg, zIndex: 401, display: "flex", flexDirection: "column", boxShadow: "-4px 0 28px rgba(0,0,0,0.3)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: `1px solid ${borderColor}`, flexShrink: 0 }}>
+              <span style={{ fontWeight: 800, fontSize: 15, color: textColor }}>🔖 Bookmarks</span>
+              <button onClick={() => setShowBookmarks(false)} aria-label="Close" style={{ background: "none", border: "none", cursor: "pointer", color: textColor, fontSize: 20, lineHeight: 1, padding: 4 }}>×</button>
+            </div>
+            <div style={{ overflowY: "auto", flex: 1, padding: "12px 20px" }}>
+              {bookmarks.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "32px 0", color: "#888", fontSize: 12, lineHeight: 2 }}>
+                  No bookmarks yet.<br />Tap <strong>🔖 Save</strong> while reading<br />to save your place.
+                </div>
+              ) : [...bookmarks].reverse().map((bm, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0", borderBottom: `1px solid ${borderColor}` }}>
+                  <div style={{ flex: 1, cursor: "pointer" }} onClick={() => { renditionRef.current?.display(bm.cfi); setShowBookmarks(false); }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: textColor }}>{bm.chapter || "Saved page"}</div>
+                    <div style={{ fontSize: 11, color: "#888" }}>Page {bm.page} · {new Date(bm.date).toLocaleDateString()}</div>
+                  </div>
+                  <button onClick={() => {
+                    const updated = bookmarks.filter(b => b.cfi !== bm.cfi);
+                    setBookmarks(updated);
+                    if (bmKey) localStorage.setItem(bmKey, JSON.stringify(updated));
+                  }} aria-label="Delete bookmark"
+                    style={{ background: "none", border: "none", cursor: "pointer", color: "#ccc", fontSize: 18, lineHeight: 1, padding: 4 }}>×</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Search panel (dropdown from top) ── */}
+      {showSearch && (
+        <>
+          <div onClick={() => { setShowSearch(false); setSearchResults([]); setSearchQuery(""); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 400 }} />
+          <div style={{ position: "fixed", top: 64, left: "50%", transform: "translateX(-50%)", width: 440, maxWidth: "92vw", background: bg, border: `1px solid ${borderColor}`, borderRadius: 14, boxShadow: "0 12px 40px rgba(0,0,0,0.25)", zIndex: 401, display: "flex", flexDirection: "column", maxHeight: "60vh" }}>
+            <div style={{ padding: "14px 16px 10px", borderBottom: `1px solid ${borderColor}`, flexShrink: 0 }}>
+              <div style={{ display: "flex", gap: 8 }}>
+                <input autoFocus value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && doSearch()} placeholder="Search in book…" aria-label="Search"
+                  style={{ flex: 1, border: `1px solid ${borderColor}`, borderRadius: 8, padding: "7px 12px", fontSize: 13, background: darkMode ? "#222" : "#f9f9f9", color: textColor, outline: "none" }} />
+                <button onClick={doSearch}
+                  style={{ background: GREEN, color: "#fff", border: "none", borderRadius: 8, padding: "7px 16px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Go</button>
+                <button onClick={() => { setShowSearch(false); setSearchResults([]); setSearchQuery(""); }} aria-label="Close search"
+                  style={{ background: "none", border: `1px solid ${borderColor}`, borderRadius: 8, padding: "7px 10px", cursor: "pointer", color: textColor, fontSize: 16, lineHeight: 1 }}>×</button>
+              </div>
+            </div>
+            <div style={{ overflowY: "auto", flex: 1, padding: "8px 0" }}>
+              {searchLoading && <div style={{ textAlign: "center", padding: 20, color: "#888", fontSize: 13 }}>Searching…</div>}
+              {!searchLoading && searchQuery && searchResults.length === 0 && (
+                <div style={{ textAlign: "center", padding: 20, color: "#888", fontSize: 13 }}>No results for &ldquo;<em>{searchQuery}</em>&rdquo;</div>
+              )}
+              {searchResults.map((r, i) => (
+                <div key={i} onClick={() => { renditionRef.current?.display(r.cfi); setShowSearch(false); }}
+                  style={{ padding: "10px 16px", borderBottom: `1px solid ${borderColor}`, cursor: "pointer", fontSize: 12, color: textColor, lineHeight: 1.6 }}>
+                  {r.excerpt}
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Resume toast ── */}
+      {showResume && resumeCfi && (
+        <div style={{ position: "fixed", bottom: 90, left: "50%", transform: "translateX(-50%)", background: bg, border: `2px solid ${GREEN}`, borderRadius: 14, padding: "14px 22px", display: "flex", alignItems: "center", gap: 14, boxShadow: "0 8px 36px rgba(45,106,79,0.3)", zIndex: 500, maxWidth: "90vw", flexWrap: "wrap" }}>
+          <span style={{ fontSize: 13, color: textColor, fontWeight: 600 }}>📖 Resume where you left off?</span>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => { renditionRef.current?.display(resumeCfi); setShowResume(false); }}
+              style={{ background: GREEN, color: "#fff", border: "none", borderRadius: 8, padding: "7px 18px", cursor: "pointer", fontWeight: 700, fontSize: 13 }}>Resume</button>
+            <button onClick={() => setShowResume(false)}
+              style={{ background: "none", border: `1px solid ${borderColor}`, borderRadius: 8, padding: "7px 14px", cursor: "pointer", color: textColor, fontSize: 12 }}>Start fresh</button>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -948,6 +1272,7 @@ export function ReaderPage({ bookId }: Props) {
                 readAloud={readAloud}
                 onReadAloudStop={() => setReadAloud(false)}
                 spreadMode={spreadMode}
+                bookId={bookId}
               />
             ) : (
               <PdfViewer

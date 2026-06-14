@@ -1,0 +1,107 @@
+Build a professional EPUB reader page for our NFGN back office ebook library. This should be a single self-contained React component (or plain HTML/JS if simpler) that renders an EPUB file in a clean Apple Books-style experience. Here are the exact requirements:
+Core Reading Experience:
+Default view is 2-page spread (left page + right page side by side), like Apple Books on iPad landscape
+Pages flip horizontally only — left/right navigation. No vertical scrolling in 2-page mode
+Use epub.js (ePub.js library) to render the EPUB
+Set spread: "always" so both pages always show side by side
+Set flow: "paginated" so content is paginated, NOT scrolled
+The EPUB iframe must be overflow: hidden — no internal scrollbars
+Page dimensions: height = available screen height minus header; width derived at 2:3 ratio (standard 6×9 book format); both pages centered on screen
+Do NOT inject any font-size into the EPUB themes — use themes.fontSize("100%") as a no-op so the book's own CSS is untouched
+Touch & Swipe Navigation:
+Full touch/swipe gesture support using touchstart and touchend events
+Swipe LEFT → go to next page spread
+Swipe RIGHT → go to previous page spread
+Minimum swipe distance threshold of 50px to prevent accidental page turns
+Tap the right 30% of the screen → next page; tap the left 30% → previous page (like Kindle/Apple Books)
+Smooth CSS transition animation on page turn (slide effect, 300ms ease)
+Pinch-to-zoom support on the EPUB content area
+Page Numbers & Progress:
+Display current page number and total pages at the bottom center (e.g., "Page 12 of 82")
+Show a thin progress bar at the very bottom of the screen indicating reading progress percentage
+Progress bar fills left to right, color matches the brand (use a gold/amber accent color)
+Page numbers update live as user navigates
+Display current chapter name in small text below the header or above the page number
+Navigation:
+Large left/right arrow buttons on the sides (semi-transparent, appear on hover/tap)
+Keyboard arrow keys (← →) also navigate pages
+A scroll mode toggle button in the header that switches between paginated (default) and continuous scroll mode
+Header Bar (fixed at top):
+Back to Library button (← My Library)
+Book title + author (centered)
+Font size controls: − and + buttons (adjust in 10% increments, range 70%–150%, display current %)
+"2 Pages" toggle button (switches between 1-page and 2-page spread)
+"Read Aloud" button — when clicked, extracts the current visible page text and uses the Web Speech API (window.speechSynthesis) to read it aloud; button toggles to "Stop" while reading
+Dark mode toggle button (sun/moon icon)
+Table of Contents (TOC) button — opens a slide-in sidebar panel listing all chapters; clicking a chapter jumps to it
+Bookmarks button — saves current page location; bookmarks panel shows saved locations with chapter name and page number; tap any bookmark to jump to it
+Search button — opens a search bar; searches text across the EPUB and lists results with chapter context; clicking a result jumps to that location
+Header auto-hides after 3 seconds of inactivity and reappears on tap/mouse move
+Read Aloud Feature:
+Uses window.speechSynthesis (no external API needed)
+Extracts text from the current EPUB page/spread via rendition.getContents()
+Reads aloud with a natural voice; highlights the Read Aloud button as active/pulsing while speaking
+Clicking "Stop" calls speechSynthesis.cancel()
+Auto-advances to next page when current page finishes reading
+Voice speed control slider (0.5x – 2x) in a small popover when Read Aloud is active
+Dark Mode:
+Toggles a dark theme on both the outer UI and injects a dark CSS theme into the EPUB via rendition.themes.register() and rendition.themes.select()
+Dark theme: background #1a1a1a, text #e8e8e8
+Smooth transition between light and dark mode
+Table of Contents Sidebar:
+Slides in from the left
+Lists all chapters with indentation for sub-chapters
+Highlights the currently active chapter
+Close button and tap-outside-to-close behavior
+Bookmarks:
+Bookmark icon in header; filled/gold when current page is bookmarked
+Bookmarks stored in localStorage keyed by book ID
+Bookmarks panel slides in from the right
+Each bookmark shows: chapter name, page number, date saved
+Delete individual bookmarks with a trash icon
+Reading Progress & Resume:
+Save reading position to localStorage automatically every page turn
+On reopening the book, show a toast notification: "Resume from page X?" with Yes/Dismiss options
+Resume jumps directly to the saved CFI location
+Search:
+Search input in a dropdown panel from the header
+Uses book.search() from epub.js
+Results show snippet of text with the search term highlighted
+Clicking a result navigates to that location
+Layout & Styling:
+Clean, minimal, professional — similar to Apple Books
+White background in light mode, dark gray #1a1a1a in dark mode
+The book spread is centered in the viewport with a subtle drop shadow and rounded corners
+No visible scrollbars anywhere on the page
+Fully responsive — on mobile/portrait (width < 768px), automatically switch to 1-page view
+Loading spinner shown while EPUB is loading
+Smooth page-turn slide animation (translateX transition)
+Additional Professional Features:
+Full Screen button — enters browser fullscreen mode for immersive reading (document.documentElement.requestFullscreen())
+Print/Export current page button (optional, low priority)
+Reading time estimate displayed in header (e.g., "~14 min left in chapter")
+Highlight & Note feature — user can select text, a small popover appears with "Highlight" (yellow) and "Add Note" options; highlights stored in localStorage
+Font family selector — toggle between Serif (Georgia), Sans-serif (Inter), and Dyslexia-friendly (OpenDyslexic via Google Fonts)
+Accessibility: all buttons have aria-label; keyboard fully navigable; focus ring visible
+File/Integration:
+The component accepts a bookUrl prop (URL string to the .epub file stored in our system)
+Also accepts bookTitle, bookAuthor, and bookId props for the header and localStorage keying
+Use epubjs from CDN: https://cdnjs.cloudflare.com/ajax/libs/epub.js/0.3.93/epub.min.js
+The reader div should have id "viewer" where ePub.js renders
+File to create: EpubReader.jsx (React component) OR epub-reader.html (standalone HTML) — whichever is cleaner for a Replit web app. Make the code complete with no placeholders. Include all CSS inline or in a <style> block. The result should work by simply dropping in an .epub file URL.
+Summary of everything added:
+Feature	Detail
+👆 Touch/Swipe	Swipe left/right to turn pages; tap zones like Kindle
+📄 Page Numbers	"Page 12 of 82" live at bottom center
+📊 Progress Bar	Thin gold bar at bottom showing % complete
+📖 Chapter Name	Current chapter displayed live
+🔖 Bookmarks	Save/view/delete bookmarks, stored in localStorage
+📑 TOC Sidebar	Slide-in chapter list, jump to any chapter
+🔍 Search	Full-text search with highlighted results
+▶️ Resume Reading	Auto-saves position, prompts to resume on reopen
+🖊️ Highlights & Notes	Select text → highlight or annotate
+🔤 Font Selector	Serif / Sans / Dyslexia-friendly fonts
+⏱️ Reading Time	Estimated time left in chapter
+⛶ Fullscreen	One-tap immersive fullscreen mode
+🌙 Dark Mode	Smooth toggle, applies inside EPUB too
+♿ Accessibility	ARIA labels, keyboard nav, focus rings

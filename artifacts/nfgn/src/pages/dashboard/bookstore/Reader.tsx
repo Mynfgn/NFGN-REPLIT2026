@@ -92,12 +92,16 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
       const epubBook = ePub(streamUrl, { openAs: "epub" });
       bookRef.current = epubBook;
 
-      const epubHeight = Math.max(500, window.innerHeight - 220);
+      // "scrolled" flow renders each spine item (chapter/section) exactly as
+      // the EPUB's own CSS specifies — no repagination recalculation.
+      // "paginated" flow recalculates page breaks from the container size,
+      // causing content to split at different points than the original design.
+      const epubHeight = Math.max(600, window.innerHeight - 180);
       const rendition = epubBook.renderTo(containerRef.current!, {
         width: "100%",
         height: epubHeight,
-        spread: spreadMode ? "always" : "none",
-        flow: "paginated",
+        flow: "scrolled",
+        manager: "continuous",
       });
       renditionRef.current = rendition;
 
@@ -206,13 +210,7 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
     }
   }, [readAloud]);
 
-  /* ── Toggle spread mode after init ── */
-  useEffect(() => {
-    if (!renditionRef.current || !epubReady) return;
-    try {
-      renditionRef.current.spread(spreadMode ? "always" : "none");
-    } catch { /* epub.js may not support post-init spread on all versions */ }
-  }, [spreadMode, epubReady]);
+  /* ── Spread mode is not used in scrolled flow (no-op) ── */
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 180px)", minHeight: 500 }}>
@@ -765,7 +763,7 @@ export function ReaderPage({ bookId }: Props) {
               <button onClick={() => setFontSize(s => Math.min(150, s + 10))} style={{ background: "none", border: `1px solid ${borderColor}`, borderRadius: 6, padding: "4px 8px", cursor: "pointer", color: textColor }}><Plus size={12} /></button>
             </>
           )}
-          {!isAudio && (
+          {!isAudio && !isEpub && (
             <button
               onClick={() => setSpreadMode(s => !s)}
               style={{ display: "flex", alignItems: "center", gap: 5, background: spreadMode ? GREEN : "none", border: `1px solid ${spreadMode ? GREEN : borderColor}`, borderRadius: 6, padding: "6px 10px", cursor: "pointer", color: spreadMode ? "#fff" : textColor, fontSize: 12, fontWeight: 700 }}

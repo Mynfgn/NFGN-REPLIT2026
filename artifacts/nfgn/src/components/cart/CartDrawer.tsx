@@ -52,7 +52,7 @@ import { customFetch } from "@/lib/custom-fetch";
 import { resolveImageSrc } from "@/lib/image";
 
 /* ── Types ─────────────────────────────────────────────────────── */
-type PaymentMethod = "authorizenet" | "square" | "cash_app" | "paypal" | "cod";
+type PaymentMethod = "authorizenet" | "square" | "cash_app" | "afterpay" | "paypal" | "cod";
 
 type ShippingForm = {
   fullName: string;
@@ -127,6 +127,18 @@ const PAYMENT_METHODS: {
         <svg viewBox="0 0 24 24" className="h-5 w-5" style={{ fill: "#C9A84C" }}>
           <path d="M7.076 21.337H2.47a.641.641 0 01-.633-.74L4.944 3.217a.641.641 0 01.634-.541h7.78c2.628 0 4.466.613 5.46 1.822.47.572.77 1.186.903 1.826.14.68.1 1.49-.117 2.41v.004c-.676 2.847-2.814 4.292-6.353 4.292H11.29a.77.77 0 00-.761.65l-.855 5.397-.042.267a.641.641 0 01-.633.541H7.076zm10.86-13.8c-.023.15-.05.3-.083.454C16.44 12.3 13.99 13.5 11.027 13.5H9.99l-.938 5.935h2.098l.71-4.492h1.388c2.898 0 5.065-1.178 5.714-4.59.282-1.443.122-2.65-.626-3.566z" />
         </svg>
+      </div>
+    ),
+  },
+  {
+    id: "afterpay",
+    label: "Afterpay — Pay in 4",
+    sub: "4 interest-free payments · Powered by Afterpay & Square",
+    accentColor: "#B2FCE4",
+    activeBg: "#0a1a14",
+    icon: (
+      <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #0a1a14, #0d2a1f)", border: "1px solid #B2FCE4" }}>
+        <span className="font-black text-xs leading-none" style={{ color: "#B2FCE4" }}>AP</span>
       </div>
     ),
   },
@@ -427,6 +439,9 @@ export function CartDrawer() {
   const [cashAppPay, setCashAppPay] = useState<any>(null);
   const [cashAppPayReady, setCashAppPayReady] = useState(false);
   const cashAppContainerRef = useRef<HTMLDivElement>(null);
+  const [afterpay, setAfterpay] = useState<any>(null);
+  const [afterpayReady, setAfterpayReady] = useState(false);
+  const afterpayContainerRef = useRef<HTMLDivElement>(null);
   const discountedTotalRef = useRef<number>(0);
   const [paypalSection, setPaypalSection] = useState<"button" | "manual">("button");
   const [paypalLoading, setPaypalLoading] = useState(false);
@@ -497,6 +512,11 @@ export function CartDrawer() {
         setSquareCard(null);
         setSquareReady(false);
         squareInitializingRef.current = false;
+      }
+      if (afterpay) {
+        afterpay.destroy?.();
+        setAfterpay(null);
+        setAfterpayReady(false);
       }
       setTimeout(() => {
         setView("cart");
@@ -689,6 +709,96 @@ export function CartDrawer() {
       }
     };
   }, [view, paymentMethod, cashAppSection]);
+
+  /* ── Square Afterpay / Clearpay init ─────────────────────────── */
+  const initAfterPay = useCallback(async () => {
+    if (afterpay) return;
+    try {
+      if (!(window as any).Square) {
+        const script = document.createElement("script");
+        script.src = "https://web.squarecdn.com/v1/square.js";
+        script.async = true;
+        await new Promise<void>((resolve, reject) => {
+          script.onload = () => resolve();
+          script.onerror = () => reject(new Error("Failed to load Square SDK"));
+          document.head.appendChild(script);
+        });
+      }
+      let payments = squarePayments;
+      if (!payments) {
+        const configRes = await customFetch("/api/payments/square/config");
+        const config = await configRes.json();
+        payments = (window as any).Square.payments(config.applicationId, config.locationId);
+        setSquarePayments(payments);
+      }
+      const paymentRequest = payments.paymentRequest({
+        countryCode: "US",
+        currencyCode: "USD",
+        total: { amount: String(Math.round(discountedTotalRef.current * 100)), label: "NFGN Order" },
+      });
+      const ap = await payments.afterpayClearpay(paymentRequest);
+      ap.addEventListener("ontokenization", async (event: any) => {
+        const { tokenResult } = event.detail;
+        if (tokenResult?.status === "OK") {
+          await handleAfterPayPayment(tokenResult.token);
+        } else {
+          const msg = tokenResult?.errors?.[0]?.message ?? "Afterpay payment failed. Please try again.";
+          toast({ title: "Payment failed", description: msg, variant: "destructive" });
+          setPaymentProcessing(false);
+        }
+      });
+      await ap.attach("#afterpay-clearpay-container");
+      setAfterpay(ap);
+      setAfterpayReady(true);
+    } catch (err: any) {
+      console.error("Afterpay init error:", err);
+      toast({ title: "Afterpay unavailable", description: "Could not load Afterpay. Please choose another payment method or ensure Afterpay is enabled in your Square account.", variant: "destructive" });
+    }
+  }, [afterpay, squarePayments]);
+
+  async function handleAfterPayPayment(token: string) {
+    if (!shippingValid()) {
+      toast({ title: "Missing information", description: "Please fill in your shipping address before paying.", variant: "destructive" });
+      return;
+    }
+    const addr = `${shipping.fullName}, ${shipping.address}, ${shipping.city}, ${shipping.state} ${shipping.zip}${shipping.phone ? " | " + shipping.phone : ""}`;
+    setPaymentProcessing(true);
+    try {
+      const payRes = await customFetch("/api/payments/square/process", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sourceId: token,
+          amount: discountedTotalRef.current,
+          note: `NFGN Order (Afterpay) — ${shipping.fullName}`,
+        }),
+      });
+      const payData = await payRes.json();
+      if (!payRes.ok) {
+        toast({ title: "Payment declined", description: payData.error ?? "Please try again.", variant: "destructive" });
+        setPaymentProcessing(false);
+        return;
+      }
+      createOrder.mutate({ data: { paymentMethod: "afterpay", shippingAddress: addr, promoCode: promoApplied?.code || promoCode || undefined, squarePaymentId: payData.paymentId, walletAmount: walletApplied } } as any);
+    } catch (err: any) {
+      toast({ title: "Payment error", description: err?.message ?? "Something went wrong. Please try again.", variant: "destructive" });
+      setPaymentProcessing(false);
+    }
+  }
+
+  useEffect(() => {
+    if (view === "checkout" && paymentMethod === "afterpay" && afterpayContainerRef.current && !afterpay) {
+      const t = setTimeout(() => initAfterPay(), 350);
+      return () => clearTimeout(t);
+    }
+    return () => {
+      if ((view !== "checkout" || paymentMethod !== "afterpay") && afterpay) {
+        afterpay.destroy?.();
+        setAfterpay(null);
+        setAfterpayReady(false);
+      }
+    };
+  }, [view, paymentMethod]);
 
   /* ── Fetch server-side order estimate (tax + shipping) when entering checkout ── */
   useEffect(() => {
@@ -1533,6 +1643,52 @@ export function CartDrawer() {
                 </section>
               )}
 
+              {/* Afterpay */}
+              {paymentMethod === "afterpay" && (
+                <section className="rounded-xl p-4 space-y-4" style={{ background: "linear-gradient(135deg, #0a1a14, #0d0d0d)", border: "1.5px solid #B2FCE4" }}>
+                  {/* Header */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-bold text-white">Afterpay — Pay in 4</p>
+                      <p className="text-xs mt-0.5" style={{ color: "rgba(178,252,228,0.7)" }}>4 interest-free installments, automatically charged</p>
+                    </div>
+                    <div className="h-9 px-3 rounded-xl flex items-center justify-center" style={{ background: "#B2FCE4" }}>
+                      <span className="font-black text-sm text-black">Afterpay</span>
+                    </div>
+                  </div>
+
+                  {/* How it works */}
+                  <div className="grid grid-cols-4 gap-2 text-center">
+                    {[
+                      { n: "1", label: "Today", sub: `$${(realFinalDue / 4).toFixed(2)}` },
+                      { n: "2", label: "2 weeks", sub: `$${(realFinalDue / 4).toFixed(2)}` },
+                      { n: "3", label: "4 weeks", sub: `$${(realFinalDue / 4).toFixed(2)}` },
+                      { n: "4", label: "6 weeks", sub: `$${(realFinalDue / 4).toFixed(2)}` },
+                    ].map(({ n, label, sub }) => (
+                      <div key={n} className="rounded-lg p-2 space-y-0.5" style={{ background: "rgba(178,252,228,0.08)", border: "1px solid rgba(178,252,228,0.2)" }}>
+                        <p className="text-xs font-black" style={{ color: "#B2FCE4" }}>{sub}</p>
+                        <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.5)" }}>{label}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Afterpay button rendered by Square SDK */}
+                  {!afterpayReady && (
+                    <div className="flex items-center justify-center gap-2 text-xs py-3" style={{ color: "#B2FCE4" }}>
+                      <Loader2 className="h-4 w-4 animate-spin" /> Loading Afterpay…
+                    </div>
+                  )}
+                  <div ref={afterpayContainerRef} id="afterpay-clearpay-container" className="min-h-[48px]" />
+
+                  {/* Eligibility note */}
+                  <div className="rounded-lg p-3 space-y-1" style={{ background: "rgba(178,252,228,0.06)", border: "1px solid rgba(178,252,228,0.15)" }}>
+                    <p className="text-xs font-semibold" style={{ color: "#B2FCE4" }}>Eligibility</p>
+                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.65)" }}>Available for orders between <strong style={{ color: "#B2FCE4" }}>$1 – $2,000</strong>. Available in US, Canada, UK & Australia.</p>
+                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.65)" }}>No interest charged. First payment due today at checkout. Afterpay eligibility determined at checkout.</p>
+                  </div>
+                </section>
+              )}
+
               {/* PayPal */}
               {paymentMethod === "paypal" && (
                 <section className="rounded-xl p-4 space-y-4" style={{ background: "linear-gradient(135deg, #1a1200, #0d0d0d)", border: "1.5px solid #C9A84C" }}>
@@ -1861,6 +2017,10 @@ export function CartDrawer() {
               {paymentMethod === "cash_app" && cashAppSection === "button" ? (
                 <p className="text-xs text-center font-semibold py-1" style={{ color: "#00C853" }}>
                   Use the <strong>Cash App Pay</strong> button above to complete your order.
+                </p>
+              ) : paymentMethod === "afterpay" ? (
+                <p className="text-xs text-center font-semibold py-1" style={{ color: "#B2FCE4" }}>
+                  Use the <strong>Afterpay</strong> button above to complete your order.
                 </p>
               ) : paymentMethod === "paypal" && paypalSection === "button" ? (
                 <p className="text-xs text-center font-semibold py-1" style={{ color: "#009cde" }}>

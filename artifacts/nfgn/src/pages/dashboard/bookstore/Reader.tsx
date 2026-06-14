@@ -101,7 +101,7 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
       });
       renditionRef.current = rendition;
 
-      rendition.themes.fontSize(`${fontSize}px`);
+      rendition.themes.fontSize(`${fontSize}%`);
       if (darkMode) {
         rendition.themes.register("dark", { body: { background: "#1a1a1a !important", color: "#e5e5e5 !important" } });
         rendition.themes.select("dark");
@@ -130,7 +130,7 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
 
   useEffect(() => {
     if (!renditionRef.current || !epubReady) return;
-    renditionRef.current.themes.fontSize(`${fontSize}px`);
+    renditionRef.current.themes.fontSize(`${fontSize}%`);
   }, [fontSize, epubReady]);
 
   useEffect(() => {
@@ -643,7 +643,7 @@ export function ReaderPage({ bookId }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState("");
   const [darkMode, setDarkMode]   = useState(false);
-  const [fontSize, setFontSize]   = useState(16);
+  const [fontSize, setFontSize]   = useState(100); // percentage; 100 = book's own CSS default
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages]   = useState(0);
   const [audioSpeed, setAudioSpeed]   = useState(1);
@@ -760,9 +760,9 @@ export function ReaderPage({ bookId }: Props) {
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {!isAudio && (
             <>
-              <button onClick={() => setFontSize(s => Math.max(10, s - 1))} style={{ background: "none", border: `1px solid ${borderColor}`, borderRadius: 6, padding: "4px 8px", cursor: "pointer", color: textColor }}><Minus size={12} /></button>
-              <span style={{ fontSize: 12, color: textColor, fontWeight: 600, minWidth: 30, textAlign: "center" }}>{fontSize}px</span>
-              <button onClick={() => setFontSize(s => Math.min(28, s + 1))} style={{ background: "none", border: `1px solid ${borderColor}`, borderRadius: 6, padding: "4px 8px", cursor: "pointer", color: textColor }}><Plus size={12} /></button>
+              <button onClick={() => setFontSize(s => Math.max(70, s - 10))} style={{ background: "none", border: `1px solid ${borderColor}`, borderRadius: 6, padding: "4px 8px", cursor: "pointer", color: textColor }}><Minus size={12} /></button>
+              <span style={{ fontSize: 12, color: textColor, fontWeight: 600, minWidth: 36, textAlign: "center" }}>{fontSize}%</span>
+              <button onClick={() => setFontSize(s => Math.min(150, s + 10))} style={{ background: "none", border: `1px solid ${borderColor}`, borderRadius: 6, padding: "4px 8px", cursor: "pointer", color: textColor }}><Plus size={12} /></button>
             </>
           )}
           {!isAudio && (

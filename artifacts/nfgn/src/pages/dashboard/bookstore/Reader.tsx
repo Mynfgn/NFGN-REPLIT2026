@@ -52,12 +52,20 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
   onReadAloudStop: () => void;
   spreadMode: boolean;
 }) {
+  // Native 6×9 book page dimensions (matching Apple Books' reference size).
+  // epub.js renders at this full size so the EPUB's own CSS (flex footers,
+  // fixed-position elements) lays out exactly as designed. We then scale the
+  // result down with CSS transform to fit the available viewport.
+  const EPUB_PAGE_W = 450;  // per-page width  (6in × 75dpi ≈ 450px)
+  const EPUB_PAGE_H = 675;  // per-page height (9in × 75dpi ≈ 675px)
+
   const containerRef = useRef<HTMLDivElement>(null);
   const bookRef      = useRef<any>(null);
   const renditionRef = useRef<any>(null);
   const [epubReady,   setEpubReady]   = useState(false);
   const [epubError,   setEpubError]   = useState("");
   const [epubLoading, setEpubLoading] = useState(true);
+  const [epubScale,   setEpubScale]   = useState(1);
 
   // TTS state
   const [ttsStatus, setTtsStatus] = useState<"idle" | "playing" | "paused">("idle");
@@ -90,21 +98,23 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
       const epubBook = ePub(streamUrl, { openAs: "epub" });
       bookRef.current = epubBook;
 
-      // Compute page dimensions that preserve the standard 6×9 book aspect ratio
-      // (width:height = 2:3), height-constrained by available screen space.
-      // This matches how Apple Books sizes pages on iPad.
-      // In 2-page spread, each page = pageW × pageH, total width = pageW × 2.
-      const availH = Math.max(500, window.innerHeight - 200);
-      const availW = Math.max(400, window.innerWidth - 40);
-      const idealPageW = Math.floor(availH * (2 / 3)); // 2:3 ratio
-      const clampedW  = Math.min(idealPageW * 2, availW); // cap to screen
-      const pageW     = Math.floor(clampedW / 2);
-      const pageH     = Math.min(availH, Math.round(pageW * 1.5));
+      // Render at the NATIVE 6×9 page size so the EPUB's own CSS (flex/absolute
+      // footers, etc.) lays out exactly as designed — matching Apple Books.
+      // We then scale the rendered result down to fit the viewport with CSS
+      // transform, so pagination is identical to Apple Books regardless of
+      // the current screen size.
+      const nativeW = EPUB_PAGE_W * 2; // 900px (two pages)
+      const nativeH = EPUB_PAGE_H;     // 675px
+
+      const availH  = Math.max(300, window.innerHeight - 180);
+      const availW  = Math.max(300, window.innerWidth  - 40);
+      const scale   = Math.min(availW / nativeW, availH / nativeH, 1);
+      if (!destroyed) setEpubScale(scale);
 
       const rendition = epubBook.renderTo(containerRef.current!, {
-        width:          pageW * 2,  // two pages side-by-side
-        height:         pageH,
-        spread:         "always",   // always show 2 pages (like Apple Books on iPad)
+        width:          nativeW,
+        height:         nativeH,
+        spread:         "always",   // 2-page spread like Apple Books on iPad
         flow:           "paginated",
         minSpreadWidth: 0,
       });
@@ -232,12 +242,26 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
           <div style={{ fontSize: 12, color: "#888", textAlign: "center" }}>{epubError}</div>
         </div>
       )}
-      {/* Centre the fixed-size epub.js iframe within the full-width row */}
+      {/* epub.js renders at native 6×9 size (EPUB_PAGE_W×2 × EPUB_PAGE_H),
+          then we CSS-scale it down to fit the available viewport so the
+          EPUB's own CSS (flex footers, absolute elements) lays out correctly. */}
       <div style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "flex-start", overflow: "hidden", visibility: epubLoading || epubError ? "hidden" : "visible" }}>
-        <div
-          ref={containerRef}
-          style={{ borderRadius: 12, overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
-        />
+        {/* Outer box: sized to the VISUAL (scaled) dimensions so it doesn't overflow */}
+        <div style={{ width: EPUB_PAGE_W * 2 * epubScale, height: EPUB_PAGE_H * epubScale, flexShrink: 0, overflow: "hidden" }}>
+          {/* Inner div: epub.js target at NATIVE size, scaled down visually */}
+          <div
+            ref={containerRef}
+            style={{
+              width:           EPUB_PAGE_W * 2,
+              height:          EPUB_PAGE_H,
+              transform:       `scale(${epubScale})`,
+              transformOrigin: "top left",
+              borderRadius:    12,
+              overflow:        "hidden",
+              boxShadow:       "0 4px 20px rgba(0,0,0,0.1)",
+            }}
+          />
+        </div>
       </div>
       {epubReady && !epubError && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 20, padding: "14px 0 4px" }}>

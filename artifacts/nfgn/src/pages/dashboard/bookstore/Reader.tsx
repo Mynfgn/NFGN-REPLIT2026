@@ -9,6 +9,35 @@ const DARK    = "#0a0a0a";
 const GOLD    = "#C9A84C";
 const SPIN    = `@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`;
 
+// 3-D page-flip animation (matches Apple Books / shared reference code)
+// Forward: right edge folds away at the spine (left centre origin).
+// Backward: left edge folds away from the spine (right centre origin).
+// epub.js navigation is called at the 50 % point when the page is edge-on
+// (invisible due to backface-visibility:hidden) so the new content is
+// already loaded before the page "unfolds" back to 0 deg.
+const FLIP_CSS = `
+@keyframes epubFlipFwd {
+  0%   { transform: rotateY(0deg); }
+  50%  { box-shadow: -10px 4px 35px rgba(0,0,0,0.55); }
+  100% { transform: rotateY(-180deg); }
+}
+@keyframes epubFlipBwd {
+  0%   { transform: rotateY(0deg); }
+  50%  { box-shadow:  10px 4px 35px rgba(0,0,0,0.55); }
+  100% { transform: rotateY(180deg); }
+}
+.epub-flip-fwd {
+  animation: epubFlipFwd 0.55s cubic-bezier(0.645,0.045,0.355,1.000) forwards;
+  transform-origin: left center !important;
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+}
+.epub-flip-bwd {
+  animation: epubFlipBwd 0.55s cubic-bezier(0.645,0.045,0.355,1.000) forwards;
+  transform-origin: right center !important;
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+}
+`;
+
 async function apiFetch(path: string, opts?: RequestInit) {
   const token = localStorage.getItem("nfgn_token");
   const res = await fetch(path, {
@@ -66,6 +95,9 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
   const [epubError,   setEpubError]   = useState("");
   const [epubLoading, setEpubLoading] = useState(true);
   const [epubScale,   setEpubScale]   = useState(1);
+  // 3-D page-flip state
+  const [flipClass,   setFlipClass]   = useState("");
+  const [flipping,    setFlipping]    = useState(false);
 
   // TTS state
   const [ttsStatus, setTtsStatus] = useState<"idle" | "playing" | "paused">("idle");
@@ -74,8 +106,24 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
 
   const borderColor = darkMode ? "#333" : "#e5e7eb";
 
-  const prev = useCallback(() => renditionRef.current?.prev(), []);
-  const next = useCallback(() => renditionRef.current?.next(), []);
+  // Animated prev/next: rotate the page away (0→180°), navigate epub.js at the
+  // midpoint when the page is edge-on and invisible, then snap back to 0° with
+  // the new content already loaded (matches the Apple Books reference component).
+  const FLIP_MS = 550;
+  const prev = useCallback(() => {
+    if (flipping || !renditionRef.current) return;
+    setFlipClass("epub-flip-bwd");
+    setFlipping(true);
+    setTimeout(() => renditionRef.current?.prev(), FLIP_MS / 2);
+    setTimeout(() => { setFlipClass(""); setFlipping(false); }, FLIP_MS);
+  }, [flipping]);
+  const next = useCallback(() => {
+    if (flipping || !renditionRef.current) return;
+    setFlipClass("epub-flip-fwd");
+    setFlipping(true);
+    setTimeout(() => renditionRef.current?.next(), FLIP_MS / 2);
+    setTimeout(() => { setFlipClass(""); setFlipping(false); }, FLIP_MS);
+  }, [flipping]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -228,6 +276,7 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 180px)", minHeight: 500 }}>
       <style>{SPIN}</style>
+      <style>{FLIP_CSS}</style>
       {epubLoading && (
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
           <Loader2 size={28} color={GREEN} style={{ animation: "spin 1s linear infinite" }} />
@@ -242,34 +291,39 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
           <div style={{ fontSize: 12, color: "#888", textAlign: "center" }}>{epubError}</div>
         </div>
       )}
-      {/* epub.js renders at native 6×9 size (EPUB_PAGE_W×2 × EPUB_PAGE_H),
-          then we CSS-scale it down to fit the available viewport so the
-          EPUB's own CSS (flex footers, absolute elements) lays out correctly. */}
-      <div style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "flex-start", overflow: "hidden", visibility: epubLoading || epubError ? "hidden" : "visible" }}>
-        {/* Outer box: sized to the VISUAL (scaled) dimensions so it doesn't overflow */}
-        <div style={{ width: EPUB_PAGE_W * 2 * epubScale, height: EPUB_PAGE_H * epubScale, flexShrink: 0, overflow: "hidden" }}>
-          {/* Inner div: epub.js target at NATIVE size, scaled down visually */}
-          <div
-            ref={containerRef}
-            style={{
-              width:           EPUB_PAGE_W * 2,
-              height:          EPUB_PAGE_H,
-              transform:       `scale(${epubScale})`,
-              transformOrigin: "top left",
-              borderRadius:    12,
-              overflow:        "hidden",
-              boxShadow:       "0 4px 20px rgba(0,0,0,0.1)",
-            }}
-          />
+      {/* epub.js renders at native 6×9 size, scaled down to fit the viewport.
+          The outer centering div carries the 3-D perspective so the flip div's
+          rotateY animation has realistic depth.  flipClass drives the animation;
+          epub.js navigates at the midpoint when the page is edge-on/invisible. */}
+      <div style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "flex-start", overflow: "hidden", visibility: epubLoading || epubError ? "hidden" : "visible", perspective: "2500px" }}>
+        {/* FLIP layer — gets the rotateY animation class */}
+        <div
+          className={flipClass}
+          style={{ width: EPUB_PAGE_W * 2 * epubScale, height: EPUB_PAGE_H * epubScale, flexShrink: 0, transformStyle: "preserve-3d", willChange: "transform" }}
+        >
+          {/* CLIP layer — masks the oversized native iframe */}
+          <div style={{ width: "100%", height: "100%", overflow: "hidden", borderRadius: 12, boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }}>
+            {/* SCALE layer — epub.js target at NATIVE size, scaled to visual size */}
+            <div
+              ref={containerRef}
+              style={{ width: EPUB_PAGE_W * 2, height: EPUB_PAGE_H, transform: `scale(${epubScale})`, transformOrigin: "top left" }}
+            />
+          </div>
         </div>
       </div>
       {epubReady && !epubError && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 20, padding: "14px 0 4px" }}>
-          <button onClick={prev} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: `1.5px solid ${GREEN}`, color: GREEN, borderRadius: 8, padding: "8px 18px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+          <button
+            onClick={prev} disabled={flipping}
+            style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: `1.5px solid ${GREEN}`, color: GREEN, borderRadius: 8, padding: "8px 18px", fontWeight: 700, fontSize: 13, cursor: flipping ? "default" : "pointer", opacity: flipping ? 0.4 : 1 }}
+          >
             <ChevronLeft size={14} /> Prev
           </button>
           <span style={{ fontSize: 11, color: "#aaa" }}>← → keys also work</span>
-          <button onClick={next} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: `1.5px solid ${GREEN}`, color: GREEN, borderRadius: 8, padding: "8px 18px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+          <button
+            onClick={next} disabled={flipping}
+            style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: `1.5px solid ${GREEN}`, color: GREEN, borderRadius: 8, padding: "8px 18px", fontWeight: 700, fontSize: 13, cursor: flipping ? "default" : "pointer", opacity: flipping ? 0.4 : 1 }}
+          >
             Next <ChevronRight size={14} />
           </button>
         </div>

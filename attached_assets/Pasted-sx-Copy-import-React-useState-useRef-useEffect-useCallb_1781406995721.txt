@@ -1,0 +1,314 @@
+sx
+
+Copy
+import React, { useState, useRef, useEffect, useCallback } from "react";
+
+// ─── Sample pages – replace with your real content ───────────────────────────
+const SAMPLE_PAGES = [
+  {
+    id: 1,
+    content: `Chapter 1\n\nWelcome to the NFGN eBooks Library. This reader replicates the Apple Books page-flip experience.\n\nSwipe left/right or use the arrow buttons to turn pages. Vertical scrolling is completely disabled.`,
+  },
+  {
+    id: 2,
+    content: `Chapter 1 (continued)\n\nPages flip from the correct edge — right edge to go forward, left edge to go back — just like a real book.\n\nThe blank back of each page is hidden using backface-visibility so you never see an empty white flash.`,
+  },
+  {
+    id: 3,
+    content: `Chapter 2\n\nThe 3D perspective is applied to the book container so every page turn has realistic depth.\n\nTouch-action is locked to prevent the browser from hijacking swipes into a scroll event.`,
+  },
+  {
+    id: 4,
+    content: `Chapter 2 (continued)\n\nYou can replace the SAMPLE_PAGES array at the top of this file with your real ebook content — plain text, HTML strings, or React JSX nodes all work.\n\nEnjoy your NFGN eBooks Library!`,
+  },
+];
+
+// ─── CSS injected once into <head> ────────────────────────────────────────────
+const GLOBAL_CSS = `
+  .ebook-root {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #1a1a2e;
+    overflow: hidden;          /* ← kills vertical scroll on the whole reader */
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .ebook-stage {
+    perspective: 2000px;       /* ← gives 3D depth to all child transforms */
+    width: 680px;
+    max-width: 95vw;
+    height: 520px;
+    position: relative;
+  }
+
+  .ebook-book {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+  }
+
+  /* ── Each page sits stacked in the same spot ── */
+  .ebook-page {
+    position: absolute;
+    inset: 0;
+    background: #fffdf6;
+    border-radius: 4px 12px 12px 4px;
+    box-shadow: 4px 4px 20px rgba(0,0,0,0.45);
+    overflow: hidden;           /* ← no internal scroll */
+    backface-visibility: hidden; /* ← hides blank back during flip */
+    -webkit-backface-visibility: hidden;
+    transform-style: preserve-3d;
+    transition: transform 0.65s cubic-bezier(0.645, 0.045, 0.355, 1.000);
+    transform-origin: left center; /* default; overridden per direction */
+    will-change: transform;
+  }
+
+  .ebook-page.flip-forward {
+    transform-origin: left center;
+    animation: flipForward 0.65s cubic-bezier(0.645, 0.045, 0.355, 1.000) forwards;
+  }
+
+  .ebook-page.flip-backward {
+    transform-origin: right center;
+    animation: flipBackward 0.65s cubic-bezier(0.645, 0.045, 0.355, 1.000) forwards;
+  }
+
+  @keyframes flipForward {
+    0%   { transform: rotateY(0deg); }
+    50%  { transform: rotateY(-90deg); box-shadow: -8px 4px 30px rgba(0,0,0,0.6); }
+    100% { transform: rotateY(-180deg); }
+  }
+
+  @keyframes flipBackward {
+    0%   { transform: rotateY(0deg); }
+    50%  { transform: rotateY(90deg); box-shadow: 8px 4px 30px rgba(0,0,0,0.6); }
+    100% { transform: rotateY(180deg); }
+  }
+
+  .ebook-page-inner {
+    padding: 48px 52px;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: hidden;           /* ← absolutely no internal scroll */
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ebook-page-text {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 17px;
+    line-height: 1.75;
+    color: #2c2c2c;
+    white-space: pre-wrap;
+    flex: 1;
+  }
+
+  .ebook-page-number {
+    text-align: center;
+    font-size: 12px;
+    color: #aaa;
+    margin-top: 16px;
+    font-family: Georgia, serif;
+  }
+
+  /* ── Navigation bar ── */
+  .ebook-nav {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-top: 20px;
+  }
+
+  .ebook-nav button {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: #fff;
+    padding: 10px 28px;
+    border-radius: 24px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .ebook-nav button:hover:not(:disabled) {
+    background: rgba(255,255,255,0.22);
+  }
+
+  .ebook-nav button:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+
+  .ebook-nav-label {
+    color: rgba(255,255,255,0.6);
+    font-size: 13px;
+    min-width: 80px;
+    text-align: center;
+  }
+
+  /* ── Tap zones (invisible left/right halves) ── */
+  .ebook-tap-zone {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 40%;
+    cursor: pointer;
+    z-index: 10;
+  }
+  .ebook-tap-zone.left  { left: 0; }
+  .ebook-tap-zone.right { right: 0; }
+`;
+
+// ─── Inject CSS once ──────────────────────────────────────────────────────────
+function injectStyles() {
+  if (document.getElementById("ebook-global-css")) return;
+  const style = document.createElement("style");
+  style.id = "ebook-global-css";
+  style.textContent = GLOBAL_CSS;
+  document.head.appendChild(style);
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+export default function EbookReader({ pages = SAMPLE_PAGES }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [flipping, setFlipping] = useState(false);
+  const [flipClass, setFlipClass] = useState("");
+
+  // Touch tracking refs
+  const touchStartX = useRef(null);
+  const touchStartY = useRef(null);
+
+  useEffect(() => {
+    injectStyles();
+  }, []);
+
+  // ── Prevent ALL default scroll/touch behaviour on the reader ──────────────
+  useEffect(() => {
+    const prevent = (e) => e.preventDefault();
+    document.addEventListener("touchmove", prevent, { passive: false });
+    document.addEventListener("wheel", prevent, { passive: false });
+    return () => {
+      document.removeEventListener("touchmove", prevent);
+      document.removeEventListener("wheel", prevent);
+    };
+  }, []);
+
+  const goForward = useCallback(() => {
+    if (flipping || currentIndex >= pages.length - 1) return;
+    setFlipClass("flip-forward");
+    setFlipping(true);
+    setTimeout(() => {
+      setCurrentIndex((i) => i + 1);
+      setFlipClass("");
+      setFlipping(false);
+    }, 650);
+  }, [flipping, currentIndex, pages.length]);
+
+  const goBackward = useCallback(() => {
+    if (flipping || currentIndex <= 0) return;
+    setFlipClass("flip-backward");
+    setFlipping(true);
+    setTimeout(() => {
+      setCurrentIndex((i) => i - 1);
+      setFlipClass("");
+      setFlipping(false);
+    }, 650);
+  }, [flipping, currentIndex]);
+
+  // ── Keyboard navigation ───────────────────────────────────────────────────
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") goForward();
+      if (e.key === "ArrowLeft"  || e.key === "ArrowUp")   goBackward();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [goForward, goBackward]);
+
+  // ── Touch / swipe ─────────────────────────────────────────────────────────
+  const onTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const onTouchEnd = (e) => {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const dy = e.changedTouches[0].clientY - touchStartY.current;
+    // Only treat as horizontal swipe if horizontal movement dominates
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+      dx < 0 ? goForward() : goBackward();
+    }
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
+
+  const page = pages[currentIndex];
+
+  return (
+    <div className="ebook-root">
+      <div
+        className="ebook-stage"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        {/* Invisible tap zones */}
+        <div className="ebook-tap-zone left"  onClick={goBackward} />
+        <div className="ebook-tap-zone right" onClick={goForward}  />
+
+        <div className="ebook-book">
+          <div className={`ebook-page ${flipClass}`}>
+            <div className="ebook-page-inner">
+              <div className="ebook-page-text">{page.content}</div>
+              <div className="ebook-page-number">
+                {currentIndex + 1} / {pages.length}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation buttons */}
+      <div className="ebook-nav">
+        <button onClick={goBackward} disabled={currentIndex === 0 || flipping}>
+          ← Back
+        </button>
+        <span className="ebook-nav-label">
+          Page {currentIndex + 1} of {pages.length}
+        </span>
+        <button onClick={goForward} disabled={currentIndex === pages.length - 1 || flipping}>
+          Next →
+        </button>
+      </div>
+    </div>
+  );
+}
+How to use it in Replit
+Save the code above as EbookReader.jsx in your src/ folder.
+Import and render it wherever your router/app mounts the reader:
+jsx
+
+Copy
+import EbookReader from "./EbookReader";
+
+// Pass your real pages array:
+const myPages = [
+  { id: 1, content: "Your chapter 1 text here..." },
+  { id: 2, content: "Your chapter 2 text here..." },
+];
+
+<EbookReader pages={myPages} />
+Replace SAMPLE_PAGES at the top with your actual ebook data.
+What this fixes specifically
+Problem	Fix applied
+Pages flipping on blank/back side	backface-visibility: hidden + correct transform-origin
+Vertical scroll active during reading	overflow: hidden on root + preventDefault on touchmove & wheel
+Simultaneous scroll + swipe conflict	Swipe only triggers if `
+No 3D depth on flip	perspective: 2000px on the stage container
+Flip animates from center	transform-origin: left center (forward) / right center (backward)

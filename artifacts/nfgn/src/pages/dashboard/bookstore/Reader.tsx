@@ -275,6 +275,7 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
     } catch (e: any) {
       setEpubError(e?.message ?? "Failed to open book.");
       setEpubLoading(false);
+      return;
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [streamUrl]);

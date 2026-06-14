@@ -463,10 +463,13 @@ export function ProJoin() {
 
             {/* Step 1: Select Package */}
             <section>
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-2 mb-1">
                 <div className="h-7 w-7 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center flex-shrink-0">1</div>
                 <h2 className="text-xl font-serif font-bold">Select Your Pro Registration Package</h2>
               </div>
+              <p className="text-sm text-muted-foreground mb-5 ml-9">
+                Choose the tier that fits your goals. All packages activate full Pro Member status and commission eligibility.
+              </p>
               {proPackagesLoading ? (
                 <div className="flex items-center gap-2 text-muted-foreground py-6">
                   <Loader2 className="h-4 w-4 animate-spin" /> Loading packages...
@@ -475,78 +478,186 @@ export function ProJoin() {
                 <div className="border rounded-lg p-6 text-center text-muted-foreground">
                   No Pro Registration Packages available. Please contact your sponsor.
                 </div>
-              ) : (
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {proPackages.map((pkg) => {
-                    const isSelected = selectedProductId === String(pkg.id);
-                    return (
-                      <div
-                        key={pkg.id}
-                        onClick={() => setSelectedProductId(String(pkg.id))}
-                        className="relative cursor-pointer rounded-xl border-2 transition-all overflow-hidden"
-                        style={{
-                          borderColor: isSelected ? "#C9A84C" : "rgba(255,255,255,0.12)",
-                          boxShadow: isSelected ? "0 0 0 2px rgba(201,168,76,0.25), 0 4px 20px rgba(201,168,76,0.15)" : "none",
-                          background: isSelected ? "rgba(201,168,76,0.05)" : "rgba(255,255,255,0.02)",
-                        }}
-                      >
-                        {/* Badge strip */}
-                        {pkg.badge && (
-                          <div
-                            className="text-center py-1.5 text-xs font-bold tracking-wide"
-                            style={{ background: pkg.badgeColor ?? "#C9A84C", color: "#000" }}
-                          >
-                            {pkg.badge}
-                          </div>
-                        )}
+              ) : (() => {
+                const coreGroup = proPackages.filter(p => p.name.toUpperCase().startsWith("CORE"));
+                const igniteGroup = proPackages.filter(p => !p.name.toUpperCase().startsWith("CORE"));
+                const groups: { label: string; sub: string; accent: string; pkgs: ProPackage[] }[] = [];
+                if (coreGroup.length > 0) groups.push({ label: "CORE Subscriptions", sub: "Digital membership — activate Pro status immediately", accent: "#C9A84C", pkgs: coreGroup });
+                if (igniteGroup.length > 0) groups.push({ label: "IGNITE Product Bundles", sub: "Physical wellness packs + Pro membership included", accent: "#c77dff", pkgs: igniteGroup });
 
-                        {/* Selected checkmark */}
-                        {isSelected && (
-                          <div className="absolute top-2 right-2 z-10">
-                            <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center">
-                              <CheckCircle className="h-4 w-4 text-primary-foreground" />
+                return (
+                  <div className="space-y-8">
+                    {groups.map(({ label, sub, accent, pkgs }) => {
+                      const midIdx = Math.floor((pkgs.length - 1) / 2);
+                      return (
+                        <div key={label}>
+                          {/* Group header */}
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="h-px flex-1" style={{ background: `linear-gradient(to right, ${accent}66, transparent)` }} />
+                            <div className="text-center px-1">
+                              <p className="text-xs font-black tracking-[0.2em] uppercase" style={{ color: accent }}>{label}</p>
+                              <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>
                             </div>
-                          </div>
-                        )}
-
-                        <div className="p-4">
-                          {/* Name */}
-                          <h3 className="font-bold text-base leading-snug mb-3" style={{ color: isSelected ? "#C9A84C" : "var(--foreground)" }}>
-                            {pkg.name}
-                          </h3>
-
-                          {/* Pricing */}
-                          <div className="flex items-baseline gap-2 mb-4">
-                            <span className="text-2xl font-black" style={{ color: "#C9A84C" }}>
-                              ${Number(pkg.price).toFixed(2)}
-                            </span>
-                            {pkg.originalPrice > pkg.price && (
-                              <span className="text-sm text-muted-foreground line-through">
-                                ${Number(pkg.originalPrice).toFixed(2)}
-                              </span>
-                            )}
-                            {pkg.cv > 0 && (
-                              <span className="text-xs text-muted-foreground ml-auto">{pkg.cv} CV</span>
-                            )}
+                            <div className="h-px flex-1" style={{ background: `linear-gradient(to left, ${accent}66, transparent)` }} />
                           </div>
 
-                          {/* Perks list */}
-                          {pkg.perks.length > 0 && (
-                            <ul className="space-y-1.5">
-                              {pkg.perks.map((perk) => (
-                                <li key={perk} className="flex items-start gap-2 text-xs text-muted-foreground">
-                                  <CheckCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" style={{ color: "#C9A84C" }} />
-                                  {perk}
-                                </li>
-                              ))}
-                            </ul>
-                          )}
+                          {/* Cards */}
+                          <div className={`grid gap-3 ${pkgs.length === 3 ? "grid-cols-1 sm:grid-cols-3" : pkgs.length === 2 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"}`}>
+                            {pkgs.map((pkg, idx) => {
+                              const isSelected = selectedProductId === String(pkg.id);
+                              const isFeatured = idx === midIdx && pkgs.length > 1;
+                              const savings = pkg.originalPrice > pkg.price
+                                ? Math.round(100 - (pkg.price / pkg.originalPrice) * 100)
+                                : 0;
+
+                              return (
+                                <div
+                                  key={pkg.id}
+                                  onClick={() => setSelectedProductId(String(pkg.id))}
+                                  className="relative cursor-pointer rounded-2xl overflow-hidden transition-all duration-200"
+                                  style={{
+                                    border: isSelected
+                                      ? `2px solid ${accent}`
+                                      : isFeatured
+                                      ? `2px solid ${accent}66`
+                                      : "2px solid rgba(255,255,255,0.08)",
+                                    boxShadow: isSelected
+                                      ? `0 0 0 3px ${accent}30, 0 8px 32px ${accent}20`
+                                      : isFeatured
+                                      ? `0 4px 20px ${accent}15`
+                                      : "none",
+                                    background: isSelected
+                                      ? `linear-gradient(160deg, ${accent}12, ${accent}05 60%, #0d0d0d)`
+                                      : isFeatured
+                                      ? "linear-gradient(160deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01))"
+                                      : "rgba(255,255,255,0.02)",
+                                    transform: isFeatured && !isSelected ? "translateY(-3px)" : "none",
+                                  }}
+                                >
+                                  {/* Featured glow top bar */}
+                                  {isFeatured && (
+                                    <div className="h-0.5 w-full" style={{ background: `linear-gradient(to right, transparent, ${accent}, transparent)` }} />
+                                  )}
+
+                                  {/* Badge strip */}
+                                  {pkg.badge && (
+                                    <div
+                                      className="text-center py-1.5 text-[11px] font-black tracking-widest uppercase"
+                                      style={{ background: pkg.badgeColor ?? accent, color: "#000" }}
+                                    >
+                                      {pkg.badge}
+                                    </div>
+                                  )}
+
+                                  {/* Selected checkmark */}
+                                  {isSelected && (
+                                    <div className="absolute top-2.5 right-2.5 z-10">
+                                      <div className="h-5 w-5 rounded-full flex items-center justify-center" style={{ background: accent }}>
+                                        <CheckCircle className="h-3.5 w-3.5 text-black" />
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  <div className="p-4 flex flex-col h-full">
+                                    {/* Tier label */}
+                                    <p className="text-[10px] font-black tracking-[0.18em] uppercase mb-1" style={{ color: `${accent}aa` }}>
+                                      {pkg.name.includes("|") ? pkg.name.split("|")[0].trim() : ""}
+                                    </p>
+
+                                    {/* Package name (after pipe) */}
+                                    <h3 className="font-black text-sm leading-snug mb-3" style={{ color: isSelected ? accent : "var(--foreground)" }}>
+                                      {pkg.name.includes("|") ? pkg.name.split("|")[1].trim() : pkg.name}
+                                    </h3>
+
+                                    {/* Price block */}
+                                    <div className="mb-3">
+                                      <div className="flex items-baseline gap-1.5 flex-wrap">
+                                        <span className="text-2xl font-black" style={{ color: accent }}>
+                                          ${Number(pkg.price).toFixed(2)}
+                                        </span>
+                                        {pkg.originalPrice > pkg.price && (
+                                          <span className="text-xs text-muted-foreground line-through">
+                                            ${Number(pkg.originalPrice).toFixed(2)}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center gap-2 mt-0.5">
+                                        {pkg.cv > 0 && (
+                                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: `${accent}22`, color: accent }}>
+                                            {pkg.cv} CV
+                                          </span>
+                                        )}
+                                        {savings > 0 && (
+                                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-green-500/15 text-green-400">
+                                            Save {savings}%
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {/* Divider */}
+                                    <div className="h-px mb-3" style={{ background: `${accent}22` }} />
+
+                                    {/* Perks */}
+                                    {pkg.perks.length > 0 && (
+                                      <ul className="space-y-1.5 flex-1">
+                                        {pkg.perks.map((perk) => {
+                                          const clean = perk.replace(/^[-=+*•]\s*/, "");
+                                          return (
+                                            <li key={perk} className="flex items-start gap-2 text-[11px]" style={{ color: "rgba(255,255,255,0.65)" }}>
+                                              <CheckCircle className="h-3 w-3 flex-shrink-0 mt-0.5" style={{ color: accent }} />
+                                              {clean}
+                                            </li>
+                                          );
+                                        })}
+                                      </ul>
+                                    )}
+
+                                    {/* Select button */}
+                                    <div className="mt-4">
+                                      <div
+                                        className="w-full text-center py-2 rounded-lg text-xs font-black tracking-wide transition-all"
+                                        style={isSelected
+                                          ? { background: accent, color: "#000" }
+                                          : { background: `${accent}18`, color: accent, border: `1px solid ${accent}44` }
+                                        }
+                                      >
+                                        {isSelected ? "✓ Selected" : "Select This Package"}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {/* Selected package summary */}
+                    {selectedProduct && (
+                      <div
+                        className="flex items-center justify-between gap-4 rounded-xl px-4 py-3"
+                        style={{ background: "rgba(201,168,76,0.08)", border: "1.5px solid rgba(201,168,76,0.3)" }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(201,168,76,0.2)" }}>
+                            <CheckCircle className="h-4 w-4" style={{ color: "#C9A84C" }} />
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">Selected package</p>
+                            <p className="text-sm font-bold" style={{ color: "#C9A84C" }}>{selectedProduct.name}</p>
+                          </div>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <p className="text-lg font-black" style={{ color: "#C9A84C" }}>${Number(selectedProduct.price).toFixed(2)}</p>
+                          {selectedProduct.cv > 0 && <p className="text-[10px] text-muted-foreground">{selectedProduct.cv} CV</p>}
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
+                    )}
+                  </div>
+                );
+              })()}
             </section>
 
             {/* Step 2: Account Info */}

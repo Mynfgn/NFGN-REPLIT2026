@@ -85,23 +85,28 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
 
     try {
       // Pass the stream URL directly — epub.js fetches it internally.
-      // openAs:"epub" is required because our URL has no .epub extension;
-      // without it epub.js treats the URL as a directory base and tries to
-      // fetch META-INF/container.xml from it (resulting in 404s).
+      // openAs:"epub" is required because our URL has no .epub extension.
       // The server sends application/octet-stream so iOS Safari won't intercept it.
       const epubBook = ePub(streamUrl, { openAs: "epub" });
       bookRef.current = epubBook;
 
-      // "scrolled" flow renders each spine item (chapter/section) exactly as
-      // the EPUB's own CSS specifies — no repagination recalculation.
-      // "paginated" flow recalculates page breaks from the container size,
-      // causing content to split at different points than the original design.
-      const epubHeight = Math.max(600, window.innerHeight - 180);
+      // Compute page dimensions that preserve the standard 6×9 book aspect ratio
+      // (width:height = 2:3), height-constrained by available screen space.
+      // This matches how Apple Books sizes pages on iPad.
+      // In 2-page spread, each page = pageW × pageH, total width = pageW × 2.
+      const availH = Math.max(500, window.innerHeight - 200);
+      const availW = Math.max(400, window.innerWidth - 40);
+      const idealPageW = Math.floor(availH * (2 / 3)); // 2:3 ratio
+      const clampedW  = Math.min(idealPageW * 2, availW); // cap to screen
+      const pageW     = Math.floor(clampedW / 2);
+      const pageH     = Math.min(availH, Math.round(pageW * 1.5));
+
       const rendition = epubBook.renderTo(containerRef.current!, {
-        width: "100%",
-        height: epubHeight,
-        flow: "scrolled",
-        manager: "continuous",
+        width:          pageW * 2,  // two pages side-by-side
+        height:         pageH,
+        spread:         "always",   // always show 2 pages (like Apple Books on iPad)
+        flow:           "paginated",
+        minSpreadWidth: 0,
       });
       renditionRef.current = rendition;
 
@@ -210,8 +215,6 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
     }
   }, [readAloud]);
 
-  /* ── Spread mode is not used in scrolled flow (no-op) ── */
-
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 180px)", minHeight: 500 }}>
       <style>{SPIN}</style>
@@ -229,10 +232,13 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
           <div style={{ fontSize: 12, color: "#888", textAlign: "center" }}>{epubError}</div>
         </div>
       )}
-      <div
-        ref={containerRef}
-        style={{ flex: 1, visibility: epubLoading || epubError ? "hidden" : "visible", borderRadius: 12, overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
-      />
+      {/* Centre the fixed-size epub.js iframe within the full-width row */}
+      <div style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "flex-start", overflow: "hidden", visibility: epubLoading || epubError ? "hidden" : "visible" }}>
+        <div
+          ref={containerRef}
+          style={{ borderRadius: 12, overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
+        />
+      </div>
       {epubReady && !epubError && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 20, padding: "14px 0 4px" }}>
           <button onClick={prev} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: `1.5px solid ${GREEN}`, color: GREEN, borderRadius: 8, padding: "8px 18px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
@@ -770,6 +776,12 @@ export function ReaderPage({ bookId }: Props) {
             >
               <BookOpen size={14} /> {spreadMode ? "2 Pages" : "1 Page"}
             </button>
+          )}
+          {/* EPUB always renders 2-page spread (like Apple Books) — show passive indicator */}
+          {!isAudio && isEpub && (
+            <span style={{ display: "flex", alignItems: "center", gap: 5, background: GREEN, border: `1px solid ${GREEN}`, borderRadius: 6, padding: "6px 10px", color: "#fff", fontSize: 12, fontWeight: 700 }}>
+              <BookOpen size={14} /> 2 Pages
+            </span>
           )}
           {!isAudio && (
             <button

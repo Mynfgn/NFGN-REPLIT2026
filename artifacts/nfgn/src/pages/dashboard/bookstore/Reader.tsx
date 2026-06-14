@@ -400,15 +400,21 @@ function PdfViewer({ streamUrl, darkMode, currentPage, onPageChange, onTotalPage
     const pdf = pdfDocRef.current;
 
     async function renderToCanvas(canvas: HTMLCanvasElement, pageNum: number) {
-      const pg  = await pdf.getPage(Math.max(1, Math.min(pageNum, pdf.numPages)));
+      const pg   = await pdf.getPage(Math.max(1, Math.min(pageNum, pdf.numPages)));
       if (cancelled) return null;
-      const ctx = canvas.getContext("2d")!;
-      const w   = canvas.parentElement?.clientWidth || (spreadMode ? 400 : 800);
+      const ctx  = canvas.getContext("2d")!;
+      const dpr  = window.devicePixelRatio || 1;
+      const cssW = canvas.parentElement?.clientWidth || (spreadMode ? 400 : 800);
       const base = pg.getViewport({ scale: 1 });
-      const scale = Math.min(w / base.width, 2.5);
-      const vp   = pg.getViewport({ scale });
-      canvas.width  = vp.width;
+      // Compute the scale that fills the CSS width, then multiply by DPR
+      // so the canvas pixel buffer is crisp on high-DPI screens.
+      const cssScale = cssW / base.width;
+      const renderScale = cssScale * dpr;
+      const vp   = pg.getViewport({ scale: renderScale });
+      canvas.width  = vp.width;         // physical pixels
       canvas.height = vp.height;
+      canvas.style.width  = `${cssW}px`;               // CSS (logical) size
+      canvas.style.height = `${base.height * cssScale}px`;
       const task = pg.render({ canvasContext: ctx, viewport: vp });
       return task;
     }
@@ -569,14 +575,14 @@ function PdfViewer({ streamUrl, darkMode, currentPage, onPageChange, onTotalPage
           )}
           {/* Left page */}
           <div style={{ flex: 1, position: "relative", background: pageBg, borderRadius: "6px 0 0 6px", overflow: "hidden", boxShadow: "inset -3px 0 10px rgba(0,0,0,0.08)" }}>
-            <canvas ref={leftCanvasRef} style={{ display: "block", width: "100%", height: "auto", filter: darkMode ? "invert(1) hue-rotate(180deg)" : "none" }} />
+            <canvas ref={leftCanvasRef} style={{ display: "block", filter: darkMode ? "invert(1) hue-rotate(180deg)" : "none" }} />
             {watermarkText && <WatermarkOverlay text={watermarkText} />}
           </div>
           {/* Spine shadow */}
           <div style={{ width: 8, flexShrink: 0, background: darkMode ? "linear-gradient(to right, rgba(0,0,0,0.35), rgba(0,0,0,0.06))" : "linear-gradient(to right, rgba(0,0,0,0.12), rgba(0,0,0,0.03))", zIndex: 3 }} />
           {/* Right page */}
           <div style={{ flex: 1, position: "relative", background: pageBg, borderRadius: "0 6px 6px 0", overflow: "hidden", boxShadow: "inset 3px 0 10px rgba(0,0,0,0.08)" }}>
-            <canvas ref={rightCanvasRef} style={{ display: "block", width: "100%", height: "auto", filter: darkMode ? "invert(1) hue-rotate(180deg)" : "none" }} />
+            <canvas ref={rightCanvasRef} style={{ display: "block", filter: darkMode ? "invert(1) hue-rotate(180deg)" : "none" }} />
             {watermarkText && hasRightPage && <WatermarkOverlay text={watermarkText} />}
           </div>
         </div>
@@ -588,7 +594,7 @@ function PdfViewer({ streamUrl, darkMode, currentPage, onPageChange, onTotalPage
               <Loader2 size={22} color={GREEN} style={{ animation: "spin 1s linear infinite" }} />
             </div>
           )}
-          <canvas ref={leftCanvasRef} style={{ display: "block", width: "100%", height: "auto", filter: darkMode ? "invert(1) hue-rotate(180deg)" : "none" }} />
+          <canvas ref={leftCanvasRef} style={{ display: "block", filter: darkMode ? "invert(1) hue-rotate(180deg)" : "none" }} />
           {watermarkText && <WatermarkOverlay text={watermarkText} />}
         </div>
       )}

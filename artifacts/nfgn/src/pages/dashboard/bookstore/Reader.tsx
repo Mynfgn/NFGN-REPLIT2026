@@ -186,12 +186,12 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
       const epubBook = ePub(streamUrl, { openAs: "epub" });
       bookRef.current = epubBook;
 
-      const nativeW = EPUB_PAGE_W * 2;
+      const nativeW = EPUB_PAGE_W;
       const nativeH = EPUB_PAGE_H;
 
       const rendition = epubBook.renderTo(containerRef.current!, {
         width: nativeW, height: nativeH,
-        spread: "always", flow: "paginated", minSpreadWidth: 0,
+        spread: "none", flow: "paginated",
       });
       renditionRef.current = rendition;
 
@@ -210,10 +210,15 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
       // ── Track reading position on every page turn ──
       rendition.on("relocated", (location: any) => {
         if (destroyed) return;
-        const page  = location.start.displayed?.page  ?? 0;
-        const total = location.start.displayed?.total ?? 0;
-        const pct   = (location.start.percentage ?? 0) * 100;
         const cfi   = location.start.cfi ?? "";
+        const pct   = (location.start.percentage ?? 0) * 100;
+        // Use global location index when available (accurate book-wide page number)
+        const locs  = epubBook.locations;
+        const globalIdx = (locs && typeof locs.locationFromCfi === "function")
+          ? locs.locationFromCfi(cfi)
+          : -1;
+        const page  = globalIdx >= 0 ? globalIdx + 1 : (location.start.displayed?.page ?? 0);
+        const total = (locs && locs.total > 0) ? locs.total : (location.start.displayed?.total ?? 0);
         setEpubCurrentPage(page);
         setEpubTotalPages(total);
         setEpubProgress(pct);
@@ -260,9 +265,20 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
           if (!destroyed) { setEpubError(e?.message ?? "Could not open this book."); setEpubLoading(false); }
         });
 
-      epubBook.ready.catch((e: any) => {
-        if (!destroyed) { setEpubError(e?.message ?? "Book failed to load."); setEpubLoading(false); }
-      });
+      // ── Generate global locations for accurate book-wide page count ──
+      epubBook.ready
+        .then(() => {
+          if (destroyed) return;
+          return epubBook.locations.generate(1650);
+        })
+        .then(() => {
+          if (destroyed) return;
+          const total = epubBook.locations?.total ?? 0;
+          if (total > 0) setEpubTotalPages(total);
+        })
+        .catch((e: any) => {
+          if (!destroyed) { setEpubError(e?.message ?? "Book failed to load."); setEpubLoading(false); }
+        });
 
       return () => {
         destroyed = true;
@@ -507,12 +523,12 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
 
         {/* FLIP layer — rotateY animation */}
         <div className={flipClass}
-          style={{ width: EPUB_PAGE_W * 2 * epubScale, height: EPUB_PAGE_H * epubScale, flexShrink: 0, transformStyle: "preserve-3d", willChange: "transform" }}>
+          style={{ width: EPUB_PAGE_W * epubScale, height: EPUB_PAGE_H * epubScale, flexShrink: 0, transformStyle: "preserve-3d", willChange: "transform" }}>
           {/* CLIP layer */}
           <div style={{ width: "100%", height: "100%", overflow: "hidden", borderRadius: 12, boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }}>
             {/* SCALE layer — epub.js target at native size, CSS-scaled to fit */}
             <div ref={containerRef}
-              style={{ width: EPUB_PAGE_W * 2, height: EPUB_PAGE_H, transform: `scale(${epubScale})`, transformOrigin: "top left" }} />
+              style={{ width: EPUB_PAGE_W, height: EPUB_PAGE_H, transform: `scale(${epubScale})`, transformOrigin: "top left" }} />
           </div>
         </div>
       </div>

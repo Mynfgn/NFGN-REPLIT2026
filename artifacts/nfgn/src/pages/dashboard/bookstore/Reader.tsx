@@ -88,15 +88,20 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
   const EPUB_PAGE_W = 450;
   const EPUB_PAGE_H = 675;
 
-  const containerRef = useRef<HTMLDivElement>(null);
-  const bookRef      = useRef<any>(null);
-  const renditionRef = useRef<any>(null);
+  const containerRef   = useRef<HTMLDivElement>(null);
+  const bookRef        = useRef<any>(null);
+  const renditionRef   = useRef<any>(null);
+  // Tracks current rendition native width (single vs two-page spread)
+  const nativeWRef     = useRef(450);
+  const spreadModeRef  = useRef<"none" | "always">("none");
 
   // Core state
   const [epubReady,   setEpubReady]   = useState(false);
   const [epubError,   setEpubError]   = useState("");
   const [epubLoading, setEpubLoading] = useState(true);
   const [epubScale,   setEpubScale]   = useState(1);
+  // true when epub.js switches to two-page spread (all pages after cover)
+  const [isSpread,    setIsSpread]    = useState(false);
 
   // 3-D page-flip
   const [flipClass, setFlipClass] = useState("");
@@ -186,20 +191,22 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
       const epubBook = ePub(streamUrl, { openAs: "epub" });
       bookRef.current = epubBook;
 
-      const nativeW = EPUB_PAGE_W;
       const nativeH = EPUB_PAGE_H;
+      // Start single-page (cover); rendered event will upgrade to spread for content
+      nativeWRef.current = EPUB_PAGE_W;
+      spreadModeRef.current = "none";
 
       const rendition = epubBook.renderTo(containerRef.current!, {
-        width: nativeW, height: nativeH,
+        width: EPUB_PAGE_W, height: nativeH,
         spread: "none", flow: "paginated",
       });
       renditionRef.current = rendition;
 
-      // Apply initial scale
+      // Scale uses nativeWRef so it stays correct after spread-mode switches
       const calcScale = () => {
         const availW = Math.max(300, window.innerWidth  - 40);
         const availH = Math.max(300, window.innerHeight - 240);
-        return Math.min(availW / nativeW, availH / nativeH, 1);
+        return Math.min(availW / nativeWRef.current, availH / nativeH, 1);
       };
       if (!destroyed) setEpubScale(calcScale());
       const onResize = () => { if (!destroyed) setEpubScale(calcScale()); };
@@ -240,6 +247,23 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
           const ch = findCh(tocRef.current);
           if (ch) setCurrentChapter(ch);
         }
+      });
+
+      // ── Hybrid spread: single-page for cover, two-page for content ──
+      rendition.on("rendered", (section: any) => {
+        if (destroyed) return;
+        const isCover     = section.index === 0;
+        const targetMode: "none" | "always" = isCover ? "none" : "always";
+        const targetW     = isCover ? EPUB_PAGE_W : EPUB_PAGE_W * 2;
+        // Guard: only switch when mode actually changes (prevents infinite loop
+        // because rendition.spread() internally calls rendition.display())
+        if (spreadModeRef.current === targetMode) return;
+        spreadModeRef.current = targetMode;
+        nativeWRef.current    = targetW;
+        setIsSpread(!isCover);
+        setEpubScale(calcScale());
+        rendition.resize(targetW, EPUB_PAGE_H);
+        rendition.spread(targetMode, 0);
       });
 
       // ── Load TOC ──
@@ -521,14 +545,14 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
           </>
         )}
 
-        {/* FLIP layer — rotateY animation */}
+        {/* FLIP layer — rotateY animation; width tracks hybrid spread state */}
         <div className={flipClass}
-          style={{ width: EPUB_PAGE_W * epubScale, height: EPUB_PAGE_H * epubScale, flexShrink: 0, transformStyle: "preserve-3d", willChange: "transform" }}>
+          style={{ width: (isSpread ? EPUB_PAGE_W * 2 : EPUB_PAGE_W) * epubScale, height: EPUB_PAGE_H * epubScale, flexShrink: 0, transformStyle: "preserve-3d", willChange: "transform" }}>
           {/* CLIP layer */}
           <div style={{ width: "100%", height: "100%", overflow: "hidden", borderRadius: 12, boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }}>
             {/* SCALE layer — epub.js target at native size, CSS-scaled to fit */}
             <div ref={containerRef}
-              style={{ width: EPUB_PAGE_W, height: EPUB_PAGE_H, transform: `scale(${epubScale})`, transformOrigin: "top left" }} />
+              style={{ width: isSpread ? EPUB_PAGE_W * 2 : EPUB_PAGE_W, height: EPUB_PAGE_H, transform: `scale(${epubScale})`, transformOrigin: "top left" }} />
           </div>
         </div>
       </div>

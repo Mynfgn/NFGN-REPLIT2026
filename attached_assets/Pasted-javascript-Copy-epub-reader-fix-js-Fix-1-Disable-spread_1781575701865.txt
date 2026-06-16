@@ -1,0 +1,93 @@
+javascript
+
+Copy
+// epub-reader-fix.js
+// Fix 1: Disable spread mode so cover gets full page width
+// Fix 2: Proper 2-page layout for content pages
+
+const book = ePub("your-book.epub");
+
+const rendition = book.renderTo("viewer", {
+  width: "100%",
+  height: "100%",
+  spread: "none",        // ← KEY FIX: was "always", now "none" prevents cover clipping
+  minSpreadWidth: 900,   // Only use 2-page spread when viewport is wide enough
+  flow: "paginated",
+  allowScriptedContent: true
+});
+
+// Fix 3: Force cover page to render as single full page
+book.ready.then(() => {
+  const coverSpine = book.spine.get(0); // Cover is usually spine item 0
+  if (coverSpine) {
+    rendition.display(coverSpine.href);
+  }
+});
+
+// Fix 4: Switch to 2-page spread AFTER cover
+rendition.on("rendered", (section) => {
+  const isCover = section.index === 0;
+  
+  if (isCover) {
+    // Single page for cover
+    rendition.spread("none");
+  } else {
+    // 2-page spread for all other pages
+    rendition.spread("auto");
+  }
+});
+
+// Fix 5: Global page counter (not section-based)
+book.ready.then(() => {
+  book.locations.generate(1024).then(() => {
+    rendition.on("locationChanged", (location) => {
+      const currentPage = book.locations.locationFromCfi(location.start.cfi);
+      const totalPages = book.locations.total;
+      document.getElementById("page-counter").textContent = 
+        `Page ${currentPage} of ${totalPages}`;
+    });
+  });
+});
+And add this CSS to prevent text overflow on the cover:
+
+css
+
+Copy
+/* epub-reader-fix.css */
+
+/* Prevent cover text from overflowing */
+.epub-container {
+  overflow: hidden !important;
+}
+
+/* Ensure cover page scales properly */
+.epub-view iframe {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* 2-page spread layout */
+#viewer {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: stretch;
+}
+
+/* Cover page - full width single page */
+#viewer.cover-page .epub-view {
+  width: 100% !important;
+  max-width: 450px;
+  margin: 0 auto;
+}
+
+/* Content pages - 2-page spread */
+#viewer.content-page {
+  column-count: 2;
+  column-gap: 0;
+}
+Key changes explained:
+
+spread: "none" → prevents the 900px canvas from being split in half (which was clipping the cover title to 450px)
+After the cover, switch back to spread: "auto" for the 2-page layout like Apple Books
+locations.generate() → fixes the "Page 1 of 1" counter to show global page numbers

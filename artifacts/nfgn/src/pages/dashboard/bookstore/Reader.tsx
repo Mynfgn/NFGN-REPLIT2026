@@ -72,15 +72,17 @@ interface Book {
 interface Props { bookId: string }
 
 // ── EPUB viewer — Apple Books-style professional reader ───────────────────────
-function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onReadAloudStop, bookId }: {
+function EpubViewer({ streamUrl, fontSize, darkMode, sepia, bookTitle, readAloud, onReadAloudStop, bookId, coverImage }: {
   streamUrl: string;
   fontSize: number;
   darkMode: boolean;
+  sepia: boolean;
   bookTitle: string;
   readAloud: boolean;
   onReadAloudStop: () => void;
   spreadMode?: boolean;
   bookId?: string;
+  coverImage?: string;
 }) {
   // Native 6×9 book page dimensions — epub.js renders at full size so the
   // EPUB's own CSS (flex footers, absolute elements) lays out correctly.
@@ -94,6 +96,7 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
   // Tracks current rendition native width (single vs two-page spread)
   const nativeWRef     = useRef(450);
   const spreadModeRef  = useRef<"none" | "always">("none");
+  const epubScaleRef   = useRef(1);
 
   // Core state
   const [epubReady,   setEpubReady]   = useState(false);
@@ -102,6 +105,8 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
   const [epubScale,   setEpubScale]   = useState(1);
   // true when epub.js switches to two-page spread (all pages after cover)
   const [isSpread,    setIsSpread]    = useState(false);
+  // Current spine section index — used to show the premium cover overlay on idx 0
+  const [sectionIndex, setSectionIndex] = useState(0);
 
   // 3-D page-flip
   const [flipClass, setFlipClass] = useState("");
@@ -133,6 +138,18 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
   const [showBookmarks, setShowBookmarks] = useState(false);
   const [isBookmarked,  setIsBookmarked]  = useState(false);
 
+  // Highlights — colored text selections persisted to localStorage
+  const hlKey = bookId ? `nfgn_epub_hl_${bookId}` : null;
+  const [highlights, setHighlights] = useState<Array<{ cfi: string; text: string; color: string; chapter: string; page: number; date: number }>>(() => {
+    if (!hlKey) return [];
+    try { return JSON.parse(localStorage.getItem(hlKey) || "[]"); } catch { return []; }
+  });
+  const highlightsRef = useRef(highlights);
+  highlightsRef.current = highlights;
+  const [showHighlights, setShowHighlights] = useState(false);
+  // Floating selection toolbar { x, y } in container-relative px, plus the cfi/text
+  const [selPopup, setSelPopup] = useState<{ x: number; y: number; cfi: string; text: string } | null>(null);
+
   // Search
   const [showSearch,    setShowSearch]    = useState(false);
   const [searchQuery,   setSearchQuery]   = useState("");
@@ -152,9 +169,9 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
 
-  const borderColor = darkMode ? "#333" : "#e5e7eb";
-  const bg          = darkMode ? "#1a1a1a" : "#fff";
-  const textColor   = darkMode ? "#e5e5e5" : DARK;
+  const borderColor = darkMode ? "#333" : sepia ? "#d9c7a0" : "#e5e7eb";
+  const bg          = darkMode ? "#1a1a1a" : sepia ? "#f4ecd8" : "#fff";
+  const textColor   = darkMode ? "#e5e5e5" : sepia ? "#5b4636" : DARK;
 
   // ── 3-D animated nav ────────────────────────────────────────────────────────
   const FLIP_MS = 550;
@@ -219,6 +236,8 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
         if (destroyed) return;
         const cfi   = location.start.cfi ?? "";
         const pct   = (location.start.percentage ?? 0) * 100;
+        if (typeof location.start.index === "number") setSectionIndex(location.start.index);
+        setSelPopup(null);
         // Use global location index when available (accurate book-wide page number)
         const locs  = epubBook.locations;
         const globalIdx = (locs && typeof locs.locationFromCfi === "function")
@@ -252,6 +271,13 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
       // ── Hybrid spread: single-page for cover, two-page for content ──
       rendition.on("rendered", (section: any) => {
         if (destroyed) return;
+        if (typeof section.index === "number") setSectionIndex(section.index);
+        // Re-apply any saved highlights that live on this section
+        try {
+          for (const h of highlightsRef.current) {
+            try { rendition.annotations.add("highlight", h.cfi, {}, undefined, "nfgn-hl", { fill: h.color, "fill-opacity": "0.32" }); } catch {}
+          }
+        } catch {}
         const isCover     = section.index === 0;
         const targetMode: "none" | "always" = isCover ? "none" : "always";
         const targetW     = isCover ? EPUB_PAGE_W : EPUB_PAGE_W * 2;
@@ -264,6 +290,26 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
         setEpubScale(calcScale());
         rendition.resize(targetW, EPUB_PAGE_H);
         rendition.spread(targetMode, 0);
+      });
+
+      // ── Text selection → floating highlight toolbar ──
+      rendition.on("selected", (cfiRange: string, contents: any) => {
+        if (destroyed) return;
+        try {
+          const sel = contents.window.getSelection();
+          const text = (sel?.toString() ?? "").trim();
+          if (!text) return;
+          const range = sel.getRangeAt(0);
+          const rect  = range.getBoundingClientRect();
+          // iframe offset within our container
+          const iframe = contents.document?.defaultView?.frameElement as HTMLElement | null;
+          const ir = iframe?.getBoundingClientRect();
+          const host = containerRef.current?.parentElement?.getBoundingClientRect();
+          const scale = nativeWRef.current ? epubScaleRef.current : 1;
+          const x = ((ir?.left ?? 0) + rect.left * scale + (rect.width * scale) / 2) - (host?.left ?? 0);
+          const y = ((ir?.top ?? 0) + rect.top * scale) - (host?.top ?? 0);
+          setSelPopup({ x: Math.max(70, x), y: Math.max(8, y - 6), cfi: cfiRange, text });
+        } catch {}
       });
 
       // ── Load TOC ──
@@ -336,12 +382,17 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
     };
     if (darkMode) {
       rules["html, body"] = { background: "#1a1a1a !important", color: "#e8e8e8 !important" };
+    } else if (sepia) {
+      rules["html, body"] = { background: "#f4ecd8 !important", color: "#5b4636 !important" };
     } else {
       rules["html, body"] = { background: "#ffffff !important", color: "#1a1a1a !important" };
     }
     r.themes.register("active", rules);
     r.themes.select("active");
-  }, [darkMode, fontFamily, epubReady]);
+  }, [darkMode, sepia, fontFamily, epubReady]);
+
+  // Keep a ref of the latest scale for the (once-registered) selection handler
+  useEffect(() => { epubScaleRef.current = epubScale; }, [epubScale]);
 
   // ── Font size ──
   useEffect(() => {
@@ -424,6 +475,30 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookmarks, currentChapter, epubCurrentPage, bmKey]);
 
+  // ── Highlights ────────────────────────────────────────────────────────────────
+  const addHighlight = useCallback((color: string) => {
+    if (!selPopup || !hlKey || !renditionRef.current) return;
+    const { cfi, text } = selPopup;
+    if (highlights.some(h => h.cfi === cfi)) { setSelPopup(null); return; }
+    try {
+      renditionRef.current.annotations.add("highlight", cfi, {}, undefined, "nfgn-hl", { fill: color, "fill-opacity": "0.32" });
+    } catch {}
+    const updated = [...highlights, { cfi, text, color, chapter: currentChapter, page: epubCurrentPage, date: Date.now() }];
+    setHighlights(updated);
+    localStorage.setItem(hlKey, JSON.stringify(updated));
+    // Clear the native selection
+    try { renditionRef.current.getContents?.().forEach((c: any) => c.window?.getSelection?.()?.removeAllRanges?.()); } catch {}
+    setSelPopup(null);
+  }, [selPopup, hlKey, highlights, currentChapter, epubCurrentPage]);
+
+  const removeHighlight = useCallback((cfi: string) => {
+    if (!hlKey) return;
+    try { renditionRef.current?.annotations?.remove(cfi, "highlight"); } catch {}
+    const updated = highlights.filter(h => h.cfi !== cfi);
+    setHighlights(updated);
+    localStorage.setItem(hlKey, JSON.stringify(updated));
+  }, [highlights, hlKey]);
+
   // ── Search ──────────────────────────────────────────────────────────────────
   const doSearch = useCallback(async () => {
     if (!bookRef.current || !searchQuery.trim()) return;
@@ -503,6 +578,12 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
                 Bookmarks{bookmarks.length > 0 ? ` (${bookmarks.length})` : ""}
               </button>
             )}
+            {hlKey && (
+              <button onClick={() => setShowHighlights(s => !s)} aria-label="View highlights"
+                style={{ background: showHighlights ? GOLD : "none", border: `1px solid ${showHighlights ? GOLD : borderColor}`, color: showHighlights ? "#fff" : textColor, borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+                ✎ Highlights{highlights.length > 0 ? ` (${highlights.length})` : ""}
+              </button>
+            )}
             <button onClick={toggleFullscreen} aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
               style={{ background: "none", border: `1px solid ${borderColor}`, color: textColor, borderRadius: 6, padding: "4px 9px", fontSize: 13, cursor: "pointer" }} title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}>
               {isFullscreen ? "⤓" : "⤢"}
@@ -555,6 +636,32 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
               style={{ width: isSpread ? EPUB_PAGE_W * 2 : EPUB_PAGE_W, height: EPUB_PAGE_H, transform: `scale(${epubScale})`, transformOrigin: "top left" }} />
           </div>
         </div>
+
+        {/* ── Premium cover overlay — shown on the opening page (section 0) so the
+             marketing cover (with the full, un-clipped title) greets the reader,
+             exactly like Apple Books. Sits above epub's own cover but below the
+             tap zones so swipe / tap-to-advance still works. ── */}
+        {epubReady && coverImage && sectionIndex === 0 && (
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10, background: bg, pointerEvents: "none" }}>
+            <div style={{ height: EPUB_PAGE_H * epubScale, aspectRatio: "2 / 3", maxWidth: "92%", borderRadius: 12, overflow: "hidden", boxShadow: "0 10px 40px rgba(0,0,0,0.28)" }}>
+              <img src={coverImage} alt={`${bookTitle} cover`}
+                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+            </div>
+          </div>
+        )}
+
+        {/* ── Floating highlight toolbar on text selection ── */}
+        {selPopup && (
+          <div style={{ position: "absolute", left: selPopup.x, top: selPopup.y, transform: "translate(-50%, -100%)", zIndex: 60, display: "flex", alignItems: "center", gap: 6, background: darkMode ? "#222" : "#fff", border: `1px solid ${borderColor}`, borderRadius: 10, padding: "6px 8px", boxShadow: "0 6px 24px rgba(0,0,0,0.28)" }}>
+            {["#FFD54A", "#9DDFA0", "#88C7F2", "#F6A6C1"].map(c => (
+              <button key={c} onClick={() => addHighlight(c)} aria-label={`Highlight ${c}`}
+                style={{ width: 22, height: 22, borderRadius: "50%", background: c, border: "2px solid rgba(0,0,0,0.12)", cursor: "pointer" }} />
+            ))}
+            <div style={{ width: 1, height: 18, background: borderColor }} />
+            <button onClick={() => setSelPopup(null)} aria-label="Cancel"
+              style={{ background: "none", border: "none", cursor: "pointer", color: textColor, fontSize: 16, lineHeight: 1, padding: "0 4px" }}>×</button>
+          </div>
+        )}
       </div>
 
       {/* ── Page nav + page numbers ── */}
@@ -655,6 +762,36 @@ function EpubViewer({ streamUrl, fontSize, darkMode, bookTitle, readAloud, onRea
                     setBookmarks(updated);
                     if (bmKey) localStorage.setItem(bmKey, JSON.stringify(updated));
                   }} aria-label="Delete bookmark"
+                    style={{ background: "none", border: "none", cursor: "pointer", color: "#ccc", fontSize: 18, lineHeight: 1, padding: 4 }}>×</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Highlights panel (slides in from right) ── */}
+      {showHighlights && (
+        <>
+          <div onClick={() => setShowHighlights(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 400 }} />
+          <div style={{ position: "fixed", right: 0, top: 0, height: "100vh", width: 320, maxWidth: "85vw", background: bg, zIndex: 401, display: "flex", flexDirection: "column", boxShadow: "-4px 0 28px rgba(0,0,0,0.3)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: `1px solid ${borderColor}`, flexShrink: 0 }}>
+              <span style={{ fontWeight: 800, fontSize: 15, color: textColor }}>✎ Highlights</span>
+              <button onClick={() => setShowHighlights(false)} aria-label="Close" style={{ background: "none", border: "none", cursor: "pointer", color: textColor, fontSize: 20, lineHeight: 1, padding: 4 }}>×</button>
+            </div>
+            <div style={{ overflowY: "auto", flex: 1, padding: "12px 20px" }}>
+              {highlights.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "32px 0", color: "#888", fontSize: 12, lineHeight: 2 }}>
+                  No highlights yet.<br />Select any text while reading,<br />then pick a color to highlight it.
+                </div>
+              ) : [...highlights].reverse().map((h, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 0", borderBottom: `1px solid ${borderColor}` }}>
+                  <div style={{ width: 6, alignSelf: "stretch", borderRadius: 3, background: h.color, flexShrink: 0 }} />
+                  <div style={{ flex: 1, cursor: "pointer", minWidth: 0 }} onClick={() => { renditionRef.current?.display(h.cfi); setShowHighlights(false); }}>
+                    <div style={{ fontSize: 13, color: textColor, lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>&ldquo;{h.text}&rdquo;</div>
+                    <div style={{ fontSize: 11, color: "#888", marginTop: 3 }}>{h.chapter ? `${h.chapter} · ` : ""}Page {h.page} · {new Date(h.date).toLocaleDateString()}</div>
+                  </div>
+                  <button onClick={() => removeHighlight(h.cfi)} aria-label="Delete highlight"
                     style={{ background: "none", border: "none", cursor: "pointer", color: "#ccc", fontSize: 18, lineHeight: 1, padding: 4 }}>×</button>
                 </div>
               ))}
@@ -1089,7 +1226,9 @@ export function ReaderPage({ bookId }: Props) {
   const [book, setBook]       = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState("");
-  const [darkMode, setDarkMode]   = useState(false);
+  const [theme, setTheme]         = useState<"light" | "dark" | "sepia">("light");
+  const darkMode = theme === "dark";
+  const sepia    = theme === "sepia";
   const [fontSize, setFontSize]   = useState(100); // percentage; 100 = book's own CSS default
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages]   = useState(0);
@@ -1144,10 +1283,10 @@ export function ReaderPage({ bookId }: Props) {
     if (audioRef.current) audioRef.current.playbackRate = audioSpeed;
   }, [audioSpeed]);
 
-  const bg          = darkMode ? "#1a1a1a" : "#fff";
-  const textColor   = darkMode ? "#e5e5e5" : DARK;
-  const headerBg    = darkMode ? "#0a0a0a" : "#f9fafb";
-  const borderColor = darkMode ? "#333" : "#e5e7eb";
+  const bg          = darkMode ? "#1a1a1a" : sepia ? "#f4ecd8" : "#fff";
+  const textColor   = darkMode ? "#e5e5e5" : sepia ? "#5b4636" : DARK;
+  const headerBg    = darkMode ? "#0a0a0a" : sepia ? "#efe5cc" : "#f9fafb";
+  const borderColor = darkMode ? "#333" : sepia ? "#d9c7a0" : "#e5e7eb";
 
   const token        = encodeURIComponent(localStorage.getItem("nfgn_token") ?? "");
   const streamBase   = `/api/bookstore/books/${id}/stream?token=${token}`;
@@ -1234,8 +1373,12 @@ export function ReaderPage({ bookId }: Props) {
               <Volume2 size={14} /> {readAloud ? "Stop" : "Read Aloud"}
             </button>
           )}
-          <button onClick={() => setDarkMode(d => !d)} style={{ background: "none", border: `1px solid ${borderColor}`, borderRadius: 6, padding: "6px 10px", cursor: "pointer", display: "flex", alignItems: "center", gap: 5, color: textColor, fontSize: 12, fontWeight: 700 }}>
-            {darkMode ? <Sun size={14} /> : <Moon size={14} />} {darkMode ? "Light" : "Dark"}
+          <button
+            onClick={() => setTheme(t => (t === "light" ? "sepia" : t === "sepia" ? "dark" : "light"))}
+            title="Switch reading theme (Light · Sepia · Dark)"
+            style={{ background: sepia ? GOLD : "none", border: `1px solid ${sepia ? GOLD : borderColor}`, borderRadius: 6, padding: "6px 10px", cursor: "pointer", display: "flex", alignItems: "center", gap: 5, color: sepia ? "#fff" : textColor, fontSize: 12, fontWeight: 700 }}>
+            {theme === "light" ? <Sun size={14} /> : theme === "sepia" ? <BookOpen size={14} /> : <Moon size={14} />}
+            {theme === "light" ? "Light" : theme === "sepia" ? "Sepia" : "Dark"}
           </button>
         </div>
       </div>
@@ -1309,11 +1452,13 @@ export function ReaderPage({ bookId }: Props) {
                 streamUrl={fileStreamUrl}
                 fontSize={fontSize}
                 darkMode={darkMode}
+                sepia={sepia}
                 bookTitle={book.title}
                 readAloud={readAloud}
                 onReadAloudStop={() => setReadAloud(false)}
                 spreadMode={spreadMode}
                 bookId={bookId}
+                coverImage={book.coverImage}
               />
             ) : (
               <PdfViewer

@@ -87,14 +87,17 @@ function EpubViewer({ streamUrl, fontSize, darkMode, sepia, bookTitle, readAloud
   // Native 6×9 book page dimensions — epub.js renders at full size so the
   // EPUB's own CSS (flex footers, absolute elements) lays out correctly.
   // We then CSS-scale the result down to fit the viewport.
-  const EPUB_PAGE_W = 450;
-  const EPUB_PAGE_H = 675;
+  // Per-page render size. A wider column (vs the old 450) fits more words per
+  // line, so at the book's native font-size the text density matches Apple
+  // Books instead of looking oversized. 2:3 aspect keeps the cover overlay correct.
+  const EPUB_PAGE_W = 600;
+  const EPUB_PAGE_H = 900;
 
   const containerRef   = useRef<HTMLDivElement>(null);
   const bookRef        = useRef<any>(null);
   const renditionRef   = useRef<any>(null);
   // Tracks current rendition native width (single vs two-page spread)
-  const nativeWRef     = useRef(450);
+  const nativeWRef     = useRef(600);
   const spreadModeRef  = useRef<"none" | "always">("none");
   const epubScaleRef   = useRef(1);
 
@@ -233,7 +236,9 @@ function EpubViewer({ streamUrl, fontSize, darkMode, sepia, bookTitle, readAloud
       // Scale uses nativeWRef so it stays correct after spread-mode switches
       const calcScale = () => {
         const availW = Math.max(300, window.innerWidth  - 40);
-        const availH = Math.max(300, window.innerHeight - 240);
+        // Reserve room for header + toolbar + bottom nav/progress + the reader
+        // area's vertical padding so the full page (incl. last line) stays visible.
+        const availH = Math.max(300, window.innerHeight - 320);
         return Math.min(availW / nativeWRef.current, availH / nativeH, 1);
       };
       if (!destroyed) setEpubScale(calcScale());
@@ -376,36 +381,26 @@ function EpubViewer({ streamUrl, fontSize, darkMode, sepia, bookTitle, readAloud
       sans:     "system-ui, -apple-system, sans-serif",
       dyslexia: "'OpenDyslexic', Arial, sans-serif",
     };
+    // IMPORTANT: respect the EPUB's own typography. We do NOT override
+    // font-size, line-height, margins or padding — the book's native CSS
+    // controls those so the layout matches Apple Books exactly. The only
+    // rules below are: (1) the user-selectable reading font, and (2) safety
+    // rules that prevent long words / oversized media from spilling past the
+    // page edge. None of these change the native text size or density.
     const rules: Record<string, Record<string, string>> = {
       "html, body, p, div, span, li, td, h1, h2, h3, h4, h5, h6": {
         "font-family": `${fontMap[fontFamily]} !important`,
       },
-      // ── Anti-clipping: keep every element inside its column so nothing gets
-      //    cut off on the right edge. Long words / wide headings now wrap. ──
+      // Anti-overflow only — wrap long words/URLs so nothing gets clipped on
+      // the right. This does not enlarge or re-space text.
       "p, div, span, li, td, a, blockquote, pre, code, h1, h2, h3, h4, h5, h6": {
-        "max-width": "100% !important",
         "overflow-wrap": "break-word !important",
         "word-wrap": "break-word !important",
       },
-      // Headings/titles in some EPUBs are set to nowrap or fixed widths which
-      // pushes text past the page edge — force them to wrap normally.
-      "h1, h2, h3, h4, h5, h6": {
-        "white-space": "normal !important",
-        "word-break": "break-word !important",
-        "max-width": "100% !important",
-        "line-height": "1.25 !important",
-      },
-      // Images, tables and SVGs must never exceed the page width.
+      // Images, SVGs and tables must never exceed the page width.
       "img, svg, image, table, figure": {
         "max-width": "100% !important",
         height: "auto !important",
-      },
-      // Comfortable reading rhythm + a little breathing room from the edges.
-      body: {
-        "line-height": "1.65 !important",
-        "padding-left": "6px !important",
-        "padding-right": "6px !important",
-        "box-sizing": "border-box !important",
       },
     };
     if (darkMode) {

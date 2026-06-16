@@ -209,13 +209,24 @@ function EpubViewer({ streamUrl, fontSize, darkMode, sepia, bookTitle, readAloud
       bookRef.current = epubBook;
 
       const nativeH = EPUB_PAGE_H;
-      // Start single-page (cover); rendered event will upgrade to spread for content
-      nativeWRef.current = EPUB_PAGE_W;
-      spreadModeRef.current = "none";
+      // Decide spread mode ONCE, up front, from the viewport width. We render at
+      // the final (double) width immediately and let epub.js handle the cover as a
+      // single page and content as a two-page spread natively via spread:"auto".
+      //
+      // NOTE: We deliberately do NOT switch spread modes reactively inside the
+      // "rendered" event. Calling rendition.resize()/rendition.spread() mid-render
+      // re-triggers rendition.display(), which on some books bounces the location
+      // back to the cover (section 0) — leaving the reader permanently stuck on the
+      // cover. Setting the layout once at init is robust and avoids that loop.
+      const wantSpread = window.innerWidth >= 700;
+      const renderW = wantSpread ? EPUB_PAGE_W * 2 : EPUB_PAGE_W;
+      nativeWRef.current = renderW;
+      spreadModeRef.current = wantSpread ? "always" : "none";
+      setIsSpread(wantSpread);
 
       const rendition = epubBook.renderTo(containerRef.current!, {
-        width: EPUB_PAGE_W, height: nativeH,
-        spread: "none", flow: "paginated",
+        width: renderW, height: nativeH,
+        spread: wantSpread ? "auto" : "none", flow: "paginated",
       });
       renditionRef.current = rendition;
 
@@ -268,7 +279,9 @@ function EpubViewer({ streamUrl, fontSize, darkMode, sepia, bookTitle, readAloud
         }
       });
 
-      // ── Hybrid spread: single-page for cover, two-page for content ──
+      // ── On each section render: track the section index and re-apply highlights ──
+      // (Spread mode is fixed at init — see note above — so we never resize/spread
+      //  here, which is what previously trapped the reader on the cover.)
       rendition.on("rendered", (section: any) => {
         if (destroyed) return;
         if (typeof section.index === "number") setSectionIndex(section.index);
@@ -278,18 +291,6 @@ function EpubViewer({ streamUrl, fontSize, darkMode, sepia, bookTitle, readAloud
             try { rendition.annotations.add("highlight", h.cfi, {}, undefined, "nfgn-hl", { fill: h.color, "fill-opacity": "0.32" }); } catch {}
           }
         } catch {}
-        const isCover     = section.index === 0;
-        const targetMode: "none" | "always" = isCover ? "none" : "always";
-        const targetW     = isCover ? EPUB_PAGE_W : EPUB_PAGE_W * 2;
-        // Guard: only switch when mode actually changes (prevents infinite loop
-        // because rendition.spread() internally calls rendition.display())
-        if (spreadModeRef.current === targetMode) return;
-        spreadModeRef.current = targetMode;
-        nativeWRef.current    = targetW;
-        setIsSpread(!isCover);
-        setEpubScale(calcScale());
-        rendition.resize(targetW, EPUB_PAGE_H);
-        rendition.spread(targetMode, 0);
       });
 
       // ── Text selection → floating highlight toolbar ──

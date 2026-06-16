@@ -380,6 +380,33 @@ function EpubViewer({ streamUrl, fontSize, darkMode, sepia, bookTitle, readAloud
       "html, body, p, div, span, li, td, h1, h2, h3, h4, h5, h6": {
         "font-family": `${fontMap[fontFamily]} !important`,
       },
+      // ── Anti-clipping: keep every element inside its column so nothing gets
+      //    cut off on the right edge. Long words / wide headings now wrap. ──
+      "p, div, span, li, td, a, blockquote, pre, code, h1, h2, h3, h4, h5, h6": {
+        "max-width": "100% !important",
+        "overflow-wrap": "break-word !important",
+        "word-wrap": "break-word !important",
+      },
+      // Headings/titles in some EPUBs are set to nowrap or fixed widths which
+      // pushes text past the page edge — force them to wrap normally.
+      "h1, h2, h3, h4, h5, h6": {
+        "white-space": "normal !important",
+        "word-break": "break-word !important",
+        "max-width": "100% !important",
+        "line-height": "1.25 !important",
+      },
+      // Images, tables and SVGs must never exceed the page width.
+      "img, svg, image, table, figure": {
+        "max-width": "100% !important",
+        height: "auto !important",
+      },
+      // Comfortable reading rhythm + a little breathing room from the edges.
+      body: {
+        "line-height": "1.65 !important",
+        "padding-left": "6px !important",
+        "padding-right": "6px !important",
+        "box-sizing": "border-box !important",
+      },
     };
     if (darkMode) {
       rules["html, body"] = { background: "#1a1a1a !important", color: "#e8e8e8 !important" };
@@ -613,7 +640,12 @@ function EpubViewer({ streamUrl, fontSize, darkMode, sepia, bookTitle, readAloud
 
       {/* ── Reader area: touch events + tap zones + 3-layer flip/clip/scale ── */}
       <div
-        style={{ height: "calc(100vh - 280px)", minHeight: 400, display: "flex", justifyContent: "center", alignItems: "flex-start", overflow: "hidden", visibility: epubLoading || epubError ? "hidden" : "visible", perspective: "2500px", position: "relative" }}
+        style={{ height: "calc(100vh - 280px)", minHeight: 400, display: "flex", justifyContent: "center", alignItems: "center", overflow: "hidden", visibility: epubLoading || epubError ? "hidden" : "visible", perspective: "2500px", position: "relative", padding: "20px 0",
+          background: darkMode
+            ? "radial-gradient(ellipse at top, #242424 0%, #141414 70%)"
+            : sepia
+              ? "radial-gradient(ellipse at top, #efe4ca 0%, #e6d8b8 70%)"
+              : "radial-gradient(ellipse at top, #f4f5f7 0%, #e7e9ee 70%)" }}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
@@ -631,10 +663,19 @@ function EpubViewer({ streamUrl, fontSize, darkMode, sepia, bookTitle, readAloud
         <div className={flipClass}
           style={{ width: (isSpread ? EPUB_PAGE_W * 2 : EPUB_PAGE_W) * epubScale, height: EPUB_PAGE_H * epubScale, flexShrink: 0, transformStyle: "preserve-3d", willChange: "transform" }}>
           {/* CLIP layer */}
-          <div style={{ width: "100%", height: "100%", overflow: "hidden", borderRadius: 12, boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }}>
+          <div style={{ position: "relative", width: "100%", height: "100%", overflow: "hidden", borderRadius: 12, boxShadow: darkMode ? "0 10px 40px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.4)" : "0 14px 44px rgba(0,0,0,0.20), 0 2px 8px rgba(0,0,0,0.10)" }}>
             {/* SCALE layer — epub.js target at native size, CSS-scaled to fit */}
             <div ref={containerRef}
               style={{ width: isSpread ? EPUB_PAGE_W * 2 : EPUB_PAGE_W, height: EPUB_PAGE_H, transform: `scale(${epubScale})`, transformOrigin: "top left" }} />
+            {/* Center gutter — gives the two-page spread a clear book-spine divide */}
+            {isSpread && (
+              <div style={{ position: "absolute", top: 0, bottom: 0, left: "50%", width: 28, transform: "translateX(-50%)", pointerEvents: "none", zIndex: 5,
+                background: darkMode
+                  ? "linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0) 100%)"
+                  : "linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.16) 50%, rgba(0,0,0,0) 100%)" }}>
+                <div style={{ position: "absolute", top: 0, bottom: 0, left: "50%", width: 1, transform: "translateX(-50%)", background: darkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.22)" }} />
+              </div>
+            )}
           </div>
         </div>
 
@@ -833,16 +874,15 @@ function EpubViewer({ streamUrl, fontSize, darkMode, sepia, bookTitle, readAloud
         </>
       )}
 
-      {/* ── Resume toast ── */}
+      {/* ── Resume prompt — slim pill pinned just under the toolbar so it never
+           covers the page content or the bottom navigation. Auto-dismisses. ── */}
       {showResume && resumeCfi && (
-        <div style={{ position: "fixed", bottom: 90, left: "50%", transform: "translateX(-50%)", background: bg, border: `2px solid ${GREEN}`, borderRadius: 14, padding: "14px 22px", display: "flex", alignItems: "center", gap: 14, boxShadow: "0 8px 36px rgba(45,106,79,0.3)", zIndex: 500, maxWidth: "90vw", flexWrap: "wrap" }}>
-          <span style={{ fontSize: 13, color: textColor, fontWeight: 600 }}>📖 Resume where you left off?</span>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => { renditionRef.current?.display(resumeCfi); setShowResume(false); }}
-              style={{ background: GREEN, color: "#fff", border: "none", borderRadius: 8, padding: "7px 18px", cursor: "pointer", fontWeight: 700, fontSize: 13 }}>Resume</button>
-            <button onClick={() => setShowResume(false)}
-              style={{ background: "none", border: `1px solid ${borderColor}`, borderRadius: 8, padding: "7px 14px", cursor: "pointer", color: textColor, fontSize: 12 }}>Start fresh</button>
-          </div>
+        <div style={{ position: "absolute", top: 10, left: "50%", transform: "translateX(-50%)", background: bg, border: `1px solid ${GREEN}`, borderRadius: 999, padding: "6px 8px 6px 16px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 6px 24px rgba(0,0,0,0.18)", zIndex: 80, maxWidth: "94%" }}>
+          <span style={{ fontSize: 12, color: textColor, fontWeight: 600, whiteSpace: "nowrap" }}>📖 Resume where you left off?</span>
+          <button onClick={() => { renditionRef.current?.display(resumeCfi); setShowResume(false); }}
+            style={{ background: GREEN, color: "#fff", border: "none", borderRadius: 999, padding: "5px 14px", cursor: "pointer", fontWeight: 700, fontSize: 12 }}>Resume</button>
+          <button onClick={() => setShowResume(false)} aria-label="Dismiss"
+            style={{ background: "none", border: "none", cursor: "pointer", color: textColor, fontSize: 18, lineHeight: 1, padding: "0 6px" }}>×</button>
         </div>
       )}
     </div>
@@ -1348,7 +1388,12 @@ export function ReaderPage({ bookId }: Props) {
           {!isAudio && (
             <>
               <button onClick={() => setFontSize(s => Math.max(70, s - 10))} style={{ background: "none", border: `1px solid ${borderColor}`, borderRadius: 6, padding: "4px 8px", cursor: "pointer", color: textColor }}><Minus size={12} /></button>
-              <span style={{ fontSize: 12, color: textColor, fontWeight: 600, minWidth: 36, textAlign: "center" }}>{fontSize}%</span>
+              <button
+                onClick={() => setFontSize(100)}
+                title="Reset zoom to 100%"
+                style={{ fontSize: 12, color: fontSize === 100 ? "#888" : GREEN, fontWeight: 700, minWidth: 44, textAlign: "center", background: "none", border: "none", cursor: "pointer", padding: "4px 2px" }}>
+                {fontSize}%
+              </button>
               <button onClick={() => setFontSize(s => Math.min(150, s + 10))} style={{ background: "none", border: `1px solid ${borderColor}`, borderRadius: 6, padding: "4px 8px", cursor: "pointer", color: textColor }}><Plus size={12} /></button>
             </>
           )}

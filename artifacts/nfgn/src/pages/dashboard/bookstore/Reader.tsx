@@ -245,7 +245,10 @@ function EpubViewer({ streamUrl, fontSize, darkMode, sepia, bookTitle, readAloud
       const onResize = () => { if (!destroyed) setEpubScale(calcScale()); };
       window.addEventListener("resize", onResize);
 
-      rendition.themes.fontSize(`${fontSize}%`);
+      // NOTE: We deliberately do NOT call rendition.themes.fontSize() here.
+      // At the default (100%) the book's own font sizes must show through
+      // untouched so the layout matches Apple Books. The font-size effect
+      // below only injects a size when the reader explicitly zooms (≠ 100%).
 
       // ── Track reading position on every page turn ──
       rendition.on("relocated", (location: any) => {
@@ -388,12 +391,24 @@ function EpubViewer({ streamUrl, fontSize, darkMode, sepia, bookTitle, readAloud
     // rules that prevent long words / oversized media from spilling past the
     // page edge. None of these change the native text size or density.
     const rules: Record<string, Record<string, string>> = {
-      "html, body, p, div, span, li, td, h1, h2, h3, h4, h5, h6": {
+      // Apply the reader-selectable font to BODY TEXT ONLY. Headings/titles keep
+      // the book's own (often condensed display) font so the cover/chapter titles
+      // look exactly like Apple Books instead of being recast in a serif face.
+      "p, li, td, dd, dt, blockquote": {
         "font-family": `${fontMap[fontFamily]} !important`,
+      },
+      // Headings: never let an oversized display title clip at the page edge.
+      // Force normal wrapping (overrides any white-space:nowrap in the book) and
+      // allow a too-wide word to break as a last resort. This changes neither the
+      // font size nor the spacing — it only lets long titles wrap like Apple Books.
+      "h1, h2, h3, h4, h5, h6": {
+        "white-space": "normal !important",
+        "overflow-wrap": "break-word !important",
+        "max-width": "100% !important",
       },
       // Anti-overflow only — wrap long words/URLs so nothing gets clipped on
       // the right. This does not enlarge or re-space text.
-      "p, div, span, li, td, a, blockquote, pre, code, h1, h2, h3, h4, h5, h6": {
+      "p, div, span, li, td, a, blockquote, pre, code": {
         "overflow-wrap": "break-word !important",
         "word-wrap": "break-word !important",
       },
@@ -417,9 +432,23 @@ function EpubViewer({ streamUrl, fontSize, darkMode, sepia, bookTitle, readAloud
   // Keep a ref of the latest scale for the (once-registered) selection handler
   useEffect(() => { epubScaleRef.current = epubScale; }, [epubScale]);
 
-  // ── Font size ──
+  // ── Auto-dismiss the resume prompt so it never lingers over the toolbar ──
   useEffect(() => {
-    if (renditionRef.current && epubReady) renditionRef.current.themes.fontSize(`${fontSize}%`);
+    if (!showResume) return;
+    const t = setTimeout(() => setShowResume(false), 6000);
+    return () => clearTimeout(t);
+  }, [showResume]);
+
+  // ── Font size (zoom) ──
+  // Respect the book's native sizes at 100%: we only inject a font-size once the
+  // reader has actually zoomed. fontTouchedRef makes sure we never touch the
+  // native cascade on first load — only after an explicit +/- adjustment.
+  const fontTouchedRef = useRef(false);
+  useEffect(() => {
+    const r = renditionRef.current;
+    if (!r || !epubReady) return;
+    if (fontSize !== 100) fontTouchedRef.current = true;
+    if (fontTouchedRef.current) r.themes.fontSize(`${fontSize}%`);
   }, [fontSize, epubReady]);
 
   // ── Keyboard nav ──
@@ -869,10 +898,10 @@ function EpubViewer({ streamUrl, fontSize, darkMode, sepia, bookTitle, readAloud
         </>
       )}
 
-      {/* ── Resume prompt — slim pill pinned just under the toolbar so it never
-           covers the page content or the bottom navigation. Auto-dismisses. ── */}
+      {/* ── Resume prompt — slim pill pinned to the BOTTOM of the reading area so
+           it never covers the toolbar or page content. Auto-dismisses after 6s. ── */}
       {showResume && resumeCfi && (
-        <div style={{ position: "absolute", top: 10, left: "50%", transform: "translateX(-50%)", background: bg, border: `1px solid ${GREEN}`, borderRadius: 999, padding: "6px 8px 6px 16px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 6px 24px rgba(0,0,0,0.18)", zIndex: 80, maxWidth: "94%" }}>
+        <div style={{ position: "absolute", bottom: 16, left: "50%", transform: "translateX(-50%)", background: bg, border: `1px solid ${GREEN}`, borderRadius: 999, padding: "6px 8px 6px 16px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 6px 24px rgba(0,0,0,0.18)", zIndex: 80, maxWidth: "94%" }}>
           <span style={{ fontSize: 12, color: textColor, fontWeight: 600, whiteSpace: "nowrap" }}>📖 Resume where you left off?</span>
           <button onClick={() => { renditionRef.current?.display(resumeCfi); setShowResume(false); }}
             style={{ background: GREEN, color: "#fff", border: "none", borderRadius: 999, padding: "5px 14px", cursor: "pointer", fontWeight: 700, fontSize: 12 }}>Resume</button>

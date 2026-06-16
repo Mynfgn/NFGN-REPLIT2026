@@ -71,6 +71,118 @@ interface Book {
 
 interface Props { bookId: string }
 
+// ── Fixed-layout (pre-paginated) EPUB helpers ────────────────────────────────
+// Tools like Apple Pages export "fixed-layout" EPUBs: every page has a fixed
+// pixel viewport and each line is absolutely positioned. They also embed
+// IDPF-obfuscated fonts. epub.js renders the geometry natively but does NOT
+// de-obfuscate the fonts, so the custom display faces (e.g. Druk, ProximaNova)
+// silently fall back to serif. These helpers reproduce what Apple Books does:
+// detect the layout, read the native viewport, and de-obfuscate the fonts.
+
+// Default 2:3 page size used for reflowable books (unchanged legacy behaviour).
+const DEFAULT_PAGE_W = 600;
+const DEFAULT_PAGE_H = 900;
+
+// SHA-1 of a string → 20 raw bytes (Web Crypto).
+async function sha1Bytes(str: string): Promise<Uint8Array> {
+  const buf = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(str));
+  return new Uint8Array(buf);
+}
+
+// Reverse the IDPF font obfuscation (http://www.idpf.org/2008/embedding):
+// XOR the first 1040 bytes with the repeating SHA-1(unique-identifier) key.
+function deobfuscateFont(data: Uint8Array, key: Uint8Array): Uint8Array {
+  const out = new Uint8Array(data); // copy so we never mutate the archive bytes
+  const n = Math.min(1040, out.length);
+  for (let i = 0; i < n; i++) out[i] = out[i] ^ key[i % key.length];
+  return out;
+}
+
+// The OPF unique-identifier, trimmed exactly as stored (the obfuscation key).
+function getUniqueIdentifier(book: any): string {
+  const pkg = book?.packaging ?? {};
+  const uid = pkg.uniqueIdentifier ?? pkg.metadata?.identifier ?? "";
+  return String(uid).trim();
+}
+
+// Map an embedded font's filename → CSS family / weight / style.
+function fontDescriptor(path: string): { family: string; weight: string; style: string } | null {
+  const name = (path.split("/").pop() ?? "").toLowerCase();
+  const style = name.includes("italic") || name.includes("oblique") ? "italic" : "normal";
+  if (name.startsWith("druk")) {
+    const weight = name.includes("super") ? "800"
+      : name.includes("bold") ? "700"
+      : name.includes("medium") ? "500"
+      : name.includes("light") ? "300" : "700";
+    return { family: "Druk", weight, style };
+  }
+  if (name.startsWith("proximanova") || name.startsWith("proxima")) {
+    const weight = name.includes("bold") ? "700"
+      : name.includes("semibold") ? "600"
+      : name.includes("light") ? "300"
+      : name.includes("thin") ? "200" : "400";
+    return { family: "ProximaNova", weight, style };
+  }
+  return null;
+}
+
+// Build @font-face CSS for every embedded font (de-obfuscating where needed),
+// returning a string to inject into each content document's <head>.
+async function buildFontFaces(book: any): Promise<string> {
+  try {
+    const zip = book?.archive?.zip;
+    if (!zip || !zip.files) return "";
+
+    // Which entries are obfuscated? Read META-INF/encryption.xml.
+    let encXml = "";
+    try { encXml = (await zip.file("META-INF/encryption.xml")?.async("string")) ?? ""; } catch {}
+    const obf = new Set<string>();
+    const re = /CipherReference\s+URI="([^"]+)"/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(encXml))) obf.add(decodeURIComponent(m[1]));
+
+    const uid = getUniqueIdentifier(book);
+    const key = uid ? await sha1Bytes(uid) : new Uint8Array(20);
+
+    const faces: string[] = [];
+    const fontPaths = Object.keys(zip.files).filter((p) => /\.(otf|ttf|woff2?|otc)$/i.test(p));
+    for (const path of fontPaths) {
+      const desc = fontDescriptor(path);
+      if (!desc) continue;
+      let bytes: Uint8Array;
+      try { bytes = await zip.file(path).async("uint8array"); } catch { continue; }
+      if (obf.has(path)) bytes = deobfuscateFont(bytes, key);
+      const ext = (path.split(".").pop() ?? "otf").toLowerCase();
+      const fmt = ext === "ttf" ? "truetype" : ext === "woff" ? "woff" : ext === "woff2" ? "woff2" : "opentype";
+      const mime = ext === "ttf" ? "font/ttf" : ext === "woff" ? "font/woff" : ext === "woff2" ? "font/woff2" : "font/otf";
+      const url = URL.createObjectURL(new Blob([bytes as unknown as BlobPart], { type: mime }));
+      faces.push(
+        `@font-face{font-family:"${desc.family}";font-weight:${desc.weight};font-style:${desc.style};src:url(${url}) format("${fmt}");font-display:block;}`
+      );
+    }
+    return faces.join("\n");
+  } catch {
+    return "";
+  }
+}
+
+// Read the fixed-layout viewport (width/height in px) from the first content
+// page that declares a <meta name="viewport"> with explicit pixel dimensions.
+async function readFxlViewport(book: any): Promise<{ w: number; h: number } | null> {
+  try {
+    const zip = book?.archive?.zip;
+    if (!zip || !zip.files) return null;
+    const htmlPaths = Object.keys(zip.files).filter((p) => /\.(xhtml|html)$/i.test(p)).sort();
+    for (const path of htmlPaths) {
+      let xhtml = "";
+      try { xhtml = (await zip.file(path)?.async("string")) ?? ""; } catch { continue; }
+      const m = xhtml.match(/viewport["']?\s*content=["'][^"']*width=(\d+(?:\.\d+)?)[^"']*height=(\d+(?:\.\d+)?)/i);
+      if (m) return { w: Math.round(parseFloat(m[1])), h: Math.round(parseFloat(m[2])) };
+    }
+  } catch {}
+  return null;
+}
+
 // ── EPUB viewer — Apple Books-style professional reader ───────────────────────
 function EpubViewer({ streamUrl, fontSize, darkMode, sepia, bookTitle, readAloud, onReadAloudStop, bookId, coverImage }: {
   streamUrl: string;
@@ -84,22 +196,28 @@ function EpubViewer({ streamUrl, fontSize, darkMode, sepia, bookTitle, readAloud
   bookId?: string;
   coverImage?: string;
 }) {
-  // Native 6×9 book page dimensions — epub.js renders at full size so the
-  // EPUB's own CSS (flex footers, absolute elements) lays out correctly.
-  // We then CSS-scale the result down to fit the viewport.
-  // Per-page render size. A wider column (vs the old 450) fits more words per
-  // line, so at the book's native font-size the text density matches Apple
-  // Books instead of looking oversized. 2:3 aspect keeps the cover overlay correct.
-  const EPUB_PAGE_W = 600;
-  const EPUB_PAGE_H = 900;
+  // Per-page render size. epub.js renders at this full size so the EPUB's own
+  // CSS lays out correctly; we then CSS-scale the result down to fit the viewport.
+  // For REFLOWABLE books we use a 2:3 column (600×900). For FIXED-LAYOUT books
+  // we switch to the book's own native viewport (read from its <meta viewport>)
+  // so each absolutely-positioned page renders pixel-perfect, like Apple Books.
+  const [pageW, setPageW] = useState(DEFAULT_PAGE_W);
+  const [pageH, setPageH] = useState(DEFAULT_PAGE_H);
+  // True once we've detected a fixed-layout (pre-paginated) EPUB.
+  const [isFxl, setIsFxl] = useState(false);
 
   const containerRef   = useRef<HTMLDivElement>(null);
   const bookRef        = useRef<any>(null);
   const renditionRef   = useRef<any>(null);
   // Tracks current rendition native width (single vs two-page spread)
-  const nativeWRef     = useRef(600);
+  const nativeWRef     = useRef(DEFAULT_PAGE_W);
   const spreadModeRef  = useRef<"none" | "always">("none");
   const epubScaleRef   = useRef(1);
+  // FXL bookkeeping (refs so the once-run init/handlers read fresh values)
+  const pageWRef       = useRef(DEFAULT_PAGE_W);
+  const pageHRef       = useRef(DEFAULT_PAGE_H);
+  const isFxlRef       = useRef(false);
+  const fontFaceCssRef = useRef("");
 
   // Core state
   const [epubReady,   setEpubReady]   = useState(false);
@@ -207,43 +325,95 @@ function EpubViewer({ streamUrl, fontSize, darkMode, sepia, bookTitle, readAloud
       return;
     }
 
+    let onResize: (() => void) | null = null;
+    let epubBook: any = null;
     try {
-      const epubBook = ePub(streamUrl, { openAs: "epub" });
+      epubBook = ePub(streamUrl, { openAs: "epub" });
       bookRef.current = epubBook;
+    } catch (e: any) {
+      setEpubError(e?.message ?? "Failed to open book.");
+      setEpubLoading(false);
+      return;
+    }
 
-      const nativeH = EPUB_PAGE_H;
-      // Decide spread mode ONCE, up front, from the viewport width. We render at
-      // the final (double) width immediately and let epub.js handle the cover as a
-      // single page and content as a two-page spread natively via spread:"auto".
-      //
-      // NOTE: We deliberately do NOT switch spread modes reactively inside the
-      // "rendered" event. Calling rendition.resize()/rendition.spread() mid-render
-      // re-triggers rendition.display(), which on some books bounces the location
-      // back to the cover (section 0) — leaving the reader permanently stuck on the
-      // cover. Setting the layout once at init is robust and avoids that loop.
-      const wantSpread = window.innerWidth >= 700;
-      const renderW = wantSpread ? EPUB_PAGE_W * 2 : EPUB_PAGE_W;
-      nativeWRef.current = renderW;
-      spreadModeRef.current = wantSpread ? "always" : "none";
-      setIsSpread(wantSpread);
+    // We must inspect the package metadata (to detect fixed-layout) and read the
+    // book's native viewport BEFORE we render — so the whole pipeline is async.
+    (async () => {
+      try {
+        await epubBook.ready;
+        if (destroyed) return;
 
-      const rendition = epubBook.renderTo(containerRef.current!, {
-        width: renderW, height: nativeH,
-        spread: wantSpread ? "auto" : "none", flow: "paginated",
-      });
-      renditionRef.current = rendition;
+        // ── Detect FIXED-LAYOUT (pre-paginated) EPUBs ──────────────────────────
+        // Tools like Apple Pages export pre-paginated books where every page is a
+        // fixed pixel canvas with absolutely-positioned lines and custom embedded
+        // (obfuscated) fonts. For those we render at the book's OWN viewport size
+        // and inject the de-obfuscated fonts, so the result is pixel-identical to
+        // Apple Books. Reflowable books keep the legacy 600×900 column path.
+        let vpW = DEFAULT_PAGE_W, vpH = DEFAULT_PAGE_H;
+        const layout = epubBook?.packaging?.metadata?.layout;
+        const fxl = layout === "pre-paginated";
+        if (fxl) {
+          const vp = await readFxlViewport(epubBook);
+          if (destroyed) return;
+          if (vp && vp.w > 0 && vp.h > 0) { vpW = vp.w; vpH = vp.h; }
+          // De-obfuscate the embedded display fonts (epub.js can't do this).
+          try { fontFaceCssRef.current = await buildFontFaces(epubBook); } catch {}
+          if (destroyed) return;
+          isFxlRef.current = true;
+          setIsFxl(true);
+        }
+        pageWRef.current = vpW; pageHRef.current = vpH;
+        setPageW(vpW); setPageH(vpH);
 
-      // Scale uses nativeWRef so it stays correct after spread-mode switches
-      const calcScale = () => {
-        const availW = Math.max(300, window.innerWidth  - 40);
-        // Reserve room for header + toolbar + bottom nav/progress + the reader
-        // area's vertical padding so the full page (incl. last line) stays visible.
-        const availH = Math.max(300, window.innerHeight - 320);
-        return Math.min(availW / nativeWRef.current, availH / nativeH, 1);
-      };
-      if (!destroyed) setEpubScale(calcScale());
-      const onResize = () => { if (!destroyed) setEpubScale(calcScale()); };
-      window.addEventListener("resize", onResize);
+        const nativeH = vpH;
+        // Decide spread mode ONCE, up front, from the viewport width. We render at
+        // the final (double) width immediately and let epub.js handle the cover as a
+        // single page and content as a two-page spread natively via spread:"auto".
+        //
+        // NOTE: We deliberately do NOT switch spread modes reactively inside the
+        // "rendered" event. Calling rendition.resize()/rendition.spread() mid-render
+        // re-triggers rendition.display(), which on some books bounces the location
+        // back to the cover (section 0) — leaving the reader permanently stuck on the
+        // cover. Setting the layout once at init is robust and avoids that loop.
+        const wantSpread = window.innerWidth >= 700;
+        const renderW = wantSpread ? vpW * 2 : vpW;
+        nativeWRef.current = renderW;
+        spreadModeRef.current = wantSpread ? "always" : "none";
+        setIsSpread(wantSpread);
+
+        if (destroyed || !containerRef.current) return;
+        const rendition = epubBook.renderTo(containerRef.current, {
+          width: renderW, height: nativeH,
+          spread: wantSpread ? "auto" : "none", flow: "paginated",
+        });
+        renditionRef.current = rendition;
+
+        // ── FXL: inject the de-obfuscated @font-face rules into every rendered
+        // document so the native Druk / ProximaNova faces show, not serif. ──
+        if (fxl && fontFaceCssRef.current) {
+          rendition.hooks.content.register((contents: any) => {
+            try {
+              const d = contents.document;
+              if (!d || !d.head) return;
+              const style = d.createElement("style");
+              style.setAttribute("data-nfgn-fonts", "1");
+              style.textContent = fontFaceCssRef.current;
+              d.head.appendChild(style);
+            } catch {}
+          });
+        }
+
+        // Scale uses nativeWRef so it stays correct after spread-mode switches
+        const calcScale = () => {
+          const availW = Math.max(300, window.innerWidth  - 40);
+          // Reserve room for header + toolbar + bottom nav/progress + the reader
+          // area's vertical padding so the full page (incl. last line) stays visible.
+          const availH = Math.max(300, window.innerHeight - 320);
+          return Math.min(availW / nativeWRef.current, availH / nativeH, 1);
+        };
+        if (!destroyed) setEpubScale(calcScale());
+        onResize = () => { if (!destroyed) setEpubScale(calcScale()); };
+        window.addEventListener("resize", onResize);
 
       // NOTE: We deliberately do NOT call rendition.themes.fontSize() here.
       // At the default (100%) the book's own font sizes must show through
@@ -359,19 +529,19 @@ function EpubViewer({ streamUrl, fontSize, darkMode, sepia, bookTitle, readAloud
           if (!destroyed) { setEpubError(e?.message ?? "Book failed to load."); setEpubLoading(false); }
         });
 
-      return () => {
-        destroyed = true;
-        window.removeEventListener("resize", onResize);
-        window.speechSynthesis?.cancel();
-        try { epubBook.destroy(); } catch {}
-        renditionRef.current = null;
-        bookRef.current = null;
-      };
-    } catch (e: any) {
-      setEpubError(e?.message ?? "Failed to open book.");
-      setEpubLoading(false);
-      return;
-    }
+      } catch (e: any) {
+        if (!destroyed) { setEpubError(e?.message ?? "Failed to open book."); setEpubLoading(false); }
+      }
+    })();
+
+    return () => {
+      destroyed = true;
+      if (onResize) window.removeEventListener("resize", onResize);
+      window.speechSynthesis?.cancel();
+      try { epubBook?.destroy(); } catch {}
+      renditionRef.current = null;
+      bookRef.current = null;
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [streamUrl]);
 
@@ -379,6 +549,11 @@ function EpubViewer({ streamUrl, fontSize, darkMode, sepia, bookTitle, readAloud
   useEffect(() => {
     const r = renditionRef.current;
     if (!r || !epubReady) return;
+    // FIXED-LAYOUT books: never inject typography. Every page is a fixed pixel
+    // canvas with absolutely-positioned text in the book's own (de-obfuscated)
+    // fonts. Overriding font-family / wrapping / background would shift or clip
+    // the baked-in layout. Render it exactly as authored, like Apple Books.
+    if (isFxl) return;
     const fontMap: Record<string, string> = {
       serif:    "Georgia, 'Times New Roman', serif",
       sans:     "system-ui, -apple-system, sans-serif",
@@ -427,7 +602,7 @@ function EpubViewer({ streamUrl, fontSize, darkMode, sepia, bookTitle, readAloud
     }
     r.themes.register("active", rules);
     r.themes.select("active");
-  }, [darkMode, sepia, fontFamily, epubReady]);
+  }, [darkMode, sepia, fontFamily, epubReady, isFxl]);
 
   // Keep a ref of the latest scale for the (once-registered) selection handler
   useEffect(() => { epubScaleRef.current = epubScale; }, [epubScale]);
@@ -447,6 +622,9 @@ function EpubViewer({ streamUrl, fontSize, darkMode, sepia, bookTitle, readAloud
   useEffect(() => {
     const r = renditionRef.current;
     if (!r || !epubReady) return;
+    // Fixed-layout pages can't be zoomed via font-size without breaking their
+    // absolute positioning — the whole page is scaled to fit instead.
+    if (isFxlRef.current) return;
     if (fontSize !== 100) fontTouchedRef.current = true;
     if (fontTouchedRef.current) r.themes.fontSize(`${fontSize}%`);
   }, [fontSize, epubReady]);
@@ -685,12 +863,12 @@ function EpubViewer({ streamUrl, fontSize, darkMode, sepia, bookTitle, readAloud
 
         {/* FLIP layer — rotateY animation; width tracks hybrid spread state */}
         <div className={flipClass}
-          style={{ width: (isSpread ? EPUB_PAGE_W * 2 : EPUB_PAGE_W) * epubScale, height: EPUB_PAGE_H * epubScale, flexShrink: 0, transformStyle: "preserve-3d", willChange: "transform" }}>
+          style={{ width: (isSpread ? pageW * 2 : pageW) * epubScale, height: pageH * epubScale, flexShrink: 0, transformStyle: "preserve-3d", willChange: "transform" }}>
           {/* CLIP layer */}
           <div style={{ position: "relative", width: "100%", height: "100%", overflow: "hidden", borderRadius: 12, boxShadow: darkMode ? "0 10px 40px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.4)" : "0 14px 44px rgba(0,0,0,0.20), 0 2px 8px rgba(0,0,0,0.10)" }}>
             {/* SCALE layer — epub.js target at native size, CSS-scaled to fit */}
             <div ref={containerRef}
-              style={{ width: isSpread ? EPUB_PAGE_W * 2 : EPUB_PAGE_W, height: EPUB_PAGE_H, transform: `scale(${epubScale})`, transformOrigin: "top left" }} />
+              style={{ width: isSpread ? pageW * 2 : pageW, height: pageH, transform: `scale(${epubScale})`, transformOrigin: "top left" }} />
             {/* Center gutter — gives the two-page spread a clear book-spine divide */}
             {isSpread && (
               <div style={{ position: "absolute", top: 0, bottom: 0, left: "50%", width: 28, transform: "translateX(-50%)", pointerEvents: "none", zIndex: 5,
@@ -707,9 +885,9 @@ function EpubViewer({ streamUrl, fontSize, darkMode, sepia, bookTitle, readAloud
              marketing cover (with the full, un-clipped title) greets the reader,
              exactly like Apple Books. Sits above epub's own cover but below the
              tap zones so swipe / tap-to-advance still works. ── */}
-        {epubReady && coverImage && sectionIndex === 0 && (
+        {epubReady && coverImage && sectionIndex === 0 && !isFxl && (
           <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10, background: bg, pointerEvents: "none" }}>
-            <div style={{ height: EPUB_PAGE_H * epubScale, aspectRatio: "2 / 3", maxWidth: "92%", borderRadius: 12, overflow: "hidden", boxShadow: "0 10px 40px rgba(0,0,0,0.28)" }}>
+            <div style={{ height: pageH * epubScale, aspectRatio: "2 / 3", maxWidth: "92%", borderRadius: 12, overflow: "hidden", boxShadow: "0 10px 40px rgba(0,0,0,0.28)" }}>
               <img src={coverImage} alt={`${bookTitle} cover`}
                 style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
             </div>
